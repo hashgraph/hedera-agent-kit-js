@@ -44,7 +44,7 @@ Notes:
 Use these concise defaults to populate `<PART1_USER_STORY>`, `<PART2_FILES_CHANGED>`, `<PART3_ACCEPTANCE_CRITERIA>` based on the tool’s plugin/service. Tailor specifics (transaction types, params) per tool.
 
 - Account (core-account-plugin)
-  - User Story: As a developer using Hedera Agent Kit, I want <TOOL_NAME> so I can manage Hedera accounts programmatically.
+  - User Story: As a developer using Hedera Agent Kit, I want <TOOL_NAME> so I can manage and interact with Hedera accounts programmatically.
   - Files Changed:
     - [ ] typescript/src/plugins/core-account-plugin/tools/account/<tool-name>.ts (new tool)
     - [ ] typescript/src/plugins/core-account-plugin/index.ts (import, register, export tool name)
