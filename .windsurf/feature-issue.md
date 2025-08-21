@@ -5,8 +5,8 @@ Use this rule when you already know the set of new Tools to add and want one Git
 
 - Say: "I have a list of tools to add. Please use the feature-issue batch rule to generate a gh issue create command for each tool."
 - Provide a list like:
-  - Tool: TRANSFER_TOKEN_TOOL; Plugin: core-hts-plugin; Service: HTS; Title: "Add HTS: TRANSFER_TOKEN_TOOL"; Labels (optional): "feature,tool"; Assignee (optional): @githubusername
-  - Tool: CREATE_ACCOUNT_TOOL; Plugin: core-account-plugin; Service: Account; Title: "Add Account: CREATE_ACCOUNT_TOOL"
+  - Tool: TRANSFER_TOKEN_TOOL; Plugin: core-hts-plugin; Labels (optional): "feature,tool"; Assignee (optional): @githubusername
+  - Tool: CREATE_ACCOUNT_TOOL; Plugin: core-account-plugin; "feature,tool";
 
 ### Context for AI Assistant
 - First, confirm the GitHub CLI is available:
@@ -21,7 +21,7 @@ Use this rule when you already know the set of new Tools to add and want one Git
 - After running each command, capture the created issue link from gh output and end your response with: "Please go to the issue at [issue link] and assign it to the Hedera Agent Kit project and assign a status."
 
 ### Goal
-Create one GitHub Issue per tool with consistent release tagging and clear implementation guidance.
+Create one GitHub Issue per tool with consistent release tagging and clear implementation guidance. Use the 
 
 ## Output
 - Format: One shell command per tool using the GitHub CLI
