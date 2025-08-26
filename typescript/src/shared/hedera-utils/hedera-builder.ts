@@ -7,6 +7,8 @@ import {
   ContractExecuteTransaction,
   TokenMintTransaction,
   AccountCreateTransaction,
+  AccountDeleteTransaction,
+  AccountUpdateTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
@@ -18,7 +20,9 @@ import {
 import z from 'zod';
 import {
   createAccountParametersNormalised,
+  deleteAccountParametersNormalised,
   transferHbarParametersNormalised,
+  updateAccountParametersNormalised,
 } from '@/shared/parameter-schemas/has.zod';
 import {
   createTopicParametersNormalised,
@@ -79,5 +83,17 @@ export default class HederaBuilder {
 
   static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
     return new AccountCreateTransaction(params);
+  }
+  
+  static deleteAccount(
+    params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>
+  ) {
+    return new AccountDeleteTransaction(params);
+  }
+  
+  static updateAccount(
+    params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>
+  ) {
+    return new AccountUpdateTransaction(params);
   }
 }

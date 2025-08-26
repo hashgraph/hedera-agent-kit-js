@@ -12,14 +12,18 @@ import {
 import {
   createAccountParameters,
   createAccountParametersNormalised,
+  deleteAccountParameters,
+  deleteAccountParametersNormalised,
   transferHbarParameters,
+  updateAccountParameters,
+  updateAccountParametersNormalised,
 } from '@/shared/parameter-schemas/has.zod';
 import {
   createTopicParameters,
   createTopicParametersNormalised,
 } from '@/shared/parameter-schemas/hcs.zod';
 
-import { Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import {
@@ -464,6 +468,56 @@ export default class HederaParameterNormaliser {
       functionParameters,
       gas: 100_000,
     };
+  }
+
+
+  static normaliseDeleteAccount(
+    params: z.infer<ReturnType<typeof deleteAccountParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof deleteAccountParametersNormalised>> {
+    if (!AccountResolver.isHederaAddress(params.accountId)) {
+      throw new Error('Account ID must be a Hedera address');
+    }
+
+    // if no transfer account ID is provided, use the operator account ID
+    if (!params.transferAccountId) {
+      params.transferAccountId = AccountResolver.getDefaultAccount(context, client);
+    }
+
+    return {
+      accountId: AccountId.fromString(params.accountId),
+      transferAccountId: AccountId.fromString(params.transferAccountId),
+    };
+  }
+  
+  static normaliseUpdateAccount(
+    params: z.infer<ReturnType<typeof updateAccountParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const accountId = AccountId.fromString(
+      AccountResolver.resolveAccount(params.accountId, context, client),
+    );
+
+    const normalised: z.infer<ReturnType<typeof updateAccountParametersNormalised>> = {
+      accountId,
+    } as any;
+
+    if (params.maxAutomaticTokenAssociations) {
+      normalised.maxAutomaticTokenAssociations = params.maxAutomaticTokenAssociations;
+    }
+    if (params.stakedAccountId) {
+      normalised.stakedAccountId = params.stakedAccountId;
+    }
+    if (params.accountMemo) {
+      normalised.accountMemo = params.accountMemo;
+    }
+    if (params.declineStakingReward) {
+      normalised.declineStakingReward = params.declineStakingReward;
+    }
+
+    return normalised;
   }
 
   static async getHederaEVMAddress(

@@ -7,8 +7,8 @@ import {
   coreQueriesPlugin,
   coreHTSPlugin,
   coreConsensusPlugin,
+  coreAccountPlugin,
   coreAccountPluginToolNames,
-  coreAccountPlugin
 } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -42,7 +42,12 @@ async function bootstrap(): Promise<void> {
     GET_TOKEN_INFO_QUERY_TOOL,
   } = coreQueriesPluginToolNames;
 
-  const { CREATE_ACCOUNT_TOOL } = coreAccountPluginToolNames;
+  const { 
+    DELETE_ACCOUNT_TOOL, 
+    TRANSFER_HBAR_TOOL,
+    UPDATE_ACCOUNT_TOOL,
+    CREATE_ACCOUNT_TOOL,
+  } = coreAccountPluginToolNames;
 
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
@@ -55,12 +60,21 @@ async function bootstrap(): Promise<void> {
         CREATE_FUNGIBLE_TOKEN_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
         CREATE_ACCOUNT_TOOL,
+        DELETE_ACCOUNT_TOOL,
+        TRANSFER_HBAR_TOOL,
+        UPDATE_ACCOUNT_TOOL,
         GET_TOKEN_INFO_QUERY_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
       ],
-      plugins: [examplePlugin, coreHTSPlugin, coreConsensusPlugin, coreQueriesPlugin, coreAccountPlugin], // Add the example plugin
+      plugins: [
+        examplePlugin,
+        coreHTSPlugin,
+        coreConsensusPlugin,
+        coreQueriesPlugin,
+        coreAccountPlugin,
+      ], // Add the example plugin
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
