@@ -1,4 +1,4 @@
-# ADR-001: Comprehensive Testing Strategy
+# ADR-002: Comprehensive Testing Strategy
 
 ## Status
 
@@ -33,7 +33,7 @@ We will implement a **four-tier testing strategy**:
 ### Key Decisions
 
 #### Testing Framework
-- **Jest** for TypeScript unit, integration, and tool-calling validation tests
+- **Vitest** for TypeScript unit, integration, and tool-calling validation tests
 - **Hardhat + Chai** for smart contract tests (existing)
 
 #### Test Organization

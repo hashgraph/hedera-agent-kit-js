@@ -57,13 +57,15 @@ Hedera network
 
 These tools provided by the toolkit enable you to complete (free) queries against mirror nodes on the Hedera network.
 
-| Tool Name                               | Description                                                          | Usage                                                                                                                               |
-|-----------------------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| `GET_ACCOUNT_QUERY_TOOL`                | Returns comprehensive account information for a given Hedera account | Provide an account ID to query                                                                                                      |
-| `GET_HBAR_BALANCE_QUERY_TOOL`           | Returns the HBAR balance for a given Hedera account                  | Requires a Hedera account ID to query (uses context operator account if not specified)                                              |
-| `GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL` | Returns token balances for a Hedera account                          | Provide the account ID to query (optional - uses context account if not provided). Optionally, provide a specific token ID to query |
-| `GET_TOPIC_MESSAGES_QUERY_TOOL`         | Returns messages for a given Hedera Consensus Service (HCS) topic    | Provide the topic ID to query (required). Optionally, provide start time, end time, and limit for message filtering                 |
- <!--                                    | `tool-name`                                                          | Description of what Tool Does                                                                                                       | How to use| -->
+
+| Tool Name                      | Description                                                          | Usage                                                                                                                               |
+| ------------------------------ |----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `GET_ACCOUNT_QUERY_TOOL`| Returns comprehensive account information for a given Hedera account | Provide an account ID to query                                                                                                      |
+| `GET_HBAR_BALANCE_QUERY_TOOL`| Returns the HBAR balance for a given Hedera account                  | Requires a Hedera account ID to query (uses context operator account if not specified)                                              |
+| `GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL`| Returns token balances for a Hedera account                          | Provide the account ID to query (optional - uses context account if not provided). Optionally, provide a specific token ID to query |
+| `GET_TOPIC_MESSAGES_QUERY_TOOL`| Returns messages for a given Hedera Consensus Service (HCS) topic    | Provide the topic ID to query (required). Optionally, provide start time, end time, and limit for message filtering                 |
+| `GET_TOKEN_INFO_QUERY_TOOL`| Returns details of a given token (HTS)                               | Provide the ID of token to query (required).                                                                                        |
+
 
 ## Using Hedera Plugins
 
