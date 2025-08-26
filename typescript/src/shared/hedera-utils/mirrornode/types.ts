@@ -1,4 +1,4 @@
-import { LedgerId, TokenType } from '@hashgraph/sdk';
+import { LedgerId } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 
 export const LedgerIdToBaseUrl: Map<string, string> = new Map([
@@ -75,10 +75,78 @@ export type TopicMessagesAPIResponse = {
 
 export type KeyEncryptionType = 'ED25519' | 'ECDSA_SECP256K1';
 
-export type TokenDetails = {
-  decimals: string;
+/**
+ * This type matches responses from Hedera Mirror Node API
+ */
+export type TokenInfo = {
+  // Basic Token Identity
+  token_id?: string;
   name: string;
   symbol: string;
-  maxSupply: number;
-  type: TokenType;
+  type?: string;
+  memo?: string;
+
+  // Supply Information
+  decimals: string;
+  initial_supply?: string;
+  total_supply?: string;
+  max_supply?: string;
+  supply_type?: string;
+
+  // Account & Treasury
+  treasury_account_id?: string;
+  auto_renew_account?: string;
+  auto_renew_period?: number;
+
+  // Status & State
+  deleted: boolean;
+  freeze_default?: boolean;
+  pause_status?: string;
+
+  // Timestamps
+  created_timestamp?: string;
+  modified_timestamp?: string;
+  expiry_timestamp?: number;
+
+  // Keys
+  admin_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  supply_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  kyc_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  freeze_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  wipe_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  pause_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  fee_schedule_key?: {
+    _type: string;
+    key: string;
+  } | null;
+  metadata_key?: {
+    _type: string;
+    key: string;
+  } | null;
+
+  // Metadata & Custom Features
+  metadata?: string;
+  custom_fees?: {
+    created_timestamp: string;
+    fixed_fees: any[];
+    fractional_fees: any[];
+  };
 };

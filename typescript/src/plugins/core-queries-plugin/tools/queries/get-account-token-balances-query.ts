@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/account-query.zod';
+import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/query.zod';
 import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
