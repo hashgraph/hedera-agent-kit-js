@@ -34,3 +34,39 @@ export const transferHbarParametersNormalised = (_context: Context = {}) =>
     ),
     transactionMemo: z.string().optional(),
   });
+
+export const deleteAccountParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().describe('The account ID to delete.'),
+    transferAccountId: z.string().optional().describe('The ID of the account to transfer the remaining funds to. If not provided, the operator account ID will be used.'),
+  });
+
+export const deleteAccountParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    accountId: z.instanceof(AccountId),
+    transferAccountId: z.instanceof(AccountId),
+  })
+
+export const updateAccountParameters = (_context: Context = {}) =>
+  z.object({
+    // If not passed, will be injected from context in normalisation
+    accountId: z.string().optional().describe('Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used'),
+
+    maxAutomaticTokenAssociations: z
+      .number()
+      .int()
+      .optional()
+      .describe('Max automatic token associations, positive, zero or -1 if unlimited'),
+    stakedAccountId: z.string().optional().describe('Staked account ID'),
+    accountMemo: z.string().optional().describe('Account memo'),
+    declineStakingReward: z.boolean().optional().describe('Decline staking rewards'),
+  });
+
+export const updateAccountParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    accountId: z.instanceof(AccountId),
+    maxAutomaticTokenAssociations: z.union([z.number(), z.instanceof(Long)]).optional(),
+    stakedAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
+    accountMemo: z.string().optional(),
+    declineStakingReward: z.boolean().optional(),
+  });
