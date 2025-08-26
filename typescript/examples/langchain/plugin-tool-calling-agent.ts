@@ -37,7 +37,10 @@ async function bootstrap(): Promise<void> {
 
   const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 
-  const { GET_HBAR_BALANCE_QUERY_TOOL } = coreQueriesPluginToolNames;
+  const {
+    GET_HBAR_BALANCE_QUERY_TOOL,
+    GET_TOKEN_INFO_QUERY_TOOL,
+  } = coreQueriesPluginToolNames;
 
   const { CREATE_ACCOUNT_TOOL } = coreAccountPluginToolNames;
 
@@ -52,6 +55,7 @@ async function bootstrap(): Promise<void> {
         CREATE_FUNGIBLE_TOKEN_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
         CREATE_ACCOUNT_TOOL,
+        GET_TOKEN_INFO_QUERY_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',

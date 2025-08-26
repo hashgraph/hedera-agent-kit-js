@@ -25,7 +25,7 @@ import z from 'zod';
 import {
   accountBalanceQueryParameters,
   accountTokenBalancesQueryParameters,
-} from '@/shared/parameter-schemas/account-query.zod';
+} from '@/shared/parameter-schemas/query.zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
 import Long from 'long';
@@ -176,8 +176,8 @@ export default class HederaParameterNormaliser {
   ) {
     const sourceAccountId = AccountResolver.resolveAccount(params.sourceAccountId, context, client);
 
-    const tokenDetails = await mirrorNode.getTokenDetails(params.tokenId);
-    const tokenDecimals = parseInt(tokenDetails.decimals, 10);
+    const tokenInfo = await mirrorNode.getTokenInfo(params.tokenId);
+    const tokenDecimals = parseInt(tokenInfo.decimals, 10);
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
     let totalAmount = Long.ZERO;
@@ -351,11 +351,11 @@ export default class HederaParameterNormaliser {
 
   static async normaliseMintFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
-    context: Context,
+    _context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
     const decimals =
-      (await mirrorNode.getTokenDetails(params.tokenId).then(r => Number(r.decimals))) ?? 0;
+      (await mirrorNode.getTokenInfo(params.tokenId).then(r => Number(r.decimals))) ?? 0;
     const baseAmount = toBaseUnit(params.amount, decimals);
     return {
       tokenId: params.tokenId,
