@@ -18,8 +18,7 @@ export function customParseJSONObjectFromText(text: string): Record<string, any>
   try {
     if (jsonBlockMatch) {
       // Clean the extracted JSON content
-      const jsonContent = jsonBlockMatch[1].trim()
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, ''); // Remove control characters
+      const jsonContent = jsonBlockMatch[1].trim().replace(/[\u0000-\u001F\u007F-\u009F]/g, ''); // Remove control characters
       jsonData = JSON.parse(jsonContent);
     } else {
       // Try direct parsing first for well-formatted JSON
@@ -31,7 +30,7 @@ export function customParseJSONObjectFromText(text: string): Record<string, any>
       }
     }
   } catch (error) {
-    console.warn("Could not parse text as JSON:", error);
+    console.warn('Could not parse text as JSON:', error);
     return null;
   }
 
@@ -40,7 +39,7 @@ export function customParseJSONObjectFromText(text: string): Record<string, any>
     return jsonData;
   }
 
-  console.warn("Parsed result is not a valid object or array");
+  console.warn('Parsed result is not a valid object or array');
   return null;
 }
 
@@ -66,20 +65,17 @@ function customNormalizeJsonString(str: string): string {
 
   // Handle unquoted property values that should be strings
   // But skip numbers, true, false, and null which should remain unquoted
-  str = str.replace(
-    /"([^"]+)"\s*:\s*([^",\{\[\]\}0-9][^",\{\[\]\}\s]*)/g,
-    (match, key, value) => {
-      // Skip if value is true, false, or null
-      if (value === 'true' || value === 'false' || value === 'null') {
-        return `"${key}": ${value}`;
-      }
-      // Skip if value is a number
-      if (!isNaN(Number(value))) {
-        return `"${key}": ${value}`;
-      }
-      return `"${key}": "${value}"`;
+  str = str.replace(/"([^"]+)"\s*:\s*([^",\{\[\]\}0-9][^",\{\[\]\}\s]*)/g, (match, key, value) => {
+    // Skip if value is true, false, or null
+    if (value === 'true' || value === 'false' || value === 'null') {
+      return `"${key}": ${value}`;
     }
-  );
+    // Skip if value is a number
+    if (!isNaN(Number(value))) {
+      return `"${key}": ${value}`;
+    }
+    return `"${key}": "${value}"`;
+  });
 
   return str;
 }

@@ -1,17 +1,28 @@
 {
-  "name": "hedera-agent-kit-contracts",
-  "scripts": {
-    "deploy:mainnet": "hardhat ignition deploy ignition/modules/deploy-factory.ts --network hederaMainnet",
-    "deploy:testnet": "hardhat ignition deploy ignition/modules/deploy-factory.ts --network hederaTestnet",
-    "deploy:previewnet": "hardhat ignition deploy ignition/modules/deploy-factory.ts --network hederaPreviewnet",
-    "deploy:all": "npm run deploy:mainnet & npm run deploy:testnet & npm run deploy:previewnet & wait"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "dotenv": "^16.6.1",
-    "hardhat": "^2.26.1"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
-  }
+    "name": "hedera-agent-kit-contracts",
+    "scripts": {
+        "test": "hardhat test",
+        "lint": "eslint . --ext .ts,.tsx",
+        "format": "prettier \"**/*.{ts,tsx,js,jsx,json,md,sol}\" --write",
+        "format:check": "prettier \"**/*.{ts,tsx,js,jsx,json,md,sol}\" --check",
+        "deploy:mainnet": "hardhat ignition deploy ignition/modules/deploy-factory.ts --network hederaMainnet",
+        "deploy:testnet": "hardhat ignition deploy ignition/modules/deploy-factory.ts --network hederaTestnet",
+        "deploy:previewnet": "hardhat ignition deploy ignition/modules/deploy-factory.ts --network hederaPreviewnet",
+        "deploy:all": "npm run deploy:mainnet & npm run deploy:testnet & npm run deploy:previewnet & wait"
+    },
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+        "@typescript-eslint/eslint-plugin": "^8.37.0",
+        "@typescript-eslint/parser": "^8.37.0",
+        "dotenv": "^16.6.1",
+        "eslint": "^9.31.0",
+        "eslint-config-prettier": "^10.1.5",
+        "eslint-plugin-prettier": "^5.5.1",
+        "hardhat": "^2.26.1",
+        "prettier": "^3.6.2",
+        "prettier-plugin-solidity": "^1.4.2"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^5.4.0"
+    }
 }

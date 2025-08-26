@@ -8,7 +8,9 @@ import transferERC721Tool, {
 import mintERC721Tool, {
   MINT_ERC721_TOOL,
 } from '@/plugins/core-evm-plugin/tools/erc721/mint-erc721';
-import createERC721Tool, { CREATE_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
+import createERC721Tool, {
+  CREATE_ERC721_TOOL,
+} from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
 
 export const coreEVMPlugin: Plugin = {
   name: 'core-evm-plugin',
