@@ -13,6 +13,9 @@ import {
   deleteAccountParameters,
   deleteAccountParametersNormalised,
   transferHbarParameters,
+  transferHbarParameters,
+  updateAccountParameters,
+  updateAccountParametersNormalised,
 } from '@/shared/parameter-schemas/has.zod';
 import {
   createTopicParameters,
@@ -25,7 +28,7 @@ import z from 'zod';
 import {
   accountBalanceQueryParameters,
   accountTokenBalancesQueryParameters,
-} from '@/shared/parameter-schemas/account-query.zod';
+} from '@/shared/parameter-schemas/query.zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
 import Long from 'long';
@@ -176,8 +179,8 @@ export default class HederaParameterNormaliser {
   ) {
     const sourceAccountId = AccountResolver.resolveAccount(params.sourceAccountId, context, client);
 
-    const tokenDetails = await mirrorNode.getTokenDetails(params.tokenId);
-    const tokenDecimals = parseInt(tokenDetails.decimals, 10);
+    const tokenInfo = await mirrorNode.getTokenInfo(params.tokenId);
+    const tokenDecimals = parseInt(tokenInfo.decimals, 10);
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
     let totalAmount = Long.ZERO;
@@ -316,11 +319,11 @@ export default class HederaParameterNormaliser {
 
   static async normaliseMintFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
-    context: Context,
+    _context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
     const decimals =
-      (await mirrorNode.getTokenDetails(params.tokenId).then(r => Number(r.decimals))) ?? 0;
+      (await mirrorNode.getTokenInfo(params.tokenId).then(r => Number(r.decimals))) ?? 0;
     const baseAmount = toBaseUnit(params.amount, decimals);
     return {
       tokenId: params.tokenId,
@@ -431,6 +434,7 @@ export default class HederaParameterNormaliser {
     };
   }
 
+
   static normaliseDeleteAccount(
     params: z.infer<ReturnType<typeof deleteAccountParameters>>,
     context: Context,
@@ -449,6 +453,35 @@ export default class HederaParameterNormaliser {
       accountId: AccountId.fromString(params.accountId),
       transferAccountId: AccountId.fromString(params.transferAccountId),
     };
+  }
+  
+  static normaliseUpdateAccount(
+    params: z.infer<ReturnType<typeof updateAccountParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const accountId = AccountId.fromString(
+      AccountResolver.resolveAccount(params.accountId, context, client),
+    );
+
+    const normalised: z.infer<ReturnType<typeof updateAccountParametersNormalised>> = {
+      accountId,
+    } as any;
+
+    if (params.maxAutomaticTokenAssociations) {
+      normalised.maxAutomaticTokenAssociations = params.maxAutomaticTokenAssociations;
+    }
+    if (params.stakedAccountId) {
+      normalised.stakedAccountId = params.stakedAccountId;
+    }
+    if (params.accountMemo) {
+      normalised.accountMemo = params.accountMemo;
+    }
+    if (params.declineStakingReward) {
+      normalised.declineStakingReward = params.declineStakingReward;
+    }
+
+    return normalised;
   }
 
   static async getHederaEVMAddress(

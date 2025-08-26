@@ -37,9 +37,18 @@ async function bootstrap(): Promise<void> {
 
   const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 
-  const { GET_HBAR_BALANCE_QUERY_TOOL } = coreQueriesPluginToolNames;
+  const {
+    GET_HBAR_BALANCE_QUERY_TOOL,
+    GET_TOKEN_INFO_QUERY_TOOL,
+  } = coreQueriesPluginToolNames;
 
-  const { DELETE_ACCOUNT_TOOL, TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
+  const { 
+    DELETE_ACCOUNT_TOOL, 
+    TRANSFER_HBAR_TOOL,
+    UPDATE_ACCOUNT_TOOL,
+  } = coreAccountPluginToolNames;
+
+  const { UPDATE_ACCOUNT_TOOL } = coreAccountPluginToolNames;
 
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
@@ -53,6 +62,8 @@ async function bootstrap(): Promise<void> {
         GET_HBAR_BALANCE_QUERY_TOOL,
         DELETE_ACCOUNT_TOOL,
         TRANSFER_HBAR_TOOL,
+        UPDATE_ACCOUNT_TOOL,
+        GET_TOKEN_INFO_QUERY_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
