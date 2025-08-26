@@ -467,7 +467,10 @@ See a more thorough description and how to implement the plugins in [docs/HEDERA
 ---
 
 ### Third Party Plugins
-_Coming Soon_
+
+- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+
+  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
 
 ---
 
