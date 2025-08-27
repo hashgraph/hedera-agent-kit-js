@@ -40,11 +40,11 @@ You can try out examples of the different types of agents you can build in the [
 
 First follow instructions in the [Developer Examples](docs/DEVEXAMPLES.md) to clone and configure the examples, then choose from one of the examples to run:
 
-**Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
-**Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
-**Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
-**Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
-**Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
+* **Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
+* **Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
+* **Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+* **Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
+***Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
 
 ---
 
@@ -53,7 +53,7 @@ See more info at [https://www.npmjs.com/package/hedera-agent-kit](https://www.np
 
 ### 🆓 Free AI Options Available!
 - **Ollama**: 100% free, runs on your computer, no API key needed
-- **[Groq](https://console.groq.com/keys**: Offers generous free tier with API key
+- **[Groq](https://console.groq.com/keys)**: Offers generous free tier with API key
 - **[Claude](https://console.anthropic.com/settings/keys) & [OpenAI](https://platform.openai.com/api-keys)**: Paid options for production use
 
 ### 1 – Project Setup
