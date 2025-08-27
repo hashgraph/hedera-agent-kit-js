@@ -223,27 +223,27 @@ Please also reach out in the Hedera Discord in the Support > developer-help-desk
 
 ## Plugin README Template
 
-````markdown
+```markdown
 ## Plugin Name
 
 This plugin was built by <?> for the <project, platform, etc>. It was built to enable <who?> to <do what?>
 
-\_Feel free to include a description of your project and how it can be used with the Hedera Agent Kit.
+<Include a description of your project and how it can be used with the Hedera Agent Kit.>
 
 ### Installation
 
-```bash
+'''bash
 npm install <plugin-name>
-```
-````
+'''
+
 
 ### Usage
 
-```javascript
+'''javascript
 import { myPlugin } from "<plugin-name>";
-```
+'''
 
-```javascript
+'''javascript
 const hederaAgentToolkit = new HederaLangchainToolkit({
   client,
   configuration: {
@@ -259,7 +259,7 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
     ],
   },
 });
-```
+'''
 
 ### Functionality
 
@@ -271,7 +271,5 @@ _High level description of the plugin_
 | Tool Name               | Description  | Usage                                                           |
 | ----------------------- | ------------ | --------------------------------------------------------------- |
 | `YOUR_PLUGIN_TOOL_NAME` | What it does | How to use. Include a list of parameters and their descriptions |
-
-```
 
 ```

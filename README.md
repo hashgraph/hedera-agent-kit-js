@@ -26,8 +26,8 @@
 This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the original version. It is designed to be more flexible and easier to use, with a focus on developer experience. It enables direct API execution through a simple HederaAgentAPI class, with an individual LangChain tools call for each example.
 
 The Hedera Agent Kit is extensible with third party plugins by other projects.
----
 
+---
 ## Agent Kit Functionality
 The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
@@ -282,6 +282,7 @@ Currently, the following plugins are available:
 
 
 _See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
+
 ---
 
 ## Creating Plugins & Contributing
