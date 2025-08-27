@@ -34,11 +34,27 @@ The list of currently available tools can be found in the [Tools section](#heder
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
+---
+## Developer Examples
+You can try out examples of the different types of agents you can build in the [Developer Examples](docs/DEVEXAMPLES.md) section of this page.
+
+First follow instructions in the [Developer Examples](docs/DEVEXAMPLES.md) to clone and configure the examples, then choose from one of the examples to run:
+
+**Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
+**Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
+**Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+**Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
+**Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
 
 ---
 
 ## 🚀 60-Second Quick-Start
 See more info at [https://www.npmjs.com/package/hedera-agent-kit](https://www.npmjs.com/package/hedera-agent-kit)
+
+### 🆓 Free AI Options Available!
+- **Ollama**: 100% free, runs on your computer, no API key needed
+- **[Groq](https://console.groq.com/keys**: Offers generous free tier with API key
+- **[Claude](https://console.anthropic.com/settings/keys) & [OpenAI](https://platform.openai.com/api-keys)**: Paid options for production use
 
 ### 1 – Project Setup
 Create a directory for your project and install dependencies:
@@ -52,17 +68,25 @@ Init and install with npm
 npm init -y
 ```
 
+> This command initializes a CommonJS project by default.
+
 ```bash
-npm install hedera-agent-kit @langchain/openai @langchain/core langchain @hashgraph/sdk dotenv
+npm install hedera-agent-kit @langchain/core langchain @hashgraph/sdk dotenv
 ```
 
-```json
-  "name": "hello-hedera-agent-kit",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {},
-  "type": "module",
-  ...
+Then install ONE of these AI provider packages:
+```bash
+# Option 1: OpenAI (requires API key)
+npm install @langchain/openai
+
+# Option 2: Anthropic Claude (requires API key)
+npm install @langchain/anthropic
+
+# Option 3: Groq (free tier available)
+npm install @langchain/groq
+
+# Option 4: Ollama (100% free, runs locally)
+npm install @langchain/ollama
 ```
 
 
@@ -76,15 +100,21 @@ If you already have a **testnet** account, you can use it. Otherwise, you can cr
 
 Add the following to the .env file:
 ```env
-ACCOUNT_ID="0.0.xxxxx" # your operator account ID from https://portal.hedera.com/dashboard
-PRIVATE_KEY="0x..." # ECDSA encoded private key
-OPENAI_API_KEY="sk-proj-..." # Create an OpenAPI Key at https://platform.openai.com/api-keys
+# Required: Hedera credentials (get free testnet account at https://portal.hedera.com/dashboard)
+HEDERA_ACCOUNT_ID="0.0.xxxxx"
+HEDERA_PRIVATE_KEY="0x..." # ECDSA encoded private key
+
+# Optional: Add the API key for your chosen AI provider
+OPENAI_API_KEY="sk-proj-..."      # For OpenAI (https://platform.openai.com/api-keys)
+ANTHROPIC_API_KEY="sk-ant-..."    # For Claude (https://console.anthropic.com)
+GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com/keys)
+# Ollama doesn't need an API key (runs locally)
 ```
 
 
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
-Create a new file called `index.js` in the `hello-hedera-agent-kit` folder.
+Create a a new file called `index.js` in the `hello-hedera-agent-kit` folder.
 
 ```bash
 touch index.js
@@ -94,49 +124,69 @@ Once you have created a new file `index.js` and added the environment variables,
 
 ```javascript
 // index.js
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 dotenv.config();
 
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
-import { Client, PrivateKey } from '@hashgraph/sdk';
-import { 
-  HederaLangchainToolkit,AgentMode, coreQueriesPlugin,coreAccountPlugin, coreConsensusPlugin, coreHTSPlugin 
-} from 'hedera-agent-kit';
+const { ChatPromptTemplate } = require('@langchain/core/prompts');
+const { AgentExecutor, createToolCallingAgent } = require('langchain/agents');
+const { Client, PrivateKey } = require('@hashgraph/sdk');
+const { HederaLangchainToolkit, coreQueriesPlugin } = require('hedera-agent-kit');
+
+// Choose your AI provider (install the one you want to use)
+function createLLM() {
+  // Option 1: OpenAI (requires OPENAI_API_KEY in .env)
+  if (process.env.OPENAI_API_KEY) {
+    const { ChatOpenAI } = require('@langchain/openai');
+    return new ChatOpenAI({ model: 'gpt-4o-mini' });
+  }
+  
+  // Option 2: Anthropic Claude (requires ANTHROPIC_API_KEY in .env)
+  if (process.env.ANTHROPIC_API_KEY) {
+    const { ChatAnthropic } = require('@langchain/anthropic');
+    return new ChatAnthropic({ model: 'claude-3-haiku-20240307' });
+  }
+  
+  // Option 3: Groq (requires GROQ_API_KEY in .env)
+  if (process.env.GROQ_API_KEY) {
+    const { ChatGroq } = require('@langchain/groq');
+    return new ChatGroq({ model: 'llama-3.3-70b-versatile' });
+  }
+  
+  // Option 4: Ollama (free, local - requires Ollama installed and running)
+  try {
+    const { ChatOllama } = require('@langchain/ollama');
+    return new ChatOllama({ 
+      model: 'llama3.2',
+      baseUrl: 'http://localhost:11434'
+    });
+  } catch (e) {
+    console.error('No AI provider configured. Please either:');
+    console.error('1. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GROQ_API_KEY in .env');
+    console.error('2. Install and run Ollama locally (https://ollama.com)');
+    process.exit(1);
+  }
+}
 
 async function main() {
-  // Initialise OpenAI LLM
-  const llm = new ChatOpenAI({
-    model: 'gpt-4o-mini',
-  });
+  // Initialize AI model
+  const llm = createLLM();
 
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
-    process.env.ACCOUNT_ID,
-    PrivateKey.fromStringDer(process.env.PRIVATE_KEY),
-  ); // get these from https://portal.hedera.com
+    process.env.HEDERA_ACCOUNT_ID,
+    PrivateKey.fromStringECDSA(process.env.HEDERA_PRIVATE_KEY),
+  );
 
-  // Prepare Hedera toolkit with plugins
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      tools: [], // use an empty array to load all tools from plugins
-      context: {
-        mode: AgentMode.AUTONOMOUS,
-      },
-      plugins: [
-        coreQueriesPlugin,    // For account queries and balances
-        coreAccountPlugin,    // For HBAR transfers
-        coreConsensusPlugin,  // For HCS topics and messages
-        coreHTSPlugin,        // For token operations
-      ],
+      plugins: [coreQueriesPlugin] // all our core plugins here https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/src/plugins
     },
   });
   
   // Load the structured chat prompt template
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', 'You are a helpful assistant with access to Hedera blockchain tools'],
+    ['system', 'You are a helpful assistant'],
     ['placeholder', '{chat_history}'],
     ['human', '{input}'],
     ['placeholder', '{agent_scratchpad}'],
@@ -152,15 +202,14 @@ async function main() {
     prompt,
   });
   
-  // Wrap everything in an executor
+  // Wrap everything in an executor that will maintain memory
   const agentExecutor = new AgentExecutor({
     agent,
     tools,
-    returnIntermediateSteps: false,
   });
   
   const response = await agentExecutor.invoke({ input: "what's my balance?" });
-  console.log(`AI: ${response?.output ?? response}`);
+  console.log(response);
 }
 
 main().catch(console.error);
@@ -199,47 +248,47 @@ This tool has two execution modes with AI agents;  autonomous excution and retur
  * `mode: AgentMode.RETURN_BYTE` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned. 
  * `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
 
-### Hedera Transaction Tools
-The Hedera Agent Kit provides a set of tools to execute transactions on the Hedera network, which we will be expanding in the future. 
+### Hedera Plugins & Tools
+The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
 
-To request more functionality in the toolkit for:
-* [Token Service](https://docs.hedera.com/hedera/sdks-and-apis/sdks/token-service)
-* [Consensus Service](https://docs.hedera.com/hedera/sdks-and-apis/sdks/consensus-service)
-* [EVM / Smart Contract Servce](https://docs.hedera.com/hedera/tutorials/smart-contracts)
+Currently, the following plugins are available:
 
-Please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
+#### Available Plugins & Tools
 
-**Available Tools**
+#### Core Account Plugin: Tools for Hedera Account Service operations
+* Transfer HBAR
+#### Core Consensus Plugin: Tools for Hedera Consensus Service (HCS) operations 
+* Create a Topic
+* Submit a message to a Topic 
+#### Core HTS Plugin: Tools for Hedera Token Service operations
+* Create a Fungible Token
+* Create a Non-Fungible Token
+* Airdrop Fungible Tokens
 
-- Transfer HBAR
-- Create a Topic
-- Submit a message to a Topic
-- Create a Fungible Token
-- Create an ERC20 Token
-- Create a Non-Fungible Token
-- Airdrop Fungible Tokens
-- Transfer Fungible Tokens
-
-See the implementation details in [docs/TOOLS.md](docs/TOOLS.md)
-
-### Hedera Mirror Node Query Tools
-The Hedera network is made up of two types of nodes: consensus nodes and mirror nodes. Mirror nodes are free to query, and maintain a copy of the state of the network for users to query. 
-
-This toolkit provides a set of tools to query the state of the network, including accounts, tokens, and transactions. To request more functionality, please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.md&title=[FEATURE]%20-%20).
-
-The Hedera Agent Kit provides a set of tools to execute query these nodes:
-
+#### Core Queries Plugin: Tools for querying Hedera network data
 * Get Account Query
 * Get HBAR Balance Query
 * Get Account Token Balances Query
 * Get Topic Messages Query
 
-See the implementation details in [docs/TOOLS.md](docs/TOOLS.md)
+To request more functionality in the toolkit for other Hedera services, please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
+
+See a more thorough description and how to implement the plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
 
 ---
 
-## Creating Tools
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
+### Third Party Plugins
+
+- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+
+  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+
+---
+
+## Creating Plugins & Contributing
+* You can find a guide for creating plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
+
+* If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
 ## License
 Apache 2.0
