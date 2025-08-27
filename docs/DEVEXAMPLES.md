@@ -13,7 +13,7 @@ git clone https://github.com/hedera-dev/hedera-agent-kit.git
 * zod 
 * dotenv
 
-### 2 – Configure: Add Environment Variables
+### 2 – Configure
 
 #### For Agent Examples
 Copy `typescript/examples/langchain/.env.example` to `typescript/examples/langchain/.env`:
@@ -30,14 +30,16 @@ ACCOUNT_ID= 0.0.xxxxx
 PRIVATE_KEY= 302e...
 OPENAI_API_KEY= sk-proj-...
 ```
+> Create similar .env files for each of the other framework examples
 
 ### 3 – Choose an Example
-Try out one or more the example agents
-**Option A -** [Example Tool Calling Agent](#option-a-example-tool-calling-agent)
-**Option B -** [Example Structured Chat Agent](#option-b-example-structured-chat-agent)
-**Option C -** [Example Return Bytes Agent](#option-c-example-return-bytes-agent)
-**Option D -** [Example MCP Server](#option-d-example-mcp-server)
-**Option E -** [Example ElizaOS Agent](#option-e-example-elizaos-agent)
+Try out one or more the example agents:
+
+* **Option A -** [Example Tool Calling Agent](#option-a-example-tool-calling-agent)
+* **Option B -** [Example Structured Chat Agent](#option-b-example-structured-chat-agent)
+* **Option C -** [Example Return Bytes Agent](#option-c-example-return-bytes-agent)
+* **Option D -** [Example MCP Server](#option-d-example-mcp-server)
+* **Option E -** [Example ElizaOS Agent](#option-e-example-elizaos-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end applications -->
