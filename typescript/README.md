@@ -12,8 +12,8 @@
 
 - [Key Features](#key-features)
 - [About the Agent Kit Tools](#about-the-agent-kit-tools)
+- [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
-- [📦 Clone & Test the SDK Examples](#-clone--test-the-sdk-examples)
 - [Agent Execution Modes](#agent-execution-modes)
 - [Hedera Plugins & Tools](#hedera-plugins--tools)
 - [Third Party Plugins](#third-party-plugins)
@@ -30,21 +30,21 @@ This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the 
 ## About the Agent Kit Tools
 The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
+👉 See [docs/PLUGINS.md](../docs/PLUGINS.md) for the full catalogue & usage examples.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
 ---
 ## Developer Examples
-You can try out examples of the different types of agents you can build in the [Developer Examples](docs/DEVEXAMPLES.md) section of this page.
+You can try out examples of the different types of agents you can build in the [Developer Examples](../docs/DEVEXAMPLES.md) section of this page.
 
-First follow instructions in the [Developer Examples](docs/DEVEXAMPLES.md) to clone and configure the examples, then choose from one of the examples to run:
+First follow instructions in the [Developer Examples](../docs/DEVEXAMPLES.md) to clone and configure the examples, then choose from one of the examples to run:
 
-* **Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
-* **Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
-* **Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
-* **Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
-***Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
+* **Option A -** [Example Tool Calling Agent](../docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
+* **Option B -** [Example Structured Chat Agent](../docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
+* **Option C -** [Example Return Bytes Agent](../docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+* **Option D -** [Example MCP Server](../docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
+* **Option E -** [Example ElizaOS Agent](../docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
 
 ---
 
@@ -248,7 +248,7 @@ This tool has two execution modes with AI agents;  autonomous excution and retur
  * `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
 
 ### Hedera Plugins & Tools
-The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
+The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](../docs/HEDERAPLUGINS.md)
 
 Currently, the following plugins are available:
 
@@ -270,12 +270,20 @@ Currently, the following plugins are available:
 * Get Account Token Balances Query
 * Get Topic Messages Query
 
-See the implementation details in [docs/TOOLS.md](docs/TOOLS.md)
+
+_See more in [docs/PLUGINS.md](../docs/PLUGINS.md)_
+---
+
+### Third Party Plugins
+
+- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+
+  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
 
 ---
 
 ## Creating Plugins & Contributing
-* You can find a guide for creating plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
+* You can find a guide for creating plugins in [docs/PLUGINS.md](../docs/PLUGINS.md#step-by-step-guide)
 
 * If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 

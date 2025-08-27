@@ -12,8 +12,8 @@
 
 - [Key Features](#key-features)
 - [About the Agent Kit Tools](#about-the-agent-kit-tools)
+- [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
-- [📦 Clone & Test the SDK Examples](#-clone--test-the-sdk-examples)
 - [Agent Execution Modes](#agent-execution-modes)
 - [Hedera Plugins & Tools](#hedera-plugins--tools)
 - [Third Party Plugins](#third-party-plugins)
@@ -40,11 +40,11 @@ You can try out examples of the different types of agents you can build in the [
 
 First follow instructions in the [Developer Examples](docs/DEVEXAMPLES.md) to clone and configure the examples, then choose from one of the examples to run:
 
-**Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
-**Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
-**Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
-**Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
-**Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
+* **Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
+* **Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
+* **Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+* **Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
+* **Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
 
 ---
 
@@ -53,7 +53,7 @@ See more info at [https://www.npmjs.com/package/hedera-agent-kit](https://www.np
 
 ### 🆓 Free AI Options Available!
 - **Ollama**: 100% free, runs on your computer, no API key needed
-- **[Groq](https://console.groq.com/keys**: Offers generous free tier with API key
+- **[Groq](https://console.groq.com/keys)**: Offers generous free tier with API key
 - **[Claude](https://console.anthropic.com/settings/keys) & [OpenAI](https://platform.openai.com/api-keys)**: Paid options for production use
 
 ### 1 – Project Setup
@@ -110,7 +110,6 @@ ANTHROPIC_API_KEY="sk-ant-..."    # For Claude (https://console.anthropic.com)
 GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com/keys)
 # Ollama doesn't need an API key (runs locally)
 ```
-
 
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
@@ -271,10 +270,8 @@ Currently, the following plugins are available:
 * Get Account Token Balances Query
 * Get Topic Messages Query
 
-To request more functionality in the toolkit for other Hedera services, please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
 
-See a more thorough description and how to implement the plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
-
+_See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
 ---
 
 ### Third Party Plugins
@@ -286,7 +283,7 @@ See a more thorough description and how to implement the plugins in [docs/HEDERA
 ---
 
 ## Creating Plugins & Contributing
-* You can find a guide for creating plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
+* You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md#step-by-step-guide)
 
 * If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
