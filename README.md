@@ -12,11 +12,11 @@
 
 - [Key Features](#key-features)
 - [About the Agent Kit Tools](#about-the-agent-kit-tools)
+- [Third Party Plugins](#third-party-plugins)
 - [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [Agent Execution Modes](#agent-execution-modes)
 - [Hedera Plugins & Tools](#hedera-plugins--tools)
-- [Third Party Plugins](#third-party-plugins)
 - [Creating Plugins & Contributing](#creating-plugins--contributing)
 - [License](#license)
 - [Credits](#credits)   
@@ -25,6 +25,7 @@
 ## Key Features
 This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the original version. It is designed to be more flexible and easier to use, with a focus on developer experience. It enables direct API execution through a simple HederaAgentAPI class, with an individual LangChain tools call for each example.
 
+The Hedera Agent Kit is extensible with third party plugins by other projects.
 ---
 
 ## About the Agent Kit Tools
@@ -35,10 +36,19 @@ The list of currently available Hedera plugins and functionality can be found in
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
 ---
-## Developer Examples
-You can try out examples of the different types of agents you can build in the [Developer Examples](docs/DEVEXAMPLES.md) section of this page.
 
-First follow instructions in the [Developer Examples](docs/DEVEXAMPLES.md) to clone and configure the examples, then choose from one of the examples to run:
+### Third Party Plugins
+
+- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+
+  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+
+
+---
+## Developer Examples
+You can try out examples of the different types of agents you can build by followin the instructions in the [Developer Examples](docs/DEVEXAMPLES.md) doc in this repo.
+
+First follow instructions in the [Developer Examples to clone and configure the example](docs/DEVEXAMPLES.md), then choose from one of the examples to run:
 
 * **Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
 * **Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
@@ -272,14 +282,6 @@ Currently, the following plugins are available:
 
 
 _See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
----
-
-### Third Party Plugins
-
-- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
-
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
-
 ---
 
 ## Creating Plugins & Contributing
