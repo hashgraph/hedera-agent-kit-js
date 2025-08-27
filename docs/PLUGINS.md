@@ -17,8 +17,6 @@ The tools are now organized into plugins, each containing a set functionality re
 
 ## Creating a Plugin
 
-Creating a Custom Plugin
-
 ### Plugin Interface
 
 Every plugin must implement the Plugin interface:
