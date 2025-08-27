@@ -11,7 +11,7 @@
 ## 📋 Contents
 
 - [Key Features](#key-features)
-- [About the Agent Kit Tools](#about-the-agent-kit-tools)
+- [About the Agent Kit Functionality](#agent-kit-functionality)
 - [Third Party Plugins](#third-party-plugins)
 - [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
@@ -28,7 +28,7 @@ This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the 
 The Hedera Agent Kit is extensible with third party plugins by other projects.
 ---
 
-## About the Agent Kit Tools
+## Agent Kit Functionality
 The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
 👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
