@@ -3,6 +3,9 @@ import { Plugin } from '@/shared/plugin';
 import transferHbarTool, {
   TRANSFER_HBAR_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
+import createAccountTool, {
+  CREATE_ACCOUNT_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/create-account';
 
 import deleteAccountTool, {
   DELETE_ACCOUNT_TOOL,
@@ -20,13 +23,15 @@ export const coreAccountPlugin: Plugin = {
     return [
       transferHbarTool(context), 
       deleteAccountTool(context),
-      updateAccountTool(context)
+      updateAccountTool(context),
+      createAccountTool(context),
     ];
   },
 };
 
 export const coreAccountPluginToolNames = {
   TRANSFER_HBAR_TOOL,
+  CREATE_ACCOUNT_TOOL,
   DELETE_ACCOUNT_TOOL,
   UPDATE_ACCOUNT_TOOL,
 } as const;

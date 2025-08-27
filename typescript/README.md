@@ -15,9 +15,9 @@
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [📦 Clone & Test the SDK Examples](#-clone--test-the-sdk-examples)
 - [Agent Execution Modes](#agent-execution-modes)
-- [Hedera Transaction Tools](#hedera-transaction-tools)
-- [Hedera Mirror Node Query Tools](#hedera-mirror-node-query-tools)
-- [Creating Tools](#creating-tools)
+- [Hedera Plugins & Tools](#hedera-plugins--tools)
+- [Third Party Plugins](#third-party-plugins)
+- [Creating Plugins & Contributing](#creating-plugins--contributing)
 - [License](#license)
 - [Credits](#credits)   
 
@@ -28,9 +28,9 @@ This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the 
 ---
 
 ## About the Agent Kit Tools
-The list of currently available tools can be found in the [Tools section](#hedera-transaction-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/TOOLS.md](docs/TOOLS.md) for the full catalogue & usage examples.
+👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
@@ -110,7 +110,6 @@ ANTHROPIC_API_KEY="sk-ant-..."    # For Claude (https://console.anthropic.com)
 GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com/keys)
 # Ollama doesn't need an API key (runs locally)
 ```
-
 
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
@@ -271,17 +270,7 @@ Currently, the following plugins are available:
 * Get Account Token Balances Query
 * Get Topic Messages Query
 
-To request more functionality in the toolkit for other Hedera services, please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
-
-See a more thorough description and how to implement the plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
-
----
-
-### Third Party Plugins
-
-- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
-
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+See the implementation details in [docs/TOOLS.md](docs/TOOLS.md)
 
 ---
 

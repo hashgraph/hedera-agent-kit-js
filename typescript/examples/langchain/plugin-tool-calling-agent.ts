@@ -46,9 +46,8 @@ async function bootstrap(): Promise<void> {
     DELETE_ACCOUNT_TOOL, 
     TRANSFER_HBAR_TOOL,
     UPDATE_ACCOUNT_TOOL,
+    CREATE_ACCOUNT_TOOL,
   } = coreAccountPluginToolNames;
-
-  const { UPDATE_ACCOUNT_TOOL } = coreAccountPluginToolNames;
 
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
@@ -60,6 +59,7 @@ async function bootstrap(): Promise<void> {
         SUBMIT_TOPIC_MESSAGE_TOOL,
         CREATE_FUNGIBLE_TOKEN_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
+        CREATE_ACCOUNT_TOOL,
         DELETE_ACCOUNT_TOOL,
         TRANSFER_HBAR_TOOL,
         UPDATE_ACCOUNT_TOOL,

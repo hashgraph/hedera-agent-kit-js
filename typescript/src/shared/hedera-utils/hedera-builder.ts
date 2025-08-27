@@ -6,6 +6,7 @@ import {
   TransferTransaction,
   ContractExecuteTransaction,
   TokenMintTransaction,
+  AccountCreateTransaction,
   AccountDeleteTransaction,
   AccountUpdateTransaction,
 } from '@hashgraph/sdk';
@@ -18,6 +19,7 @@ import {
 } from '@/shared/parameter-schemas/hts.zod';
 import z from 'zod';
 import {
+  createAccountParametersNormalised,
   deleteAccountParametersNormalised,
   transferHbarParametersNormalised,
   updateAccountParametersNormalised,
@@ -79,6 +81,10 @@ export default class HederaBuilder {
     return new TokenMintTransaction(params);
   }
 
+  static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
+    return new AccountCreateTransaction(params);
+  }
+  
   static deleteAccount(
     params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>
   ) {

@@ -14,6 +14,7 @@ The tools are now organized into plugins, each containing related functionality:
 - **Core Account Plugin**: Tools for Hedera Account Service operations
 - **Core Consensus Plugin**: Tools for Hedera Consensus Service (HCS) operations
 - **Core HTS Plugin**: Tools for Hedera Token Service operations
+- **Core EVM Plugin**: Tools for interacting with EVM smart contracts on Hedera (ERC-20 and ERC-721)
 - **Core Queries Plugin**: Tools for querying Hedera network data
 
 See [an example of how to create a plugin](../typescript/examples/plugin/example-plugin.ts) as well as how they can be
@@ -28,9 +29,10 @@ Plugins can be found in [typescript/src/plugins](../typescript/src/plugins)
 
 This plugin provides tools for Hedera Account Service operations
 
-| Tool Name             | Description                    | Usage                                                                                                                                                                                                                                              |
-|-----------------------|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `TRANSFER_HBAR_TOOL`  | Transfer HBAR between accounts | Provide the amount of of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                                                                                                                                         |
+| Tool Name             | Description                             | Usage                                                                                                                               |
+|-----------------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `TRANSFER_HBAR_TOOL`  | Transfer HBAR between accounts          | Provide the amount of of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                          |
+| `CREATE_ACCOUNT_TOOL` | Creates new hedera account, either for a provided public key, or for the keypair provided in the operator account | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance and max auto association |
 | `UPDATE_ACCOUNT_TOOL` | Update an account's metadata   | Provide the account ID to update (required), the max automatic token associations (number, optional), id of account to staked to (string, optional), account memo (string, optional) and if staking rewards should be declined (boolean, optional) |
 | `DELETE_ACCOUNT_TOOL`| Delete an account and send all remaining assets to a specified account | Provide the ID of account to delete (required) and the transfer account ID to send the remaining assets to (optional). If transfer account is not specified the operator's account ID will be used |
 
@@ -54,6 +56,18 @@ Hedera network
 | `AIRDROP_FUNGIBLE_TOKEN_TOOL`    | Airdrops a fungible token to multiple recipients on Hedera          | Provide the token ID and recipients array. Optionally provide source account ID (string, uses operator account if not specified) and transaction memo (string)                                                                                                                                                                                                         |
 | `MINT_NON_FUNGIBLE_TOKEN_TOOL`   | Mints NFTs with unique metadata for an existing NFT class on Hedera | Provide the token ID and URIs array                                                                                                                                                                                                                                                                                                                                    |
 | `MINT_FUNGIBLE_TOKEN_TOOL`       | Mints additional supply of an existing fungible token on Hedera     | Provide the token ID and amount to mint                                                                                                                                                                                                                                                                                                                                |
+
+### Core EVM Plugin Tools (core-evm-plugin)
+
+This plugin provides tools for interacting with EVM smart contracts on Hedera, including creating and managing ERC-20 and ERC-721 tokens via on-chain factory contracts and standard function calls.
+
+| Tool Name              | Description                                              | Usage |
+|------------------------|----------------------------------------------------------|-------|
+| `CREATE_ERC20_TOOL`    | Deploys a new ERC-20 token via the BaseERC20Factory     | Provide the token name (string, required) and token symbol (string, required). Optionally provide decimals (int, defaults to 18) and initial supply (int, defaults to 0). |
+| `TRANSFER_ERC20_TOOL`  | Transfers an existing ERC-20 token                       | Provide the contract ID (string, required), recipient address (string, required), and amount to transfer (number, required). The contract ID and addresses can be either EVM addresses or Hedera IDs. |
+| `CREATE_ERC721_TOOL`   | Deploys a new ERC-721 token via the BaseERC721Factory   | Provide the token name (string, required), token symbol (string, required), and base URI (string, required). |
+| `MINT_ERC721_TOOL`     | Mints a new ERC-721 token                                | Provide the contract ID (string, required) and to address (string, required). The contract ID and address can be either EVM addresses or Hedera IDs. |
+| `TRANSFER_ERC721_TOOL` | Transfers an existing ERC-721 token                       | Provide the contract ID (string, required), from address (string, required), to address (string, required), and token ID (number, required). The contract ID and addresses can be either EVM addresses or Hedera IDs. |
 
 ### Core Hedera Queries Plugin Tools (core-queries-plugin)
 
@@ -94,16 +108,20 @@ import {
   coreConsensusPluginToolNames,
   coreHTSPlugin,
   coreHTSPluginToolNames,
+  coreEVMPlugin,
+  coreEVMPluginToolNames,
   coreQueriesPlugin,
   coreQueriesPluginToolNames,
 } from 'hedera-agent-kit';
 ```
+
 
 You will instantiate the HederaAgentToolkit with your chosen framework, defining the tools and plugins you want to use,
 and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plugins you wish to use:
 
 ```javascript
  const hederaAgentToolkit = new HederaLangchainToolkit({
+
   client,
   configuration: {
     tools: [
@@ -111,6 +129,11 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
       CREATE_NON_FUNGIBLE_TOKEN_TOOL,
       AIRDROP_FUNGIBLE_TOKEN_TOOL,
       MINT_NON_FUNGIBLE_TOKEN_TOOL,
+      CREATE_ERC20_TOOL,
+      CREATE_ERC721_TOOL,
+      TRANSFER_ERC20_TOOL,
+      MINT_ERC721_TOOL,
+      TRANSFER_ERC721_TOOL,
       TRANSFER_HBAR_TOOL,
       CREATE_TOPIC_TOOL,
       SUBMIT_TOPIC_MESSAGE_TOOL,
@@ -121,12 +144,7 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
     context: {
       mode: AgentMode.AUTONOMOUS,
     },
-    plugins: [
-      coreHTSPlugin,
-      coreAccountPlugin,
-      coreConsensusPlugin,
-      coreQueriesPlugin,
-    ],
+    plugins: [coreHTSPlugin, coreEVMPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin],
   },
 });
 ```

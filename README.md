@@ -15,9 +15,9 @@
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [📦 Clone & Test the SDK Examples](#-clone--test-the-sdk-examples)
 - [Agent Execution Modes](#agent-execution-modes)
-- [Hedera Transaction Tools](#hedera-transaction-tools)
-- [Hedera Mirror Node Query Tools](#hedera-mirror-node-query-tools)
-- [Creating Tools](#creating-tools)
+- [Hedera Plugins & Tools](#hedera-plugins--tools)
+- [Third Party Plugins](#third-party-plugins)
+- [Creating Plugins & Contributing](#creating-plugins--contributing)
 - [License](#license)
 - [Credits](#credits)   
 
@@ -28,9 +28,9 @@ This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the 
 ---
 
 ## About the Agent Kit Tools
-The list of currently available tools can be found in the [Tools section](#hedera-transaction-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/TOOLS.md](docs/TOOLS.md) for the full catalogue & usage examples.
+👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
