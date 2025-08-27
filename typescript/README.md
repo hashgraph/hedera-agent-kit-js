@@ -15,9 +15,9 @@
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [📦 Clone & Test the SDK Examples](#-clone--test-the-sdk-examples)
 - [Agent Execution Modes](#agent-execution-modes)
-- [Hedera Transaction Tools](#hedera-transaction-tools)
-- [Hedera Mirror Node Query Tools](#hedera-mirror-node-query-tools)
-- [Creating Tools](#creating-tools)
+- [Hedera Plugins & Tools](#hedera-plugins--tools)
+- [Third Party Plugins](#third-party-plugins)
+- [Creating Plugins & Contributing](#creating-plugins--contributing)
 - [License](#license)
 - [Credits](#credits)   
 
@@ -28,9 +28,9 @@ This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the 
 ---
 
 ## About the Agent Kit Tools
-The list of currently available tools can be found in the [Tools section](#hedera-transaction-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/TOOLS.md](docs/TOOLS.md) for the full catalogue & usage examples.
+👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
@@ -224,8 +224,8 @@ PRIVATE_KEY= 302e...
 OPENAI_API_KEY= sk-proj-...
 ```
 
-### 3 – Option A: Run the Example Tool Calling Agent 
-With the tool-calling-agent (found at `typescript/examples/langchain/tool-calling-agent.ts`), you can experiment with and call the [available tools](docs/TOOLS.md) in the Hedera Agent Kit for the operator account (the account you are using in the .env file). This example tool-calling-agent uses GPT 4-o-mini that is a simple template you can use with other LLMs. This agent is intended for use with simple tasks, such as an invididual tool call.
+### 3 – Option A: Run the Example Plugin Tool Calling Agent 
+With the tool-calling-agent (found at `typescript/examples/langchain/tool-calling-agent.ts`), you can experiment with and call the [available plugins and tools](docs/PLUGINS.md) in the Hedera Agent Kit for the operator account (the account you are using in the .env file). This example tool-calling-agent uses GPT 4-o-mini that is a simple template you can use with other LLMs. This agent is intended for use with simple tasks, such as an invididual tool call.
 
 
 1. First, go into the directory where the example is and run `npm install`
@@ -421,7 +421,7 @@ Please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new
 - Airdrop Fungible Tokens
 - Transfer Fungible Tokens
 
-See the implementation details in [docs/TOOLS.md](docs/TOOLS.md)
+See the implementation details in [docs/PLUGINS.md](docs/PLUGINS.md)
 
 ### Hedera Mirror Node Query Tools
 The Hedera network is made up of two types of nodes: consensus nodes and mirror nodes. Mirror nodes are free to query, and maintain a copy of the state of the network for users to query. 
@@ -435,7 +435,7 @@ The Hedera Agent Kit provides a set of tools to execute query these nodes:
 * Get Account Token Balances Query
 * Get Topic Messages Query
 
-See the implementation details in [docs/TOOLS.md](docs/TOOLS.md)
+See the implementation details in [docs/PLUGINS.md](docs/PLUGINS.md)
 
 ---
 

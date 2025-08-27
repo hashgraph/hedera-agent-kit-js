@@ -14,14 +14,7 @@ export class HederaElizaOSToolkit {
     const toolDiscovery = ToolDiscovery.createFromConfiguration(configuration);
     const allTools = toolDiscovery.getAllTools(this.context, configuration);
 
-    this.tools = allTools.map(
-      tool =>
-        new HederaAgentKitTool(
-          this.client,
-          this.context,
-          tool,
-        ),
-    );
+    this.tools = allTools.map(tool => new HederaAgentKitTool(this.client, this.context, tool));
   }
 
   /**

@@ -11,12 +11,7 @@ contract BaseERC721Factory {
         string memory symbol_,
         string memory baseURI_
     ) external returns (address) {
-        BaseERC721 token = new BaseERC721(
-            name_,
-            symbol_,
-            baseURI_,
-            msg.sender
-        );
+        BaseERC721 token = new BaseERC721(name_, symbol_, baseURI_, msg.sender);
 
         emit TokenDeployed(msg.sender, address(token));
         return address(token);
