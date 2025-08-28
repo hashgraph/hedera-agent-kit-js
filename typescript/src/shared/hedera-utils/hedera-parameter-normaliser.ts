@@ -41,59 +41,43 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>> {
     const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
-
-    const normalized: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>> = {
-      ...params,
-      supplyType: TokenSupplyType.Finite, // defaults to finite supply
-      autoRenewAccountId: defaultAccountId,
-    };
-
     const treasuryAccountId = params.treasuryAccountId ?? defaultAccountId;
+    if (!treasuryAccountId) throw new Error('Must include treasury account ID');
 
-    if (!treasuryAccountId) {
-      throw new Error('Must include treasury account ID');
-    }
-
-    const supplyTypeString = params.supplyType ?? 'infinite';
-    const supplyType =
-      supplyTypeString === 'finite' ? TokenSupplyType.Finite : TokenSupplyType.Infinite;
     const decimals = params.decimals ?? 0;
     const initialSupply = toBaseUnit(params.initialSupply ?? 0, decimals);
 
-    let maxSupply: number | undefined = undefined;
-    if (supplyTypeString === 'finite') {
-      if (!params.maxSupply) {
-        throw new Error('Must include max supply for finite supply type');
-      }
-      maxSupply = toBaseUnit(params.maxSupply, decimals);
+    const isFinite = (params.supplyType ?? 'infinite') === 'finite';
+    const supplyType = isFinite ? TokenSupplyType.Finite : TokenSupplyType.Infinite;
 
-      if (initialSupply > maxSupply) {
-        throw new Error(
-          `Initial supply (${initialSupply}) cannot exceed max supply (${maxSupply})`,
-        );
-      }
+    const maxSupply = isFinite
+      ? toBaseUnit(params.maxSupply ?? 1_000_000, decimals) // default finite max supply
+      : undefined;
+
+    if (maxSupply !== undefined && initialSupply > maxSupply) {
+      throw new Error(
+        `Initial supply (${initialSupply}) cannot exceed max supply (${maxSupply})`,
+      );
     }
 
     const publicKey =
-      (await mirrorNode.getAccount(defaultAccountId).then(r => r.accountPublicKey)) ??
+      (await mirrorNode
+        .getAccount(defaultAccountId)
+        .then(r => r.accountPublicKey)) ??
       client.operatorPublicKey?.toStringDer();
 
-    if (params.isSupplyKey === true) {
-      normalized.supplyKey = PublicKey.fromString(publicKey);
-    }
-
-    const autoRenewAccountId = defaultAccountId;
-
     return {
-      ...normalized,
-      treasuryAccountId,
+      ...params,
       supplyType,
+      treasuryAccountId,
       maxSupply,
       decimals,
       initialSupply,
-      autoRenewAccountId,
+      autoRenewAccountId: defaultAccountId,
+      supplyKey:
+        params.isSupplyKey === true ? PublicKey.fromString(publicKey) : undefined,
     };
   }
 
