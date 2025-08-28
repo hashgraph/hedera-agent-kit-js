@@ -1,4 +1,4 @@
-import { HederaLangchainToolkit, AgentMode, coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreEVMPlugin } from 'hedera-agent-kit';
+import { HederaLangchainToolkit, AgentMode, coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
@@ -55,7 +55,7 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
-      plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreEVMPlugin],
+      plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin, coreEVMPlugin],
     },
   });
 
