@@ -11,7 +11,7 @@ interface TxModeStrategy {
 }
 
 export interface RawTransactionResponse {
-  status: number;
+  status: string;
   accountId: AccountId | null;
   tokenId: TokenId | null;
   transactionId: string;
@@ -37,7 +37,7 @@ class ExecuteStrategy implements TxModeStrategy {
     const submit = await tx.execute(client);
     const receipt = await submit.getReceipt(client);
     const rawTransactionResponse: RawTransactionResponse = {
-      status: receipt.status._code,
+      status: receipt.status.toString(),
       accountId: receipt.accountId,
       tokenId: receipt.tokenId,
       transactionId: tx.transactionId?.toString() ?? '',
