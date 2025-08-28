@@ -251,7 +251,7 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
       mode: AgentMode.AUTONOMOUS,
     },
     plugins: [
-      coreHTSPlugin,
+      coreTokenPlugin,
       coreAccountPlugin,
       coreConsensusPlugin,
       coreQueriesPlugin,

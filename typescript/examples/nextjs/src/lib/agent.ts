@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgentMode, coreAccountPlugin, coreHTSPlugin, type Context } from 'hedera-agent-kit';
+import { AgentMode, coreAccountPlugin, coreTokenPlugin, type Context } from 'hedera-agent-kit';
 import { Client, AccountId, PrivateKey, LedgerId } from '@hashgraph/sdk';
 import { coreQueriesPlugin, coreConsensusPlugin } from 'hedera-agent-kit';
 import type { Configuration } from 'hedera-agent-kit';
@@ -72,7 +72,7 @@ export function createHederaClient(bootstrap: AgentBootstrap): Client {
 export function createToolkitConfiguration(bootstrap: AgentBootstrap): Configuration {
     return {
         context: bootstrap.context,
-        plugins: [coreQueriesPlugin, coreConsensusPlugin, coreHTSPlugin, coreAccountPlugin],
+        plugins: [coreQueriesPlugin, coreConsensusPlugin, coreTokenPlugin, coreAccountPlugin],
     };
 }
 

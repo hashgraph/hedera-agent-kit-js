@@ -1,4 +1,4 @@
-import { HederaLangchainToolkit, AgentMode, coreHTSPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreHTSPluginToolNames, coreQueriesPluginToolNames, coreConsensusPluginToolNames, coreAccountPluginToolNames, coreEVMPluginToolNames, coreEVMPlugin } from 'hedera-agent-kit';
+import { HederaLangchainToolkit, AgentMode, coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreTokenPluginToolNames, coreQueriesPluginToolNames, coreConsensusPluginToolNames, coreAccountPluginToolNames, coreEVMPluginToolNames, coreEVMPlugin } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import type { ChatPromptTemplate } from '@langchain/core/prompts';
 import { pull } from 'langchain/hub';
@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
     AIRDROP_FUNGIBLE_TOKEN_TOOL,
     MINT_NON_FUNGIBLE_TOKEN_TOOL,
     MINT_FUNGIBLE_TOKEN_TOOL,
-  } = coreHTSPluginToolNames;
+  } = coreTokenPluginToolNames;
 
   const {
     TRANSFER_HBAR_TOOL,
@@ -72,7 +72,7 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
-      plugins: [coreHTSPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreEVMPlugin],
+      plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreEVMPlugin],
     },
   });
 

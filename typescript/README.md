@@ -102,7 +102,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import { 
-  HederaLangchainToolkit,AgentMode, coreQueriesPlugin,coreAccountPlugin, coreConsensusPlugin, coreHTSPlugin 
+  HederaLangchainToolkit,AgentMode, coreQueriesPlugin,coreAccountPlugin, coreConsensusPlugin, coreTokenPlugin 
 } from 'hedera-agent-kit';
 
 async function main() {
@@ -129,7 +129,7 @@ async function main() {
         coreQueriesPlugin,    // For account queries and balances
         coreAccountPlugin,    // For HBAR transfers
         coreConsensusPlugin,  // For HCS topics and messages
-        coreHTSPlugin,        // For token operations
+        coreTokenPlugin,        // For token operations
       ],
     },
   });
