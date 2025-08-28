@@ -3,6 +3,9 @@ import { coreAccountPlugin, coreAccountPluginToolNames } from './core-account-pl
 import { coreConsensusPlugin, coreConsensusPluginToolNames } from './core-consensus-plugin';
 import { coreQueriesPlugin, coreQueriesPluginToolNames } from './core-queries-plugin';
 import { coreEVMPlugin, coreEVMPluginToolNames } from './core-evm-plugin';
+import { coreAccountQueryPlugin, coreAccountQueryPluginToolNames } from './core-account-query-plugin';
+import { coreTokenQueryPlugin, coreTokenQueryPluginToolNames } from './core-token-query-plugin';
+import { coreConsensusQueryPlugin, coreConsensusQueryPluginToolNames } from './core-consensus-query-plugin';
 
 export {
   coreTokenPlugin,
@@ -15,6 +18,12 @@ export {
   coreQueriesPluginToolNames,
   coreEVMPlugin,
   coreEVMPluginToolNames,
+  coreAccountQueryPlugin,
+  coreTokenQueryPlugin,
+  coreConsensusQueryPlugin,
+  coreAccountQueryPluginToolNames,
+  coreTokenQueryPluginToolNames,
+  coreConsensusQueryPluginToolNames,
 };
 
 // Deprecated exports for backward compatibility
