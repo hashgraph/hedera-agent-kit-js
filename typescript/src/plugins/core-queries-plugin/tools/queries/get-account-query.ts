@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Client } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { accountQueryParameters } from '@/shared/parameter-schemas/account-query.zod';
+import { accountQueryParameters } from '@/shared/parameter-schemas/query.zod';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { AccountResponse } from '@/shared/hedera-utils/mirrornode/types';
@@ -53,7 +53,7 @@ export const getAccountQuery = async (
 
 export const GET_ACCOUNT_QUERY_TOOL = 'get_account_query_tool';
 
-const getAccountQueryTool = (context: Context): Tool => ({
+const tool = (context: Context): Tool => ({
   method: GET_ACCOUNT_QUERY_TOOL,
   name: 'Get Account Query',
   description: getAccountQueryPrompt(context),
@@ -61,4 +61,4 @@ const getAccountQueryTool = (context: Context): Tool => ({
   execute: getAccountQuery,
 });
 
-export default getAccountQueryTool;
+export default tool;

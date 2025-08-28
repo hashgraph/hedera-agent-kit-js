@@ -4,9 +4,9 @@ import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
-  { ignores: ['dist/**', 'node_modules/**', '.prettierrc.cjs', 'eslint.config.mjs', '**/*.d.ts'] },
+  { ignores: ['dist/**', 'node_modules/**', '.prettierrc.cjs', 'eslint.config.mjs', '**/*.d.ts', '**/.next/**'] },
   {
-    files: ['**/*.{js,ts}'],
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -14,7 +14,11 @@ export default defineConfig([
         BigNumber: 'readonly',
       },
       parser: typescriptParser,
-      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+      },
     },
     plugins: { '@typescript-eslint': typescript },
     rules: {

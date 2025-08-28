@@ -20,12 +20,87 @@ fi
 
 echo "✅ Node.js version $(node -v) meets requirement."
 
-cd ./typescript
+# Function to run checks in a package directory
+run_package_checks() {
+  local package_dir="$1"
+  local package_name="$2"
+  
+  if [ ! -d "$package_dir" ]; then
+    echo "⚠️  Package directory $package_dir not found, skipping..."
+    return 0
+  fi
+  
+  echo "🔍 Running checks in $package_name..."
+  cd "$package_dir"
+  
+  # Check if package.json exists
+  if [ ! -f "package.json" ]; then
+    echo "⚠️  No package.json found in $package_dir, skipping..."
+    cd - > /dev/null
+    return 0
+  fi
+  
+  # Run tests if available
+  if npm run test > /dev/null 2>&1; then
+    echo "🧪 Running tests in $package_name..."
+    npm test
+    if [ $? -ne 0 ]; then
+      echo "❌ Tests failed in $package_name"
+      cd - > /dev/null
+      return 1
+    fi
+  else
+    echo "ℹ️  No test script found in $package_name, skipping tests..."
+  fi
+  
+  # Run linting if available
+  if npm run lint > /dev/null 2>&1; then
+    echo "🔍 Running lint in $package_name..."
+    npm run lint
+    if [ $? -ne 0 ]; then
+      echo "❌ Lint failed in $package_name"
+      cd - > /dev/null
+      return 1
+    fi
+  else
+    echo "ℹ️  No lint script found in $package_name, skipping lint..."
+  fi
+  
+  # Run formatting if available (check for format, prettier, or format:check scripts)
+  if npm run format > /dev/null 2>&1; then
+    echo "🎨 Running format in $package_name..."
+    npm run format
+  elif npm run prettier > /dev/null 2>&1; then
+    echo "🎨 Running prettier in $package_name..."
+    npm run prettier
+  elif npm run format:check > /dev/null 2>&1; then
+    echo "🎨 Running format check in $package_name..."
+    npm run format:check
+  elif npm run prettier-check > /dev/null 2>&1; then
+    echo "🎨 Running prettier check in $package_name..."
+    npm run prettier-check
+  else
+    echo "ℹ️  No format script found in $package_name, skipping formatting..."
+  fi
+  
+  cd - > /dev/null
+  echo "✅ Checks completed for $package_name"
+  return 0
+}
 
-# Run checks
-npm test
-npm run format
-npm run lint
+# Run checks on all packages
+echo "🚀 Running pre-commit checks on all packages..."
+
+# Main packages
+run_package_checks "./typescript" "typescript" || exit 1
+run_package_checks "./contracts" "contracts" || exit 1
+run_package_checks "./modelcontextprotocol" "modelcontextprotocol" || exit 1
+
+# Example packages
+run_package_checks "./typescript/examples/ai-sdk" "ai-sdk-examples" || exit 1
+run_package_checks "./typescript/examples/langchain" "langchain-examples" || exit 1
+
+echo "🎉 All pre-commit checks passed!"
 
 # Stage any formatting/lint fixes
 git add .

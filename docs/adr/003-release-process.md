@@ -49,7 +49,6 @@ We will implement a **comprehensive release process** with the following key com
 #### Version Bumping
 - **Automated**: Use `semantic-release` for managing version bumps and changelogs based on commit messages
 - **Manual override**: Allow manual version bumps for hotfixes or special releases
-- **Pre-release support**: Support for alpha, beta, and RC releases
 
 ### 2. Release Workflow
 
@@ -63,26 +62,17 @@ We will implement a **comprehensive release process** with the following key com
 ##### LLM Testing Strategy
 - **Single LLM for PRs**: GPT-4 (most reliable for tool-calling accuracy)
 - **Multiple LLMs for releases**: GPT-4, and other supported LLMs for compatibility validation
-- **Pre-release testing**: Full test suite with multiple LLMs on Tuesday demo days before Thursday releases
-
-#### Pre-release Checklist
-1. **Code Quality**: All tests pass (unit, integration, tool-calling validation, E2E)
-2. **Documentation**: README, API docs, and examples are up-to-date
-3. **Security**: Security audit passes, no known vulnerabilities
-4. **Dependencies**: All dependencies are up-to-date and secure
-5. **Build Verification**: Package builds successfully for both ESM and CJS
 
 #### Release Process
 1. **Commit Changes**: Use conventional commit messages (feat, fix, breaking change, etc.)
 2. **Push to Main**: Changes are pushed to the main branch
-3. **Pre-release Testing**: Full test suite with multiple LLMs on Tuesday demo days
-4. **Manual Release Trigger**: Release is manually triggered via GitHub Actions or CLI on Thursday
-5. **Run Tests**: All tests pass (unit, integration, tool-calling validation, E2E) with multiple LLM validation
-6. **Analyze Commits**: semantic-release analyzes commit messages to determine version bump
-7. **Generate Release Notes**: Automated changelog generation based on commits
-8. **Create Git Tag**: semantic-release creates version tag
-9. **Publish to NPM**: Automated publication to NPM registry
-10. **Create GitHub Release**: Automated GitHub release with release notes
+3. **Manual Release Trigger**: Release is manually triggered via GitHub Actions or CLI on Thursday
+4. **Run Tests**: All tests pass (unit, integration, tool-calling validation, E2E) with multiple LLM validation
+5. **Analyze Commits**: semantic-release analyzes commit messages to determine version bump
+6. **Generate Release Notes**: Automated changelog generation based on commits
+7. **Create Git Tag**: semantic-release creates version tag
+8. **Publish to NPM**: Automated publication to NPM registry
+9. **Create GitHub Release**: Automated GitHub release with release notes
 
 ### 3. Automation Tools
 
@@ -150,11 +140,6 @@ on:
         required: false
         default: 'false'
         type: boolean
-      pre_release:
-        description: 'Pre-release testing (Tuesday demo)'
-        required: false
-        default: 'false'
-        type: boolean
 
 jobs:
   release:
@@ -193,7 +178,7 @@ jobs:
           npm run build
           
       - name: Release
-        if: ${{ github.event.inputs.dry_run == 'false' && github.event.inputs.pre_release == 'false' }}
+        if: ${{ github.event.inputs.dry_run == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -273,7 +258,6 @@ jobs:
 - **NPM Tag**: `latest`
 - **Trigger**: Manual via GitHub Actions workflow_dispatch on Thursday
 - **Frequency**: As needed, typically bi-weekly or monthly
-- **Pre-release Testing**: Full test suite with multiple LLMs on Tuesday demo days
 
 #### Hotfixes
 - **Branch**: `hotfix/vX.Y.Z` (temporary branch from main)
@@ -285,7 +269,6 @@ jobs:
 ### 6. Testing Schedule and LLM Strategy
 
 #### Weekly Testing Schedule
-- **Tuesday Demo Days**: Pre-release testing with full test suite and multiple LLMs
 - **Thursday Releases**: Actual releases after successful pre-release testing
 - **Continuous**: Unit tests on every commit, integration and tool-calling tests on PRs
 
@@ -295,15 +278,14 @@ jobs:
 - **Test Coverage**: 
   - PRs: Single LLM (GPT-4) for tool-calling validation
   - Releases: Multiple LLMs for comprehensive compatibility testing
-  - Pre-release: Full multi-LLM validation on Tuesday demo days
 
 #### Test Execution Matrix
-| Test Type | Branch Commits | PR to Main | Pre-release (Tuesday) | Release (Thursday) |
-|-----------|----------------|------------|----------------------|-------------------|
-| Unit Tests | ✅ | ✅ | ✅ | ✅ |
-| Integration Tests | ❌ | ✅ | ✅ | ✅ |
-| Tool-calling Tests | ❌ | ✅ (GPT-4 only) | ✅ (All LLMs) | ✅ (All LLMs) |
-| E2E Tests | ❌ | ❌ | ✅ (All LLMs) | ✅ (All LLMs) |
+| Test Type | Branch Commits | PR to Main | Release (Thursday) |
+|-----------|----------------|------------|-------------------|
+| Unit Tests | ✅ | ✅ | ✅ |
+| Integration Tests | ❌ | ✅ | ✅ 
+| Tool-calling Tests | ❌ | ✅ (GPT-4 only) | ✅ (All LLMs) |
+| E2E Tests | ❌ | ❌ | ✅ (All LLMs) |
 
 ### 7. Release Triggers
 
@@ -312,7 +294,6 @@ jobs:
 - **Dry Run Support**: Test release process without actual publishing
 - **CLI Option**: Local release via `npx semantic-release` command
 - **Release Approval**: Human oversight before publishing to NPM
-
 
 #### Benefits of Manual Triggers
 - **Quality Control**: Ensures releases are intentional and reviewed
@@ -384,7 +365,6 @@ jobs:
 
 #### Risk: Git Tag Conflicts
 - **Mitigation**: Unique versioning strategy, proper branch protection rules
-
 
 ## Alternatives Considered
 

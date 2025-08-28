@@ -2,7 +2,7 @@
   "name": "hedera-agent-toolkit-examples-langchain",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"No tests specified for example package\"",
     "langchain:structured-chat-agent": "tsx structured-chat-agent.ts",
     "langchain:tool-calling-agent": "tsx tool-calling-agent.ts",
     "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
@@ -13,7 +13,7 @@
     "@langchain/core": "^0.3.66",
     "@langchain/openai": "^0.6.2",
     "dotenv": "^17.2.0",
-    "hedera-agent-kit": "latest",
+    "hedera-agent-kit": "../..",
     "langchain": "^0.3.30",
     "prompts": "^2.4.2"
   },
