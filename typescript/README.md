@@ -136,6 +136,13 @@ Once you have created a new file `index.js` and added the environment variables,
 const dotenv = require('dotenv');
 dotenv.config();
 
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
+import { Client, PrivateKey } from '@hashgraph/sdk';
+import { 
+  HederaLangchainToolkit,AgentMode, coreQueriesPlugin,coreAccountPlugin, coreConsensusPlugin, coreTokenPlugin 
+} from 'hedera-agent-kit';
 const { ChatPromptTemplate } = require('@langchain/core/prompts');
 const { AgentExecutor, createToolCallingAgent } = require('langchain/agents');
 const { Client, PrivateKey } = require('@hashgraph/sdk');
@@ -189,7 +196,16 @@ async function main() {
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      plugins: [coreQueriesPlugin] // all our core plugins here https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/src/plugins
+      tools: [], // use an empty array to load all tools from plugins
+      context: {
+        mode: AgentMode.AUTONOMOUS,
+      },
+      plugins: [
+        coreQueriesPlugin,    // For account queries and balances
+        coreAccountPlugin,    // For HBAR transfers
+        coreConsensusPlugin,  // For HCS topics and messages
+        coreTokenPlugin,        // For token operations
+      ],
     },
   });
   

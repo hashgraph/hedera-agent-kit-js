@@ -1,13 +1,10 @@
 import { z } from 'zod';
-import { AgentMode, coreAccountPlugin, coreHTSPlugin, type Context } from 'hedera-agent-kit';
+import { AgentMode, coreAccountPlugin, coreTokenPlugin, coreConsensusPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin, type Context } from 'hedera-agent-kit';
 import { Client, AccountId, PrivateKey, LedgerId } from '@hashgraph/sdk';
-import { coreQueriesPlugin, coreConsensusPlugin } from 'hedera-agent-kit';
 import type { Configuration } from 'hedera-agent-kit';
 
 export type AppMode = 'autonomous' | 'human';
 export type HederaNetwork = 'testnet' | 'mainnet';
-
-LedgerId.MAINNET.toString()
 
 const EnvSchema = z.object({
     NEXT_PUBLIC_AGENT_MODE: z.enum(['autonomous', 'human']).default('human'),
@@ -72,7 +69,7 @@ export function createHederaClient(bootstrap: AgentBootstrap): Client {
 export function createToolkitConfiguration(bootstrap: AgentBootstrap): Configuration {
     return {
         context: bootstrap.context,
-        plugins: [coreQueriesPlugin, coreConsensusPlugin, coreHTSPlugin, coreAccountPlugin],
+        plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin],
     };
 }
 

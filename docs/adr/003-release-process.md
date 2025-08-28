@@ -13,6 +13,8 @@ The Hedera Agent Kit TypeScript SDK (`typescript/` package) needs to be publishe
 4. **Documentation lag**: Release notes and documentation may not be updated timely
 5. **Security concerns**: No automated security checks before releases
 
+The project follows GitLab Flow with a single `main` branch as the primary development and release branch. Feature development is done through feature branches that are merged directly into `main`.
+
 The TypeScript package contains:
 - Core SDK functionality for Hedera network interaction
 - Multiple framework integrations (LangChain, AI SDK, Model Context Protocol)
@@ -47,22 +49,25 @@ We will implement a **comprehensive release process** with the following key com
 #### Version Bumping
 - **Automated**: Use `semantic-release` for managing version bumps and changelogs based on commit messages
 - **Manual override**: Allow manual version bumps for hotfixes or special releases
-- **Pre-release support**: Support for alpha, beta, and RC releases
 
 ### 2. Release Workflow
 
-#### Pre-release Checklist
-1. **Code Quality**: All tests pass (unit, integration, E2E)
-2. **Documentation**: README, API docs, and examples are up-to-date
-3. **Security**: Security audit passes, no known vulnerabilities
-4. **Dependencies**: All dependencies are up-to-date and secure
-5. **Build Verification**: Package builds successfully for both ESM and CJS
+#### Test Execution Strategy
+
+##### Branch-Level Testing
+- **Any commit on any branch**: Unit tests run automatically
+- **Pull requests to main**: Integration tests and tool-calling validation tests run automatically
+- **Releases**: All tests (unit, integration, tool-calling validation, end-to-end) run with multiple LLM validation
+
+##### LLM Testing Strategy
+- **Single LLM for PRs**: GPT-4 (most reliable for tool-calling accuracy)
+- **Multiple LLMs for releases**: GPT-4, and other supported LLMs for compatibility validation
 
 #### Release Process
 1. **Commit Changes**: Use conventional commit messages (feat, fix, breaking change, etc.)
 2. **Push to Main**: Changes are pushed to the main branch
-3. **Manual Release Trigger**: Release is manually triggered via GitHub Actions or CLI
-4. **Run Tests**: All tests pass (unit, integration, E2E)
+3. **Manual Release Trigger**: Release is manually triggered via GitHub Actions or CLI on Thursday
+4. **Run Tests**: All tests pass (unit, integration, tool-calling validation, E2E) with multiple LLM validation
 5. **Analyze Commits**: semantic-release analyzes commit messages to determine version bump
 6. **Generate Release Notes**: Automated changelog generation based on commits
 7. **Create Git Tag**: semantic-release creates version tag
@@ -71,7 +76,60 @@ We will implement a **comprehensive release process** with the following key com
 
 ### 3. Automation Tools
 
-#### GitHub Actions Workflow
+#### GitHub Actions Workflows
+
+##### PR Testing Workflow
+```yaml
+name: PR Tests
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          cd typescript
+          npm ci
+      - name: Run unit tests
+        run: |
+          cd typescript
+          npm run test:unit
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          cd typescript
+          npm ci
+      - name: Run integration tests
+        run: |
+          cd typescript
+          npm run test:integration
+      - name: Run tool-calling validation tests (single LLM)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd typescript
+          npm run test:tool-calling -- --llm=gpt-4
+```
+
+##### Release Workflow
 ```yaml
 name: Release
 on:
@@ -103,11 +161,16 @@ jobs:
           cd typescript
           npm ci
           
-      - name: Run tests
+      - name: Run all tests with multiple LLMs
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd typescript
-          npm run test
-          npm run test:coverage
+          npm run test:unit
+          npm run test:integration
+          npm run test:tool-calling -- --llm=all
+          npm run test:e2e -- --llm=all
           
       - name: Build package
         run: |
@@ -115,16 +178,40 @@ jobs:
           npm run build
           
       - name: Release
+        if: ${{ github.event.inputs.dry_run == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd typescript
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            npx semantic-release --dry-run
-          else
-            npx semantic-release
-          fi
+          npx semantic-release
+```
+
+##### Branch Testing Workflow
+```yaml
+name: Branch Tests
+on:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          cd typescript
+          npm ci
+      - name: Run unit tests
+        run: |
+          cd typescript
+          npm run test:unit
 ```
 
 #### Semantic-Release Workflow Steps
@@ -169,24 +256,38 @@ jobs:
 - **Branch**: `main`
 - **Tag Format**: `vX.Y.Z`
 - **NPM Tag**: `latest`
-- **Trigger**: Manual via GitHub Actions workflow_dispatch
+- **Trigger**: Manual via GitHub Actions workflow_dispatch on Thursday
 - **Frequency**: As needed, typically bi-weekly or monthly
 
-#### Pre-releases
-- **Branch**: `develop` or feature branches
-- **Tag Format**: `vX.Y.Z-alpha.N`, `vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`
-- **NPM Tag**: `alpha`, `beta`, `rc`
-- **Trigger**: Manual via GitHub Actions workflow_dispatch
-- **Frequency**: Weekly or as needed
-
 #### Hotfixes
-- **Branch**: `hotfix/vX.Y.Z`
+- **Branch**: `hotfix/vX.Y.Z` (temporary branch from main)
 - **Tag Format**: `vX.Y.Z`
 - **NPM Tag**: `latest`
 - **Trigger**: Manual via GitHub Actions workflow_dispatch
 - **Frequency**: As needed for critical fixes
 
-### 6. Release Triggers
+### 6. Testing Schedule and LLM Strategy
+
+#### Weekly Testing Schedule
+- **Thursday Releases**: Actual releases after successful pre-release testing
+- **Continuous**: Unit tests on every commit, integration and tool-calling tests on PRs
+
+#### LLM Testing Configuration
+- **Primary LLM (GPT-4)**: Used for all PR testing and as the baseline for releases
+- **Secondary LLMs (Claude, others)**: Used for release validation to ensure multi-LLM compatibility
+- **Test Coverage**: 
+  - PRs: Single LLM (GPT-4) for tool-calling validation
+  - Releases: Multiple LLMs for comprehensive compatibility testing
+
+#### Test Execution Matrix
+| Test Type | Branch Commits | PR to Main | Release (Thursday) |
+|-----------|----------------|------------|-------------------|
+| Unit Tests | ✅ | ✅ | ✅ |
+| Integration Tests | ❌ | ✅ | ✅ 
+| Tool-calling Tests | ❌ | ✅ (GPT-4 only) | ✅ (All LLMs) |
+| E2E Tests | ❌ | ❌ | ✅ (All LLMs) |
+
+### 7. Release Triggers
 
 #### Manual Release Control
 - **GitHub Actions**: Manual trigger via `workflow_dispatch` event
@@ -201,14 +302,13 @@ jobs:
 - **Emergency Control**: Prevents accidental releases from broken commits
 - **Release Coordination**: Aligns releases with marketing, documentation, and support
 
-### 7. Quality Gates
+### 8. Quality Gates
 
 #### Automated Checks
 - **Tests**: All test suites must pass
 - **Linting**: ESLint and Prettier checks pass
 - **Type Checking**: TypeScript compilation succeeds
 - **Build**: Package builds successfully
-- **Security**: No known vulnerabilities in dependencies
 
 #### Manual Checks
 - **Code Review**: At least one approval required
@@ -216,7 +316,7 @@ jobs:
 - **Breaking Changes**: Proper migration guide if applicable
 - **Release Approval**: Manual trigger ensures intentional releases
 
-### 8. Rollback Strategy
+### 9. Rollback Strategy
 
 #### NPM Unpublish
 - **Time Limit**: 72 hours after publication
@@ -265,40 +365,6 @@ jobs:
 
 #### Risk: Git Tag Conflicts
 - **Mitigation**: Unique versioning strategy, proper branch protection rules
-
-## Implementation
-
-### Phase 1: Foundation Setup
-- Install and configure `semantic-release` and required plugins
-- Set up GitHub Actions release workflow with manual triggers
-- Configure NPM publishing tokens
-- Create initial changelog structure
-- Set up dry-run capabilities for testing
-
-### Phase 2: Automation Implementation
-- Implement automated version bumping based on commit messages
-- Set up automated changelog generation
-- Configure automated NPM publishing with manual triggers
-- Set up GitHub release automation
-- Implement dry-run testing capabilities
-
-### Phase 3: Quality Gates
-- Implement pre-release testing workflow
-- Set up security scanning
-- Configure dependency vulnerability checks
-- Implement build verification
-
-### Phase 4: Documentation and Training
-- Create release process documentation
-- Train team members on new process
-- Create troubleshooting guides
-- Set up monitoring and alerting
-
-### Phase 5: Optimization
-- Optimize release workflow performance
-- Implement parallel processing where possible
-- Add advanced rollback capabilities
-- Implement release analytics
 
 ## Alternatives Considered
 

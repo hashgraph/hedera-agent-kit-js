@@ -16,18 +16,18 @@ import {
   createNonFungibleTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
-} from '@/shared/parameter-schemas/hts.zod';
+} from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
   createAccountParametersNormalised,
   deleteAccountParametersNormalised,
   transferHbarParametersNormalised,
   updateAccountParametersNormalised,
-} from '@/shared/parameter-schemas/has.zod';
+} from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
-} from '@/shared/parameter-schemas/hcs.zod';
+} from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
 
 export default class HederaBuilder {

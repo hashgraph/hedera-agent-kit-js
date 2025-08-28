@@ -1,11 +1,11 @@
 import {
   HederaLangchainToolkit,
   AgentMode,
-  coreHTSPluginToolNames,
+  coreTokenPluginToolNames,
   coreConsensusPluginToolNames,
   coreQueriesPluginToolNames,
   coreQueriesPlugin,
-  coreHTSPlugin,
+  coreTokenPlugin,
   coreConsensusPlugin,
   coreAccountPlugin,
   coreAccountPluginToolNames,
@@ -33,7 +33,7 @@ async function bootstrap(): Promise<void> {
   );
 
   // all the available tools
-  const { CREATE_FUNGIBLE_TOKEN_TOOL } = coreHTSPluginToolNames;
+  const { CREATE_FUNGIBLE_TOKEN_TOOL } = coreTokenPluginToolNames;
 
   const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 
@@ -70,7 +70,7 @@ async function bootstrap(): Promise<void> {
       ],
       plugins: [
         examplePlugin,
-        coreHTSPlugin,
+        coreTokenPlugin,
         coreConsensusPlugin,
         coreQueriesPlugin,
         coreAccountPlugin,

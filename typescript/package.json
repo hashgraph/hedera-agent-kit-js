@@ -22,7 +22,8 @@
     "format": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --write",
     "format:check": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --check",
     "lint": "eslint . --ext .ts,.tsx",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepack": "npm ci && npm run build"
   },
   "engines": {
     "node": ">=18"

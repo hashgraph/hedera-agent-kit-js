@@ -13,8 +13,8 @@ import {
   coreAccountPluginToolNames,
   coreConsensusPlugin,
   coreConsensusPluginToolNames,
-  coreHTSPlugin,
-  coreHTSPluginToolNames,
+  coreTokenPlugin,
+  coreTokenPluginToolNames,
   coreQueriesPlugin,
   coreQueriesPluginToolNames,
   HederaMCPToolkit,
@@ -32,7 +32,7 @@ const {
   CREATE_NON_FUNGIBLE_TOKEN_TOOL,
   AIRDROP_FUNGIBLE_TOKEN_TOOL,
   MINT_NON_FUNGIBLE_TOKEN_TOOL,
-} = coreHTSPluginToolNames;
+} = coreTokenPluginToolNames;
 
 const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
 
@@ -161,7 +161,7 @@ export async function main() {
     tools: options.tools,
     context: options.context,
     plugins: [
-      coreHTSPlugin,
+      coreTokenPlugin,
       coreAccountPlugin,
       coreConsensusPlugin,
       coreQueriesPlugin,

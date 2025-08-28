@@ -13,7 +13,7 @@ The tools are now organized into plugins, each containing related functionality:
 
 - **Core Account Plugin**: Tools for Hedera Account Service operations
 - **Core Consensus Plugin**: Tools for Hedera Consensus Service (HCS) operations
-- **Core HTS Plugin**: Tools for Hedera Token Service operations
+- **Core Token Plugin**: Tools for Hedera Token Service operations
 - **Core EVM Plugin**: Tools for interacting with EVM smart contracts on Hedera (ERC-20 and ERC-721)
 - **Core Queries Plugin**: Tools for querying Hedera network data
 
@@ -44,7 +44,7 @@ This plugin provides tools for Hedera Account Service operations
 | `CREATE_TOPIC_TOOL`         | Create a new topic on the Hedera network          | Optionally provide a topic memo (string) and whether to set a submit key (boolean - set to true if you want to set a submit key, otherwise false) |
 | `SUBMIT_TOPIC_MESSAGE_TOOL` | Submit a message to a topic on the Hedera network | Provide the topic ID (string, required) and the message to submit (string, required)                                                              |
 
-### Core Hedera Token Service Plugin Tools (core-hts-plugin)
+### Core Hedera Token Service Plugin Tools (core-token-plugin)
 
 A plugin for the Hedera Token Service (HTS), enabling you to create and manage fungible and non-funglible tokens on the
 Hedera network
@@ -106,8 +106,8 @@ import {
   coreAccountPluginToolNames,
   coreConsensusPlugin,
   coreConsensusPluginToolNames,
-  coreHTSPlugin,
-  coreHTSPluginToolNames,
+  coreTokenPlugin,
+  coreTokenPluginToolNames,
   coreEVMPlugin,
   coreEVMPluginToolNames,
   coreQueriesPlugin,
@@ -144,7 +144,7 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
     context: {
       mode: AgentMode.AUTONOMOUS,
     },
-    plugins: [coreHTSPlugin, coreEVMPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin],
+    plugins: [coreTokenPlugin, coreEVMPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin],
   },
 });
 ```
