@@ -29,9 +29,10 @@ Plugins can be found in [typescript/src/plugins](../typescript/src/plugins)
 
 This plugin provides tools for Hedera Account Service operations
 
-| Tool Name             | Description                    | Usage                                                                                                                                                                                                                                              |
-|-----------------------|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `TRANSFER_HBAR_TOOL`  | Transfer HBAR between accounts | Provide the amount of of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                                                                                                                                         |
+| Tool Name             | Description                             | Usage                                                                                                                               |
+|-----------------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `TRANSFER_HBAR_TOOL`  | Transfer HBAR between accounts          | Provide the amount of of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                          |
+| `CREATE_ACCOUNT_TOOL` | Creates new hedera account, either for a provided public key, or for the keypair provided in the operator account | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance and max auto association |
 | `UPDATE_ACCOUNT_TOOL` | Update an account's metadata   | Provide the account ID to update (required), the max automatic token associations (number, optional), id of account to staked to (string, optional), account memo (string, optional) and if staking rewards should be declined (boolean, optional) |
 | `DELETE_ACCOUNT_TOOL`| Delete an account and send all remaining assets to a specified account | Provide the ID of account to delete (required) and the transfer account ID to send the remaining assets to (optional). If transfer account is not specified the operator's account ID will be used |
 
@@ -114,11 +115,13 @@ import {
 } from 'hedera-agent-kit';
 ```
 
+
 You will instantiate the HederaAgentToolkit with your chosen framework, defining the tools and plugins you want to use,
 and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plugins you wish to use:
 
 ```javascript
  const hederaAgentToolkit = new HederaLangchainToolkit({
+
   client,
   configuration: {
     tools: [
