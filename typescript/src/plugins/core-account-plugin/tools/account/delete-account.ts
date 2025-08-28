@@ -5,7 +5,7 @@ import { Client } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
-import { deleteAccountParameters } from '@/shared/parameter-schemas/has.zod';
+import { deleteAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 const deleteAccountPrompt = (context: Context = {}) => {

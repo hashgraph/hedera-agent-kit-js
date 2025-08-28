@@ -4,64 +4,69 @@ import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
-import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/hts.zod';
+import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 
-const mintFungibleTokenPrompt = (context: Context = {}) => {
+const createNonFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
+  const treasuryAccountDesc = PromptGenerator.getAccountParameterDescription(
+    'treasuryAccountId',
+    context,
+  );
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
   return `
 ${contextSnippet}
 
-This tool will mint a given amount (supply) of an existing fungible token on Hedera.
+This tool creates a non-fungible token (NFT) on Hedera.
 
 Parameters:
-- tokenId (str, required): The id of the token
-- amount (number, required): The amount to be minted
+- tokenName (str, required): Name of the token
+- tokenSymbol (str, required): Symbol of the token
+- maxSupply (int, optional): Maximum NFT supply. Defaults to 100 if not provided
+- ${treasuryAccountDesc}
 ${usageInstructions}
-
-Example: "Mint 1 of 0.0.6458037" means minting the amount of 1 of the token with id 0.0.6458037.
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Tokens successfully minted with transaction id ${response.transactionId.toString()}`;
+  return `Token created successfully at address ${response.tokenId?.toString()} with transaction id ${response.transactionId.toString()}`;
 };
 
-const mintFungibleToken = async (
+const createNonFungibleToken = async (
   client: Client,
   context: Context,
-  params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
+  params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>>,
 ) => {
   try {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseMintFungibleTokenParams(
+    const normalisedParams = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
       params,
       context,
+      client,
       mirrornodeService,
     );
-    const tx = HederaBuilder.mintFungibleToken(normalisedParams);
+    const tx = HederaBuilder.createNonFungibleToken(normalisedParams);
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
     if (error instanceof Error) {
       return error.message;
     }
-    return 'Failed to mint fungible token';
+    return 'Failed to create non-fungible token';
   }
 };
 
-export const MINT_FUNGIBLE_TOKEN_TOOL = 'mint_fungible_token_tool';
+export const CREATE_NON_FUNGIBLE_TOKEN_TOOL = 'create_non_fungible_token_tool';
 
 const tool = (context: Context): Tool => ({
-  method: MINT_FUNGIBLE_TOKEN_TOOL,
-  name: 'Mint Fungible Token',
-  description: mintFungibleTokenPrompt(context),
-  parameters: mintFungibleTokenParameters(context),
-  execute: mintFungibleToken,
+  method: CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+  name: 'Create Non-Fungible Token',
+  description: createNonFungibleTokenPrompt(context),
+  parameters: createNonFungibleTokenParameters(context),
+  execute: createNonFungibleToken,
 });
 
 export default tool;

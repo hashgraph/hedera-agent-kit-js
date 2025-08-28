@@ -6,7 +6,7 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
-import { updateAccountParameters } from '@/shared/parameter-schemas/has.zod';
+import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
 
 const updateAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
