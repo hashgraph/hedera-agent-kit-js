@@ -1,4 +1,4 @@
-import { HederaAIToolkit, AgentMode, coreHTSPlugin, coreQueriesPlugin, coreAccountPlugin } from 'hedera-agent-kit';
+import { HederaAIToolkit, AgentMode, coreTokenPlugin, coreQueriesPlugin, coreAccountPlugin } from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -17,7 +17,7 @@ async function bootstrap(): Promise<void> {
     client,
     configuration: {
       plugins: [
-        coreHTSPlugin,
+        coreTokenPlugin,
         coreQueriesPlugin,
         coreAccountPlugin
       ],

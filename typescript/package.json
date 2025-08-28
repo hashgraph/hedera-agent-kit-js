@@ -1,21 +1,29 @@
 {
   "name": "hedera-agent-kit",
-  "version": "3.0.7",
+  "version": "3.1.0",
   "description": "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like.",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "import": {
+        "types": "./dist/esm/index.d.mts",
+        "default": "./dist/esm/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     }
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "build": "tsup",
     "format": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --write",
     "format:check": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --check",
     "lint": "eslint . --ext .ts,.tsx",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepack": "npm ci && npm run build"
   },
   "engines": {
     "node": ">=18"
@@ -39,7 +47,7 @@
     "@eslint/js": "^9.31.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
-    "dotenv": "^17.2.1",
+    "@vitest/coverage-v8": "^1.6.0",
     "esbuild-plugin-alias": "^0.2.1",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.5",
@@ -50,13 +58,14 @@
     "tsconfig-paths": "^4.2.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.37.0"
+    "typescript-eslint": "^8.37.0",
+    "vitest": "^1.6.0"
   },
   "files": [
     "dist/**/*"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hedera-dev/hedera-agent-kit.git"
+    "url": "git+https://github.com/hashgraph/hedera-agent-kit.git"
   }
 }

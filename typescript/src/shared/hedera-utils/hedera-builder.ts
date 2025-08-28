@@ -6,6 +6,9 @@ import {
   TransferTransaction,
   ContractExecuteTransaction,
   TokenMintTransaction,
+  AccountCreateTransaction,
+  AccountDeleteTransaction,
+  AccountUpdateTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
@@ -13,14 +16,19 @@ import {
   createNonFungibleTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
-} from '@/shared/parameter-schemas/hts.zod';
+} from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
-import { transferHbarParametersNormalised } from '@/shared/parameter-schemas/has.zod';
+import {
+  createAccountParametersNormalised,
+  deleteAccountParametersNormalised,
+  transferHbarParametersNormalised,
+  updateAccountParametersNormalised,
+} from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
-} from '@/shared/parameter-schemas/hcs.zod';
-import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/hscs.zod';
+} from '@/shared/parameter-schemas/consensus.zod';
+import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
 
 export default class HederaBuilder {
   static createFungibleToken(
@@ -71,5 +79,21 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>>,
   ) {
     return new TokenMintTransaction(params);
+  }
+
+  static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
+    return new AccountCreateTransaction(params);
+  }
+  
+  static deleteAccount(
+    params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>
+  ) {
+    return new AccountDeleteTransaction(params);
+  }
+  
+  static updateAccount(
+    params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>
+  ) {
+    return new AccountUpdateTransaction(params);
   }
 }

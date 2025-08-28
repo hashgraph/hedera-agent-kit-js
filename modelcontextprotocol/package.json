@@ -26,7 +26,7 @@
     "@hashgraph/sdk": "^2.68.0",
     "@modelcontextprotocol/sdk": "^1.16.0",
     "colors": "^1.4.0",
-    "hedera-agent-kit": "3.0.5"
+    "hedera-agent-kit": "latest"
   },
   "keywords": [
     "mcp",

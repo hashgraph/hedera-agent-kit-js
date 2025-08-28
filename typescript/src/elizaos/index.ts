@@ -1,1 +1,1 @@
-export { ElizaOSAdapter } from './adapter';
+export { HederaElizaOSToolkit } from './toolkit';

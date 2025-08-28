@@ -4,7 +4,7 @@ import type { Tool } from '@/shared/tools';
 import { Client } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
-import { createTopicParameters } from '@/shared/parameter-schemas/hcs.zod';
+import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';

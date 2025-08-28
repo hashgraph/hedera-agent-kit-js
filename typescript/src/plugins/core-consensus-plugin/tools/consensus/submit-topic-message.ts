@@ -4,7 +4,7 @@ import type { Tool } from '@/shared/tools';
 import { Client } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
-import { submitTopicMessageParameters } from '@/shared/parameter-schemas/hcs.zod';
+import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 
 const submitTopicMessagePrompt = (_context: Context = {}) => {

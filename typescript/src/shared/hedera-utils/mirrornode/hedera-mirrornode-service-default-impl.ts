@@ -5,7 +5,7 @@ import {
   AccountResponse,
   LedgerIdToBaseUrl,
   TokenBalancesResponse,
-  TokenDetails,
+  TokenInfo,
   TopicMessage,
   TopicMessagesAPIResponse,
   TopicMessagesQueryParams,
@@ -96,7 +96,7 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     };
   }
 
-  async getTokenDetails(tokenId: string): Promise<TokenDetails> {
+  async getTokenInfo(tokenId: string): Promise<TokenInfo> {
     const url = `${this.baseUrl}/tokens/${tokenId}`;
     const response = await fetch(url);
     return await response.json();

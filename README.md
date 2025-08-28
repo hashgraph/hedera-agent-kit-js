@@ -15,9 +15,9 @@
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [📦 Clone & Test the SDK Examples](#-clone--test-the-sdk-examples)
 - [Agent Execution Modes](#agent-execution-modes)
-- [Hedera Transaction Tools](#hedera-transaction-tools)
-- [Hedera Mirror Node Query Tools](#hedera-mirror-node-query-tools)
-- [Creating Tools](#creating-tools)
+- [Hedera Plugins & Tools](#hedera-plugins--tools)
+- [Third Party Plugins](#third-party-plugins)
+- [Creating Plugins & Contributing](#creating-plugins--contributing)
 - [License](#license)
 - [Credits](#credits)   
 
@@ -28,9 +28,9 @@ This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the 
 ---
 
 ## About the Agent Kit Tools
-The list of currently available tools can be found in the [Tools section](#hedera-transaction-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/TOOLS.md](docs/TOOLS.md) for the full catalogue & usage examples.
+👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
@@ -56,6 +56,8 @@ Init and install with npm
 ```bash
 npm init -y
 ```
+
+> This command initializes a CommonJS project by default.
 
 ```bash
 npm install hedera-agent-kit @langchain/core langchain @hashgraph/sdk dotenv
@@ -259,10 +261,11 @@ ACCOUNT_ID= 0.0.xxxxx
 PRIVATE_KEY= 302e...
 OPENAI_API_KEY= sk-proj-...
 ```
+> Note: Running from Source - If you would like to use features of the hedera agent kit that are in this repository, but not yet published to npm, within the `package-lock.json` file in the `/examples/langchain` or `/examples/ai-sdk` directories, change the line that says `"hedera-agent-kit":vx.x.x` to `"hedera-agent-kit": "../.."`. You will also need to go to the root directory of this repository and run `npm install`.
 
-### 3 – Option A: Run the Example Tool Calling Agent 
-With the tool-calling-agent (found at `typescript/examples/langchain/tool-calling-agent.ts`), you can experiment with and call the [available tools](docs/TOOLS.md) in the Hedera Agent Kit for the operator account (the account you are using in the .env file). This example tool-calling-agent uses GPT 4-o-mini that is a simple template you can use with other LLMs. This agent is intended for use with simple tasks, such as an invididual tool call.
+### 3 – Option A: Run the Example Plugin Tool Calling Agent 
 
+With the tool-calling-agent (found at `typescript/examples/langchain/plugin-tool-calling-agent.ts`), you can experiment with and call the [available plugins and tools](docs/PLUGINS.md) in the Hedera Agent Kit for the operator account (the account you are using in the .env file). This example tool-calling-agent uses the LLM you have configured in the .env file. This agent is intended for use with simple tasks, such as an invididual tool call.
 
 1. First, go into the directory where the example is and run `npm install`
 
@@ -273,16 +276,16 @@ npm install
 2. Then, run the example
 
 ```bash
-npm run langchain:tool-calling-agent
+npm run langchain:plugin-tool-calling-agent
 ```
 
 3. interact with the agent. First, tell the agent who you are (your name) and try out some of the interactions by asking questions: 
   *  _What can you help me do with Hedera?_ 
   * _What's my current HBAR balance?_ 
-  * _Create a new topic called 'Daily Updates_ 
+  * _Create a new topic called 'Daily Updates'_ 
   * _Submit the message 'Hello World' to topic 0.0.12345_ 
   * _Create a fungible token called 'MyToken' with symbol 'MTK'_ 
-  * _Check my balance and then create a topic for announcements_ 
+  * _Check my hbar balance_
   * _Create a token with 1000 initial supply and then submit a message about it to topic 0.0.67890_ 
   
 
@@ -386,7 +389,7 @@ npm run build
 ```
 3. Run and test the MCP server.
 The server accepts these command-line options:
-  - `--ledger-id=testnet|mainnet` (defaults to testnet)s
+  - `--ledger-id=testnet|mainnet` (defaults to testnet/ mainnet)
   - `--agent-mode`, and `--account-id` for additional configuration
 
 4. Run the server to verify it works:
@@ -416,7 +419,17 @@ node dist/index.js
 }
 ```
 
----
+### 7 - Option E: Try out the Hedera Agent Kit with ElizaOS
+
+ElizaOS is a powerful framework for building autonomous AI agents. The Hedera plugin for ElizaOS enables seamless integration with Hedera's blockchain services, allowing you to create sophisticated AI agents that can interact with the Hedera network.
+
+> ⚠️ **Development Status**: The ElizaOS plugin is currently in active development. Features and APIs may change as the plugin evolves.
+
+1. Clone the [Hedera ElizaOS Plugin Repository](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
+2. Install ElizaOS CLI
+3. Follow the [Hedera ElizaOS Plugin Docs](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
+
+
 ## About the Agent Kit
 
 ### Agent Execution Modes
@@ -425,7 +438,7 @@ This tool has two execution modes with AI agents;  autonomous excution and retur
  * `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
 
 ### Hedera Plugins & Tools
-The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. 
+The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
 
 Currently, the following plugins are available:
 
@@ -447,25 +460,24 @@ Currently, the following plugins are available:
 * Get Account Token Balances Query
 * Get Topic Messages Query
 
-To request more functionality in the toolkit for:
-* [Token Service](https://docs.hedera.com/hedera/sdks-and-apis/sdks/token-service)
-* [Consensus Service](https://docs.hedera.com/hedera/sdks-and-apis/sdks/consensus-service)
-* [Smart Contract Servce](https://docs.hedera.com/hedera/tutorials/smart-contracts)
-
-Please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
-
+To request more functionality in the toolkit for other Hedera services, please [open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
 
 See a more thorough description and how to implement the plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
 
 ---
 
 ### Third Party Plugins
-_Coming Soon_
+
+- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+
+  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
 
 ---
 
-## Creating Tools
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
+## Creating Plugins & Contributing
+* You can find a guide for creating plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
+
+* If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
 ## License
 Apache 2.0
