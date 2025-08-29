@@ -6,7 +6,7 @@ Use this rule when you already know the set of new Tools to add and want one Git
 - Say: "I have a tool (or list of tools) to add. Please use the feature-issue batch rule to generate a gh issue create command for each tool."
 - Provide a list like:
   - Tool: TRANSFER_TOKEN_TOOL; Plugin: core-hts-plugin; Labels (optional): "feature,tool"; Assignee (optional): @githubusername
-  - Tool: CREATE_ACCOUNT_TOOL; Plugin: core-account-plugin; "feature,tool";
+  - Tool: CREATE_ACCOUNT_TOOL; Plugin: core-account-plugin; Labels "feature,tool";
 
 ### Context for AI Assistant
 - First, confirm the GitHub CLI is available:
@@ -14,9 +14,9 @@ Use this rule when you already know the set of new Tools to add and want one Git
 - Do not run `git diff` or prompt per-file changes. This batch rule skips interactive analysis.
 - For each listed tool, output a separate `gh issue create` command.
 - Ensure each body includes:
-  - `Plugin: <PLUGIN>` and `Project Tag: 3.2.0`
+  - `Plugin: <PLUGIN>` and `Project Tag: v3`
   - The markdown sections: User Story, Files Changed, Acceptance Criteria (templated below)
-- Always include the label `3.2.0`. Optionally include plugin/service labels (e.g., `plugin: core-hts-plugin`, `service: HTS`).
+- Always include the label `v3` and any other labels provided by the user in instructions. Optionally include plugin/service labels (e.g., `plugin: core-hts-plugin`, `service: HTS`).
 - Prefix the issue title with `feat:` (if the provided title already starts with `feat:`, do not duplicate).
 - After running each command, capture the created issue link from gh output and end your response with: "Please go to the issue at [issue link] and assign it to the Hedera Agent Kit project and assign a status."
 - The different plugins names are: core-account-plugin, core-schedule-plugin, core schedule-query-plugin, core-account-query-plugin, core-consensus-plugin, core-consensus-query-plugin, core-file-plugin, core-file-query-plugin, core-token-plugin, core-token-query-plugin, core-evm-plugin (instead of core-smart-contract-plugin), core-evm-query-plugin, core-schedule-plugin, core-schedule-query-plugin. there may or may not be a core-misc-plugin category as well
@@ -35,7 +35,7 @@ Create one GitHub Issue per tool with consistent release tagging and clear imple
 gh issue create \
   --title "feat: <TITLE>" \
   --body $'Plugin: <PLUGIN>\nProject Tag: 3.2.0\n\n## User Story\n<PART1_USER_STORY>\n\n## Files Changed\n<PART2_FILES_CHANGED>\n\n## Acceptance Criteria\n<PART3_ACCEPTANCE_CRITERIA>\n' \
-  --label "3.2.0,feature,tool,<OPTIONAL_PLUGIN_OR_SERVICE_LABELS>" \
+  --label "v3,feature,tool,<OPTIONAL_PLUGIN_OR_SERVICE_LABELS>" \
   --assignee <OPTIONAL_ASSIGNEE> \
   -R hedera-dev/hedera-agent-kit
 ```
