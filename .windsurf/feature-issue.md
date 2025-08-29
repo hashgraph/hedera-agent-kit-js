@@ -3,7 +3,7 @@
 ### Context for Human User
 Use this rule when you already know the set of new Tools to add and want one GitHub Issue per tool, without interactive diff/file review.
 
-- Say: "I have a list of tools to add. Please use the feature-issue batch rule to generate a gh issue create command for each tool."
+- Say: "I have a tool (or list of tools) to add. Please use the feature-issue batch rule to generate a gh issue create command for each tool."
 - Provide a list like:
   - Tool: TRANSFER_TOKEN_TOOL; Plugin: core-hts-plugin; Labels (optional): "feature,tool"; Assignee (optional): @githubusername
   - Tool: CREATE_ACCOUNT_TOOL; Plugin: core-account-plugin; "feature,tool";
@@ -19,9 +19,13 @@ Use this rule when you already know the set of new Tools to add and want one Git
 - Always include the label `3.2.0`. Optionally include plugin/service labels (e.g., `plugin: core-hts-plugin`, `service: HTS`).
 - Prefix the issue title with `feat:` (if the provided title already starts with `feat:`, do not duplicate).
 - After running each command, capture the created issue link from gh output and end your response with: "Please go to the issue at [issue link] and assign it to the Hedera Agent Kit project and assign a status."
+- The different plugins names are: core-account-plugin, core-schedule-plugin, core schedule-query-plugin, core-account-query-plugin, core-consensus-plugin, core-consensus-query-plugin, core-file-plugin, core-file-query-plugin, core-token-plugin, core-token-query-plugin, core-evm-plugin (instead of core-smart-contract-plugin), core-evm-query-plugin, core-schedule-plugin, core-schedule-query-plugin. there may or may not be a core-misc-plugin category as well
+- core-queries-plugin (and a couple other plugins) are old but still supported plugin group that will be replaced with a query plugin for each service/ area of functionality for Hedera.
+- Use the information in docs/HEDERAPLUGINS.md to understand the types of plugins, and even suggest the best plugin to include a tool in if the one the user suggested isn't the best fit.
+- Also look on the internet at the Hedera Docs here: https://docs.hedera.com/hedera/sdks-and-apis/hedera-api. the categories here roughly align with the different plugins. Crypto Accounts map to core-account-plugin and Smart Contracts map to core-evm-plugin
 
 ### Goal
-Create one GitHub Issue per tool with consistent release tagging and clear implementation guidance. Use the 
+Create one GitHub Issue per tool with consistent release tagging and clear implementation guidance. 
 
 ## Output
 - Format: One shell command per tool using the GitHub CLI
