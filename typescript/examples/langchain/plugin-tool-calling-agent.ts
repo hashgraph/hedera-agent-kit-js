@@ -1,4 +1,15 @@
-import { HederaLangchainToolkit, AgentMode, coreHTSPluginToolNames, coreConsensusPluginToolNames, coreQueriesPluginToolNames, coreQueriesPlugin, coreHTSPlugin, coreConsensusPlugin } from 'hedera-agent-kit';
+import {
+  HederaLangchainToolkit,
+  AgentMode,
+  coreTokenPluginToolNames,
+  coreConsensusPluginToolNames,
+  coreQueriesPluginToolNames,
+  coreQueriesPlugin,
+  coreTokenPlugin,
+  coreConsensusPlugin,
+  coreAccountPlugin,
+  coreAccountPluginToolNames,
+} from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
@@ -22,19 +33,21 @@ async function bootstrap(): Promise<void> {
   );
 
   // all the available tools
-  const {
-    CREATE_FUNGIBLE_TOKEN_TOOL,
-  } = coreHTSPluginToolNames;
+  const { CREATE_FUNGIBLE_TOKEN_TOOL } = coreTokenPluginToolNames;
 
-  const {
-    CREATE_TOPIC_TOOL,
-    SUBMIT_TOPIC_MESSAGE_TOOL,
-  } = coreConsensusPluginToolNames;
+  const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 
   const {
     GET_HBAR_BALANCE_QUERY_TOOL,
+    GET_TOKEN_INFO_QUERY_TOOL,
   } = coreQueriesPluginToolNames;
 
+  const { 
+    DELETE_ACCOUNT_TOOL, 
+    TRANSFER_HBAR_TOOL,
+    UPDATE_ACCOUNT_TOOL,
+    CREATE_ACCOUNT_TOOL,
+  } = coreAccountPluginToolNames;
 
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
@@ -46,11 +59,22 @@ async function bootstrap(): Promise<void> {
         SUBMIT_TOPIC_MESSAGE_TOOL,
         CREATE_FUNGIBLE_TOKEN_TOOL,
         GET_HBAR_BALANCE_QUERY_TOOL,
+        CREATE_ACCOUNT_TOOL,
+        DELETE_ACCOUNT_TOOL,
+        TRANSFER_HBAR_TOOL,
+        UPDATE_ACCOUNT_TOOL,
+        GET_TOKEN_INFO_QUERY_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
       ],
-      plugins: [examplePlugin, coreHTSPlugin, coreConsensusPlugin, coreQueriesPlugin], // Add the example plugin
+      plugins: [
+        examplePlugin,
+        coreTokenPlugin,
+        coreConsensusPlugin,
+        coreQueriesPlugin,
+        coreAccountPlugin,
+      ], // Add the example plugin
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
@@ -59,7 +83,10 @@ async function bootstrap(): Promise<void> {
 
   // Load the structured chat prompt template
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', 'You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools'],
+    [
+      'system',
+      'You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools',
+    ],
     ['placeholder', '{chat_history}'],
     ['human', '{input}'],
     ['placeholder', '{agent_scratchpad}'],
@@ -94,7 +121,9 @@ async function bootstrap(): Promise<void> {
   console.log('Hedera Agent CLI Chatbot with Plugin Support — type "exit" to quit');
   console.log('Available plugin tools:');
   console.log('- example_greeting_tool: Generate personalized greetings');
-  console.log('- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)');
+  console.log(
+    '- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)',
+  );
   console.log('');
 
   while (true) {
@@ -119,9 +148,11 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal error during CLI bootstrap:', err);
-  process.exit(1);
-}).then(() => {
-  process.exit(0);
-});
+bootstrap()
+  .catch(err => {
+    console.error('Fatal error during CLI bootstrap:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    process.exit(0);
+  });

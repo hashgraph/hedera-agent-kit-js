@@ -38,7 +38,7 @@ body:
         - label: "HTS - Tokens & NFTs"
         - label: "HCS - Consensus & Messaging"
         - label: "HFS - File Storage"
-        - label: "HSCS - Smart Contracts"
+        - label: "EVM - Smart Contracts"
         - label: "Account/HBAR - Transfers & Management"
         - label: "Cross-Service - Multiple services"
         - label: "Other - Other functionality"

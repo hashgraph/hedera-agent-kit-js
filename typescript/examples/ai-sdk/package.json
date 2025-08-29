@@ -2,14 +2,14 @@
   "name": "hedera-agent-toolkit-examples-ai-sdk",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"No tests specified for example package\"",
     "ai-sdk:tool-calling-agent": "ts-node tool-calling-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.23",
     "ai": "^4.3.19",
     "dotenv": "^17.2.0",
-    "hedera-agent-kit": "3.0.7",
+    "hedera-agent-kit": "latest",
     "prompts": "^2.4.2"
   },
   "author": "",
