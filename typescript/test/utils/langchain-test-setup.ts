@@ -5,7 +5,6 @@ import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
 import { AgentMode } from '@/shared';
 import type { Plugin } from '@/shared/plugin';
-import { expect } from 'vitest';
 import {
   coreAccountPlugin,
   coreAccountPluginToolNames,
@@ -150,35 +149,4 @@ Always use the exact tool name and parameter structure expected.`;
     toolkit,
     cleanup,
   };
-}
-
-export function getToolCallFromResult(result: any, stepIndex: number = 0): any {
-  if (!result.intermediateSteps || result.intermediateSteps.length === 0) {
-    throw new Error(
-      'No intermediate steps found in result. Make sure returnIntermediateSteps is enabled.',
-    );
-  }
-
-  if (stepIndex >= result.intermediateSteps.length) {
-    throw new Error(
-      `Step index ${stepIndex} is out of bounds. Only ${result.intermediateSteps.length} steps available.`,
-    );
-  }
-
-  return result.intermediateSteps[stepIndex];
-}
-
-export function expectToolCall(
-  toolCall: any,
-  expectedTool: string,
-  expectedInputValidator?: (input: any) => void,
-): void {
-  expect(toolCall).toBeDefined();
-  expect(toolCall.action).toBeDefined();
-  expect(toolCall.action.tool).toBe(expectedTool);
-  expect(toolCall.action.toolInput).toBeDefined();
-
-  if (expectedInputValidator) {
-    expectedInputValidator(toolCall.action.toolInput);
-  }
 }
