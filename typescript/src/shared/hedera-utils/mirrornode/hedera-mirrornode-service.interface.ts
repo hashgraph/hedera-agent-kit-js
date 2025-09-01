@@ -3,7 +3,7 @@ import {
   AccountResponse,
   TokenBalancesResponse,
   TopicMessagesResponse,
-  TokenDetails,
+  TokenInfo,
   TransactionDetailsResponse,
 } from './types';
 
@@ -12,6 +12,6 @@ export interface IHederaMirrornodeService {
   getAccountHBarBalance(accountId: string): Promise<BigNumber>;
   getAccountTokenBalances(accountId: string): Promise<TokenBalancesResponse>;
   getTopicMessages(queryParams: TopicMessagesQueryParams): Promise<TopicMessagesResponse>;
-  getTokenDetails(tokenId: string): Promise<TokenDetails>;
+  getTokenInfo(tokenId: string): Promise<TokenInfo>;
   getTransactionDetails(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse>;
 }

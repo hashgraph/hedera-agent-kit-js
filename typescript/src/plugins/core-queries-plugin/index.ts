@@ -15,11 +15,19 @@ import getTopicMessagesQuery, {
 import getTransactionDetailsQuery, {
   GET_TRANSACTION_DETAILS_QUERY_TOOL,
 } from '@/plugins/core-queries-plugin/tools/queries/get-transaction-details-query';
+import getTokenInfoQuery, { GET_TOKEN_INFO_QUERY_TOOL}  from '@/plugins/core-queries-plugin/tools/queries/get-token-info-query';
 
+/**
+ * @deprecated This plugin is deprecated. Use the specific query plugins instead:
+ * - coreAccountQueryPlugin for account-related queries
+ * - coreTokenQueryPlugin for token-related queries
+ * - coreConsensusQueryPlugin for consensus-related queries
+ * This export will be removed in a future version.
+ */
 export const coreQueriesPlugin: Plugin = {
   name: 'core-queries-plugin',
   version: '1.0.0',
-  description: 'A plugin for the Hedera Queries Service',
+  description: 'A plugin for the Hedera Queries Service (DEPRECATED)',
   tools: (context: Context) => {
     return [
       getHbarBalanceQuery(context),
@@ -27,15 +35,24 @@ export const coreQueriesPlugin: Plugin = {
       getAccountTokenBalancesQuery(context),
       getTopicMessagesQuery(context),
       getTransactionDetailsQuery(context),
+      getTokenInfoQuery(context)
     ];
   },
 };
 
+/**
+ * @deprecated Use the specific query plugin tool names instead:
+ * - coreAccountQueryPluginToolNames for account-related query tools
+ * - coreTokenQueryPluginToolNames for token-related query tools
+ * - coreConsensusQueryPluginToolNames for consensus-related query tools
+ * This export will be removed in a future version.
+ */
 export const coreQueriesPluginToolNames = {
   GET_HBAR_BALANCE_QUERY_TOOL,
   GET_ACCOUNT_QUERY_TOOL,
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
   GET_TOPIC_MESSAGES_QUERY_TOOL,
+  GET_TOKEN_INFO_QUERY_TOOL,
   GET_TRANSACTION_DETAILS_QUERY_TOOL,
 } as const;
 
