@@ -1,203 +1,133 @@
 import {
   AccountBalanceQuery,
-  AccountCreateTransaction,
-  AccountDeleteTransaction,
   AccountId,
   AccountInfoQuery,
   Client,
-  Hbar,
   NftId,
-  PublicKey,
-  Status,
   TokenAssociateTransaction,
-  TokenCreateTransaction,
-  TokenDeleteTransaction,
   TokenId,
   TokenInfoQuery,
   TokenNftInfoQuery,
-  TokenSupplyType,
-  TokenType,
-  TopicCreateTransaction,
-  TopicDeleteTransaction,
   TopicId,
   TopicInfoQuery,
-  TopicMessageSubmitTransaction,
   TransferTransaction,
 } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
+import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
+import { z } from 'zod';
+import {
+  createAccountParametersNormalised,
+  deleteAccountParametersNormalised,
+  transferHbarParametersNormalised,
+} from '@/shared/parameter-schemas/account.zod';
+import {
+  createFungibleTokenParametersNormalised,
+  createNonFungibleTokenParametersNormalised,
+  deleteTokenParametersNormalised,
+} from '@/shared/parameter-schemas/token.zod';
+import {
+  createTopicParametersNormalised,
+  deleteTopicParametersNormalised,
+  submitTopicMessageParametersNormalised,
+} from '@/shared/parameter-schemas/consensus.zod';
+import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
 
 class HederaOperationsWrapper {
+  private executeStrategy = new ExecuteStrategy();
   constructor(private client: Client) {}
 
   // ACCOUNT OPERATIONS
-  async createAccount(params: {
-    publicKey: string;
-    initialBalance?: number; // in HBAR
-    memo?: string;
-    maxAutomaticTokenAssociations?: number;
-  }): Promise<AccountId> {
-    const tx = new AccountCreateTransaction({
-      accountMemo: params.memo ?? '',
-      maxAutomaticTokenAssociations: params.maxAutomaticTokenAssociations ?? 0,
-      initialBalance: params.initialBalance != null ? new Hbar(params.initialBalance) : undefined,
-    }).setKeyWithoutAlias(PublicKey.fromString(params.publicKey));
-
-    const response = await tx.execute(this.client);
-    const receipt = await response.getReceipt(this.client);
-
-    return receipt.accountId!;
+  async createAccount(
+    params: z.infer<ReturnType<typeof createAccountParametersNormalised>>,
+  ): Promise<AccountId> {
+    const tx = HederaBuilder.createAccount(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw.accountId!;
   }
 
-  async deleteAccount(params: {
-    accountId: string;
-    transferAccountId: string; // where remaining HBAR should go
-    privateKeyDer?: string;
-    memo?: string;
-  }): Promise<Status> {
-    const { accountId, transferAccountId } = params;
-    const tx = new AccountDeleteTransaction({
-      accountId: AccountId.fromString(accountId),
-      transferAccountId: AccountId.fromString(transferAccountId),
-    });
-
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+  async deleteAccount(
+    params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>,
+  ): Promise<string> {
+    const tx = HederaBuilder.deleteAccount(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw.status;
   }
 
   // TOKEN OPERATIONS
   async createFungibleToken(
-    name: string,
-    symbol?: string,
-    decimals?: number,
-    initialSupply?: number, // in base units
-    maxSupply?: number,
-    treasuryAccountId?: string, // defaults operator
-    adminKey?: string,
-    kycKey?: string,
-    freezeKey?: string,
-    wipeKey?: string,
-    supplyKey?: string,
-    pauseKey?: string,
-    metadataKey?: string,
-    memo?: string,
-    supplyType?: 'finite' | 'infinite',
+    params: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>,
   ): Promise<TokenId> {
-    const tx = new TokenCreateTransaction({
-      tokenName: name,
-      tokenSymbol: symbol,
-      tokenMemo: memo,
-      decimals,
-      initialSupply,
-      maxSupply,
-      supplyType: supplyType === 'infinite' ? TokenSupplyType.Infinite : TokenSupplyType.Finite,
-      tokenType: TokenType.FungibleCommon,
-      treasuryAccountId: treasuryAccountId ? AccountId.fromString(treasuryAccountId) : undefined,
-    });
-
-    if (adminKey) tx.setAdminKey(PublicKey.fromString(adminKey));
-    if (kycKey) tx.setKycKey(PublicKey.fromString(kycKey));
-    if (freezeKey) tx.setFreezeKey(PublicKey.fromString(freezeKey));
-    if (wipeKey) tx.setWipeKey(PublicKey.fromString(wipeKey));
-    if (supplyKey) tx.setSupplyKey(PublicKey.fromString(supplyKey));
-    if (pauseKey) tx.setPauseKey(PublicKey.fromString(pauseKey));
-    if (metadataKey) tx.setMetadataKey(PublicKey.fromString(metadataKey));
-
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.tokenId!;
+    const tx = HederaBuilder.createFungibleToken(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw.tokenId!;
   }
 
   async createNonFungibleToken(
-    name: string,
-    symbol?: string,
-    treasuryAccountId?: string,
-    adminKey?: string,
-    kycKey?: string,
-    freezeKey?: string,
-    wipeKey?: string,
-    supplyKey?: string, // required for minting
-    pauseKey?: string,
-    memo?: string,
+    params: z.infer<ReturnType<typeof createNonFungibleTokenParametersNormalised>>,
   ): Promise<TokenId> {
-    const tx = new TokenCreateTransaction({
-      tokenName: name,
-      tokenSymbol: symbol,
-      tokenMemo: memo,
-      tokenType: TokenType.NonFungibleUnique,
-      treasuryAccountId: treasuryAccountId ? AccountId.fromString(treasuryAccountId) : undefined,
-    });
-
-    if (adminKey) tx.setAdminKey(PublicKey.fromString(adminKey));
-    if (kycKey) tx.setKycKey(PublicKey.fromString(kycKey));
-    if (freezeKey) tx.setFreezeKey(PublicKey.fromString(freezeKey));
-    if (wipeKey) tx.setWipeKey(PublicKey.fromString(wipeKey));
-    if (supplyKey) tx.setSupplyKey(PublicKey.fromString(supplyKey));
-    if (pauseKey) tx.setPauseKey(PublicKey.fromString(pauseKey));
-
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.tokenId!;
+    const tx = HederaBuilder.createNonFungibleToken(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.tokenId!;
   }
 
-  async deleteToken(tokenId: string): Promise<Status> {
-    const tx = new TokenDeleteTransaction({ tokenId: TokenId.fromString(tokenId) });
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+  async deleteToken(
+    params: z.infer<ReturnType<typeof deleteTokenParametersNormalised>>,
+  ): Promise<string> {
+    const tx = HederaBuilder.deleteToken(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
   // TOPIC OPERATIONS
-  async createTopic(params?: {
-    memo?: string;
-    adminKey?: string;
-    submitKey?: string;
-  }): Promise<TopicId> {
-    const tx = new TopicCreateTransaction({
-      topicMemo: params?.memo,
-    });
-    if (params?.adminKey) tx.setAdminKey(PublicKey.fromString(params.adminKey));
-    if (params?.submitKey) tx.setSubmitKey(PublicKey.fromString(params.submitKey));
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.topicId!;
+  async createTopic(
+    params: z.infer<ReturnType<typeof createTopicParametersNormalised>>,
+  ): Promise<TopicId> {
+    const tx = HederaBuilder.createTopic(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.topicId!;
   }
 
-  async deleteTopic(topicId: string): Promise<Status> {
-    const tx = new TopicDeleteTransaction({ topicId: TopicId.fromString(topicId) });
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+  async deleteTopic(
+    params: z.infer<ReturnType<typeof deleteTopicParametersNormalised>>,
+  ): Promise<string> {
+    const tx = HederaBuilder.deleteTopic(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
-  async submitMessage(params: { topicId: string; message: string }): Promise<Status> {
-    const tx = new TopicMessageSubmitTransaction({
-      topicId: TopicId.fromString(params.topicId),
-      message: params.message,
-    });
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-
-    return receipt.status;
+  async submitMessage(
+    params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
+  ): Promise<string> {
+    const tx = HederaBuilder.submitTopicMessage(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
   // TRANSFERS AND AIRDROPS
-  async transferHbar(params: {
-    from?: string;
-    to: string;
-    amount: number;
-    memo?: string;
-  }): Promise<Status> {
-    const tx = new TransferTransaction()
-      .addHbarTransfer(AccountId.fromString(params.to), new Hbar(params.amount))
-      .addHbarTransfer(
-        AccountId.fromString(params.from ?? (this.client as any)._operatorAccountId.toString()),
-        new Hbar(-params.amount),
-      );
-
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+  async transferHbar(
+    params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>,
+  ): Promise<string> {
+    const tx = HederaBuilder.transferHbar(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
   async transferFungible(params: {
@@ -205,7 +135,7 @@ class HederaOperationsWrapper {
     from?: string;
     to: string;
     amount: number;
-  }): Promise<Status> {
+  }): Promise<string> {
     const tx = new TransferTransaction()
       .addTokenTransfer(
         TokenId.fromString(params.tokenId),
@@ -218,9 +148,11 @@ class HederaOperationsWrapper {
         -params.amount,
       );
 
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
   async transferNft(params: {
@@ -229,7 +161,7 @@ class HederaOperationsWrapper {
     from?: string;
     to: string;
     memo?: string;
-  }): Promise<Status> {
+  }): Promise<string> {
     const nft = new NftId(TokenId.fromString(params.tokenId), params.serial);
     const tx = new TransferTransaction().addNftTransfer(
       nft,
@@ -237,19 +169,23 @@ class HederaOperationsWrapper {
       AccountId.fromString(params.to),
     );
 
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
-  async associateToken(params: { accountId: string; tokenId: string }): Promise<Status> {
+  async associateToken(params: { accountId: string; tokenId: string }): Promise<string> {
     const tx = new TokenAssociateTransaction({
       accountId: AccountId.fromString(params.accountId),
       tokenIds: [TokenId.fromString(params.tokenId)],
     });
-    const resp = await tx.execute(this.client);
-    const receipt = await resp.getReceipt(this.client);
-    return receipt.status;
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    if (result.raw.status !== 'SUCCESS') {
+      throw new Error(result.raw.status);
+    }
+    return result.raw.status;
   }
 
   async getAccountBalances(accountId: string) {

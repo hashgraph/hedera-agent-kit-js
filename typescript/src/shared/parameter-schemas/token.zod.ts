@@ -30,6 +30,14 @@ export const createFungibleTokenParametersNormalised = (_context: Context = {}) 
       .optional()
       .describe('The supply key. If not provided, defaults to the operator’s public key.'),
     supplyType: z.custom<TokenSupplyType>().describe('Supply type of the token.'),
+    adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
+    kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
+    freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
+    wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
+    pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
+    metadataKey: z.custom<PublicKey>().optional().describe('The metadata key for the token.'),
+    tokenMemo: z.string().optional().describe('The memo for the token.'),
+    tokenType: z.custom<TokenType>().optional().describe('The type of the token.'),
   });
 
 export const createNonFungibleTokenParameters = (_context: Context = {}) =>
@@ -63,6 +71,12 @@ export const createNonFungibleTokenParametersNormalised = (_context: Context = {
       .custom<TokenType>()
       .default(TokenType.NonFungibleUnique)
       .describe('Token type of the token - must be non-fungible unique for NFT.'),
+    adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
+    kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
+    freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
+    wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
+    pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
+    tokenMemo: z.string().optional().describe('The memo for the token.'),
   });
 
 const AirdropRecipientSchema = z.object({
@@ -104,3 +118,11 @@ export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
 
 export const mintNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
   mintNonFungibleTokenParameters(_context).extend({});
+
+export const deleteTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().describe('The ID of the token to delete.'),
+  });
+
+export const deleteTokenParametersNormalised = (_context: Context = {}) =>
+  deleteTokenParameters(_context).extend({});
