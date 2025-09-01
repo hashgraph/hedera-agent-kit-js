@@ -12,9 +12,6 @@ import getAccountTokenBalancesQuery, {
 import getTopicMessagesQuery, {
   GET_TOPIC_MESSAGES_QUERY_TOOL,
 } from '@/plugins/core-queries-plugin/tools/queries/get-topic-messages-query';
-import getTransactionRecordQuery, {
-  GET_TRANSACTION_RECORD_QUERY_TOOL,
-} from '@/plugins/core-queries-plugin/tools/queries/get-transaction-record-query';
 import getTokenInfoQuery, {
   GET_TOKEN_INFO_QUERY_TOOL,
 } from '@/plugins/core-queries-plugin/tools/queries/get-token-info-query';
@@ -36,7 +33,6 @@ export const coreQueriesPlugin: Plugin = {
       getAccountQuery(context),
       getAccountTokenBalancesQuery(context),
       getTopicMessagesQuery(context),
-      getTransactionRecordQuery(context),
       getTokenInfoQuery(context),
     ];
   },
@@ -55,7 +51,6 @@ export const coreQueriesPluginToolNames = {
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
   GET_TOPIC_MESSAGES_QUERY_TOOL,
   GET_TOKEN_INFO_QUERY_TOOL,
-  GET_TRANSACTION_RECORD_QUERY_TOOL,
 } as const;
 
 export default { coreQueriesPlugin, coreQueriesPluginToolNames };

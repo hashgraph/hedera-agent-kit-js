@@ -35,14 +35,20 @@ const postProcess = (transactionRecord: TransactionDetailsResponse, transactionI
   const results = transactionRecord.transactions.map((tx, index) => {
     let transfersInfo = '';
     if (tx.transfers && tx.transfers.length > 0) {
-      transfersInfo = '\nTransfers:\n' + tx.transfers.map(transfer => 
-        `  Account: ${transfer.account}, Amount: ${toDisplayUnit(transfer.amount, 8)}ℏ`
-      ).join('\n');
+      transfersInfo =
+        '\nTransfers:\n' +
+        tx.transfers
+          .map(
+            transfer =>
+              `  Account: ${transfer.account}, Amount: ${toDisplayUnit(transfer.amount, 8)}ℏ`,
+          )
+          .join('\n');
     }
 
-    const transactionHeader = transactionRecord.transactions.length > 1
-      ? `Transaction ${index + 1} Details for ${transactionId}`
-      : `Transaction Details for ${transactionId}`;
+    const transactionHeader =
+      transactionRecord.transactions.length > 1
+        ? `Transaction ${index + 1} Details for ${transactionId}`
+        : `Transaction Details for ${transactionId}`;
 
     return `${transactionHeader}
 Status: ${tx.result}
@@ -65,7 +71,7 @@ export const getTransactionRecordQuery = async (
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const transactionRecord = await mirrornodeService.getTransactionRecord(
       params.transactionId,
-      params.nonce
+      params.nonce,
     );
     return {
       raw: { transactionId: params.transactionId, transactionRecord: transactionRecord },
