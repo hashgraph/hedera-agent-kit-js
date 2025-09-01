@@ -3,12 +3,18 @@ import {
   AgentMode,
   coreTokenPluginToolNames,
   coreConsensusPluginToolNames,
-  coreQueriesPluginToolNames,
-  coreQueriesPlugin,
   coreTokenPlugin,
   coreConsensusPlugin,
   coreAccountPlugin,
   coreAccountPluginToolNames,
+  coreConsensusQueryPlugin,
+  coreConsensusQueryPluginToolNames,
+  coreAccountQueryPlugin,
+  coreAccountQueryPluginToolNames,
+  coreTokenQueryPlugin,
+  coreTokenQueryPluginToolNames,
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
 } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -37,18 +43,16 @@ async function bootstrap(): Promise<void> {
 
   const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 
-  const {
-    GET_HBAR_BALANCE_QUERY_TOOL,
-    GET_TOKEN_INFO_QUERY_TOOL,
-    GET_TRANSACTION_DETAILS_QUERY_TOOL
-  } = coreQueriesPluginToolNames;
+  const { GET_ACCOUNT_QUERY_TOOL, GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
-  const {
-    DELETE_ACCOUNT_TOOL,
-    TRANSFER_HBAR_TOOL,
-    UPDATE_ACCOUNT_TOOL,
-    CREATE_ACCOUNT_TOOL,
-  } = coreAccountPluginToolNames;
+  const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
+
+  const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
+
+  const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
+
+  const { DELETE_ACCOUNT_TOOL, TRANSFER_HBAR_TOOL, UPDATE_ACCOUNT_TOOL, CREATE_ACCOUNT_TOOL } =
+    coreAccountPluginToolNames;
 
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
@@ -64,8 +68,10 @@ async function bootstrap(): Promise<void> {
         DELETE_ACCOUNT_TOOL,
         TRANSFER_HBAR_TOOL,
         UPDATE_ACCOUNT_TOOL,
+        GET_ACCOUNT_QUERY_TOOL,
+        GET_TOPIC_MESSAGES_QUERY_TOOL,
         GET_TOKEN_INFO_QUERY_TOOL,
-        GET_TRANSACTION_DETAILS_QUERY_TOOL,
+        GET_TRANSACTION_RECORD_QUERY_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
@@ -74,8 +80,11 @@ async function bootstrap(): Promise<void> {
         examplePlugin,
         coreTokenPlugin,
         coreConsensusPlugin,
-        coreQueriesPlugin,
         coreAccountPlugin,
+        coreConsensusQueryPlugin,
+        coreAccountQueryPlugin,
+        coreTokenQueryPlugin,
+        coreTransactionQueryPlugin,
       ], // Add the example plugin
       context: {
         mode: AgentMode.AUTONOMOUS,

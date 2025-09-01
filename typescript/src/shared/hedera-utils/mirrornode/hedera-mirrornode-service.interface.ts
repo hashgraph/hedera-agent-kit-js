@@ -13,5 +13,5 @@ export interface IHederaMirrornodeService {
   getAccountTokenBalances(accountId: string): Promise<TokenBalancesResponse>;
   getTopicMessages(queryParams: TopicMessagesQueryParams): Promise<TopicMessagesResponse>;
   getTokenInfo(tokenId: string): Promise<TokenInfo>;
-  getTransactionDetails(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse>;
+  getTransactionRecord(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse>;
 }

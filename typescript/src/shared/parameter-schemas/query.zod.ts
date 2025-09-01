@@ -51,7 +51,7 @@ export const topicMessagesQueryParameters = (_context: Context = {}) =>
       .describe('The limit of messages to query. If set, the number of messages to return.'),
   });
 
-export const transactionDetailsQueryParameters = (_context: Context = {}) => {
+export const transactionRecordQueryParameters = (_context: Context = {}) => {
   return z.object({
     transactionId: z.string().describe('The transaction ID to fetch details for. Should be in format \\"shard.realm.num-sss-nnn\\" format where sss are seconds and nnn are nanoseconds'),
     nonce: z.number().optional().describe('Optional nonce value for the transaction'),

@@ -103,7 +103,7 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     return await response.json();
   }
 
-  async getTransactionDetails(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse> {
+  async getTransactionRecord(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse> {
     let url = `${this.baseUrl}/transactions/${transactionId}`;
     if (nonce !== undefined) {
       url += `?nonce=${nonce}`;
