@@ -1,10 +1,10 @@
-import { Client, PrivateKey, AccountId } from '@hashgraph/sdk';
-import { ChatOpenAI } from '@langchain/openai';
+import { Client } from '@hashgraph/sdk';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
 import { AgentMode } from '@/shared';
 import type { Plugin } from '@/shared/plugin';
+import { LLMFactory, type LlmOptions } from './llm-factory';
 import {
   coreAccountPlugin,
   coreAccountPluginToolNames,
@@ -19,6 +19,7 @@ import {
   coreConsensusQueryPlugin,
   coreConsensusQueryPluginToolNames,
 } from '@/plugins';
+import { getClientForTests } from './client-setup';
 
 const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
 const {
@@ -29,17 +30,17 @@ const {
   MINT_NON_FUNGIBLE_TOKEN_TOOL,
 } = coreTokenPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
-const  {
+const {
   GET_ACCOUNT_QUERY_TOOL,
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  GET_HBAR_BALANCE_QUERY_TOOL
+  GET_HBAR_BALANCE_QUERY_TOOL,
 } = coreAccountQueryPluginToolNames;
 
 const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
 // Default options for creating a test setup - should include all possible actions
-const OPTIONS: LangchainTestOptions = {
+const PLUGIN_OPTIONS: LangchainTestOptions = {
   tools: [
     TRANSFER_HBAR_TOOL,
     CREATE_FUNGIBLE_TOKEN_TOOL,
@@ -53,9 +54,22 @@ const OPTIONS: LangchainTestOptions = {
     GET_ACCOUNT_QUERY_TOOL,
     GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
     GET_TOPIC_MESSAGES_QUERY_TOOL,
-    GET_TOKEN_INFO_QUERY_TOOL
+    GET_TOKEN_INFO_QUERY_TOOL,
   ],
-  plugins: [coreAccountPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin, coreTokenQueryPlugin, coreTokenPlugin, coreConsensusPlugin],
+  plugins: [
+    coreAccountPlugin,
+    coreAccountQueryPlugin,
+    coreConsensusQueryPlugin,
+    coreTokenQueryPlugin,
+    coreTokenPlugin,
+    coreConsensusPlugin,
+  ],
+};
+
+const LLM_OPTIONS: LlmOptions = {
+  temperature: 0,
+  maxIterations: 1,
+  model: 'gpt-4o-mini',
   systemPrompt: `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
         When a user asks to transfer HBAR, use the transfer_hbar_tool with the correct parameters.
         Extract the amount and recipient account ID from the user's request.
@@ -79,34 +93,26 @@ export interface LangchainTestOptions {
 }
 
 export async function createLangchainTestSetup(
-  options: LangchainTestOptions = OPTIONS,
+  pluginOptions: LangchainTestOptions = PLUGIN_OPTIONS,
+  llmOptions: LlmOptions = LLM_OPTIONS,
 ): Promise<LangchainTestSetup> {
-  // Initialize Hedera client
-  const operatorId = process.env.ACCOUNT_ID;
-  const operatorKey = process.env.PRIVATE_KEY;
+  const client = getClientForTests();
+  const operatorAccountId = client.operatorAccountId!;
 
-  if (!operatorId || !operatorKey) {
-    throw new Error('ACCOUNT_ID and PRIVATE_KEY must be set.');
-  }
-
-  const operatorAccountId = AccountId.fromString(operatorId);
-  const privateKey = PrivateKey.fromStringDer(operatorKey);
-  const client = Client.forTestnet().setOperator(operatorAccountId, privateKey);
-
-  // Initialize OpenAI LLM
-  const llm = new ChatOpenAI({
-    model: options.model || 'gpt-4o-mini',
-    temperature: options.temperature ?? 0, // Make responses more deterministic for testing
-  });
+  // Initialize LLM using factory - either from provided options or environment
+  const llm =
+    llmOptions.provider || llmOptions.model || llmOptions.apiKey
+      ? LLMFactory.createLLM(llmOptions)
+      : LLMFactory.fromEnvironment();
 
   // Prepare Hedera toolkit with specified tools and plugins
   const toolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      tools: options.tools,
-      plugins: options.plugins,
+      tools: pluginOptions.tools,
+      plugins: pluginOptions.plugins,
       context: {
-        mode: AgentMode.RETURN_BYTES, // Use RETURN_BYTES to prevent actual execution
+        mode: AgentMode.AUTONOMOUS,
         accountId: operatorAccountId.toString(),
       },
     },
@@ -114,7 +120,7 @@ export async function createLangchainTestSetup(
 
   // Create a prompt template for tool calling
   const systemPrompt =
-    options.systemPrompt ||
+    llmOptions.systemPrompt ||
     `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
 When a user requests blockchain operations, use the appropriate tools with the correct parameters.
 Extract all necessary parameters from the user's request.
@@ -141,7 +147,7 @@ Always use the exact tool name and parameter structure expected.`;
     agent,
     tools,
     returnIntermediateSteps: true, // This allows us to see the tool calls
-    maxIterations: options.maxIterations ?? 1, // Stop after the first tool call to avoid execution by default
+    maxIterations: llmOptions.maxIterations ?? 1, // Stop after the first tool call
   });
 
   const cleanup = () => {
