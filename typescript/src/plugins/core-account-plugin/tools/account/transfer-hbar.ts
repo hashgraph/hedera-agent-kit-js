@@ -4,7 +4,7 @@ import type { Tool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
-import { transferHbarParameters } from '@/shared/parameter-schemas/has.zod';
+import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 

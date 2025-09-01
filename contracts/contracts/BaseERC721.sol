@@ -12,10 +12,7 @@ contract BaseERC721 is ERC721, Ownable {
         string memory symbol_,
         string memory baseURI_,
         address initialOwner
-    )
-        ERC721(name_, symbol_)
-        Ownable(initialOwner)
-    {
+    ) ERC721(name_, symbol_) Ownable(initialOwner) {
         _baseTokenURI = baseURI_;
     }
 
@@ -29,5 +26,3 @@ contract BaseERC721 is ERC721, Ownable {
         return tokenId;
     }
 }
-
-      

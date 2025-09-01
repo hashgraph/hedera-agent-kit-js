@@ -1,11 +1,24 @@
 #!/usr/bin/env node
 
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import colors from 'colors';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import colors from "colors";
 const { green, red, yellow } = colors;
 
-import { LedgerId, Client } from '@hashgraph/sdk';
-import { AgentMode, Configuration, Context, coreAccountPlugin, coreAccountPluginToolNames, coreConsensusPlugin, coreConsensusPluginToolNames, coreHTSPlugin, coreHTSPluginToolNames, coreQueriesPlugin, coreQueriesPluginToolNames, HederaMCPToolkit } from 'hedera-agent-kit';
+import { LedgerId, Client } from "@hashgraph/sdk";
+import {
+  AgentMode,
+  Configuration,
+  Context,
+  coreAccountPlugin,
+  coreAccountPluginToolNames,
+  coreConsensusPlugin,
+  coreConsensusPluginToolNames,
+  coreTokenPlugin,
+  coreTokenPluginToolNames,
+  coreQueriesPlugin,
+  coreQueriesPluginToolNames,
+  HederaMCPToolkit,
+} from "hedera-agent-kit";
 
 type Options = {
   tools?: string[];
@@ -13,31 +26,33 @@ type Options = {
   ledgerId?: LedgerId;
 };
 
-  // all the available tools
-  const {
-    CREATE_FUNGIBLE_TOKEN_TOOL,
-    CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-    AIRDROP_FUNGIBLE_TOKEN_TOOL,
-    MINT_NON_FUNGIBLE_TOKEN_TOOL,
-  } = coreHTSPluginToolNames;
+// all the available tools
+const {
+  CREATE_FUNGIBLE_TOKEN_TOOL,
+  CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+  AIRDROP_FUNGIBLE_TOKEN_TOOL,
+  MINT_NON_FUNGIBLE_TOKEN_TOOL,
+} = coreTokenPluginToolNames;
 
-  const {
-    TRANSFER_HBAR_TOOL,
-  } = coreAccountPluginToolNames;
+const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
 
-  const {
-    CREATE_TOPIC_TOOL,
-    SUBMIT_TOPIC_MESSAGE_TOOL,
-  } = coreConsensusPluginToolNames;
+const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } =
+  coreConsensusPluginToolNames;
 
-  const {
-    GET_HBAR_BALANCE_QUERY_TOOL,
-    GET_ACCOUNT_QUERY_TOOL,
-    GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-    GET_TOPIC_MESSAGES_QUERY_TOOL,
-  } = coreQueriesPluginToolNames;
+const {
+  GET_HBAR_BALANCE_QUERY_TOOL,
+  GET_ACCOUNT_QUERY_TOOL,
+  GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
+  GET_TOPIC_MESSAGES_QUERY_TOOL,
+} = coreQueriesPluginToolNames;
 
-const ACCEPTED_ARGS = ['agent-mode', 'account-id', 'public-key', 'tools', 'ledger-id'];
+const ACCEPTED_ARGS = [
+  "agent-mode",
+  "account-id",
+  "public-key",
+  "tools",
+  "ledger-id",
+];
 const ACCEPTED_TOOLS = [
   CREATE_FUNGIBLE_TOKEN_TOOL,
   CREATE_NON_FUNGIBLE_TOKEN_TOOL,
@@ -60,31 +75,32 @@ export function parseArgs(args: string[]): Options {
 
   console.log(args);
   args.forEach((arg) => {
-    if (arg.startsWith('--')) {
-      const [key, value] = arg.slice(2).split('=');
+    if (arg.startsWith("--")) {
+      const [key, value] = arg.slice(2).split("=");
 
-      if (key == 'tools') {
-        options.tools = value.split(',');
-      } else if (key == 'agent-mode') {
+      if (key == "tools") {
+        options.tools = value.split(",");
+      } else if (key == "agent-mode") {
         options.context!.mode = value as AgentMode;
-      } else if (key == 'account-id') {
+      } else if (key == "account-id") {
         options.context!.accountId = value;
-      } else if (key == 'public-key') {
+      } else if (key == "public-key") {
         options.context!.accountPublicKey = value;
-      } else if (key == 'ledger-id') {
-        if (value == 'testnet') {
+      } else if (key == "ledger-id") {
+        if (value == "testnet") {
           options.ledgerId = LedgerId.TESTNET;
-        } else if (value == 'mainnet') {
+        } else if (value == "mainnet") {
           options.ledgerId = LedgerId.MAINNET;
-        }
-        else {
-          throw new Error(`Invalid ledger id: ${value}. Accepted values are: testnet, mainnet`);
+        } else {
+          throw new Error(
+            `Invalid ledger id: ${value}. Accepted values are: testnet, mainnet`,
+          );
         }
       } else {
         throw new Error(
           `Invalid argument: ${key}. Accepted arguments are: ${ACCEPTED_ARGS.join(
-            ', '
-          )}`
+            ", ",
+          )}`,
         );
       }
     }
@@ -92,14 +108,14 @@ export function parseArgs(args: string[]): Options {
 
   // Validate tools against accepted enum values
   options.tools?.forEach((tool: string) => {
-    if (tool == 'all') {
+    if (tool == "all") {
       return;
     }
     if (!ACCEPTED_TOOLS.includes(tool.trim() as any)) {
       throw new Error(
         `Invalid tool: ${tool}. Accepted tools are: ${ACCEPTED_TOOLS.join(
-          ', '
-        )}`
+          ", ",
+        )}`,
       );
     }
   });
@@ -108,7 +124,7 @@ export function parseArgs(args: string[]): Options {
 }
 
 function handleError(error: any) {
-  console.error(red('\n🚨  Error initializing Hedera MCP server:\n'));
+  console.error(red("\n🚨  Error initializing Hedera MCP server:\n"));
   console.error(yellow(`   ${error.message}\n`));
 }
 
@@ -134,14 +150,23 @@ export async function main() {
       throw error;
     }
   } else {
-    console.error(yellow('⚠️  No operator credentials found in environment variables (HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY)'));
+    console.error(
+      yellow(
+        "⚠️  No operator credentials found in environment variables (HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY)",
+      ),
+    );
   }
 
   const configuration: Configuration = {
     tools: options.tools,
     context: options.context,
-    plugins: [coreHTSPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin],
-  }
+    plugins: [
+      coreTokenPlugin,
+      coreAccountPlugin,
+      coreConsensusPlugin,
+      coreQueriesPlugin,
+    ],
+  };
 
   const server = new HederaMCPToolkit({
     client: client,
@@ -151,7 +176,7 @@ export async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // We use console.error instead of console.log since console.log will output to stdio, which will confuse the MCP server
-  console.error(green('✅ Hedera MCP Server running on stdio'));
+  console.error(green("✅ Hedera MCP Server running on stdio"));
 }
 
 if (require.main === module) {
