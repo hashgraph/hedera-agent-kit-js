@@ -62,7 +62,7 @@ export default class HederaParameterNormaliser {
     const supplyType = isFinite ? TokenSupplyType.Finite : TokenSupplyType.Infinite;
 
     const maxSupply = isFinite
-      ? toBaseUnit(params.maxSupply ?? 1_000_000, decimals) // default finite max supply
+      ? toBaseUnit(params.maxSupply ?? 1_000_000, decimals).toNumber() // default finite max supply
       : undefined;
 
     if (maxSupply !== undefined && initialSupply > maxSupply) {

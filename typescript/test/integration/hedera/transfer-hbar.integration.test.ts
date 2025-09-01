@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, AccountId } from '@hashgraph/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
-import { transferHbarParameters } from '@/shared/parameter-schemas/has.zod';
 import { Context, AgentMode } from '@/shared/configuration';
 import HederaOperationsWrapper from '../../utils/hedera-onchain-operations/HederaOperationsWrapper';
 import { verifyHbarBalanceChange } from '../../utils/uitls';
 import { getClientForTests } from '../../utils/client-setup';
 import { z } from 'zod';
+import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe.sequential('Transfer HBAR Integration Tests', () => {
   let client: Client;
@@ -62,7 +62,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
       // Check that the result contains a transaction ID
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify balance change using the helper function
@@ -99,7 +99,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify balance changes for both recipients
@@ -136,7 +136,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify balance change
@@ -165,7 +165,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify balance change
@@ -193,7 +193,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
       const result = await tool.execute(client, context, params);
 
       // Should return an object with humanMessage and raw
-      expect(result.raw.status).not.toBe(22); // no success code
+      expect(result.raw.status).not.toBe("SUCCESS");
       expect(result.humanMessage).toContain('Invalid transfer amount');
     });
 
@@ -211,7 +211,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
       const result = await tool.execute(client, context, params);
 
       // Should return an object with humanMessage and raw
-      expect(result.raw.status).not.toBe(22); // no success code
+      expect(result.raw.status).not.toBe("SUCCESS"); // no success code
       expect(result.humanMessage).toContain('Invalid transfer amount');
     });
 
@@ -229,7 +229,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
       const result = await tool.execute(client, context, params);
 
       // Should return an object with humanMessage and raw
-      expect(result.raw.status).not.toBe(22); // no success code
+      expect(result.raw.status).not.toBe("SUCCESS"); // no success code
       expect(result.humanMessage).not.toContain('HBAR successfully transferred');
     });
 
@@ -247,7 +247,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
       const result = await tool.execute(client, context, params);
 
       // Should return an object with humanMessage and raw
-      expect(result.raw.status).not.toBe(22); //no success code
+      expect(result.raw.status).not.toBe("SUCCESS"); //no success code
       expect(result.humanMessage).not.toContain('HBAR successfully transferred');
     });
   });
@@ -272,7 +272,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify balance change
@@ -304,7 +304,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify balance change
@@ -340,7 +340,7 @@ describe.sequential('Transfer HBAR Integration Tests', () => {
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBe(22);
+      expect(result.raw.status).toBe("SUCCESS");
       expect(result.raw.transactionId).toBeDefined();
 
       // Verify total balance change

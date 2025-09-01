@@ -10,10 +10,14 @@ import {
   coreAccountPluginToolNames,
   coreConsensusPlugin,
   coreConsensusPluginToolNames,
-  coreHTSPlugin,
-  coreHTSPluginToolNames,
-  coreQueriesPlugin,
-  coreQueriesPluginToolNames,
+  coreTokenPlugin,
+  coreTokenPluginToolNames,
+  coreAccountQueryPlugin,
+  coreAccountQueryPluginToolNames,
+  coreTokenQueryPlugin,
+  coreTokenQueryPluginToolNames,
+  coreConsensusQueryPlugin,
+  coreConsensusQueryPluginToolNames,
 } from '@/plugins';
 
 const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
@@ -23,14 +27,16 @@ const {
   AIRDROP_FUNGIBLE_TOKEN_TOOL,
   MINT_FUNGIBLE_TOKEN_TOOL,
   MINT_NON_FUNGIBLE_TOKEN_TOOL,
-} = coreHTSPluginToolNames;
+} = coreTokenPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
-const {
-  GET_HBAR_BALANCE_QUERY_TOOL,
+const  {
   GET_ACCOUNT_QUERY_TOOL,
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  GET_TOPIC_MESSAGES_QUERY_TOOL,
-} = coreQueriesPluginToolNames;
+  GET_HBAR_BALANCE_QUERY_TOOL
+} = coreAccountQueryPluginToolNames;
+
+const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
+const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
 // Default options for creating a test setup - should include all possible actions
 const OPTIONS: LangchainTestOptions = {
@@ -47,8 +53,9 @@ const OPTIONS: LangchainTestOptions = {
     GET_ACCOUNT_QUERY_TOOL,
     GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
     GET_TOPIC_MESSAGES_QUERY_TOOL,
+    GET_TOKEN_INFO_QUERY_TOOL
   ],
-  plugins: [coreAccountPlugin, coreQueriesPlugin, coreHTSPlugin, coreConsensusPlugin],
+  plugins: [coreAccountPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin, coreTokenQueryPlugin, coreTokenPlugin, coreConsensusPlugin],
   systemPrompt: `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
         When a user asks to transfer HBAR, use the transfer_hbar_tool with the correct parameters.
         Extract the amount and recipient account ID from the user's request.
