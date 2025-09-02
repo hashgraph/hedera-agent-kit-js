@@ -66,19 +66,29 @@ export const createAccountParametersNormalised = (_context: Context = {}) =>
 export const deleteAccountParameters = (_context: Context = {}) =>
   z.object({
     accountId: z.string().describe('The account ID to delete.'),
-    transferAccountId: z.string().optional().describe('The ID of the account to transfer the remaining funds to. If not provided, the operator account ID will be used.'),
+    transferAccountId: z
+      .string()
+      .optional()
+      .describe(
+        'The ID of the account to transfer the remaining funds to. If not provided, the operator account ID will be used.',
+      ),
   });
 
 export const deleteAccountParametersNormalised = (_context: Context = {}) =>
   z.object({
     accountId: z.instanceof(AccountId),
     transferAccountId: z.instanceof(AccountId),
-  })
+  });
 
 export const updateAccountParameters = (_context: Context = {}) =>
   z.object({
     // If not passed, will be injected from context in normalisation
-    accountId: z.string().optional().describe('Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used'),
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used',
+      ),
 
     maxAutomaticTokenAssociations: z
       .number()

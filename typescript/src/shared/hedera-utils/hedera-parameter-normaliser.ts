@@ -66,15 +66,11 @@ export default class HederaParameterNormaliser {
       : undefined;
 
     if (maxSupply !== undefined && initialSupply > maxSupply) {
-      throw new Error(
-        `Initial supply (${initialSupply}) cannot exceed max supply (${maxSupply})`,
-      );
+      throw new Error(`Initial supply (${initialSupply}) cannot exceed max supply (${maxSupply})`);
     }
 
     const publicKey =
-      (await mirrorNode
-        .getAccount(defaultAccountId)
-        .then(r => r.accountPublicKey)) ??
+      (await mirrorNode.getAccount(defaultAccountId).then(r => r.accountPublicKey)) ??
       client.operatorPublicKey?.toStringDer();
 
     return {
@@ -85,8 +81,7 @@ export default class HederaParameterNormaliser {
       decimals,
       initialSupply,
       autoRenewAccountId: defaultAccountId,
-      supplyKey:
-        params.isSupplyKey === true ? PublicKey.fromString(publicKey) : undefined,
+      supplyKey: params.isSupplyKey === true ? PublicKey.fromString(publicKey) : undefined,
     };
   }
 
@@ -235,8 +230,7 @@ export default class HederaParameterNormaliser {
     const maxAssociations = params.maxAutomaticTokenAssociations ?? -1; // unlimited if -1
 
     // Try resolving the publicKey in priority order
-    let publicKey = params.publicKey
-      ?? client.operatorPublicKey?.toStringDer();
+    let publicKey = params.publicKey ?? client.operatorPublicKey?.toStringDer();
 
     if (!publicKey) {
       const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
@@ -247,7 +241,9 @@ export default class HederaParameterNormaliser {
     }
 
     if (!publicKey) {
-      throw new Error("Unable to resolve public key: no param, mirror node, or client operator key available.");
+      throw new Error(
+        'Unable to resolve public key: no param, mirror node, or client operator key available.',
+      );
     }
 
     const normalised: z.infer<ReturnType<typeof createAccountParametersNormalised>> = {
@@ -454,7 +450,6 @@ export default class HederaParameterNormaliser {
     };
   }
 
-
   static normaliseDeleteAccount(
     params: z.infer<ReturnType<typeof deleteAccountParameters>>,
     context: Context,
@@ -474,7 +469,7 @@ export default class HederaParameterNormaliser {
       transferAccountId: AccountId.fromString(params.transferAccountId),
     };
   }
-  
+
   static normaliseUpdateAccount(
     params: z.infer<ReturnType<typeof updateAccountParameters>>,
     context: Context,

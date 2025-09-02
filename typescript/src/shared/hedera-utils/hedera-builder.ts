@@ -84,16 +84,12 @@ export default class HederaBuilder {
   static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
     return new AccountCreateTransaction(params);
   }
-  
-  static deleteAccount(
-    params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>
-  ) {
+
+  static deleteAccount(params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>) {
     return new AccountDeleteTransaction(params);
   }
-  
-  static updateAccount(
-    params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>
-  ) {
+
+  static updateAccount(params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>) {
     return new AccountUpdateTransaction(params);
   }
 }
