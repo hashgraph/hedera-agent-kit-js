@@ -50,20 +50,14 @@ const transferHbar = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        raw: {
-          status: Status.InvalidTransaction,
-        },
-        humanMessage: error.message,
-      }
-    }
+    const message = error instanceof Error ? error.message : 'Failed to transfer HBAR';
+
     return {
       raw: {
         status: Status.InvalidTransaction,
       },
-      humanMessage: 'Failed to transfer HBAR',
-    }
+      humanMessage: message,
+    };
   }
 };
 

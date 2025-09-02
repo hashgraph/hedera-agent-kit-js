@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 import * as path from 'node:path';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: path.resolve(__dirname, '.env.test.local') })
+dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
 
 export default defineConfig({
   resolve: {
@@ -12,17 +12,14 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: [
-      'src/**/*.test.ts',
-      'test/**/*.test.ts',
-    ],
+    include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
     exclude: [
       'node_modules/**',
       'dist/**',
       'examples/**',
       'src/**/types.ts',
       'src/**/index.ts',
-      'src/**/*.d.ts'
+      'src/**/*.d.ts',
     ],
     globals: false,
     reporters: ['default'],
@@ -34,12 +31,5 @@ export default defineConfig({
     },
     setupFiles: [],
     testTimeout: 60000,
-    fileParallelism: false,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true
-      }
-    },
   },
-})
+});
