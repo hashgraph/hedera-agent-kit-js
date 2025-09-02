@@ -4,7 +4,7 @@ import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
 import { AgentMode } from '@/shared';
 import type { Plugin } from '@/shared/plugin';
-import { LLMFactory, type LlmOptions } from './llm-factory';
+import { LLMFactory, type LlmOptions, LLMProvider } from './llm-factory';
 import {
   coreAccountPlugin,
   coreAccountPluginToolNames,
@@ -20,6 +20,19 @@ import {
   coreConsensusQueryPluginToolNames,
 } from '@/plugins';
 import { getClientForTests } from './client-setup';
+
+export interface LangchainTestSetup {
+  client: Client;
+  agentExecutor: AgentExecutor;
+  toolkit: HederaLangchainToolkit;
+  cleanup: () => void;
+}
+
+export interface LangchainTestOptions {
+  tools: string[];
+  plugins: Plugin[];
+  agentMode: AgentMode;
+}
 
 const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
 const {
@@ -39,8 +52,8 @@ const {
 const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
-// Default options for creating a test setup - should include all possible actions
-const PLUGIN_OPTIONS: LangchainTestOptions = {
+// Default toolkit configuration - should include all possible actions
+const TOOLKIT_OPTIONS: LangchainTestOptions = {
   tools: [
     TRANSFER_HBAR_TOOL,
     CREATE_FUNGIBLE_TOKEN_TOOL,
@@ -64,9 +77,11 @@ const PLUGIN_OPTIONS: LangchainTestOptions = {
     coreTokenPlugin,
     coreConsensusPlugin,
   ],
+  agentMode: AgentMode.AUTONOMOUS,
 };
 
-const LLM_OPTIONS: LlmOptions = {
+const DEFAULT_LLM_OPTIONS: LlmOptions = {
+  provider: LLMProvider.OPENAI,
   temperature: 0,
   maxIterations: 1,
   model: 'gpt-4o-mini',
@@ -76,58 +91,59 @@ const LLM_OPTIONS: LlmOptions = {
         Always use the exact tool name and parameter structure expected.`,
 };
 
-export interface LangchainTestSetup {
-  client: Client;
-  agentExecutor: AgentExecutor;
-  toolkit: HederaLangchainToolkit;
-  cleanup: () => void;
-}
-
-export interface LangchainTestOptions {
-  tools: string[];
-  plugins: Plugin[];
-  systemPrompt?: string;
-  temperature?: number;
-  maxIterations?: number;
-  model?: string;
-}
-
+/**
+ * Creates a test setup for LangChain using the specified plugins and LLM options.
+ *
+ * @param {LangchainTestOptions} [toolkitOptions=TOOLKIT_OPTIONS] - Options for configuring the LangChain plugins and tools.
+ * @param {LlmOptions} [llmOptions=DEFAULT_LLM_OPTIONS] - Options for configuring the large language model (LLM), including provider and API key.
+ * @return {Promise<LangchainTestSetup>} A promise that resolves to the LangChain test setup.
+ */
 export async function createLangchainTestSetup(
-  pluginOptions: LangchainTestOptions = PLUGIN_OPTIONS,
-  llmOptions: LlmOptions = LLM_OPTIONS,
+  toolkitOptions: LangchainTestOptions = TOOLKIT_OPTIONS,
+  llmOptions: LlmOptions = DEFAULT_LLM_OPTIONS,
 ): Promise<LangchainTestSetup> {
   const client = getClientForTests();
   const operatorAccountId = client.operatorAccountId!;
 
-  // Initialize LLM using factory - either from provided options or environment
-  const llm =
-    llmOptions.provider || llmOptions.model || llmOptions.apiKey
-      ? LLMFactory.createLLM(llmOptions)
-      : LLMFactory.fromEnvironment();
+  // Resolve provider from env (set by GitHub Actions matrix), or fallback to llmOptions
+  const provider = (process.env.E2E_LLM_PROVIDER || llmOptions.provider) as LLMProvider;
+
+  // Resolve API key from env
+  const providerApiKeyMap: Record<string, string | undefined> = {
+    [LLMProvider.OPENAI]: process.env.OPENAI_API_KEY,
+    [LLMProvider.ANTHROPIC]: process.env.ANTHROPIC_API_KEY,
+    [LLMProvider.GROQ]: process.env.GROQ_API_KEY,
+  };
+
+  const apiKey = llmOptions.apiKey || providerApiKeyMap[provider];
+  if (!apiKey) {
+    throw new Error(`Missing API key for provider: ${provider}`);
+  }
+
+  const resolvedLlmOptions: LlmOptions = {
+    ...llmOptions,
+    provider,
+    apiKey,
+  };
+
+  // Create an LLM instance
+  const llm = LLMFactory.createLLM(resolvedLlmOptions);
 
   // Prepare Hedera toolkit with specified tools and plugins
   const toolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      tools: pluginOptions.tools,
-      plugins: pluginOptions.plugins,
+      tools: toolkitOptions.tools,
+      plugins: toolkitOptions.plugins,
       context: {
-        mode: AgentMode.AUTONOMOUS,
+        mode: toolkitOptions.agentMode || AgentMode.AUTONOMOUS,
         accountId: operatorAccountId.toString(),
       },
     },
   });
 
-  // Create a prompt template for tool calling
-  const systemPrompt =
-    llmOptions.systemPrompt ||
-    `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
-When a user requests blockchain operations, use the appropriate tools with the correct parameters.
-Extract all necessary parameters from the user's request.
-Always use the exact tool name and parameter structure expected.`;
-
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', systemPrompt],
+    ['system', resolvedLlmOptions.systemPrompt!],
     ['human', '{input}'],
     ['placeholder', '{agent_scratchpad}'],
   ]);
@@ -146,8 +162,8 @@ Always use the exact tool name and parameter structure expected.`;
   const agentExecutor = new AgentExecutor({
     agent,
     tools,
-    returnIntermediateSteps: true, // This allows us to see the tool calls
-    maxIterations: llmOptions.maxIterations ?? 1, // Stop after the first tool call
+    returnIntermediateSteps: true,
+    maxIterations: resolvedLlmOptions.maxIterations ?? 1,
   });
 
   const cleanup = () => {

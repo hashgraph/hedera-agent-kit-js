@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, it } from 'vitest';
 import { createLangchainTestSetup, LangchainTestSetup } from '../utils';
 import { AgentExecutor } from 'langchain/agents';
-import HederaOperationsWrapper from '../utils/hedera-onchain-operations/HederaOperationsWrapper';
+import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
 import { Client, Key } from '@hashgraph/sdk';
-import { verifyHbarBalanceChange } from '../utils/uitls';
+import { verifyHbarBalanceChange } from '../utils';
 
 describe('Transfer HBAR E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -14,7 +14,7 @@ describe('Transfer HBAR E2E Tests', () => {
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    testSetup = await createLangchainTestSetup(); // the LLM provider can be set here if needed
+    testSetup = await createLangchainTestSetup(); // will auto-pick based on E2E_LLM_PROVIDER
     agentExecutor = testSetup.agentExecutor;
     client = testSetup.client;
     hederaOperationsWrapper = new HederaOperationsWrapper(client);

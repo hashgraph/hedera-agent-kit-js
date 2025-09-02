@@ -10,21 +10,33 @@ export enum LLMProvider {
 }
 
 export interface LlmOptions {
-  provider?: LLMProvider;
-  model?: string;
-  temperature?: number;
+  provider: LLMProvider;
+  model: string;
+  temperature: number;
   apiKey?: string;
   baseURL?: string;
   // Test-specific options
-  maxIterations?: number;
-  systemPrompt?: string;
+  maxIterations: number;
+  systemPrompt: string;
 }
 
 /**
  * Factory class for creating LLMs based on the specified provider and options.
  */
 export class LLMFactory {
+  /**
+   * Creates and returns an instance of a language model based on the specified provider and options.
+   *
+   * @param {LlmOptions} options - Configuration options for the language model.
+   * @param {LLMProvider} options.provider - The provider of the language model (e.g., OpenAI, Anthropic, Groq). Defaults to OpenAI.
+   * @param {string} [options.model] - The specific model to use. Defaults to the provider's default model.
+   * @param {number} [options.temperature=0] - The temperature setting for the language model, controlling randomness in response generation.
+   * @param {string} [options.apiKey] - The API key for authenticating with the provider. If not provided, a default environment variable will be used.
+   * @param {string} [options.baseURL] - Base URL for the API requests, applicable for some providers.
+   * @returns {BaseChatModel} An instance of the appropriate chat model configured based on the provider and options.
+   */
   static createLLM(options: LlmOptions): BaseChatModel {
+    // default to OpenAI if the provider is not specified
     const { provider = LLMProvider.OPENAI, model, temperature = 0, apiKey, baseURL } = options;
 
     const defaultModel = model || this.getDefaultModel(provider);
@@ -57,20 +69,12 @@ export class LLMFactory {
     }
   }
 
-  static fromEnvironment(): BaseChatModel {
-    const provider = (process.env.LLM_PROVIDER || LLMProvider.OPENAI) as LLMProvider;
-    const model = this.getDefaultModel(provider);
-    const temperature = parseFloat(process.env.LLM_TEMPERATURE || '0');
-
-    return this.createLLM({
-      provider,
-      model: process.env.LLM_MODEL || model,
-      temperature,
-      apiKey: process.env.LLM_API_KEY,
-      baseURL: process.env.LLM_BASE_URL,
-    });
-  }
-
+  /**
+   * Retrieves the default model identifier based on the specified LLMProvider.
+   *
+   * @param {LLMProvider} provider - The provider whose default model is to be retrieved.
+   * @return {string} The default model identifier for the given provider.
+   */
   private static getDefaultModel(provider: LLMProvider): string {
     switch (provider) {
       case LLMProvider.OPENAI:

@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { AgentExecutor } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
-import {
-  createLangchainTestSetup,
-  type LangchainTestSetup,
-} from '../../utils/langchain-test-setup';
+import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
 describe('Transfer HBAR Tool Matching Integration Tests', () => {
@@ -46,10 +43,10 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.1',
-              amount: 1
-            })
-          ])
-        })
+              amount: 1,
+            }),
+          ]),
+        }),
       );
     });
 
@@ -68,10 +65,10 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.2222',
-              amount: 0.5
-            })
-          ])
-        })
+              amount: 0.5,
+            }),
+          ]),
+        }),
       );
     });
 
@@ -90,11 +87,11 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.3333',
-              amount: 2
-            })
+              amount: 2,
+            }),
           ]),
-          transactionMemo: 'Payment for services'
-        })
+          transactionMemo: 'Payment for services',
+        }),
       );
     });
 
@@ -113,14 +110,14 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.1111',
-              amount: 1
+              amount: 1,
             }),
             expect.objectContaining({
               accountId: '0.0.2222',
-              amount: 2
-            })
-          ])
-        })
+              amount: 2,
+            }),
+          ]),
+        }),
       );
     });
 
@@ -139,11 +136,11 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.6666',
-              amount: 0.1
-            })
+              amount: 0.1,
+            }),
           ]),
-          sourceAccountId: '0.0.5555'
-        })
+          sourceAccountId: '0.0.5555',
+        }),
       );
     });
 
@@ -169,10 +166,10 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
             transfers: expect.arrayContaining([
               expect.objectContaining({
                 accountId: variation.accountId,
-                amount: variation.amount
-              })
-            ])
-          })
+                amount: variation.amount,
+              }),
+            ]),
+          }),
         );
         spy.mockRestore();
       }
@@ -194,11 +191,11 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.12345',
-              amount: 15.5
-            })
+              amount: 15.5,
+            }),
           ]),
-          transactionMemo: 'Monthly payment - invoice #123'
-        })
+          transactionMemo: 'Monthly payment - invoice #123',
+        }),
       );
     });
 
@@ -217,11 +214,11 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
           transfers: expect.arrayContaining([
             expect.objectContaining({
               accountId: '0.0.12345',
-              amount: 15.5
-            })
+              amount: 15.5,
+            }),
           ]),
-          transactionMemo: 'Monthly payment - invoice #123'
-        })
+          transactionMemo: 'Monthly payment - invoice #123',
+        }),
       );
     });
   });

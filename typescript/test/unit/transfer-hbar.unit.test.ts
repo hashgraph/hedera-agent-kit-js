@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client } from '@hashgraph/sdk';
-import toolFactory, { TRANSFER_HBAR_TOOL } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
+import toolFactory, {
+  TRANSFER_HBAR_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 
 // Mocks for dependencies
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
@@ -11,7 +13,13 @@ vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
 }));
 vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
   handleTransaction: vi.fn(async (_tx: any, _client: any, _context: any, post?: any) => {
-    const raw = { status: 22, accountId: null, tokenId: null, transactionId: '0.0.1234@1700000000.000000001', topicId: null };
+    const raw = {
+      status: 22,
+      accountId: null,
+      tokenId: null,
+      transactionId: '0.0.1234@1700000000.000000001',
+      topicId: null,
+    };
     return { raw, humanMessage: post ? post(raw) : JSON.stringify(raw) };
   }),
   RawTransactionResponse: {} as any,
@@ -25,8 +33,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
 }));
 
 const makeClient = () => {
-  const client = Client.forNetwork({});
-  return client;
+  return Client.forNetwork({});
 };
 
 describe('transfer-hbar tool (unit)', () => {
@@ -50,9 +57,7 @@ describe('transfer-hbar tool (unit)', () => {
     const client = makeClient();
 
     const params = {
-      transfers: [
-        { accountId: '0.0.2002', amount: 1 },
-      ],
+      transfers: [{ accountId: '0.0.2002', amount: 1 }],
       sourceAccountId: '0.0.1001',
       transactionMemo: 'unit test',
     };
@@ -70,8 +75,14 @@ describe('transfer-hbar tool (unit)', () => {
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
     expect(HederaBuilder.transferHbar).toHaveBeenCalledTimes(1);
 
-    const { default: HederaParameterNormaliser } = await import('@/shared/hedera-utils/hedera-parameter-normaliser');
-    expect(HederaParameterNormaliser.normaliseTransferHbar).toHaveBeenCalledWith(params, context, client);
+    const { default: HederaParameterNormaliser } = await import(
+      '@/shared/hedera-utils/hedera-parameter-normaliser'
+    );
+    expect(HederaParameterNormaliser.normaliseTransferHbar).toHaveBeenCalledWith(
+      params,
+      context,
+      client,
+    );
   });
 
   it('returns error message when an Error is thrown', async () => {
@@ -79,9 +90,13 @@ describe('transfer-hbar tool (unit)', () => {
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
-    (HederaBuilder.transferHbar as any).mockImplementation(() => { throw new Error('boom'); });
+    (HederaBuilder.transferHbar as any).mockImplementation(() => {
+      throw new Error('boom');
+    });
 
-    const res = await tool.execute(client, context, { transfers: [{ accountId: '0.0.9', amount: 1 }] } as any);
+    const res = await tool.execute(client, context, {
+      transfers: [{ accountId: '0.0.9', amount: 1 }],
+    } as any);
     expect(res.humanMessage).toBe('boom');
   });
 
@@ -90,9 +105,13 @@ describe('transfer-hbar tool (unit)', () => {
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
-    (HederaBuilder.transferHbar as any).mockImplementation(() => { throw 'string error'; });
+    (HederaBuilder.transferHbar as any).mockImplementation(() => {
+      throw 'string error';
+    });
 
-    const res = await tool.execute(client, context, { transfers: [{ accountId: '0.0.9', amount: 1 }] } as any);
+    const res = await tool.execute(client, context, {
+      transfers: [{ accountId: '0.0.9', amount: 1 }],
+    } as any);
     expect(res.humanMessage).toBe('Failed to transfer HBAR');
   });
 });
