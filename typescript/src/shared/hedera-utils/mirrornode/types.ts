@@ -179,7 +179,4 @@ export interface ContractInfo {
     from: string;
     to?: string | null;
   };
-
-  bytecode?: string | null;
-  runtime_bytecode?: string | null;
 }

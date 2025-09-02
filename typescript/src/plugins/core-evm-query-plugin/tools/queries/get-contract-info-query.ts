@@ -59,10 +59,6 @@ const postProcess = (contract: ContractInfo) => {
 
 **EVM**:
 - Address: ${contract.evm_address || 'N/A'}
-
-**Bytecode**:
-- Deployment: ${contract.bytecode || 'N/A'}
-- Runtime: ${contract.runtime_bytecode || 'N/A'}
 `;
 };
 
