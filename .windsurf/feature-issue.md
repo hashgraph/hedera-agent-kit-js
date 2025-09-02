@@ -108,7 +108,7 @@ Use these concise defaults to populate `<PART1_USER_STORY>`, `<PART2_FILES_CHANG
 gh issue create \
   --title "feat: core-het-plugin: TRANSFER_TOKEN_TOOL" \
   --body $'Plugin: core-hts-plugin\nProject Tag: 3.2.0\n\n## User Story\nAs a developer, I want TRANSFER_TOKEN_TOOL to transfer tokens (FT/NFT).\n\n## Files Changed\ntypescript/src/plugins/core-hts-plugin/tools/fungible-token/transfer-token.ts (new)\n\n## Acceptance Criteria\nBuilds TokenTransferTransaction; supports multiple transfers and NFTs.\n' \
-  --label "3.2.0,feature,tool,plugin: core-hts-plugin,service: HTS" \
+  --label "3.2.0,feature,tool,plugin" \
   -R hedera-dev/hedera-agent-kit
 ```
 
