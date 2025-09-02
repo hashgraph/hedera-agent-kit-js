@@ -286,7 +286,7 @@ _See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
 ---
 
 ## Creating Plugins & Contributing
-* You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md#"e)
+* You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md)
 
 * This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
