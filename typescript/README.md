@@ -304,6 +304,8 @@ _See more in [docs/PLUGINS.md](../docs/PLUGINS.md)_
 ## Creating Plugins & Contributing
 * You can find a guide for creating plugins in [docs/PLUGINS.md](../docs/PLUGINS.md#step-by-step-guide)
 
+* This guide also has instructions for [publishing and registering your plugin](../docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
+
 * If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
 ## License
