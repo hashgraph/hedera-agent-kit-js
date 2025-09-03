@@ -100,13 +100,15 @@ const DEFAULT_LLM_OPTIONS: LlmOptions = {
  *
  * @param {LangchainTestOptions} [toolkitOptions=TOOLKIT_OPTIONS] - Options for configuring the LangChain plugins and tools.
  * @param {LlmOptions} [llmOptions=DEFAULT_LLM_OPTIONS] - Options for configuring the large language model (LLM), including provider and API key.
- * @return {Promise<LangchainTestSetup>} A promise that resolves to the LangChain test setup.
+ * @param {Client} [customClient] - Optional custom Hedera client instance. If not provided, a default test client will be created from test environment variables
+ * @returns {Promise<LangchainTestSetup>} A promise that resolves to the test setup containing client, agent executor, toolkit, and cleanup function.
  */
 export async function createLangchainTestSetup(
   toolkitOptions: LangchainTestOptions = TOOLKIT_OPTIONS,
   llmOptions: LlmOptions = DEFAULT_LLM_OPTIONS,
+  customClient: Client | undefined = undefined,
 ): Promise<LangchainTestSetup> {
-  const client = getClientForTests();
+  const client = customClient || getClientForTests();
   const operatorAccountId = client.operatorAccountId!;
 
   // Resolve provider from env (set by GitHub Actions matrix), or fallback to llmOptions

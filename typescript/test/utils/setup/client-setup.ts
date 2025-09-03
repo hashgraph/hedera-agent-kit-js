@@ -22,3 +22,7 @@ export const getClientForTests = (): Client => {
 
   return Client.forTestnet().setOperator(operatorAccountId, privateKey);
 };
+
+export const getCustomClient = (accountId: AccountId, privateKey: PrivateKey): Client => {
+  return Client.forTestnet().setOperator(accountId, privateKey);
+};
