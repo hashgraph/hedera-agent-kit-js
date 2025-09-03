@@ -45,16 +45,13 @@ export const createAccountParameters = (_context: Context = {}) =>
     initialBalance: z
       .number()
       .optional()
-      .default(0)
       .describe('Initial HBAR balance to fund the account (defaults to 0)'),
     maxAutomaticTokenAssociations: z
       .number()
       .optional()
-      .default(-1)
       .describe('Max automatic token associations (-1 for unlimited)'),
   });
 
-// Normalized schema that matches AccountCreateTransaction props
 export const createAccountParametersNormalised = (_context: Context = {}) =>
   z.object({
     accountMemo: z.string().optional(),
@@ -66,19 +63,29 @@ export const createAccountParametersNormalised = (_context: Context = {}) =>
 export const deleteAccountParameters = (_context: Context = {}) =>
   z.object({
     accountId: z.string().describe('The account ID to delete.'),
-    transferAccountId: z.string().optional().describe('The ID of the account to transfer the remaining funds to. If not provided, the operator account ID will be used.'),
+    transferAccountId: z
+      .string()
+      .optional()
+      .describe(
+        'The ID of the account to transfer the remaining funds to. If not provided, the operator account ID will be used.',
+      ),
   });
 
 export const deleteAccountParametersNormalised = (_context: Context = {}) =>
   z.object({
     accountId: z.instanceof(AccountId),
     transferAccountId: z.instanceof(AccountId),
-  })
+  });
 
 export const updateAccountParameters = (_context: Context = {}) =>
   z.object({
     // If not passed, will be injected from context in normalisation
-    accountId: z.string().optional().describe('Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used'),
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used',
+      ),
 
     maxAutomaticTokenAssociations: z
       .number()
