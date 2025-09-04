@@ -10,6 +10,7 @@ import {
   TopicMessagesAPIResponse,
   TopicMessagesQueryParams,
   TopicMessagesResponse,
+  ContractInfo,
 } from './types';
 import BigNumber from 'bignumber.js';
 
@@ -98,6 +99,12 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
 
   async getTokenInfo(tokenId: string): Promise<TokenInfo> {
     const url = `${this.baseUrl}/tokens/${tokenId}`;
+    const response = await fetch(url);
+    return await response.json();
+  }
+
+  async getContractInfo(contractId: string): Promise<ContractInfo> {
+    const url = `${this.baseUrl}/contracts/${contractId}`;
     const response = await fetch(url);
     return await response.json();
   }

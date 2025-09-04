@@ -30,6 +30,10 @@ class HederaLangchainToolkit implements BaseToolkit {
   getTools(): HederaAgentKitTool[] {
     return this.tools;
   }
+
+  getHederaAgentKitAPI(): HederaAgentKitAPI {
+    return this._hederaAgentKit;
+  }
 }
 
 export default HederaLangchainToolkit;

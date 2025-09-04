@@ -1,7 +1,9 @@
 import {
   TokenAirdropTransaction,
   TokenCreateTransaction,
+  TokenDeleteTransaction,
   TopicCreateTransaction,
+  TopicDeleteTransaction,
   TopicMessageSubmitTransaction,
   TransferTransaction,
   ContractExecuteTransaction,
@@ -14,6 +16,7 @@ import {
   airdropFungibleTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
+  deleteTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
@@ -26,6 +29,7 @@ import {
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
+  deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
@@ -91,5 +95,13 @@ export default class HederaBuilder {
 
   static updateAccount(params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>) {
     return new AccountUpdateTransaction(params);
+  }
+
+  static deleteToken(params: z.infer<ReturnType<typeof deleteTokenParametersNormalised>>) {
+    return new TokenDeleteTransaction(params);
+  }
+
+  static deleteTopic(params: z.infer<ReturnType<typeof deleteTopicParametersNormalised>>) {
+    return new TopicDeleteTransaction(params);
   }
 }

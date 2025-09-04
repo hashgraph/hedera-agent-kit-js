@@ -45,16 +45,13 @@ export const createAccountParameters = (_context: Context = {}) =>
     initialBalance: z
       .number()
       .optional()
-      .default(0)
       .describe('Initial HBAR balance to fund the account (defaults to 0)'),
     maxAutomaticTokenAssociations: z
       .number()
       .optional()
-      .default(-1)
       .describe('Max automatic token associations (-1 for unlimited)'),
   });
 
-// Normalized schema that matches AccountCreateTransaction props
 export const createAccountParametersNormalised = (_context: Context = {}) =>
   z.object({
     accountMemo: z.string().optional(),
