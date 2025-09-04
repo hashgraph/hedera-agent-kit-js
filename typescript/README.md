@@ -205,7 +205,7 @@ async function main() {
         coreAccountPlugin,    // For HBAR transfers
         coreConsensusPlugin,  // For HCS topics and messages
         coreTokenPlugin,        // For token operations
-      ], // user an empty array to load all core plugins
+      ], // use an empty array to load all core plugins
     },
   });
   
