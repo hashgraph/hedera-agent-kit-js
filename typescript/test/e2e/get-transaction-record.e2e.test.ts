@@ -7,6 +7,7 @@ import {
 } from '../utils';
 import { Client, TransactionId } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import Long from 'long';
 
 describe('Get Transaction Record E2E Tests', () => {
   let testSetup: LangchainTestSetup;
