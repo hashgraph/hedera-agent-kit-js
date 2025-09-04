@@ -57,7 +57,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       transactionId: 'not-a-valid-id',
     });
 
-    expect(response).toContain('Invalid transactionId format');
+    expect(response.humanMessage).toContain('Invalid transactionId format');
   });
 
   it('throws an error for non-existent transaction', async () => {
@@ -71,7 +71,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     const response = await getTransactionRecordQuery(client, context, {
       transactionId: nonExistentTxId,
     });
-    expect(response).toContain('Not Found');
+    expect(response.humanMessage).toContain('Not Found');
   });
 
   afterAll(async () => {

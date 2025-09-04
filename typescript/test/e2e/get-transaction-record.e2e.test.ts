@@ -32,7 +32,8 @@ describe('Get Transaction Record E2E Tests', () => {
     });
 
     txIdSdkStyle = TransactionId.fromString(rawResponse.transactionId!);
-    txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${txIdSdkStyle.validStart!.nanos!.toString()}`;
+    const padNanos = (n: Long | number) => n.toString().padStart(9, '0'); // pad with leading zeros to 9 digits
+    txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${padNanos(txIdSdkStyle.validStart!.nanos!)}`;
 
     await wait(4000);
   });

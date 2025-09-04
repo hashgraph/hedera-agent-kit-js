@@ -21,11 +21,11 @@ describe('Transfer HBAR E2E Tests', () => {
 
     recipientAccountId = await hederaOperationsWrapper
       .createAccount({ key: client.operatorPublicKey as Key })
-      .then(accountId => accountId.toString());
+      .then(resp => resp.accountId!.toString());
 
     recipientAccountId2 = await hederaOperationsWrapper
       .createAccount({ key: client.operatorPublicKey as Key })
-      .then(accountId => accountId.toString());
+      .then(resp => resp.accountId!.toString());
   });
 
   afterAll(async () => {
@@ -36,6 +36,7 @@ describe('Transfer HBAR E2E Tests', () => {
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should match transfer HBAR tool for simple transfer request', async () => {
+      console.log(recipientAccountId);
       const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
       const amountToTransfer = 0.1; // 0.1 HBAR
       const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccountId}`;

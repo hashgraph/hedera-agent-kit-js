@@ -144,7 +144,7 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
   it('returns error message when mirror node throws an Error', async () => {
     (mockService.getTransactionRecord as any).mockRejectedValue(new Error('boom'));
     const result = await getTransactionRecordQuery(client, context, { transactionId: '0.0.1-1-1' });
-    expect(result).toBe('boom');
+    expect(result.humanMessage).toBe('boom');
   });
 
   it('returns generic failure message when mirror node throws non-Error', async () => {
@@ -152,6 +152,6 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
       throw 'string error';
     });
     const result = await getTransactionRecordQuery(client, context, { transactionId: '0.0.1-1-1' });
-    expect(result).toBe('Failed to get transaction record');
+    expect(result.humanMessage).toBe('Error getting transaction record');
   });
 });

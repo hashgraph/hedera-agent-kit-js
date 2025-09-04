@@ -17,13 +17,13 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let client: Client;
-  let hederaOps: HederaOperationsWrapper;
+  let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
     agentExecutor = testSetup.agentExecutor;
     client = testSetup.client;
-    hederaOps = new HederaOperationsWrapper(client);
+    hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 
   afterAll(async () => {
@@ -31,10 +31,12 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   });
 
   it('should update memo of a pre-created account via agent', async () => {
-    const targetAccount = await hederaOps.createAccount({
-      key: client.operatorPublicKey as Key,
-      initialBalance: 5,
-    });
+    const targetAccount = await hederaOperationsWrapper
+      .createAccount({
+        key: client.operatorPublicKey as Key,
+        initialBalance: 5,
+      })
+      .then(resp => resp.accountId!);
 
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
@@ -43,14 +45,17 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     const observation = extractObservation(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
-    const info = await hederaOps.getAccountInfo(targetAccount.toString());
+    const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
     expect(info.accountMemo).toBe('updated via agent');
   });
 
   it('should update maxAutomaticTokenAssociations via agent', async () => {
-    const targetAccount = await hederaOps.createAccount({
-      key: client.operatorPublicKey as Key,
-    });
+    const targetAccount = await hederaOperationsWrapper
+      .createAccount({
+        key: client.operatorPublicKey as Key,
+        initialBalance: 5,
+      })
+      .then(resp => resp.accountId!);
 
     const updateResult = await agentExecutor.invoke({
       input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
@@ -59,14 +64,17 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     const observation = extractObservation(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
-    const info = await hederaOps.getAccountInfo(targetAccount.toString());
+    const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
     expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
   });
 
   it('should update declineStakingReward flag via agent', async () => {
-    const targetAccount = await hederaOps.createAccount({
-      key: client.operatorPublicKey as Key,
-    });
+    const targetAccount = await hederaOperationsWrapper
+      .createAccount({
+        key: client.operatorPublicKey as Key,
+        initialBalance: 5,
+      })
+      .then(resp => resp.accountId!);
 
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${targetAccount.toString()} to decline staking rewards`,
@@ -75,7 +83,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     const observation = extractObservation(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
-    const info = await hederaOps.getAccountInfo(targetAccount.toString());
+    const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
     expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
   });
 
