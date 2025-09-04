@@ -23,7 +23,7 @@ export interface ExecuteStrategyResult {
   humanMessage: string;
 }
 
-class ExecuteStrategy implements TxModeStrategy {
+export class ExecuteStrategy implements TxModeStrategy {
   defaultPostProcess(response: RawTransactionResponse): string {
     return JSON.stringify(response, null, 2);
   }
@@ -31,7 +31,7 @@ class ExecuteStrategy implements TxModeStrategy {
   async handle(
     tx: Transaction,
     client: Client,
-    context: Context,
+    _context: Context,
     postProcess: (response: RawTransactionResponse) => string = this.defaultPostProcess,
   ) {
     const submit = await tx.execute(client);

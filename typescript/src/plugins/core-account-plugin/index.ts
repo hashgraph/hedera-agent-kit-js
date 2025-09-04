@@ -21,7 +21,7 @@ export const coreAccountPlugin: Plugin = {
   description: 'A plugin for the Hedera Account Service',
   tools: (context: Context) => {
     return [
-      transferHbarTool(context), 
+      transferHbarTool(context),
       deleteAccountTool(context),
       updateAccountTool(context),
       createAccountTool(context),

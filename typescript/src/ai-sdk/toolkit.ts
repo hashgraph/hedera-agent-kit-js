@@ -1,6 +1,6 @@
 import HederaAgentAPI from '../shared/api';
-import { type Configuration } from '../shared/configuration';
-import { ToolDiscovery } from '../shared/tool-discovery';
+import { type Configuration } from '@/shared';
+import { ToolDiscovery } from '@/shared/tool-discovery';
 import type { Tool, LanguageModelV1Middleware } from 'ai';
 import { Client } from '@hashgraph/sdk';
 import HederaAgentKitTool from './tool';

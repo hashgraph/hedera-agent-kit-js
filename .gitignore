@@ -58,3 +58,6 @@ pids/
 # Temporary folders
 tmp/
 temp/
+
+# coverage report
+typescript/coverage/

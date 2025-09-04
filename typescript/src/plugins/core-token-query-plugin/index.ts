@@ -9,9 +9,7 @@ export const coreTokenQueryPlugin: Plugin = {
   version: '1.0.0',
   description: 'A plugin for Hedera Token Service queries',
   tools: (context: Context) => {
-    return [
-      getTokenInfoQuery(context),
-    ];
+    return [getTokenInfoQuery(context)];
   },
 };
 
