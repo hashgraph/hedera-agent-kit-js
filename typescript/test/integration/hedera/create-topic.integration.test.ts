@@ -2,16 +2,18 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client } from '@hashgraph/sdk';
 import createTopicTool from '@/plugins/core-consensus-plugin/tools/consensus/create-topic';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests } from '../../utils';
+import { getClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
 
 describe('Create Topic Integration Tests', () => {
   let client: Client;
   let context: Context;
+  let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
     client = getClientForTests();
+    hederaOperationsWrapper = new HederaOperationsWrapper(client);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -32,9 +34,15 @@ describe('Create Topic Integration Tests', () => {
       const tool = createTopicTool(context);
       const result: any = await tool.execute(client, context, params);
 
+      const topicInfo = await hederaOperationsWrapper.getTopicInfo(result.raw.topicId!.toString());
+
       expect(result.humanMessage).toContain('Topic created successfully');
       expect(result.raw.transactionId).toBeDefined();
       expect(result.raw.topicId).toBeDefined();
+      expect(topicInfo).toBeDefined();
+      expect(topicInfo.topicMemo).toBe('');
+      expect(topicInfo.adminKey).toBeNull();
+      expect(topicInfo.submitKey).toBeNull();
     });
 
     it('should create a topic with memo and submit key', async () => {
@@ -46,8 +54,14 @@ describe('Create Topic Integration Tests', () => {
       const tool = createTopicTool(context);
       const result: any = await tool.execute(client, context, params);
 
+      const topicInfo = await hederaOperationsWrapper.getTopicInfo(result.raw.topicId!.toString());
+
       expect(result.humanMessage).toContain('Topic created successfully');
       expect(result.raw.topicId).toBeDefined();
+      expect(topicInfo).toBeDefined();
+      expect(topicInfo.topicMemo).toBe(params.topicMemo);
+      expect(topicInfo.adminKey).toBeNull();
+      expect(topicInfo.submitKey!.toString()).toBe(client.operatorPublicKey?.toStringDer());
     });
 
     it('should handle empty string topicMemo', async () => {
@@ -59,9 +73,13 @@ describe('Create Topic Integration Tests', () => {
       const tool = createTopicTool(context);
       const result: any = await tool.execute(client, context, params);
 
+      const topicInfo = await hederaOperationsWrapper.getTopicInfo(result.raw.topicId!.toString());
+
       // Empty string should be valid, so this should succeed
       expect(result.humanMessage).toContain('Topic created successfully');
       expect(result.raw.topicId).toBeDefined();
+      expect(topicInfo.topicMemo).toBe(params.topicMemo);
+      expect(topicInfo.submitKey).toBe(null);
     });
   });
 });
