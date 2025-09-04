@@ -78,15 +78,11 @@ export const getContractInfoQuery = async (
   } catch (error) {
     console.error('Error getting contract info', error);
 
-    if (error instanceof Error) {
-      return {
-        raw: { contractId: params.contractId, error: error.message },
-        humanMessage: error.message,
-      };
-    }
+    const message = error instanceof Error ? error.message : 'Error getting contract info';
+
     return {
-      raw: { contractId: params.contractId, error: 'Failed to get contract info' },
-      humanMessage: 'Failed to get contract info',
+      raw: { contractId: params.contractId, error: message },
+      humanMessage: message,
     };
   }
 };

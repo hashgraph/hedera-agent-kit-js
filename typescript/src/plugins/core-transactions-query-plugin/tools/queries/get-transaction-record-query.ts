@@ -85,7 +85,7 @@ export const getTransactionRecordQuery = async (
       humanMessage: postProcess(transactionRecord, params.transactionId),
     };
   } catch (error) {
-    console.error('Error getting contract info', error);
+    console.error('Error getting transaction record', error);
 
     const message = error instanceof Error ? error.message : 'Error getting transaction record';
 
