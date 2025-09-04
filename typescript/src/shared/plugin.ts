@@ -1,5 +1,24 @@
 import { Context } from './configuration';
 import { Tool } from './tools';
+import {
+  coreAccountPlugin,
+  coreTokenPlugin,
+  coreConsensusPlugin,
+  coreEVMPlugin,
+  coreAccountQueryPlugin,
+  coreTokenQueryPlugin,
+  coreConsensusQueryPlugin,
+} from '@/plugins';
+
+const CORE_PLUGINS = [
+  coreAccountPlugin,
+  coreTokenPlugin,
+  coreConsensusPlugin,
+  coreEVMPlugin,
+  coreAccountQueryPlugin,
+  coreTokenQueryPlugin,
+  coreConsensusQueryPlugin,
+];
 
 export interface Plugin {
   name: string;
@@ -22,9 +41,21 @@ export class PluginRegistry {
     return Array.from(this.plugins.values());
   }
 
-  getTools(context: Context): Tool[] {
+  private loadCorePlugins(context: Context): Tool[] {
     const pluginTools: Tool[] = [];
+    for (const plugin of CORE_PLUGINS) {
+      try {
+        const tools = plugin.tools(context);
+        pluginTools.push(...tools);
+      } catch (error) {
+        console.error(`Error loading tools from plugin "${plugin.name}":`, error);
+      }
+    }
+    return pluginTools;
+  }
 
+  private loadPlugins(context: Context): Tool[] {
+    const pluginTools: Tool[] = [];
     for (const plugin of this.plugins.values()) {
       try {
         const tools = plugin.tools(context);
@@ -33,8 +64,15 @@ export class PluginRegistry {
         console.error(`Error loading tools from plugin "${plugin.name}":`, error);
       }
     }
-
     return pluginTools;
+  }
+
+  getTools(context: Context): Tool[] {
+    if (this.plugins.size === 0) {
+      return this.loadCorePlugins(context);
+    } else {
+      return this.loadPlugins(context);
+    }
   }
 
   clear(): void {

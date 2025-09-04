@@ -9,9 +9,7 @@ export const coreConsensusQueryPlugin: Plugin = {
   version: '1.0.0',
   description: 'A plugin for Hedera Consensus Service queries',
   tools: (context: Context) => {
-    return [
-      getTopicMessagesQuery(context),
-    ];
+    return [getTopicMessagesQuery(context)];
   },
 };
 
