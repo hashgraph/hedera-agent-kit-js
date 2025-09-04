@@ -38,11 +38,15 @@ import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
 import {
   createERC20Parameters,
+  createERC721Parameters,
+  mintERC721Parameters,
   transferERC20Parameters,
   transferERC721Parameters,
-  mintERC721Parameters,
-  createERC721Parameters,
 } from '@/shared/parameter-schemas/evm.zod';
+import {
+  normalisedTransactionRecordQueryParameters,
+  transactionRecordQueryParameters,
+} from '@/shared/parameter-schemas/transaction.zod';
 
 export default class HederaParameterNormaliser {
   static async normaliseCreateFungibleTokenParams(
@@ -494,6 +498,37 @@ export default class HederaParameterNormaliser {
     }
     if (params.declineStakingReward !== undefined) {
       normalised.declineStakingReward = params.declineStakingReward;
+    }
+
+    return normalised;
+  }
+
+  static normaliseGetTransactionRecordParams(
+    params: z.infer<ReturnType<typeof transactionRecordQueryParameters>>,
+    _context: Context,
+  ) {
+    const normalised: z.infer<ReturnType<typeof normalisedTransactionRecordQueryParameters>> = {
+      nonce: params.nonce,
+    } as any;
+
+    if (!params.transactionId) {
+      throw new Error('transactionId is required');
+    }
+
+    const mirrorNodeStyleRegex = /^\d+\.\d+\.\d+-\d+-\d+$/;
+    const sdkStyleRegex = /^(\d+\.\d+\.\d+)@(\d+)\.(\d+)$/;
+
+    if (mirrorNodeStyleRegex.test(params.transactionId)) {
+      // Already in mirror-node style, use as-is
+      normalised.transactionId = params.transactionId;
+    } else {
+      const match = params.transactionId.match(sdkStyleRegex);
+      if (!match) {
+        throw new Error(`Invalid transactionId format: ${params.transactionId}`);
+      }
+
+      const [, accountId, seconds, nanos] = match;
+      normalised.transactionId = `${accountId}-${seconds}-${nanos}`;
     }
 
     return normalised;

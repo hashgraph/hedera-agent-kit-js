@@ -6,7 +6,8 @@ import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TransactionDetailsResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
-import { transactionRecordQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { transactionRecordQueryParameters } from '@/shared/parameter-schemas/transaction.zod';
 
 export const getTransactionRecordQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -23,7 +24,7 @@ Parameters:
 ${usageInstructions}
 
 Additional information:
-If user provides transaction ID in format 0.0.4177806@1755169980.651721264, parse it to 0.0.4177806-1755169980-651721264 and use it as transaction ID.
+If user provides transaction ID in format 0.0.4177806@1755169980.051721264, parse it to 0.0.4177806-1755169980-051721264 and use it as transaction ID. Do not remove the staring zeros.
 `;
 };
 
@@ -69,20 +70,29 @@ export const getTransactionRecordQuery = async (
 ) => {
   try {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const transactionRecord = await mirrornodeService.getTransactionRecord(
-      params.transactionId,
-      params.nonce,
+    const normalisedParams = HederaParameterNormaliser.normaliseGetTransactionRecordParams(
+      params,
+      context,
     );
+
+    const transactionRecord = await mirrornodeService.getTransactionRecord(
+      normalisedParams.transactionId,
+      normalisedParams.nonce,
+    );
+
     return {
       raw: { transactionId: params.transactionId, transactionRecord: transactionRecord },
       humanMessage: postProcess(transactionRecord, params.transactionId),
     };
   } catch (error) {
-    console.error('Error getting transaction record', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get transaction record';
+    console.error('Error getting contract info', error);
+
+    const message = error instanceof Error ? error.message : 'Error getting transaction record';
+
+    return {
+      raw: { transactionId: params.transactionId, error: message },
+      humanMessage: message,
+    };
   }
 };
 

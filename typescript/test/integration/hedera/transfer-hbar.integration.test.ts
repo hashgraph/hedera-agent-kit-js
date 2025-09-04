@@ -21,11 +21,11 @@ describe('Transfer HBAR Integration Tests', () => {
 
     recipientAccountId = await hederaOperationsWrapper
       .createAccount({ key: client.operatorPublicKey as Key })
-      .then(accountId => accountId.toString());
+      .then(resp => resp.accountId!.toString());
 
     recipientAccountId2 = await hederaOperationsWrapper
       .createAccount({ key: client.operatorPublicKey as Key })
-      .then(accountId => accountId.toString());
+      .then(resp => resp.accountId!.toString());
 
     context = {
       mode: AgentMode.AUTONOMOUS,

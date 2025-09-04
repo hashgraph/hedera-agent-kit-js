@@ -2,28 +2,19 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, Key } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
-
-function extractObservation(agentResult: any): any {
-  if (!agentResult.intermediateSteps || agentResult.intermediateSteps.length === 0) {
-    throw new Error('No intermediate steps found in agent result');
-  }
-  const lastStep = agentResult.intermediateSteps[agentResult.intermediateSteps.length - 1];
-  const observationRaw = lastStep.observation;
-  if (!observationRaw) throw new Error('No observation found in intermediate step');
-  return JSON.parse(observationRaw);
-}
+import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
 describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let client: Client;
-  let hederaOps: HederaOperationsWrapper;
+  let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
     agentExecutor = testSetup.agentExecutor;
     client = testSetup.client;
-    hederaOps = new HederaOperationsWrapper(client);
+    hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 
   afterAll(async () => {
@@ -31,29 +22,35 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   });
 
   it('should delete first pre-created account via agent (default transfer to operator)', async () => {
-    const targetAccount = await hederaOps.createAccount({ key: client.operatorPublicKey as Key });
+    const resp = await hederaOperationsWrapper.createAccount({
+      key: client.operatorPublicKey as Key,
+    });
+    const targetAccountId = resp.accountId!.toString();
 
     const deleteResult = await agentExecutor.invoke({
-      input: `Delete the account ${targetAccount.toString()}`,
+      input: `Delete the account ${targetAccountId}`,
     });
 
-    const observation = extractObservation(deleteResult);
+    const observation = extractObservationFromLangchainResponse(deleteResult);
     expect(observation.humanMessage).toContain('deleted');
 
-    await expect(hederaOps.getAccountInfo(targetAccount.toString())).rejects.toBeDefined();
+    await expect(hederaOperationsWrapper.getAccountInfo(resp.toString())).rejects.toBeDefined();
   });
 
   it('should delete second pre-created account via agent (explicit transfer account)', async () => {
-    const targetAccount = await hederaOps.createAccount({ key: client.operatorPublicKey as Key });
+    const resp = await hederaOperationsWrapper.createAccount({
+      key: client.operatorPublicKey as Key,
+    });
+    const targetAccountId = resp.accountId!.toString();
 
     const deleteResult = await agentExecutor.invoke({
-      input: `Delete the account ${targetAccount.toString()} and transfer remaining balance to ${client.operatorAccountId}`,
+      input: `Delete the account ${targetAccountId} and transfer remaining balance to ${client.operatorAccountId}`,
     });
 
-    const observation = extractObservation(deleteResult);
+    const observation = extractObservationFromLangchainResponse(deleteResult);
     expect(observation.humanMessage).toContain('deleted');
 
-    await expect(hederaOps.getAccountInfo(targetAccount.toString())).rejects.toBeDefined();
+    await expect(hederaOperationsWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
   });
 
   it('should fail to delete a non-existent account', async () => {
@@ -62,7 +59,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       input: `Delete the account ${fakeAccountId}`,
     });
 
-    const observation = extractObservation(deleteResult);
+    const observation = extractObservationFromLangchainResponse(deleteResult);
     // Expect the agent to indicate failure
     expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
       /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
@@ -70,24 +67,26 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   });
 
   it('should handle natural language variations', async () => {
-    const targetAccount = await hederaOps.createAccount({
+    const resp = await hederaOperationsWrapper.createAccount({
       key: client.operatorPublicKey as Key,
       initialBalance: 5,
     });
-    const operatorBalanceBefore = await hederaOps.getAccountHbarBalance(
+    const targetAccountId = resp.accountId!.toString();
+
+    const operatorBalanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(
       client.operatorAccountId?.toString()!,
     );
 
     const deleteResult = await agentExecutor.invoke({
-      input: `Remove account id ${targetAccount.toString()} and send balance to ${client.operatorAccountId}`,
+      input: `Remove account id ${targetAccountId} and send balance to ${client.operatorAccountId}`,
     });
-    const observation = extractObservation(deleteResult);
-    const operatorBalanceAfter = await hederaOps.getAccountHbarBalance(
+    const observation = extractObservationFromLangchainResponse(deleteResult);
+    const operatorBalanceAfter = await hederaOperationsWrapper.getAccountHbarBalance(
       client.operatorAccountId?.toString()!,
     );
 
     expect(observation.humanMessage).toContain('deleted');
-    await expect(hederaOps.getAccountInfo(targetAccount.toString())).rejects.toBeDefined();
+    await expect(hederaOperationsWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
     expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy(); // not checking the exact amount, just that it's greater because the delete action and balance check with use of consensus node cost some HBARs
   });
 });
