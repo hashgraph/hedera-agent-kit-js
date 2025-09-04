@@ -86,7 +86,6 @@ describe('Get Transaction Record E2E Tests', () => {
 
     // The agent should execute the tool and return an output that contains transaction details
     expect(observation).toBeDefined();
-    console.log(JSON.stringify(observation, null, 2));
     expect(observation.raw.error).toContain('Invalid transactionId format: invalid-tx-id');
     expect(observation.raw.transactionId).toContain(invalidTxId);
   });

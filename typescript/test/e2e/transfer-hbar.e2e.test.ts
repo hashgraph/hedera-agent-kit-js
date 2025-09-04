@@ -36,7 +36,6 @@ describe('Transfer HBAR E2E Tests', () => {
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should match transfer HBAR tool for simple transfer request', async () => {
-      console.log(recipientAccountId);
       const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
       const amountToTransfer = 0.1; // 0.1 HBAR
       const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccountId}`;
