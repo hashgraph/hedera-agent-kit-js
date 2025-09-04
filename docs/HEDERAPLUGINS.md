@@ -131,9 +131,10 @@ This plugin provides tools for fetching EVM smart contract-related information f
 ### Core Transactions Plugin Tools (`core-transactions-plugin`)
 
 Tools for **transaction-related operations** on Hedera.
-| Tool Name                      | Description                               | Usage                               |
-|--------------------------------|-------------------------------------------|-------------------------------------|
-| `GET_TRANSACTION_RECORD_QUERY_TOOL`     | Returns details for a given transaction id                           | Provide the transaction ID (required). Optionally, provide transaction nonce.                                                       |
+
+| Tool Name                           | Description                                | Usage                                                                         |
+|-------------------------------------|--------------------------------------------|-------------------------------------------------------------------------------|
+| `GET_TRANSACTION_RECORD_QUERY_TOOL` | Returns details for a given transaction id | Provide the transaction ID (required). Optionally, provide transaction nonce. |
 
 ---
 
