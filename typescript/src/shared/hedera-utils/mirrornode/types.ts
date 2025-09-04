@@ -185,3 +185,33 @@ export type TransactionData = {
 export type TransactionDetailsResponse = {
   transactions: TransactionData[];
 };
+
+export interface ContractInfo {
+  admin_key?: {
+    description?: string;
+    _type?: string;
+    example?: string;
+    key?: string;
+  } | null;
+
+  auto_renew_account?: string | null;
+  auto_renew_period?: number | null;
+  contract_id?: string | null;
+  created_timestamp?: string | null;
+  deleted?: boolean;
+  evm_address?: string;
+  expiration_timestamp?: string | null;
+  file_id?: string | null;
+  max_automatic_token_associations?: number | null;
+  memo?: string;
+  nonce?: number | null;
+  obtainer_id?: string | null;
+  permanent_removal?: boolean | null;
+  proxy_account_id?: string | null;
+
+  timestamp?: {
+    description?: string;
+    from: string;
+    to?: string | null;
+  };
+}

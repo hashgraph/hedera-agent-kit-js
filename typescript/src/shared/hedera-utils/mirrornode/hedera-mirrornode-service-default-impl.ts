@@ -11,6 +11,7 @@ import {
   TopicMessagesQueryParams,
   TopicMessagesResponse,
   TransactionDetailsResponse,
+  ContractInfo,
 } from './types';
 import BigNumber from 'bignumber.js';
 
@@ -117,6 +118,12 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
       );
     }
 
+    return await response.json();
+  }
+
+  async getContractInfo(contractId: string): Promise<ContractInfo> {
+    const url = `${this.baseUrl}/contracts/${contractId}`;
+    const response = await fetch(url);
     return await response.json();
   }
 }

@@ -21,6 +21,7 @@ export const createTopicParametersNormalised = (_context: Context = {}) =>
         'The auto renew account for the topic. If not provided, defaults to the operator account.',
       ),
     submitKey: z.custom<PublicKey>().optional().describe('The submit key of topic'),
+    adminKey: z.custom<PublicKey>().optional().describe('The admin key of topic'),
   });
 
 export const submitTopicMessageParameters = (_context: Context = {}) => {
@@ -32,3 +33,11 @@ export const submitTopicMessageParameters = (_context: Context = {}) => {
 
 export const submitTopicMessageParametersNormalised = (_context: Context = {}) =>
   submitTopicMessageParameters(_context).extend({}); // currently no additional fields are needed
+
+export const deleteTopicParameters = (_context: Context = {}) =>
+  z.object({
+    topicId: z.string().describe('The ID of the topic to delete.'),
+  });
+
+export const deleteTopicParametersNormalised = (_context: Context = {}) =>
+  deleteTopicParameters(_context).extend({});

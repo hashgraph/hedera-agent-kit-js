@@ -23,10 +23,10 @@ export const accountTokenBalancesQueryParameters = (_context: Context = {}) =>
     tokenId: z.string().optional().describe('The token ID to query.'),
   });
 
-export const tokenInfoQueryParameters = (_context:Context = {}) =>
+export const tokenInfoQueryParameters = (_context: Context = {}) =>
   z.object({
     tokenId: z.string().optional().describe('The token ID to query.'),
-  })
+  });
 
 export const topicMessagesQueryParameters = (_context: Context = {}) =>
   z.object({

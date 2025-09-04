@@ -15,6 +15,8 @@ import {
   coreTokenQueryPluginToolNames,
   coreTransactionQueryPlugin,
   coreTransactionQueryPluginToolNames,
+  coreEVMQueryPlugin,
+  coreEVMQueryPluginToolNames,
 } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -54,6 +56,8 @@ async function bootstrap(): Promise<void> {
   const { DELETE_ACCOUNT_TOOL, TRANSFER_HBAR_TOOL, UPDATE_ACCOUNT_TOOL, CREATE_ACCOUNT_TOOL } =
     coreAccountPluginToolNames;
 
+  const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
+
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
@@ -72,6 +76,7 @@ async function bootstrap(): Promise<void> {
         GET_TOPIC_MESSAGES_QUERY_TOOL,
         GET_TOKEN_INFO_QUERY_TOOL,
         GET_TRANSACTION_RECORD_QUERY_TOOL,
+        GET_CONTRACT_INFO_QUERY_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
@@ -85,6 +90,7 @@ async function bootstrap(): Promise<void> {
         coreAccountQueryPlugin,
         coreTokenQueryPlugin,
         coreTransactionQueryPlugin,
+        coreEVMQueryPlugin,
       ], // Add the example plugin
       context: {
         mode: AgentMode.AUTONOMOUS,
