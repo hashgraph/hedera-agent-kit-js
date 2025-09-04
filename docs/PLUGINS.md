@@ -215,6 +215,8 @@ Once you have a repository, published npm package, and a README with a descripti
 
 2. Include the same information **in the README.md of this repository** under the **Third Party Plugins** section.
 
+3. If you would like to include your plugin functionality in the Hedera plugin built for ElizaOS simply make a PR to [add your plugin name to the `plugins` array in the Hedera ElizaOS plugin](https://github.com/elizaos-plugins/plugin-hedera/blob/1.x/src/adapter-plugin/plugin.ts#L72) where the configuration is initiated. The hedera-agent-kit adaptor architecture means your plugin functionality will be usable with no additional configuration needed.
+
 Feel free to also [reach out to the Hedera Agent Kit maintainers on Discord](https://hedera.com/discord) or another channel so we can test out your plugin, include it in our docs, and let our community know thorough marketing and community channels.
 
 Please also reach out in the Hedera Discord in the Support > developer-help-desk channelor create an Issue in this repository for help building, publishing, and promoting your plugin
