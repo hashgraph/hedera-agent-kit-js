@@ -13,6 +13,10 @@ import {
   coreConsensusQueryPluginToolNames,
 } from './core-consensus-query-plugin';
 import { coreEVMQueryPlugin, coreEVMQueryPluginToolNames } from './core-evm-query-plugin';
+import {
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
+} from './core-transactions-query-plugin';
 
 
 export {
@@ -34,6 +38,8 @@ export {
   coreConsensusQueryPluginToolNames,
   coreEVMQueryPlugin,
   coreEVMQueryPluginToolNames,
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
 };
 
 // Deprecated exports for backward compatibility

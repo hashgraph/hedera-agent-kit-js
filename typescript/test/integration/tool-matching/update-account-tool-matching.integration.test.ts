@@ -32,7 +32,7 @@ describe('Update Account Tool Matching Integration Tests', () => {
       const input = 'Update account 0.0.1234 memo to "Updated Memo"';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -48,7 +48,7 @@ describe('Update Account Tool Matching Integration Tests', () => {
         'Set max automatic token associations to 5 and decline staking rewards for my account';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -66,7 +66,7 @@ describe('Update Account Tool Matching Integration Tests', () => {
       const input = 'Update the account 0.0.9 to stake to 0.0.10';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -92,7 +92,7 @@ describe('Update Account Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run');
+        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
         await agentExecutor.invoke({ input: variation.input });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(

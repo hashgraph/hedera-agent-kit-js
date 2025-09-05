@@ -151,6 +151,41 @@ export type TokenInfo = {
   };
 };
 
+export type TransferData = {
+  account: string;
+  amount: number;
+  is_approval: boolean;
+};
+
+export type TransactionData = {
+  batch_key: string | null;
+  bytes: string | null;
+  charged_tx_fee: number;
+  consensus_timestamp: string;
+  entity_id: string;
+  max_fee: string;
+  max_custom_fees: any[];
+  memo_base64: string;
+  name: string;
+  nft_transfers: any[];
+  node: string;
+  nonce: number;
+  parent_consensus_timestamp: string | null;
+  result: string;
+  scheduled: boolean;
+  staking_reward_transfers: any[];
+  token_transfers: any[];
+  transaction_hash: string;
+  transaction_id: string;
+  transfers: TransferData[];
+  valid_duration_seconds: string;
+  valid_start_timestamp: string;
+};
+
+export type TransactionDetailsResponse = {
+  transactions: TransactionData[];
+};
+
 export interface ContractInfo {
   admin_key?: {
     description?: string;
