@@ -30,7 +30,7 @@ describe('Get Account Query Tool Matching Integration Tests', () => {
       const input = 'Get account info for 0.0.1234';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -47,7 +47,7 @@ describe('Get Account Query Tool Matching Integration Tests', () => {
       const input = 'Query details of account 0.0.5555';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -70,7 +70,7 @@ describe('Get Account Query Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run');
+        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
         await agentExecutor.invoke({ input: variation.input });
 
         expect(spy).toHaveBeenCalledOnce();
