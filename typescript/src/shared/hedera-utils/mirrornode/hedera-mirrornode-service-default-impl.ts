@@ -27,7 +27,20 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getAccount(accountId: string): Promise<AccountResponse> {
     const url = `${this.baseUrl}/accounts/${accountId}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch account ${accountId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
     const data: AccountAPIResponse = await response.json();
+
+    // Check if the response is empty (no account found)
+    if (!data.account) {
+      throw new Error(`Account ${accountId} not found`);
+    }
+
     return {
       accountId: data.account,
       accountPublicKey: data?.key?.key,
