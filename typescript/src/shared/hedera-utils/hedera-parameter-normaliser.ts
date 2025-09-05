@@ -397,11 +397,14 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof transferERC721Parameters>>,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
-    _context: Context,
+    context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ) {
+    // Resolve fromAddress using AccountResolver pattern, similar to transfer-hbar
+    const resolvedFromAddress = AccountResolver.resolveAccount(params.fromAddress, context, client);
     const fromAddress = await HederaParameterNormaliser.getHederaEVMAddress(
-      params.fromAddress,
+      resolvedFromAddress,
       mirrorNode,
     );
     const toAddress = await HederaParameterNormaliser.getHederaEVMAddress(
