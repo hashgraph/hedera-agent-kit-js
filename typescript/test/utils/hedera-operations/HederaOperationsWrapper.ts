@@ -31,6 +31,7 @@ import {
   submitTopicMessageParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
+import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 
 class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
@@ -39,95 +40,83 @@ class HederaOperationsWrapper {
   // ACCOUNT OPERATIONS
   async createAccount(
     params: z.infer<ReturnType<typeof createAccountParametersNormalised>>,
-  ): Promise<AccountId> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.createAccount(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    return result.raw.accountId!;
+    return {
+      status: result.raw.status,
+      accountId: result.raw.accountId,
+      tokenId: null,
+      topicId: null,
+      transactionId: result.raw.transactionId,
+    };
   }
 
   async deleteAccount(
     params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>,
-  ): Promise<string> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.deleteAccount(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    return result.raw.status;
+    return result.raw;
   }
 
   // TOKEN OPERATIONS
   async createFungibleToken(
     params: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>,
-  ): Promise<TokenId> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.createFungibleToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    return result.raw.tokenId!;
+    return result.raw;
   }
 
   async createNonFungibleToken(
     params: z.infer<ReturnType<typeof createNonFungibleTokenParametersNormalised>>,
-  ): Promise<TokenId> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.createNonFungibleToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.tokenId!;
+    return result.raw;
   }
 
   async deleteToken(
     params: z.infer<ReturnType<typeof deleteTokenParametersNormalised>>,
-  ): Promise<string> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.deleteToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
   // TOPIC OPERATIONS
   async createTopic(
     params: z.infer<ReturnType<typeof createTopicParametersNormalised>>,
-  ): Promise<TopicId> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.createTopic(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.topicId!;
+    return result.raw;
   }
 
   async deleteTopic(
     params: z.infer<ReturnType<typeof deleteTopicParametersNormalised>>,
-  ): Promise<string> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.deleteTopic(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
   async submitMessage(
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
-  ): Promise<string> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.submitTopicMessage(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
   // TRANSFERS AND AIRDROPS
   async transferHbar(
     params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>,
-  ): Promise<string> {
+  ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.transferHbar(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
   async transferFungible(params: {
@@ -135,7 +124,7 @@ class HederaOperationsWrapper {
     from?: string;
     to: string;
     amount: number;
-  }): Promise<string> {
+  }): Promise<RawTransactionResponse> {
     const tx = new TransferTransaction()
       .addTokenTransfer(
         TokenId.fromString(params.tokenId),
@@ -149,10 +138,7 @@ class HederaOperationsWrapper {
       );
 
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
   async transferNft(params: {
@@ -161,7 +147,7 @@ class HederaOperationsWrapper {
     from?: string;
     to: string;
     memo?: string;
-  }): Promise<string> {
+  }): Promise<RawTransactionResponse> {
     const nft = new NftId(TokenId.fromString(params.tokenId), params.serial);
     const tx = new TransferTransaction().addNftTransfer(
       nft,
@@ -170,24 +156,22 @@ class HederaOperationsWrapper {
     );
 
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
-  async associateToken(params: { accountId: string; tokenId: string }): Promise<string> {
+  async associateToken(params: {
+    accountId: string;
+    tokenId: string;
+  }): Promise<RawTransactionResponse> {
     const tx = new TokenAssociateTransaction({
       accountId: AccountId.fromString(params.accountId),
       tokenIds: [TokenId.fromString(params.tokenId)],
     });
     const result = await this.executeStrategy.handle(tx, this.client, {});
-    if (result.raw.status !== 'SUCCESS') {
-      throw new Error(result.raw.status);
-    }
-    return result.raw.status;
+    return result.raw;
   }
 
+  // READ-ONLY QUERIES
   async getAccountBalances(accountId: string) {
     const query = new AccountBalanceQuery().setAccountId(AccountId.fromString(accountId));
     return await query.execute(this.client);

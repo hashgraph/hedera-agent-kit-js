@@ -33,7 +33,8 @@ describe('Delete Account Integration Tests', () => {
     const params: z.infer<ReturnType<typeof createAccountParametersNormalised>> = {
       key: client.operatorPublicKey as Key,
     };
-    return await hederaOperationsWrapper.createAccount(params);
+    const resp = await hederaOperationsWrapper.createAccount(params);
+    return resp.accountId!;
   };
 
   describe('Valid Delete Account Scenarios', () => {

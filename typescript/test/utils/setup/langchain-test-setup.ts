@@ -18,6 +18,8 @@ import {
   coreTokenQueryPluginToolNames,
   coreConsensusQueryPlugin,
   coreConsensusQueryPluginToolNames,
+  coreTransactionQueryPluginToolNames,
+  coreTransactionQueryPlugin,
 } from '@/plugins';
 import { getClientForTests } from './client-setup';
 
@@ -53,6 +55,8 @@ const {
 const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
+const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
+
 // Default toolkit configuration - should include all possible actions
 const TOOLKIT_OPTIONS: LangchainTestOptions = {
   tools: [
@@ -72,6 +76,7 @@ const TOOLKIT_OPTIONS: LangchainTestOptions = {
     GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
     GET_TOPIC_MESSAGES_QUERY_TOOL,
     GET_TOKEN_INFO_QUERY_TOOL,
+    GET_TRANSACTION_RECORD_QUERY_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
@@ -80,6 +85,7 @@ const TOOLKIT_OPTIONS: LangchainTestOptions = {
     coreTokenQueryPlugin,
     coreTokenPlugin,
     coreConsensusPlugin,
+    coreTransactionQueryPlugin,
   ],
   agentMode: AgentMode.AUTONOMOUS,
 };

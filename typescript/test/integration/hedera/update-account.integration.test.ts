@@ -10,19 +10,22 @@ describe('Update Account Integration Tests', () => {
   let customClient: Client;
   let client: Client;
   let context: Context;
-  let hederaOps: HederaOperationsWrapper;
+  let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
     client = getClientForTests();
-    hederaOps = new HederaOperationsWrapper(client);
+    hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 
   beforeEach(async () => {
     const privateKey = PrivateKey.generateED25519();
-    const accountId = await hederaOps.createAccount({
-      key: privateKey.publicKey as Key,
-      initialBalance: 5,
-    });
+    const accountId = await hederaOperationsWrapper
+      .createAccount({
+        key: privateKey.publicKey as Key,
+        initialBalance: 5,
+      })
+      .then(resp => resp.accountId!);
+
     customClient = getCustomClient(accountId, privateKey);
 
     context = {
@@ -46,7 +49,7 @@ describe('Update Account Integration Tests', () => {
     expect(result.humanMessage).toContain('Account successfully updated.');
     expect(result.raw.transactionId).toBeDefined();
 
-    const info = await hederaOps.getAccountInfo(accountId);
+    const info = await hederaOperationsWrapper.getAccountInfo(accountId);
     expect(info.accountMemo).toBe('updated via integration test');
     expect(info).toBeDefined();
   });
@@ -63,7 +66,7 @@ describe('Update Account Integration Tests', () => {
     const result: any = await tool.execute(customClient, context, params);
     expect(result.raw.status).toBeDefined();
 
-    const info = await hederaOps.getAccountInfo(accountId);
+    const info = await hederaOperationsWrapper.getAccountInfo(accountId);
     expect(info).toBeDefined();
   });
 
@@ -84,8 +87,8 @@ describe('Update Account Integration Tests', () => {
   });
 
   afterEach(async () => {
-    const customHederaOps = new HederaOperationsWrapper(customClient);
-    await customHederaOps.deleteAccount({
+    const customHederaOperationsWrapper = new HederaOperationsWrapper(customClient);
+    await customHederaOperationsWrapper.deleteAccount({
       accountId: customClient.operatorAccountId!,
       transferAccountId: client.operatorAccountId!,
     });
