@@ -17,6 +17,8 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
+  accountBalanceQueryParameters,
+  accountTokenBalancesQueryParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -26,10 +28,6 @@ import {
 import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
-import {
-  accountBalanceQueryParameters,
-  accountTokenBalancesQueryParameters,
-} from '@/shared/parameter-schemas/query.zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
 import Long from 'long';
