@@ -2,16 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, Key } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
-
-function extractObservation(agentResult: any): any {
-  if (!agentResult.intermediateSteps || agentResult.intermediateSteps.length === 0) {
-    throw new Error('No intermediate steps found in agent result');
-  }
-  const lastStep = agentResult.intermediateSteps[agentResult.intermediateSteps.length - 1];
-  const observationRaw = lastStep.observation;
-  if (!observationRaw) throw new Error('No observation found in intermediate step');
-  return JSON.parse(observationRaw);
-}
+import { extractObservationFromLangchainResponse } from '../utils/general-utils';
 
 describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
@@ -42,7 +33,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
       input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
     });
 
-    const observation = extractObservation(updateResult);
+    const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
     const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
@@ -61,7 +52,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
       input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
     });
 
-    const observation = extractObservation(updateResult);
+    const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
     const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
@@ -80,7 +71,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
       input: `Update account ${targetAccount.toString()} to decline staking rewards`,
     });
 
-    const observation = extractObservation(updateResult);
+    const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
     const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
@@ -93,7 +84,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
       input: `Update account ${fakeAccountId} memo to "x"`,
     });
 
-    const observation = extractObservation(updateResult);
+    const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
       /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
     );

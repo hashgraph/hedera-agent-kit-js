@@ -11,25 +11,27 @@ describe('Get Account Query Integration Tests', () => {
   let customClient: Client;
   let client: Client;
   let context: Context;
-  let hederaOps: HederaOperationsWrapper;
-  let createdAccount: AccountId;
+  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let createdAccountId: AccountId;
 
   beforeAll(async () => {
     client = getClientForTests();
-    hederaOps = new HederaOperationsWrapper(client);
+    hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 
   beforeEach(async () => {
     // Create a fresh account for each test
     const privateKey = PrivateKey.generateED25519();
-    createdAccount = await hederaOps.createAccount({
-      key: privateKey.publicKey as Key,
-      initialBalance: 10,
-    });
+    createdAccountId = await hederaOperationsWrapper
+      .createAccount({
+        key: privateKey.publicKey as Key,
+        initialBalance: 10,
+      })
+      .then(resp => resp.accountId!);
 
     await wait(4000);
 
-    customClient = getCustomClient(createdAccount, privateKey);
+    customClient = getCustomClient(createdAccountId, privateKey);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -41,20 +43,20 @@ describe('Get Account Query Integration Tests', () => {
     const tool = getAccountQueryTool(context);
 
     const params: z.infer<ReturnType<typeof accountQueryParameters>> = {
-      accountId: createdAccount.toString(),
+      accountId: createdAccountId.toString(),
     };
 
     const result: any = await tool.execute(client, context, params);
 
     expect(result).toBeDefined();
     expect(result.raw).toBeDefined();
-    expect(result.raw.account.accountId).toBe(createdAccount.toString());
+    expect(result.raw.account.accountId).toBe(createdAccountId.toString());
     expect(result.raw.account.evmAddress).toBeDefined();
     expect(result.raw.account.accountPublicKey).toEqual(
       customClient.operatorPublicKey?.toStringRaw(),
     );
 
-    expect(result.humanMessage).toContain(`Details for ${createdAccount.toString()}`);
+    expect(result.humanMessage).toContain(`Details for ${createdAccountId.toString()}`);
     expect(result.humanMessage).toContain('Balance:');
     expect(result.humanMessage).toContain('Public Key:');
     expect(result.humanMessage).toContain('EVM address:');

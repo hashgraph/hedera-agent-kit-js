@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, Key } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { extractObservationFromLangchainResponse } from '../utils/general-utils';
 
 describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;

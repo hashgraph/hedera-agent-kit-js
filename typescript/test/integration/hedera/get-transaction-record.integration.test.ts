@@ -4,7 +4,7 @@ import { getTransactionRecordQuery } from '@/plugins/core-transactions-query-plu
 import { getClientForTests, HederaOperationsWrapper } from '../../utils';
 import { Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { wait } from '../../utils/general-util';
+import { wait } from '../../utils/general-utils';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   let client: Client;

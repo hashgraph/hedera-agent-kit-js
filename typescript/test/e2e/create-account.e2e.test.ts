@@ -3,7 +3,7 @@ import { createLangchainTestSetup, LangchainTestSetup } from '../utils';
 import { AgentExecutor } from 'langchain/agents';
 import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
 import { Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { extractObservationFromLangchainResponse } from '../utils/general-utils';
 
 // Helper function to extract accountId from agentExecutor result
 function extractAccountId(agentResult: any): string {

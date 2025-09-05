@@ -6,17 +6,7 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { wait } from '../utils/general-utils';
-
-function extractObservation(agentResult: any): any {
-  if (!agentResult.intermediateSteps || agentResult.intermediateSteps.length === 0) {
-    throw new Error('No intermediate steps found in agent result');
-  }
-  const lastStep = agentResult.intermediateSteps[agentResult.intermediateSteps.length - 1];
-  const observationRaw = lastStep.observation;
-  if (!observationRaw) throw new Error('No observation found in intermediate step');
-  return JSON.parse(observationRaw);
-}
+import { extractObservationFromLangchainResponse, wait } from '../utils/general-utils';
 
 describe('Get Account Query E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -37,10 +27,12 @@ describe('Get Account Query E2E Tests', () => {
 
   it('should return account info for a newly created account', async () => {
     const privateKey = PrivateKey.generateED25519();
-    const accountId = await hederaOps.createAccount({
-      key: privateKey.publicKey as Key,
-      initialBalance: 10,
-    });
+    const accountId = await hederaOps
+      .createAccount({
+        key: privateKey.publicKey as Key,
+        initialBalance: 10,
+      })
+      .then(resp => resp.accountId!);
 
     // Give the mirror node a chance to sync
     await wait(4000);
@@ -49,7 +41,7 @@ describe('Get Account Query E2E Tests', () => {
       input: `Get account info for ${accountId.toString()}`,
     });
 
-    const observation = extractObservation(queryResult);
+    const observation = extractObservationFromLangchainResponse(queryResult);
 
     expect(observation.humanMessage).toContain(`Details for ${accountId.toString()}`);
     expect(observation.humanMessage).toContain('Balance:');
@@ -70,7 +62,7 @@ describe('Get Account Query E2E Tests', () => {
       input: `Query details for account ${operatorId}`,
     });
 
-    const observation = extractObservation(queryResult);
+    const observation = extractObservationFromLangchainResponse(queryResult);
 
     expect(observation.humanMessage).toContain(`Details for ${operatorId}`);
     expect(observation.humanMessage).toContain('Balance:');
@@ -88,7 +80,7 @@ describe('Get Account Query E2E Tests', () => {
       input: `Get account info for ${fakeAccountId}`,
     });
 
-    const observation = extractObservation(queryResult);
+    const observation = extractObservationFromLangchainResponse(queryResult);
 
     expect(observation.humanMessage).toContain(`Failed to fetch account ${fakeAccountId}`);
   });
