@@ -33,14 +33,18 @@ describe('Get HBAR Balance E2E Tests', () => {
     account1Balance = 2;
     account2Balance = 0;
 
-    targetAccount1 = await hederaOperationsWrapper.createAccount({
-      key: client.operatorPublicKey as Key,
-      initialBalance: account1Balance,
-    });
-    targetAccount2 = await hederaOperationsWrapper.createAccount({
-      key: client.operatorPublicKey as Key,
-      initialBalance: account2Balance,
-    });
+    targetAccount1 = await hederaOperationsWrapper
+      .createAccount({
+        key: client.operatorPublicKey as Key,
+        initialBalance: account1Balance,
+      })
+      .then(resp => resp.accountId!);
+    targetAccount2 = await hederaOperationsWrapper
+      .createAccount({
+        key: client.operatorPublicKey as Key,
+        initialBalance: account2Balance,
+      })
+      .then(resp => resp.accountId!);
 
     await wait(4000);
   }, 15000);

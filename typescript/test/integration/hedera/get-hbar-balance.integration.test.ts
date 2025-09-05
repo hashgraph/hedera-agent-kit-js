@@ -20,10 +20,12 @@ describe('Get HBAR Balance Integration Tests', () => {
     operatorAccountId = client.operatorAccountId!;
     hederaOperationsWrapper = new HederaOperationsWrapper(client);
 
-    recipientAccountId = await hederaOperationsWrapper.createAccount({
-      key: client.operatorPublicKey as Key,
-      initialBalance: 1,
-    });
+    recipientAccountId = await hederaOperationsWrapper
+      .createAccount({
+        key: client.operatorPublicKey as Key,
+        initialBalance: 1,
+      })
+      .then(resp => resp.accountId!);
 
     // wait for the mirror node to be updated
     await wait(4000);
@@ -53,7 +55,7 @@ describe('Get HBAR Balance Integration Tests', () => {
     const res: any = await tool.execute(client, context, params);
 
     expect(res.raw.accountId).toBe(recipientAccountId.toString());
-    expect(Number(res.raw.hbarBalance)).toBe(1); // TODO: handle mirror node not finding an account!
+    expect(Number(res.raw.hbarBalance)).toBe(1);
     expect(res.humanMessage).toContain(`Account ${recipientAccountId.toString()} has a balance of`);
   });
 
@@ -68,5 +70,18 @@ describe('Get HBAR Balance Integration Tests', () => {
 
     expect(res.raw.accountId).toBe(operatorAccountId.toString());
     expect(Number(res.raw.hbarBalance)).toBe(toDisplayUnit(operatorAccountBalance, 8).toNumber());
+  });
+
+  it('should handle not finding provided account', async () => {
+    const nonExistentAccountId = '0.0.999999999999';
+    const params: z.infer<ReturnType<typeof accountBalanceQueryParameters>> = {
+      accountId: nonExistentAccountId,
+    } as any;
+
+    const tool = getHbarBalanceTool({ ...context, accountId: operatorAccountId.toString() });
+    const res: any = await tool.execute(client, context, params);
+
+    expect(res.raw.accountId).toBe(nonExistentAccountId);
+    expect(res.humanMessage).toContain(`Failed to fetch hbar balance for`);
   });
 });
