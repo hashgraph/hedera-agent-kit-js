@@ -80,7 +80,8 @@ This plugin provides tools for fetching **Consensus Service (HCS)** related info
 
 ### Core Token Plugin Tools (`core-token-plugin`)
 
-A plugin for the Hedera **Token Service (HTS)**, enabling creation and management of fungible and non-fungible tokens.
+A plugin for the Hedera **Token Service (HTS)**, enabling creation and management of fungible
+and non-fungible tokens.
 
 | Tool Name                        | Description                                               | Usage                                                                                                                                                                                             |
 |----------------------------------|-----------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -130,7 +131,10 @@ This plugin provides tools for fetching EVM smart contract-related information f
 ### Core Transactions Plugin Tools (`core-transactions-plugin`)
 
 Tools for **transaction-related operations** on Hedera.
-(Documentation TBD once tools are implemented.)
+
+| Tool Name                           | Description                                | Usage                                                                         |
+|-------------------------------------|--------------------------------------------|-------------------------------------------------------------------------------|
+| `GET_TRANSACTION_RECORD_QUERY_TOOL` | Returns details for a given transaction id | Provide the transaction ID (required). Optionally, provide transaction nonce. |
 
 ---
 
@@ -173,7 +177,6 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
 
 ```javascript
  const hederaAgentToolkit = new HederaLangchainToolkit({
-
   client,
   configuration: {
     tools: [
@@ -200,4 +203,4 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
     ],
   },
 });
-```
+  ```

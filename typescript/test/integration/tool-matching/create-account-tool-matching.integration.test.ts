@@ -31,7 +31,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
       const input = 'Create a new Hedera account';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -43,7 +43,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
       const input = 'Create an account with memo "Payment account" and initial balance 1.5 HBAR';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -61,7 +61,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
       const input = 'Create a new account with public key 302a300506032b6570032100abcdef';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -78,7 +78,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
       const input = 'Create an account with max automatic token associations 10';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run');
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
 
       await agentExecutor.invoke({ input });
 
@@ -101,7 +101,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run');
+        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
         await agentExecutor.invoke({ input: variation.input });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
@@ -116,7 +116,6 @@ describe('Create Account Tool Matching Integration Tests', () => {
   describe('Tool Available', () => {
     it('should have create account tool available', () => {
       const tools = toolkit.getTools();
-      console.log(JSON.stringify(tools, null, 2));
       const createAccount = tools.find(tool => tool.name === 'create_account_tool');
 
       expect(createAccount).toBeDefined();

@@ -21,11 +21,11 @@ describe('Transfer HBAR E2E Tests', () => {
 
     recipientAccountId = await hederaOperationsWrapper
       .createAccount({ key: client.operatorPublicKey as Key })
-      .then(accountId => accountId.toString());
+      .then(resp => resp.accountId!.toString());
 
     recipientAccountId2 = await hederaOperationsWrapper
       .createAccount({ key: client.operatorPublicKey as Key })
-      .then(accountId => accountId.toString());
+      .then(resp => resp.accountId!.toString());
   });
 
   afterAll(async () => {

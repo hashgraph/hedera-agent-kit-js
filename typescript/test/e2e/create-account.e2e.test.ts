@@ -3,20 +3,11 @@ import { createLangchainTestSetup, LangchainTestSetup } from '../utils';
 import { AgentExecutor } from 'langchain/agents';
 import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
 import { Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
 // Helper function to extract accountId from agentExecutor result
 function extractAccountId(agentResult: any): string {
-  if (!agentResult.intermediateSteps || agentResult.intermediateSteps.length === 0) {
-    throw new Error('No intermediate steps found in agent result');
-  }
-
-  const lastStep = agentResult.intermediateSteps[agentResult.intermediateSteps.length - 1];
-  const observationRaw = lastStep.observation;
-  if (!observationRaw) {
-    throw new Error('No observation found in intermediate step');
-  }
-
-  const observation = JSON.parse(observationRaw);
+  const observation = extractObservationFromLangchainResponse(agentResult);
 
   if (!observation.raw?.accountId) {
     throw new Error('No raw.accountId found in observation');
