@@ -17,7 +17,7 @@ describe('Create Account Integration Tests', () => {
     operatorClient = getOperatorClientForTests();
     hederaOperationsWrapper = new HederaOperationsWrapper(operatorClient);
 
-    const executorKeyPair = PrivateKey.generateED25519(); // TODO: decide key type
+    const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await hederaOperationsWrapper
       .createAccount({
         initialBalance: 2,

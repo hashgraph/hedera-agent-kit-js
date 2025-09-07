@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import deleteAccountTool from '@/plugins/core-account-plugin/tools/account/delete-account';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import {
   deleteAccountParameters,
@@ -10,57 +10,83 @@ import {
 } from '@/shared/parameter-schemas/account.zod';
 
 describe('Delete Account Integration Tests', () => {
-  let client: Client;
+  let operatorClient: Client;
+  let executorClient: Client;
   let context: Context;
   let hederaOperationsWrapper: HederaOperationsWrapper;
+  let executorOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    operatorClient = getOperatorClientForTests();
+    hederaOperationsWrapper = new HederaOperationsWrapper(operatorClient);
+
+    const executorKeyPair = PrivateKey.generateED25519();
+    const executorAccountId = await hederaOperationsWrapper
+      .createAccount({
+        initialBalance: 5, // For creating and deleting accounts
+        key: executorKeyPair.publicKey,
+      })
+      .then(resp => resp.accountId!);
+    executorClient = getCustomClient(executorAccountId, executorKeyPair);
+    executorOperationsWrapper = new HederaOperationsWrapper(executorClient);
+
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: client.operatorAccountId!.toString(),
+      accountId: executorAccountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      client.close();
+    if (executorClient) {
+      // Transfer remaining balance back to operator and delete an executor account
+      try {
+        await executorOperationsWrapper.deleteAccount({
+          accountId: executorClient.operatorAccountId!,
+          transferAccountId: operatorClient.operatorAccountId!,
+        });
+      } catch (error) {
+        console.warn('Failed to clean up executor account:', error);
+      }
+      executorClient.close();
+    }
+    if (operatorClient) {
+      operatorClient.close();
     }
   });
 
   const createTempAccount = async (): Promise<AccountId> => {
     const params: z.infer<ReturnType<typeof createAccountParametersNormalised>> = {
-      key: client.operatorPublicKey as Key,
+      key: executorClient.operatorPublicKey as Key,
+      initialBalance: 1, // Give it some balance to be transferred upon deletion
     };
-    const resp = await hederaOperationsWrapper.createAccount(params);
+    const resp = await executorOperationsWrapper.createAccount(params);
     return resp.accountId!;
   };
 
   describe('Valid Delete Account Scenarios', () => {
-    it('should delete an account and transfer remaining balance to operator by default', async () => {
+    it('should delete an account and transfer remaining balance to executor by default', async () => {
       const accountId = await createTempAccount();
 
       const tool = deleteAccountTool(context);
       const params: z.infer<ReturnType<typeof deleteAccountParameters>> = {
         accountId: accountId.toString(),
-      } as any;
+      };
 
-      const result: any = await tool.execute(client, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('Account successfully deleted.');
       expect(result.humanMessage).toContain('Transaction ID:');
-      expect(result.raw.status).toBeDefined();
+      expect(result.raw.status).toBe('SUCCESS');
 
       // Verify the account is deleted by expecting failure on info fetch
       await expect(
-        hederaOperationsWrapper.getAccountInfo(accountId.toString()),
+        executorOperationsWrapper.getAccountInfo(accountId.toString()),
       ).rejects.toBeDefined();
     });
 
     it('should delete an account and transfer remaining balance to a specified account', async () => {
       const accountId = await createTempAccount();
-      const transferTo = client.operatorAccountId!.toString();
+      const transferTo = operatorClient.operatorAccountId!.toString();
 
       const tool = deleteAccountTool(context);
       const params: z.infer<ReturnType<typeof deleteAccountParameters>> = {
@@ -68,11 +94,12 @@ describe('Delete Account Integration Tests', () => {
         transferAccountId: transferTo,
       } as any;
 
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
       expect(result.raw.transactionId).toBeDefined();
+      expect(result.raw.status).toBe('SUCCESS');
 
       await expect(
-        hederaOperationsWrapper.getAccountInfo(accountId.toString()),
+        executorOperationsWrapper.getAccountInfo(accountId.toString()),
       ).rejects.toBeDefined();
     });
   });
@@ -82,12 +109,12 @@ describe('Delete Account Integration Tests', () => {
       const tool = deleteAccountTool(context);
       const params: z.infer<ReturnType<typeof deleteAccountParameters>> = {
         accountId: '0.0.999999999',
-      } as any;
+      };
 
-      const result: any = await tool.execute(client, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       if (typeof result === 'string') {
-        expect(result).toMatch(/INVALID_ACCOUNT_ID|ACCOUNT_DELETED|INVALID_SIGNATURE|NOT_FOUND/i);
+        expect(result).toMatch(/INVALID_ACCOUNT_ID/i);
       } else {
         expect(result.raw.status).not.toBe('SUCCESS');
       }
