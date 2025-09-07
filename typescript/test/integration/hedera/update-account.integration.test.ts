@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, beforeAll, afterEach } from 'vitest';
 import { Client, Key, PrivateKey } from '@hashgraph/sdk';
 import updateAccountTool from '@/plugins/core-account-plugin/tools/account/update-account';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
+import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
 
@@ -13,7 +13,7 @@ describe('Update Account Integration Tests', () => {
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
+    client = getOperatorClientForTests();
     hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 

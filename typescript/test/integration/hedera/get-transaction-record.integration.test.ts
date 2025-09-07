@@ -1,7 +1,7 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import { AccountId, Client, TransactionId } from '@hashgraph/sdk';
 import { getTransactionRecordQuery } from '@/plugins/core-transactions-query-plugin/tools/queries/get-transaction-record-query';
-import { getClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '../../utils/general-util';
@@ -13,7 +13,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
+    client = getOperatorClientForTests();
   });
 
   it('fetches record for a recent transfer using real Client', async () => {

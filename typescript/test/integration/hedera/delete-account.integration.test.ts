@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AccountId, Client, Key } from '@hashgraph/sdk';
 import deleteAccountTool from '@/plugins/core-account-plugin/tools/account/delete-account';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import {
   deleteAccountParameters,
@@ -15,7 +15,7 @@ describe('Delete Account Integration Tests', () => {
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
+    client = getOperatorClientForTests();
     hederaOperationsWrapper = new HederaOperationsWrapper(client);
     context = {
       mode: AgentMode.AUTONOMOUS,

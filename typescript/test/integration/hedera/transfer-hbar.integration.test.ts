@@ -2,7 +2,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, AccountId, Key } from '@hashgraph/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, HederaOperationsWrapper, verifyHbarBalanceChange } from '../../utils';
+import {
+  getOperatorClientForTests,
+  HederaOperationsWrapper,
+  verifyHbarBalanceChange,
+} from '../../utils';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 
@@ -15,7 +19,7 @@ describe('Transfer HBAR Integration Tests', () => {
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
+    client = getOperatorClientForTests();
     operatorAccountId = client.operatorAccountId!;
     hederaOperationsWrapper = new HederaOperationsWrapper(client);
 

@@ -1,38 +1,62 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key } from '@hashgraph/sdk';
+import { Client, Key, PrivateKey } from '@hashgraph/sdk';
 import createAccountTool from '@/plugins/core-account-plugin/tools/account/create-account';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { createAccountParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe('Create Account Integration Tests', () => {
-  let client: Client;
+  let operatorClient: Client;
+  let executorClient: Client;
   let context: Context;
   let hederaOperationsWrapper: HederaOperationsWrapper;
+  let executorOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    operatorClient = getOperatorClientForTests();
+    hederaOperationsWrapper = new HederaOperationsWrapper(operatorClient);
+
+    const executorKeyPair = PrivateKey.generateED25519(); // TODO: decide key type
+    const executorAccountId = await hederaOperationsWrapper
+      .createAccount({
+        initialBalance: 2,
+        key: executorKeyPair.publicKey,
+      })
+      .then(resp => resp.accountId!);
+    executorClient = getCustomClient(executorAccountId, executorKeyPair);
+    executorOperationsWrapper = new HederaOperationsWrapper(executorClient);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: client.operatorAccountId!.toString(),
+      accountId: executorAccountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      client.close();
+    if (executorClient) {
+      // Transfer remaining balance back to operator and delete an executor account
+      try {
+        await executorOperationsWrapper.deleteAccount({
+          accountId: executorClient.operatorAccountId!,
+          transferAccountId: operatorClient.operatorAccountId!,
+        });
+      } catch (error) {
+        console.warn('Failed to clean up executor account:', error);
+      }
+      executorClient.close();
+    }
+    if (operatorClient) {
+      operatorClient.close();
     }
   });
 
   describe('Valid Create Account Scenarios', () => {
-    it('should create an account with operator public key by default', async () => {
+    it('should create an account with executor public key by default', async () => {
       const params: z.infer<ReturnType<typeof createAccountParameters>> = {};
 
       const tool = createAccountTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('Account created successfully.');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -42,7 +66,7 @@ describe('Create Account Integration Tests', () => {
       expect(result.raw.accountId).toBeDefined();
 
       // verify the account exists by fetching info
-      const info = await hederaOperationsWrapper.getAccountInfo(result.raw.accountId!.toString());
+      const info = await executorOperationsWrapper.getAccountInfo(result.raw.accountId!.toString());
       expect(info.accountId.toString()).toBe(result.raw.accountId!.toString());
     });
 
@@ -53,28 +77,28 @@ describe('Create Account Integration Tests', () => {
       };
 
       const tool = createAccountTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('Account created successfully.');
       expect(result.raw.status).toBe('SUCCESS');
       const newAccountId = result.raw.accountId!.toString();
 
-      const balance = await hederaOperationsWrapper.getAccountHbarBalance(newAccountId);
+      const balance = await executorOperationsWrapper.getAccountHbarBalance(newAccountId);
       // At least 0.05 HBAR in tinybars
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8);
 
-      const info = await hederaOperationsWrapper.getAccountInfo(newAccountId);
+      const info = await executorOperationsWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe('Integration test account');
     });
 
     it('should create an account with explicit public key', async () => {
-      const publicKey = client.operatorPublicKey as Key;
+      const publicKey = executorClient.operatorPublicKey as Key;
       const params: z.infer<ReturnType<typeof createAccountParameters>> = {
         publicKey: publicKey.toString(),
       };
 
       const tool = createAccountTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.raw.status).toBe('SUCCESS');
       expect(result.raw.accountId).toBeDefined();
@@ -88,7 +112,7 @@ describe('Create Account Integration Tests', () => {
       };
 
       const tool = createAccountTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       if (typeof result === 'string') {
         expect(result).toContain(
@@ -105,7 +129,7 @@ describe('Create Account Integration Tests', () => {
       };
 
       const tool = createAccountTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       if (typeof result === 'string') {
         expect(result).toContain('failed precheck with status INVALID_INITIAL_BALANCE');

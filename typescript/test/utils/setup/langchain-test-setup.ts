@@ -21,7 +21,7 @@ import {
   coreTransactionQueryPluginToolNames,
   coreTransactionQueryPlugin,
 } from '@/plugins';
-import { getClientForTests } from './client-setup';
+import { getOperatorClientForTests } from './client-setup';
 
 export interface LangchainTestSetup {
   client: Client;
@@ -114,7 +114,7 @@ export async function createLangchainTestSetup(
   llmOptions: LlmOptions = DEFAULT_LLM_OPTIONS,
   customClient: Client | undefined = undefined,
 ): Promise<LangchainTestSetup> {
-  const client = customClient || getClientForTests();
+  const client = customClient || getOperatorClientForTests();
   const operatorAccountId = client.operatorAccountId!;
 
   // Resolve provider from env (set by GitHub Actions matrix), or fallback to llmOptions
