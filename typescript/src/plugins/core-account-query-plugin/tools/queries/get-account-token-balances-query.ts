@@ -26,6 +26,9 @@ ${usageInstructions}
 };
 
 const postProcess = (tokenBalances: TokenBalancesResponse, accountId: string) => {
+  if (tokenBalances.tokens.length === 0) {
+    return `No token balances found for account ${accountId}`;
+  }
   const balancesText = tokenBalances.tokens
     .map(
       token => `  Token: ${token.token_id}, Balance: ${token.balance}, Decimals: ${token.decimals}`,

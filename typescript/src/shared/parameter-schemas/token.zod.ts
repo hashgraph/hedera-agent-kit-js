@@ -22,6 +22,7 @@ export const createFungibleTokenParametersNormalised = (_context: Context = {}) 
   createFungibleTokenParameters(_context).extend({
     autoRenewAccountId: z
       .string()
+      .optional()
       .describe(
         'The auto renew account for the token. If not provided, defaults to the operator account.',
       ),
