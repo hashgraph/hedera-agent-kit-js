@@ -10,22 +10,22 @@ describe('Create Account Integration Tests', () => {
   let operatorClient: Client;
   let executorClient: Client;
   let context: Context;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
-  let executorOperationsWrapper: HederaOperationsWrapper;
+  let operatorWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(operatorClient);
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await hederaOperationsWrapper
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
       .createAccount({
         initialBalance: 2,
-        key: executorKeyPair.publicKey,
+        key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorOperationsWrapper = new HederaOperationsWrapper(executorClient);
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -37,7 +37,7 @@ describe('Create Account Integration Tests', () => {
     if (executorClient) {
       // Transfer remaining balance back to operator and delete an executor account
       try {
-        await executorOperationsWrapper.deleteAccount({
+        await executorWrapper.deleteAccount({
           accountId: executorClient.operatorAccountId!,
           transferAccountId: operatorClient.operatorAccountId!,
         });
@@ -66,7 +66,7 @@ describe('Create Account Integration Tests', () => {
       expect(result.raw.accountId).toBeDefined();
 
       // verify the account exists by fetching info
-      const info = await executorOperationsWrapper.getAccountInfo(result.raw.accountId!.toString());
+      const info = await executorWrapper.getAccountInfo(result.raw.accountId!.toString());
       expect(info.accountId.toString()).toBe(result.raw.accountId!.toString());
     });
 
@@ -83,11 +83,11 @@ describe('Create Account Integration Tests', () => {
       expect(result.raw.status).toBe('SUCCESS');
       const newAccountId = result.raw.accountId!.toString();
 
-      const balance = await executorOperationsWrapper.getAccountHbarBalance(newAccountId);
+      const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
       // At least 0.05 HBAR in tinybars
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8);
 
-      const info = await executorOperationsWrapper.getAccountInfo(newAccountId);
+      const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe('Integration test account');
     });
 

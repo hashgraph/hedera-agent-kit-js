@@ -14,21 +14,21 @@ describe('Delete Account Integration Tests', () => {
   let executorClient: Client;
   let context: Context;
   let hederaOperationsWrapper: HederaOperationsWrapper;
-  let executorOperationsWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
     hederaOperationsWrapper = new HederaOperationsWrapper(operatorClient);
 
-    const executorKeyPair = PrivateKey.generateED25519();
+    const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await hederaOperationsWrapper
       .createAccount({
         initialBalance: 5, // For creating and deleting accounts
-        key: executorKeyPair.publicKey,
+        key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorOperationsWrapper = new HederaOperationsWrapper(executorClient);
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -40,7 +40,7 @@ describe('Delete Account Integration Tests', () => {
     if (executorClient) {
       // Transfer remaining balance back to operator and delete an executor account
       try {
-        await executorOperationsWrapper.deleteAccount({
+        await executorWrapper.deleteAccount({
           accountId: executorClient.operatorAccountId!,
           transferAccountId: operatorClient.operatorAccountId!,
         });
@@ -59,7 +59,7 @@ describe('Delete Account Integration Tests', () => {
       key: executorClient.operatorPublicKey as Key,
       initialBalance: 1, // Give it some balance to be transferred upon deletion
     };
-    const resp = await executorOperationsWrapper.createAccount(params);
+    const resp = await executorWrapper.createAccount(params);
     return resp.accountId!;
   };
 
@@ -79,9 +79,7 @@ describe('Delete Account Integration Tests', () => {
       expect(result.raw.status).toBe('SUCCESS');
 
       // Verify the account is deleted by expecting failure on info fetch
-      await expect(
-        executorOperationsWrapper.getAccountInfo(accountId.toString()),
-      ).rejects.toBeDefined();
+      await expect(executorWrapper.getAccountInfo(accountId.toString())).rejects.toBeDefined();
     });
 
     it('should delete an account and transfer remaining balance to a specified account', async () => {
@@ -98,9 +96,7 @@ describe('Delete Account Integration Tests', () => {
       expect(result.raw.transactionId).toBeDefined();
       expect(result.raw.status).toBe('SUCCESS');
 
-      await expect(
-        executorOperationsWrapper.getAccountInfo(accountId.toString()),
-      ).rejects.toBeDefined();
+      await expect(executorWrapper.getAccountInfo(accountId.toString())).rejects.toBeDefined();
     });
   });
 

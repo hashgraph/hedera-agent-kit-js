@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterEach, afterAll } from 'vitest';
 import { Client, Key, PrivateKey } from '@hashgraph/sdk';
 import updateAccountTool from '@/plugins/core-account-plugin/tools/account/update-account';
 import { Context, AgentMode } from '@/shared/configuration';
@@ -8,18 +8,24 @@ import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod'
 
 describe('Update Account Integration Tests', () => {
   let customClient: Client;
-  let client: Client;
+  let operatorClient: Client;
   let context: Context;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let operatorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+  });
+
+  afterAll(async () => {
+    if (operatorClient) {
+      operatorClient.close();
+    }
   });
 
   beforeEach(async () => {
     const privateKey = PrivateKey.generateED25519();
-    const accountId = await hederaOperationsWrapper
+    const accountId = await operatorWrapper
       .createAccount({
         key: privateKey.publicKey as Key,
         initialBalance: 5,
@@ -32,6 +38,15 @@ describe('Update Account Integration Tests', () => {
       mode: AgentMode.AUTONOMOUS,
       accountId: customClient.operatorAccountId!.toString(),
     };
+  });
+
+  afterEach(async () => {
+    const customHederaOperationsWrapper = new HederaOperationsWrapper(customClient);
+    await customHederaOperationsWrapper.deleteAccount({
+      accountId: customClient.operatorAccountId!,
+      transferAccountId: operatorClient.operatorAccountId!,
+    });
+    customClient.close();
   });
 
   it('should update account memo and maxAutomaticTokenAssociations', async () => {
@@ -49,9 +64,10 @@ describe('Update Account Integration Tests', () => {
     expect(result.humanMessage).toContain('Account successfully updated.');
     expect(result.raw.transactionId).toBeDefined();
 
-    const info = await hederaOperationsWrapper.getAccountInfo(accountId);
+    const info = await operatorWrapper.getAccountInfo(accountId);
     expect(info.accountMemo).toBe('updated via integration test');
     expect(info).toBeDefined();
+    expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(4);
   });
 
   it('should update declineStakingReward flag', async () => {
@@ -66,8 +82,9 @@ describe('Update Account Integration Tests', () => {
     const result: any = await tool.execute(customClient, context, params);
     expect(result.raw.status).toBeDefined();
 
-    const info = await hederaOperationsWrapper.getAccountInfo(accountId);
+    const info = await operatorWrapper.getAccountInfo(accountId);
     expect(info).toBeDefined();
+    expect(info.stakingInfo?.declineStakingReward).toBe(true);
   });
 
   it('should fail with invalid account id', async () => {
@@ -84,14 +101,5 @@ describe('Update Account Integration Tests', () => {
     } else {
       expect(result.raw.status).not.toBe('SUCCESS');
     }
-  });
-
-  afterEach(async () => {
-    const customHederaOperationsWrapper = new HederaOperationsWrapper(customClient);
-    await customHederaOperationsWrapper.deleteAccount({
-      accountId: customClient.operatorAccountId!,
-      transferAccountId: client.operatorAccountId!,
-    });
-    customClient.close();
   });
 });
