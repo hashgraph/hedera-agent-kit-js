@@ -106,7 +106,7 @@ export class LLMFactory {
       case LLMProvider.GROQ:
         return 'llama3-8b-8192';
       default:
-        return 'gpt-4o-mini';
+        throw new Error(`Unsupported LLM provider: ${provider}`);
     }
   }
 }
