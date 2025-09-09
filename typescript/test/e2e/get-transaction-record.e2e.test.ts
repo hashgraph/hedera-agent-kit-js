@@ -4,28 +4,46 @@ import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
   type LangchainTestSetup,
+  getOperatorClientForTests,
+  getCustomClient,
 } from '../utils';
-import { Client, TransactionId } from '@hashgraph/sdk';
+import { Client, TransactionId, PrivateKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-utils';
 import Long from 'long';
 
 describe('Get Transaction Record E2E Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
-  let client: Client;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let executorClient: Client;
+  let operatorClient: Client;
+  let executorWrapper: HederaOperationsWrapper;
   let txIdSdkStyle: TransactionId;
   let txIdMirrorNodeStyle: string;
 
+  // The operator account (from env variables) funds the setup process.
+  // 1. An executor account is created using the operator account as the source of HBARs.
+  // 2. The executor account is used to perform all Hedera operations required for the tests.
+  // 3. LangChain is configured to run with the executor account as its client.
+  // 4. After all tests are complete, the executor account is deleted and its remaining balance
+  //    is transferred back to the operator account.
   beforeAll(async () => {
-    testSetup = await createLangchainTestSetup();
+    operatorClient = getOperatorClientForTests();
+    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .then(resp => resp.accountId!);
+
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
-    client = testSetup.client;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
 
     // Create a self-transfer to produce a transaction id
-    const operatorAccountId = client.operatorAccountId!.toString();
-    const rawResponse = await hederaOperationsWrapper.transferHbar({
+    const operatorAccountId = executorClient.operatorAccountId!.toString();
+    const rawResponse = await executorWrapper.transferHbar({
       hbarTransfers: [
         { accountId: operatorAccountId, amount: 0.00000001 },
         { accountId: operatorAccountId, amount: -0.00000001 },
@@ -33,65 +51,66 @@ describe('Get Transaction Record E2E Tests', () => {
     });
 
     txIdSdkStyle = TransactionId.fromString(rawResponse.transactionId!);
-    const padNanos = (n: Long | number) => n.toString().padStart(9, '0'); // pad with leading zeros to 9 digits
-    txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${padNanos(txIdSdkStyle.validStart!.nanos!)}`;
 
+    const padNanos = (n: Long | number) => n.toString().padStart(9, '0');
+    txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${padNanos(
+      txIdSdkStyle.validStart!.nanos!,
+    )}`;
+
+    // Wait for the mirror node to index the transaction
     await wait(4000);
   });
 
-  it('should fetch transaction record via agent flow for a real transaction - sdk notation of transaction id', async () => {
+  afterAll(async () => {
+    if (testSetup && operatorClient) {
+      await executorWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
+      testSetup.cleanup();
+      operatorClient.close();
+    }
+  });
+
+  it('fetches transaction record - SDK transactionId notation', async () => {
     const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
-
     const result = await agentExecutor.invoke({ input });
-
     const observation = extractObservationFromLangchainResponse(result);
 
-    // The agent should execute the tool and return an output that contains transaction details
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain(`Transaction Details for ${txIdMirrorNodeStyle}`);
   });
 
-  it('should fetch transaction record via agent flow for a real transaction - mirror node notation of transaction id', async () => {
+  it('fetches transaction record - Mirror Node transactionId notation', async () => {
     const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
-
     const result = await agentExecutor.invoke({ input });
-
     const observation = extractObservationFromLangchainResponse(result);
 
-    // The agent should execute the tool and return an output that contains transaction details
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain(`Transaction Details for ${txIdMirrorNodeStyle}`);
   });
 
-  it('should handle fetching invalid transaction', async () => {
+  it('handles non-existent transaction ID', async () => {
     const invalidTxId = '0.0.1-1756968265-043000618';
     const input = `Get the transaction record for transaction ${invalidTxId}`;
 
     const result = await agentExecutor.invoke({ input });
-
     const observation = extractObservationFromLangchainResponse(result);
 
-    // The agent should execute the tool and return an output that contains transaction details
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('HTTP error! status: 404. Message: Not Found');
     expect(observation.raw.transactionId).toContain(invalidTxId);
   });
 
-  it('should handle fetching invalid transaction', async () => {
+  it('handles invalid transaction ID format', async () => {
     const invalidTxId = 'invalid-tx-id';
     const input = `Get the transaction record for transaction ${invalidTxId}`;
 
     const result = await agentExecutor.invoke({ input });
-
     const observation = extractObservationFromLangchainResponse(result);
 
-    // The agent should execute the tool and return an output that contains transaction details
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('Invalid transactionId format: invalid-tx-id');
     expect(observation.raw.transactionId).toContain(invalidTxId);
-  });
-
-  afterAll(async () => {
-    if (testSetup) testSetup.cleanup();
   });
 });

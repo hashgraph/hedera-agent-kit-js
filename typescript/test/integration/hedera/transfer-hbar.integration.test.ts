@@ -1,53 +1,90 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, AccountId, Key } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, HederaOperationsWrapper, verifyHbarBalanceChange } from '../../utils';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+  HederaOperationsWrapper,
+  verifyHbarBalanceChange,
+} from '../../utils';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe('Transfer HBAR Integration Tests', () => {
-  let client: Client;
+  let operatorClient: Client;
+  let executorClient: Client;
   let context: Context;
-  let operatorAccountId: AccountId;
-  let recipientAccountId: string;
-  let recipientAccountId2: string;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let recipientAccountId: AccountId;
+  let recipientAccountId2: AccountId;
+  let operatorWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
-    operatorAccountId = client.operatorAccountId!;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    recipientAccountId = await hederaOperationsWrapper
-      .createAccount({ key: client.operatorPublicKey as Key })
-      .then(resp => resp.accountId!.toString());
+    const executorKeyPair = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({
+        initialBalance: 5, // To cover transfers and account creations
+        key: executorKeyPair.publicKey,
+      })
+      .then(resp => resp.accountId!);
+    executorClient = getCustomClient(executorAccountId, executorKeyPair);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    recipientAccountId2 = await hederaOperationsWrapper
-      .createAccount({ key: client.operatorPublicKey as Key })
-      .then(resp => resp.accountId!.toString());
+    recipientAccountId = await executorWrapper
+      .createAccount({ key: executorClient.operatorPublicKey as Key })
+      .then(resp => resp.accountId!);
+
+    recipientAccountId2 = await executorWrapper
+      .createAccount({ key: executorClient.operatorPublicKey as Key })
+      .then(resp => resp.accountId!);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: operatorAccountId.toString(),
+      accountId: executorAccountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      client.close();
+    if (executorClient) {
+      // Transfer remaining balance back to operator and delete executor account
+      try {
+        await executorWrapper.deleteAccount({
+          accountId: recipientAccountId,
+          transferAccountId: operatorClient.operatorAccountId!,
+        });
+        await executorWrapper.deleteAccount({
+          accountId: recipientAccountId2,
+          transferAccountId: operatorClient.operatorAccountId!,
+        });
+        await executorWrapper.deleteAccount({
+          accountId: executorClient.operatorAccountId!,
+          transferAccountId: operatorClient.operatorAccountId!,
+        });
+      } catch (error) {
+        console.warn('Failed to clean up accounts:', error);
+      }
+      executorClient.close();
+    }
+    if (operatorClient) {
+      operatorClient.close();
     }
   });
 
   describe('Valid Transfer Scenarios', () => {
     it('should successfully transfer HBAR to a single recipient', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
       const amountToTransfer = 0.1; // 0.1 HBAR
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: amountToTransfer,
           },
         ],
@@ -55,7 +92,7 @@ describe('Transfer HBAR Integration Tests', () => {
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       // Check that the result contains a transaction ID
       expect(result.humanMessage).toContain('HBAR successfully transferred');
@@ -65,27 +102,29 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change using the helper function
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore,
         amountToTransfer,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
 
     it('should successfully transfer HBAR to multiple recipients', async () => {
-      const balanceBefore1 =
-        await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const balanceBefore2 =
-        await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId2);
+      const balanceBefore1 = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
+      const balanceBefore2 = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId2.toString(),
+      );
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: 0.05,
           },
           {
-            accountId: recipientAccountId2,
+            accountId: recipientAccountId2.toString(),
             amount: 0.05,
           },
         ],
@@ -93,7 +132,7 @@ describe('Transfer HBAR Integration Tests', () => {
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -102,35 +141,37 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance changes for both recipients
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore1,
         0.05,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
       await verifyHbarBalanceChange(
-        recipientAccountId2,
+        recipientAccountId2.toString(),
         balanceBefore2,
         0.05,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
 
     it('should successfully transfer with explicit source account', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: 0.1,
           },
         ],
-        sourceAccountId: operatorAccountId.toString(),
+        sourceAccountId: executorClient.operatorAccountId!.toString(),
         transactionMemo: 'Explicit source account test',
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -139,27 +180,29 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore,
         0.1,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
 
     it('should successfully transfer without memo', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: 0.05,
           },
         ],
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -168,10 +211,10 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore,
         0.05,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
   });
@@ -181,14 +224,14 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: 0,
           },
         ],
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       // Should return an object with humanMessage and raw
       expect(result.raw.status).not.toBe('SUCCESS');
@@ -199,14 +242,14 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: -0.1,
           },
         ],
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       // Should return an object with humanMessage and raw
       expect(result.raw.status).not.toBe('SUCCESS'); // no success code
@@ -224,7 +267,7 @@ describe('Transfer HBAR Integration Tests', () => {
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       // Should return an object with humanMessage and raw
       expect(result.raw.status).not.toBe('SUCCESS'); // no success code
@@ -235,14 +278,14 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: 1000000, // 1 million HBAR - likely more than test account has
           },
         ],
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       // Should return an object with humanMessage and raw
       expect(result.raw.status).not.toBe('SUCCESS'); //no success code
@@ -252,13 +295,15 @@ describe('Transfer HBAR Integration Tests', () => {
 
   describe('Edge Cases', () => {
     it('should handle very small amounts (1 tinybar equivalent)', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
       const amountToTransfer = 0.00000001; // 1 tinybar
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: amountToTransfer,
           },
         ],
@@ -266,7 +311,7 @@ describe('Transfer HBAR Integration Tests', () => {
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -275,22 +320,24 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore,
         amountToTransfer,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
 
     it('should handle long memo strings', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
       const longMemo = 'A'.repeat(90); // Close to 100 char limit for memos
       const amountToTransfer = 0.01;
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipientAccountId.toString(),
             amount: amountToTransfer,
           },
         ],
@@ -298,7 +345,7 @@ describe('Transfer HBAR Integration Tests', () => {
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -307,15 +354,17 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore,
         amountToTransfer,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
 
     it('should handle maximum number of transfers in a single transaction', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccountId.toString(),
+      );
       const transferAmount = 0.001;
       const transferCount = 10;
       const totalAmount = transferAmount * transferCount;
@@ -324,7 +373,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const transfers = Array(transferCount)
         .fill(null)
         .map((_, _index) => ({
-          accountId: recipientAccountId,
+          accountId: recipientAccountId.toString(),
           amount: transferAmount,
         }));
 
@@ -334,7 +383,7 @@ describe('Transfer HBAR Integration Tests', () => {
       };
 
       const tool = transferHbarTool(context);
-      const result = await tool.execute(client, context, params);
+      const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('HBAR successfully transferred');
       expect(result.humanMessage).toContain('Transaction ID:');
@@ -343,10 +392,10 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify total balance change
       await verifyHbarBalanceChange(
-        recipientAccountId,
+        recipientAccountId.toString(),
         balanceBefore,
         totalAmount,
-        hederaOperationsWrapper,
+        executorWrapper,
       );
     });
   });

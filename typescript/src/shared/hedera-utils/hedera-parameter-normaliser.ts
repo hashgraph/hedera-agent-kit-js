@@ -368,7 +368,7 @@ export default class HederaParameterNormaliser {
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
-    const recipientAddress = await HederaParameterNormaliser.getHederaEVMAddress(
+    const recipientAddress = await AccountResolver.getHederaEVMAddress(
       params.recipientAddress,
       mirrorNode,
     );
@@ -395,14 +395,17 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof transferERC721Parameters>>,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
-    _context: Context,
+    context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ) {
-    const fromAddress = await HederaParameterNormaliser.getHederaEVMAddress(
-      params.fromAddress,
+    // Resolve fromAddress using AccountResolver pattern, similar to transfer-hbar
+    const resolvedFromAddress = AccountResolver.resolveAccount(params.fromAddress, context, client);
+    const fromAddress = await AccountResolver.getHederaEVMAddress(
+      resolvedFromAddress,
       mirrorNode,
     );
-    const toAddress = await HederaParameterNormaliser.getHederaEVMAddress(
+    const toAddress = await AccountResolver.getHederaEVMAddress(
       params.toAddress,
       mirrorNode,
     );
@@ -433,7 +436,7 @@ export default class HederaParameterNormaliser {
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
-    const toAddress = await HederaParameterNormaliser.getHederaEVMAddress(
+    const toAddress = await AccountResolver.getHederaEVMAddress(
       params.toAddress,
       mirrorNode,
     );
@@ -530,17 +533,6 @@ export default class HederaParameterNormaliser {
     }
 
     return normalised;
-  }
-
-  static async getHederaEVMAddress(
-    address: string,
-    mirrorNode: IHederaMirrornodeService,
-  ): Promise<string> {
-    if (!AccountResolver.isHederaAddress(address)) {
-      return address;
-    }
-    const account = await mirrorNode.getAccount(address);
-    return account.evmAddress;
   }
 
   static async getHederaAccountId(

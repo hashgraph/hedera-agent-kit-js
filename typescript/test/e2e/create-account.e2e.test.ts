@@ -1,11 +1,16 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
-import { createLangchainTestSetup, LangchainTestSetup } from '../utils';
+import {
+  createLangchainTestSetup,
+  getCustomClient,
+  getOperatorClientForTests,
+  LangchainTestSetup,
+} from '../utils';
 import { AgentExecutor } from 'langchain/agents';
 import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
 import { Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse } from '../utils/general-utils';
 
-// Helper function to extract accountId from agentExecutor result
+// Extracts accountId string (shard.realm.num) from agentExecutor result
 function extractAccountId(agentResult: any): string {
   const observation = extractObservationFromLangchainResponse(agentResult);
 
@@ -20,31 +25,53 @@ function extractAccountId(agentResult: any): string {
 describe('Create Account E2E Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
-  let client: Client;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let executorClient: Client;
+  let operatorClient: Client;
+  let executorWrapper: HederaOperationsWrapper;
 
+  // The operator account (from env variables) funds the setup process.
+  // 1. An executor account is created using the operator account as the source of HBARs.
+  // 2. The executor account is used to perform all Hedera operations required for the tests.
+  // 3. LangChain is configured to run with the executor account as its client.
+  // 4. After all tests are complete, the executor account is deleted and its remaining balance
+  //    is transferred back to the operator account.
   beforeAll(async () => {
-    testSetup = await createLangchainTestSetup(); // picks E2E LLM provider automatically
+    // Use operator Client to fund a temporary executor account
+    operatorClient = getOperatorClientForTests();
+    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .then(resp => resp.accountId!);
+
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
-    client = testSetup.client;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
   afterAll(async () => {
-    if (testSetup) {
+    if (testSetup && operatorClient) {
+      await executorWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
       testSetup.cleanup();
+      operatorClient.close();
     }
   });
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should create an account with default operator public key', async () => {
+      const publicKey = executorClient.operatorPublicKey as PublicKey;
       const input = `Create a new Hedera account`;
-      const publicKey = client.operatorPublicKey as PublicKey;
 
       const result = await agentExecutor.invoke({ input });
       const newAccountId = extractAccountId(result);
 
-      const info = await hederaOperationsWrapper.getAccountInfo(newAccountId);
+      const info = await executorWrapper.getAccountInfo(newAccountId);
       expect((info.key as PublicKey).toStringRaw()).toBe(publicKey.toStringRaw());
     });
 
@@ -54,10 +81,10 @@ describe('Create Account E2E Tests', () => {
       const result = await agentExecutor.invoke({ input });
       const newAccountId = extractAccountId(result);
 
-      const info = await hederaOperationsWrapper.getAccountInfo(newAccountId);
+      const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe('E2E test account');
 
-      const balance = await hederaOperationsWrapper.getAccountHbarBalance(newAccountId);
+      const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8); // tinybars
     });
 
@@ -68,7 +95,7 @@ describe('Create Account E2E Tests', () => {
       const result = await agentExecutor.invoke({ input });
       const newAccountId = extractAccountId(result);
 
-      const info = await hederaOperationsWrapper.getAccountInfo(newAccountId);
+      const info = await executorWrapper.getAccountInfo(newAccountId);
       expect((info.key as Key).toString()).toBe(publicKey.toString());
     });
   });
@@ -80,7 +107,7 @@ describe('Create Account E2E Tests', () => {
       const result = await agentExecutor.invoke({ input });
       const newAccountId = extractAccountId(result);
 
-      const balance = await hederaOperationsWrapper.getAccountHbarBalance(newAccountId);
+      const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.0001 * 1e8);
     });
 
@@ -91,7 +118,7 @@ describe('Create Account E2E Tests', () => {
       const result = await agentExecutor.invoke({ input });
       const newAccountId = extractAccountId(result);
 
-      const info = await hederaOperationsWrapper.getAccountInfo(newAccountId);
+      const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe(longMemo);
     });
   });

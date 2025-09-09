@@ -34,6 +34,18 @@ export class PromptGenerator {
     return lines.join('\n');
   }
 
+  static getAnyAddressParameterDescription(   
+    paramName: string,
+    context: Context,
+    isRequired: boolean = false,
+  ): string {
+    if (isRequired) {
+      return `${paramName} (str, required): The account address. This can be the EVM address or the Hedera account id`;
+    }
+
+    return `${paramName} (str, optional): The Hedera account ID or EVM address. If not provided, defaults to the ${AccountResolver.getDefaultAccountDescription(context)}`;
+  }
+
   /**
    * Generates a consistent description for optional account parameters.
    */

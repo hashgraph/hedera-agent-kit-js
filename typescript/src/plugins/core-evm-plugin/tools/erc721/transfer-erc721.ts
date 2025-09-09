@@ -15,6 +15,7 @@ import { transferERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 
 const transferERC721Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
+  const fromAddressDesc = PromptGenerator.getAnyAddressParameterDescription('fromAddress', context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
   return `
@@ -24,7 +25,7 @@ This tool will transfer an existing ERC721 token on Hedera.
 
 Parameters:
 - contractId (str, required): The id of the ERC721 contract
-- fromAddress (str, required): The address from which the token will be transfered. This can be the EVM address or the Hedera account id.
+- ${fromAddressDesc}
 - toAddress (str, required): The address to which the token will be transferred. This can be the EVM address or the Hedera account id.
 - tokenId (number, required): The ID of the transfered token
 ${usageInstructions}
@@ -48,6 +49,7 @@ const transferERC721 = async (
       ERC721_TRANSFER_FUNCTION_NAME,
       context,
       mirrorNode,
+      client,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result = await handleTransaction(tx, client, context);

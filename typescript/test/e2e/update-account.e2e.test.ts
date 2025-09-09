@@ -1,34 +1,76 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key } from '@hashgraph/sdk';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
-import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
+import {
+  createLangchainTestSetup,
+  getCustomClient,
+  getOperatorClientForTests,
+  HederaOperationsWrapper,
+  LangchainTestSetup,
+} from '../utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-utils';
 
 describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
-  let client: Client;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let operatorClient: Client;
+  let executorClient: Client;
+  let operatorWrapper: HederaOperationsWrapper;
+  let executionWrapper: HederaOperationsWrapper;
+  let targetAccount: AccountId; // account created per test, tests run one by one
 
+  // The operator account (from env variables) funds the setup process.
+  // 1. An executor account is created using the operator account as the source of HBARs.
+  // 2. The executor account is used to perform all Hedera operations required for the tests.
+  // 3. LangChain is configured to run with the executor account as its client.
+  // 4. After all tests are complete, the executor account is deleted and its remaining balance
+  //    is transferred back to the operator account.
   beforeAll(async () => {
-    testSetup = await createLangchainTestSetup();
+    // operator client creation
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    // execution account and client creation
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .then(resp => resp.accountId!);
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executionWrapper = new HederaOperationsWrapper(executorClient);
+
+    // setting up langchain to run with the execution account
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
-    client = testSetup.client;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 
   afterAll(async () => {
-    if (testSetup) testSetup.cleanup();
+    if (testSetup && operatorClient) {
+      await executionWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
+      testSetup.cleanup();
+      operatorClient.close();
+    }
+  });
+
+  beforeEach(async () => {
+    targetAccount = await executionWrapper
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        initialBalance: 0,
+      })
+      .then(resp => resp.accountId!);
+  });
+
+  afterEach(async () => {
+    await executionWrapper.deleteAccount({
+      accountId: targetAccount,
+      transferAccountId: executorClient.operatorAccountId!,
+    });
   });
 
   it('should update memo of a pre-created account via agent', async () => {
-    const targetAccount = await hederaOperationsWrapper
-      .createAccount({
-        key: client.operatorPublicKey as Key,
-        initialBalance: 5,
-      })
-      .then(resp => resp.accountId!);
-
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
     });
@@ -36,18 +78,11 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
-    const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
+    const info = await executionWrapper.getAccountInfo(targetAccount.toString());
     expect(info.accountMemo).toBe('updated via agent');
   });
 
   it('should update maxAutomaticTokenAssociations via agent', async () => {
-    const targetAccount = await hederaOperationsWrapper
-      .createAccount({
-        key: client.operatorPublicKey as Key,
-        initialBalance: 5,
-      })
-      .then(resp => resp.accountId!);
-
     const updateResult = await agentExecutor.invoke({
       input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
     });
@@ -55,18 +90,11 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
-    const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
+    const info = await executionWrapper.getAccountInfo(targetAccount.toString());
     expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
   });
 
   it('should update declineStakingReward flag via agent', async () => {
-    const targetAccount = await hederaOperationsWrapper
-      .createAccount({
-        key: client.operatorPublicKey as Key,
-        initialBalance: 5,
-      })
-      .then(resp => resp.accountId!);
-
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${targetAccount.toString()} to decline staking rewards`,
     });
@@ -74,7 +102,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     const observation = extractObservationFromLangchainResponse(updateResult);
     expect(observation.humanMessage).toContain('updated');
 
-    const info = await hederaOperationsWrapper.getAccountInfo(targetAccount.toString());
+    const info = await executionWrapper.getAccountInfo(targetAccount.toString());
     expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
   });
 
