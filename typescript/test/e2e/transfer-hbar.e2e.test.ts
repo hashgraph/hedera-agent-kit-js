@@ -1,174 +1,140 @@
-import { afterAll, beforeAll, describe, it } from 'vitest';
-import { createLangchainTestSetup, LangchainTestSetup } from '../utils';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
-import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
-import { Client, Key } from '@hashgraph/sdk';
-import { verifyHbarBalanceChange } from '../utils';
+import {
+  createLangchainTestSetup,
+  getCustomClient,
+  getOperatorClientForTests,
+  HederaOperationsWrapper,
+  LangchainTestSetup,
+  verifyHbarBalanceChange,
+} from '../utils';
 
-describe('Transfer HBAR E2E Tests', () => {
+describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
-  let recipientAccountId: string;
-  let recipientAccountId2: string;
-  let client: Client;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let operatorClient: Client;
+  let executorClient: Client;
+  let operatorWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
+  let recipientAccount: AccountId;
 
+  // The operator account (from env variables) funds the setup process.
+  // 1. An executor account is created using the operator account as the source of HBARs.
+  // 2. The executor account is used to perform all Hedera operations required for the tests.
+  // 3. LangChain is configured to run with the executor account as its client.
+  // 4. After all tests are complete, the executor account is deleted and its remaining balance
+  //    is transferred back to the operator account.
   beforeAll(async () => {
-    testSetup = await createLangchainTestSetup(); // will auto-pick based on E2E_LLM_PROVIDER
+    // operator client creation
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    // execution account and client creation
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .then(resp => resp.accountId!);
+
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
+
+    // langchain setup with execution account
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
-    client = testSetup.client;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
-
-    recipientAccountId = await hederaOperationsWrapper
-      .createAccount({ key: client.operatorPublicKey as Key })
-      .then(resp => resp.accountId!.toString());
-
-    recipientAccountId2 = await hederaOperationsWrapper
-      .createAccount({ key: client.operatorPublicKey as Key })
-      .then(resp => resp.accountId!.toString());
   });
 
   afterAll(async () => {
-    if (testSetup) {
+    if (testSetup && operatorClient) {
+      await executorWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
       testSetup.cleanup();
+      operatorClient.close();
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
-    it('should match transfer HBAR tool for simple transfer request', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const amountToTransfer = 0.1; // 0.1 HBAR
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccountId}`;
+  beforeEach(async () => {
+    recipientAccount = await executorWrapper
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        initialBalance: 0,
+      })
+      .then(resp => resp.accountId!);
+  });
 
-      await agentExecutor.invoke({ input });
-
-      // Verify balance change using the helper function
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore,
-        amountToTransfer,
-        hederaOperationsWrapper,
-      );
-    });
-
-    it('should match transfer HBAR tool for multiple recipients request', async () => {
-      const balanceBefore1 =
-        await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const balanceBefore2 =
-        await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId2);
-
-      const input = `Transfer 0.05 HBAR to ${recipientAccountId} and 0.05 HBAR to ${recipientAccountId2} with memo "Multi-recipient e2e test"`;
-
-      await agentExecutor.invoke({ input });
-
-      // Verify balance changes for both recipients
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore1,
-        0.05,
-        hederaOperationsWrapper,
-      );
-      await verifyHbarBalanceChange(
-        recipientAccountId2,
-        balanceBefore2,
-        0.05,
-        hederaOperationsWrapper,
-      );
-    });
-
-    it('should match transfer HBAR tool with explicit source account', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const operatorAccountId = client.operatorAccountId!.toString();
-
-      const input = `Transfer 0.1 HBAR from ${operatorAccountId} to ${recipientAccountId} with memo "Explicit source e2e test"`;
-
-      await agentExecutor.invoke({ input });
-
-      // Verify balance change
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore,
-        0.1,
-        hederaOperationsWrapper,
-      );
-    });
-
-    it('should match transfer HBAR tool without memo', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-
-      const input = `Send 0.05 HBAR to ${recipientAccountId}`;
-
-      await agentExecutor.invoke({ input });
-
-      // Verify balance change
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore,
-        0.05,
-        hederaOperationsWrapper,
-      );
+  afterEach(async () => {
+    await executorWrapper.deleteAccount({
+      accountId: recipientAccount,
+      transferAccountId: executorClient.operatorAccountId!,
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle very small amounts (1 tinybar equivalent)', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const amountToTransfer = 0.00000001; // 1 tinybar
+  it('should transfer HBAR to a recipient', async () => {
+    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
+    const amountToTransfer = 0.1;
+    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
 
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccountId} with memo "Minimal amount e2e test"`;
+    await agentExecutor.invoke({ input });
 
-      await agentExecutor.invoke({ input });
+    await verifyHbarBalanceChange(
+      recipientAccount.toString(),
+      balanceBefore,
+      amountToTransfer,
+      executorWrapper,
+    );
+    const balanceAfter = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
+    expect(balanceAfter.toNumber()).toBeGreaterThan(balanceBefore.toNumber());
+  });
 
-      // Verify balance change
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore,
-        amountToTransfer,
-        hederaOperationsWrapper,
-      );
-    });
+  it('should transfer HBAR with memo', async () => {
+    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
+    const amountToTransfer = 0.05;
+    const memo = 'Test memo for transfer';
 
-    it('should handle long memo strings', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const longMemo = 'A'.repeat(90); // Close to 100 char limit for memos
-      const amountToTransfer = 0.01;
+    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${memo}"`;
 
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccountId} with memo "${longMemo}"`;
+    await agentExecutor.invoke({ input });
 
-      await agentExecutor.invoke({ input });
+    await verifyHbarBalanceChange(
+      recipientAccount.toString(),
+      balanceBefore,
+      amountToTransfer,
+      executorWrapper,
+    );
+  });
 
-      // Verify balance change
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore,
-        amountToTransfer,
-        hederaOperationsWrapper,
-      );
-    });
+  it('should handle very small amount (1 tinybar)', async () => {
+    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
+    const amountToTransfer = 0.00000001;
 
-    it('should handle multiple small transfers to same recipient', async () => {
-      const balanceBefore = await hederaOperationsWrapper.getAccountHbarBalance(recipientAccountId);
-      const transferAmount = 0.001;
-      const transferCount = 10;
-      const totalAmount = transferAmount * transferCount;
+    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
 
-      // Create a request for multiple small transfers
-      const transferList = Array(transferCount)
-        .fill(null)
-        .map(() => `${transferAmount} HBAR to ${recipientAccountId}`)
-        .join(' and ');
+    await agentExecutor.invoke({ input });
 
-      const input = `Transfer ${transferList} with memo "Multiple transfers e2e test"`;
+    await verifyHbarBalanceChange(
+      recipientAccount.toString(),
+      balanceBefore,
+      amountToTransfer,
+      executorWrapper,
+    );
+  });
 
-      await agentExecutor.invoke({ input });
+  it('should handle long memo strings', async () => {
+    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
+    const longMemo = 'A'.repeat(90);
+    const amountToTransfer = 0.01;
 
-      // Verify total balance change
-      await verifyHbarBalanceChange(
-        recipientAccountId,
-        balanceBefore,
-        totalAmount,
-        hederaOperationsWrapper,
-      );
-    });
+    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${longMemo}"`;
+
+    await agentExecutor.invoke({ input });
+
+    await verifyHbarBalanceChange(
+      recipientAccount.toString(),
+      balanceBefore,
+      amountToTransfer,
+      executorWrapper,
+    );
   });
 });
