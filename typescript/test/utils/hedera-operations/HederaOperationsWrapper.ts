@@ -3,6 +3,7 @@ import {
   AccountId,
   AccountInfoQuery,
   Client,
+  LedgerId,
   NftId,
   TokenAssociateTransaction,
   TokenId,
@@ -32,10 +33,15 @@ import {
 } from '@/shared/parameter-schemas/consensus.zod';
 import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
 import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
+import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { TopicMessagesResponse } from '@/shared/hedera-utils/mirrornode/types';
 
 class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
-  constructor(private client: Client) {}
+  private mirrornode;
+  constructor(private client: Client) {
+    this.mirrornode = getMirrornodeService(undefined, LedgerId.TESTNET);
+  }
 
   // ACCOUNT OPERATIONS
   async createAccount(
@@ -108,6 +114,15 @@ class HederaOperationsWrapper {
     const tx = HederaBuilder.submitTopicMessage(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
     return result.raw;
+  }
+
+  async getTopicMessages(topicId: string): Promise<TopicMessagesResponse> {
+    return await this.mirrornode.getTopicMessages({
+      topicId,
+      lowerTimestamp: '',
+      upperTimestamp: '',
+      limit: 100,
+    });
   }
 
   // TRANSFERS AND AIRDROPS

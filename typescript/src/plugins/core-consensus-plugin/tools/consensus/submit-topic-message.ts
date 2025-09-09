@@ -32,12 +32,14 @@ const submitTopicMessage = async (
   try {
     const tx = HederaBuilder.submitTopicMessage(params);
     const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    return { ...result, topicId: params.topicId };
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to submit message to topic';
+    const message = error instanceof Error ? error.message : 'Failed to submit message to topic';
+
+    return {
+      raw: { topicId: params.topicId, error: message },
+      humanMessage: message,
+    };
   }
 };
 
