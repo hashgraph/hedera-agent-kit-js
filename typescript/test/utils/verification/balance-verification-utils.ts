@@ -41,7 +41,7 @@ export async function verifyTokenBalanceChange(
   hederaOperationsWrapper: HederaOperationsWrapper,
 ): Promise<void> {
   const balanceBefore = toDisplayUnit(balanceBeforeRaw, decimals);
-  const tokenBalance = await hederaOperationsWrapper.getAccountTokenBalances(accountId, tokenId);
+  const tokenBalance = await hederaOperationsWrapper.getAccountTokenBalance(accountId, tokenId);
   const balanceAfter = toDisplayUnit(new BigNumber(tokenBalance.balance), decimals);
 
   const expectedBalance = balanceBefore.plus(new BigNumber(expectedChange));

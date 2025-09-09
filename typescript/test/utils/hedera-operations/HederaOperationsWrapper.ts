@@ -197,12 +197,27 @@ class HederaOperationsWrapper {
     return await query.execute(this.client);
   }
 
-  async getAccountTokenBalances(accountId: string, tokenId: string) {
+  async getAccountTokenBalances(
+    accountId: string,
+  ): Promise<Array<{ tokenId: string; balance: number; decimals: number }>> {
+    const accountTokenBalances = await this.getAccountBalances(accountId);
+    const balances: Array<{ tokenId: string; balance: number; decimals: number }> = [];
+    for (const [tId, balance] of accountTokenBalances.tokens ?? []) {
+      const decimals = accountTokenBalances.tokenDecimals?.get(tId) ?? 0;
+      balances.push({ tokenId: tId.toString(), balance, decimals });
+    }
+    return balances;
+  }
+
+  async getAccountTokenBalance(
+    accountId: string,
+    tokenId: string,
+  ): Promise<{ tokenId: string; balance: number; decimals: number }> {
     const accountTokenBalances = await this.getAccountBalances(accountId);
     const tokenIdObj = TokenId.fromString(tokenId);
     const balance = accountTokenBalances.tokens?.get(tokenIdObj) ?? 0;
     const decimals = accountTokenBalances.tokenDecimals?.get(tokenIdObj) ?? 0;
-    return { balance, decimals };
+    return { tokenId: tokenIdObj.toString(), balance, decimals };
   }
 
   /**

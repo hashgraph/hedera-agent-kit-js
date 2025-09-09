@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { AccountId, Client, PrivateKey, TokenSupplyType } from '@hashgraph/sdk';
 import { getClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
 import { AgentMode, Context } from '@/shared';
@@ -58,22 +58,11 @@ describe('Integration - Hedera getTransactionRecord', () => {
   beforeEach(async () => {
     targetAccountId = await executorWrapper
       .createAccount({
-        initialBalance: 1,
+        initialBalance: 0.001,
         key: executorClient.operatorPublicKey!,
         maxAutomaticTokenAssociations: -1, // unlimited associations
       })
       .then(resp => resp.accountId!);
-  });
-
-  afterEach(async () => {
-    try {
-      await executorWrapper.deleteAccount({
-        accountId: targetAccountId,
-        transferAccountId: executorAccountId,
-      });
-    } catch (error) {
-      console.warn('Failed to clean up target account:', error);
-    }
   });
 
   it('fetches balances of account specified in the request', async () => {
@@ -92,6 +81,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 2,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
@@ -134,6 +124,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 3,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
@@ -170,6 +161,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 2,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
@@ -182,6 +174,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 1,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
@@ -253,11 +246,10 @@ describe('Integration - Hedera getTransactionRecord', () => {
     };
 
     // Create an account with no token associations
-    const emptyAccountKey = PrivateKey.generateED25519();
     const emptyAccountId = await executorWrapper
       .createAccount({
         initialBalance: 1,
-        key: emptyAccountKey.publicKey,
+        key: executorClient.operatorPublicKey!,
         maxAutomaticTokenAssociations: 0, // no automatic associations
       })
       .then(resp => resp.accountId!);
@@ -299,6 +291,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 2,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
@@ -311,6 +304,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 1,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
@@ -382,6 +376,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         decimals: 2,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
+        adminKey: executorClient.operatorPublicKey!,
       })
       .then(resp => resp.tokenId!);
 
