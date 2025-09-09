@@ -20,6 +20,8 @@ import {
   coreConsensusQueryPluginToolNames,
   coreTransactionQueryPluginToolNames,
   coreTransactionQueryPlugin,
+  coreEVMQueryPluginToolNames,
+  coreEVMQueryPlugin,
 } from '@/plugins';
 import { getOperatorClientForTests } from './client-setup';
 
@@ -56,6 +58,7 @@ const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
+const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 
 // Default toolkit configuration - should include all possible actions
 const TOOLKIT_OPTIONS: LangchainTestOptions = {
@@ -77,6 +80,7 @@ const TOOLKIT_OPTIONS: LangchainTestOptions = {
     GET_TOPIC_MESSAGES_QUERY_TOOL,
     GET_TOKEN_INFO_QUERY_TOOL,
     GET_TRANSACTION_RECORD_QUERY_TOOL,
+    GET_CONTRACT_INFO_QUERY_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
@@ -86,6 +90,7 @@ const TOOLKIT_OPTIONS: LangchainTestOptions = {
     coreTokenPlugin,
     coreConsensusPlugin,
     coreTransactionQueryPlugin,
+    coreEVMQueryPlugin,
   ],
   agentMode: AgentMode.AUTONOMOUS,
 };
