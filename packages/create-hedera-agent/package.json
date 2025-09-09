@@ -23,17 +23,21 @@
         "node": ">=20"
     },
     "dependencies": {
-        "execa": "^8.0.1",
-        "fs-extra": "^11.2.0",
-        "kolorist": "^1.8.0",
-        "prompts": "^2.4.2"
+        "execa": "8.0.1",
+        "fs-extra": "11.2.0",
+        "kolorist": "1.8.0",
+        "prompts": "2.4.2",
+        "ansi-styles": "6.2.3",
+        "strip-ansi": "7.1.2",
+        "ansi-regex": "6.2.2",
+        "debug": "4.4.1"
     },
     "devDependencies": {
-        "tsup": "^8.0.1",
-        "tsx": "^4.16.2",
-        "typescript": "^5.6.2",
-        "@types/node": "^22.7.4",
-        "@types/fs-extra": "^11.0.4",
-        "@types/prompts": "^2.4.9"
+        "tsup": "8.0.1",
+        "tsx": "4.16.2",
+        "typescript": "5.6.2",
+        "@types/node": "22.7.4",
+        "@types/fs-extra": "11.0.4",
+        "@types/prompts": "2.4.9"
     }
 }
