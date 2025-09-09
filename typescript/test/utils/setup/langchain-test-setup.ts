@@ -4,7 +4,7 @@ import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
 import { AgentMode } from '@/shared';
 import { LLMFactory, type LlmOptions, LLMProvider } from './llm-factory';
-import { getClientForTests } from './client-setup';
+import { getOperatorClientForTests } from './client-setup';
 import type { LangchainTestOptions } from './langchain-test-config';
 import {
   TOOLKIT_OPTIONS,
@@ -52,7 +52,7 @@ export async function createLangchainTestSetup(
   llmOptions?: Partial<LlmOptions>,
   customClient?: Client,
 ): Promise<LangchainTestSetup> {
-  const client = customClient || getClientForTests();
+  const client = customClient || getOperatorClientForTests();
   const operatorAccountId = client.operatorAccountId!;
 
   // Resolve final LLM options (provider, model, apiKey)
