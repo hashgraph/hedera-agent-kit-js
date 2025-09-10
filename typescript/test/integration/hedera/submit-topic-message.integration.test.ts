@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { Client } from '@hashgraph/sdk';
 import submitTopicMessageTool from '@/plugins/core-consensus-plugin/tools/consensus/submit-topic-message';
 import { Context, AgentMode } from '@/shared/configuration';
@@ -37,12 +37,6 @@ describe('Submit Topic Message Integration Tests', () => {
       mode: AgentMode.AUTONOMOUS,
       accountId: operatorClient.operatorAccountId!.toString(),
     };
-  });
-
-  afterEach(async () => {
-    if (operatorClient) {
-      operatorClient.close();
-    }
   });
 
   it('submits a message to an existing topic and returns a transaction id', async () => {

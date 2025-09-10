@@ -7,8 +7,17 @@ export const createFungibleTokenParameters = (_context: Context = {}) =>
   z.object({
     tokenName: z.string().describe('The name of the token.'),
     tokenSymbol: z.string().describe('The symbol of the token.'),
-    initialSupply: z.number().int().default(0).describe('The initial supply of the token.'),
-    supplyType: z.enum(['finite', 'infinite']).optional().describe('Supply type of the token.'),
+    initialSupply: z
+      .number()
+      .int()
+      .optional()
+      .default(0)
+      .describe('The initial supply of the token.'),
+    supplyType: z
+      .enum(['finite', 'infinite'])
+      .optional()
+      .default('finite')
+      .describe('Supply type of the token.'),
     maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
     decimals: z.number().int().optional().default(0).describe('The number of decimals.'),
     treasuryAccountId: z.string().optional().describe('The treasury account of the token.'),
