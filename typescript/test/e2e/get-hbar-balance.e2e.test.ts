@@ -1,91 +1,110 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
-import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
-import { AccountId, Client, Key } from '@hashgraph/sdk';
-import { wait } from '../utils/general-utils';
+import {
+  createLangchainTestSetup,
+  getCustomClient,
+  getOperatorClientForTests,
+  HederaOperationsWrapper,
+  LangchainTestSetup,
+} from '../utils';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
-function extractObservation(agentResult: any): any {
-  if (!agentResult.intermediateSteps || agentResult.intermediateSteps.length === 0) {
-    throw new Error('No intermediate steps found in agent result');
-  }
-  const lastStep = agentResult.intermediateSteps[agentResult.intermediateSteps.length - 1];
-  const observationRaw = lastStep.observation;
-  if (!observationRaw) throw new Error('No observation found in intermediate step');
-  return JSON.parse(observationRaw);
-}
-
-describe('Get HBAR Balance E2E Tests', () => {
+describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
-  let client: Client;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let operatorClient: Client;
+  let executorClient: Client;
+  let operatorWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
   let targetAccount1: AccountId;
   let targetAccount2: AccountId;
   let account1Balance: number;
   let account2Balance: number;
 
   beforeAll(async () => {
-    testSetup = await createLangchainTestSetup();
+    // operator client and wrapper
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    // executor account creation
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .then(resp => resp.accountId!);
+
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
+
+    // LangChain setup using executor client
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
-    client = testSetup.client;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+
     account1Balance = 2;
     account2Balance = 0;
 
-    targetAccount1 = await hederaOperationsWrapper
+    // create test accounts using executorWrapper
+    targetAccount1 = await executorWrapper
       .createAccount({
-        key: client.operatorPublicKey as Key,
+        key: executorClient.operatorPublicKey as Key,
         initialBalance: account1Balance,
       })
       .then(resp => resp.accountId!);
-    targetAccount2 = await hederaOperationsWrapper
+
+    targetAccount2 = await executorWrapper
       .createAccount({
-        key: client.operatorPublicKey as Key,
+        key: executorClient.operatorPublicKey as Key,
         initialBalance: account2Balance,
       })
       .then(resp => resp.accountId!);
 
-    await wait(4000);
-  }, 15000);
+    await new Promise(resolve => setTimeout(resolve, 4000)); // wait for indexing
+  });
 
   afterAll(async () => {
-    if (testSetup) {
-      await hederaOperationsWrapper.deleteAccount({
+    if (testSetup && executorWrapper && operatorClient) {
+      // delete accounts using executor wrapper
+      await executorWrapper.deleteAccount({
         accountId: targetAccount1,
-        transferAccountId: client.operatorAccountId!,
+        transferAccountId: executorClient.operatorAccountId!,
       });
-      await hederaOperationsWrapper.deleteAccount({
+      await executorWrapper.deleteAccount({
         accountId: targetAccount2,
-        transferAccountId: client.operatorAccountId!,
+        transferAccountId: executorClient.operatorAccountId!,
       });
+
+      // delete executor account and transfer remaining balance to operator
+      await executorWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
+
       testSetup.cleanup();
+      operatorClient.close();
+      executorClient.close();
     }
   });
 
-  it('should return balance when asking for default operator account', async () => {
-    const operator = testSetup.client.operatorAccountId!.toString();
-    const operatorAccountBalance = await hederaOperationsWrapper.getAccountHbarBalance(
-      client.operatorAccountId!.toString(),
-    );
+  it('should return balance when asking for default executor account', async () => {
+    const executorId = executorClient.operatorAccountId!.toString();
+    const executorBalance = await operatorWrapper.getAccountHbarBalance(executorId); // operator will pay for the query and we wont need to wait for mirror node to update
 
-    const input = `What is the HBAR balance of ${operator}?`;
-
+    const input = `What is the HBAR balance of ${executorId}?`;
     const result: any = await agentExecutor.invoke({ input });
-    const observation = extractObservation(result);
+    const observation = extractObservationFromLangchainResponse(result);
 
-    expect(observation.raw.accountId).toBe(operator);
+    expect(observation.raw.accountId).toBe(executorId);
     expect(observation.humanMessage).toContain(
-      `Account ${operator} has a balance of ${toDisplayUnit(operatorAccountBalance, 8).toNumber()}`,
+      `Account ${executorId} has a balance of ${toDisplayUnit(executorBalance, 8).toNumber()}`,
     );
-    expect(observation.raw.hbarBalance).toBe(toDisplayUnit(operatorAccountBalance, 8).toString());
+    expect(observation.raw.hbarBalance).toBe(toDisplayUnit(executorBalance, 8).toString());
   });
 
-  it('should return balance when asking for specific account with non-zero hbar balance', async () => {
+  it('should return balance for specific account with non-zero balance', async () => {
     const input = `What is the HBAR balance of ${targetAccount1.toString()}?`;
-
     const result: any = await agentExecutor.invoke({ input });
-    const observation = extractObservation(result);
+    const observation = extractObservationFromLangchainResponse(result);
 
     expect(observation.raw.accountId).toBe(targetAccount1.toString());
     expect(observation.humanMessage).toContain(
@@ -94,11 +113,10 @@ describe('Get HBAR Balance E2E Tests', () => {
     expect(observation.raw.hbarBalance).toBe(account1Balance.toString());
   });
 
-  it('should return balance when asking for specific account with zero hbar balance', async () => {
+  it('should return balance for specific account with zero balance', async () => {
     const input = `What is the HBAR balance of ${targetAccount2.toString()}?`;
-
     const result: any = await agentExecutor.invoke({ input });
-    const observation = extractObservation(result);
+    const observation = extractObservationFromLangchainResponse(result);
 
     expect(observation.raw.accountId).toBe(targetAccount2.toString());
     expect(observation.humanMessage).toContain(
