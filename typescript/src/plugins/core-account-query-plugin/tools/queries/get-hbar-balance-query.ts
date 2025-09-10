@@ -49,10 +49,12 @@ export const getHbarBalanceQuery = async (
       humanMessage: postProcess(toHBar(balance).toString() as string, normalisedParams.accountId),
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get HBAR balance';
+    const message = error instanceof Error ? error.message : 'Error getting HBAR balance';
+
+    return {
+      raw: { accountId: params.accountId, error: message },
+      humanMessage: message,
+    };
   }
 };
 

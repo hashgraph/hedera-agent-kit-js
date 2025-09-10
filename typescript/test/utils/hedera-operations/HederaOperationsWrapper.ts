@@ -3,6 +3,7 @@ import {
   AccountId,
   AccountInfoQuery,
   Client,
+  LedgerId,
   NftId,
   TokenAssociateTransaction,
   TokenId,
@@ -32,10 +33,15 @@ import {
 } from '@/shared/parameter-schemas/consensus.zod';
 import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
 import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
+import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { TopicMessagesResponse } from '@/shared/hedera-utils/mirrornode/types';
 
 class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
-  constructor(private client: Client) {}
+  private mirrornode;
+  constructor(private client: Client) {
+    this.mirrornode = getMirrornodeService(undefined, LedgerId.TESTNET);
+  }
 
   // ACCOUNT OPERATIONS
   async createAccount(
@@ -108,6 +114,15 @@ class HederaOperationsWrapper {
     const tx = HederaBuilder.submitTopicMessage(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
     return result.raw;
+  }
+
+  async getTopicMessages(topicId: string): Promise<TopicMessagesResponse> {
+    return await this.mirrornode.getTopicMessages({
+      topicId,
+      lowerTimestamp: '',
+      upperTimestamp: '',
+      limit: 100,
+    });
   }
 
   // TRANSFERS AND AIRDROPS
@@ -197,12 +212,27 @@ class HederaOperationsWrapper {
     return await query.execute(this.client);
   }
 
-  async getAccountTokenBalances(accountId: string, tokenId: string) {
+  async getAccountTokenBalances(
+    accountId: string,
+  ): Promise<Array<{ tokenId: string; balance: number; decimals: number }>> {
+    const accountTokenBalances = await this.getAccountBalances(accountId);
+    const balances: Array<{ tokenId: string; balance: number; decimals: number }> = [];
+    for (const [tId, balance] of accountTokenBalances.tokens ?? []) {
+      const decimals = accountTokenBalances.tokenDecimals?.get(tId) ?? 0;
+      balances.push({ tokenId: tId.toString(), balance, decimals });
+    }
+    return balances;
+  }
+
+  async getAccountTokenBalance(
+    accountId: string,
+    tokenId: string,
+  ): Promise<{ tokenId: string; balance: number; decimals: number }> {
     const accountTokenBalances = await this.getAccountBalances(accountId);
     const tokenIdObj = TokenId.fromString(tokenId);
     const balance = accountTokenBalances.tokens?.get(tokenIdObj) ?? 0;
     const decimals = accountTokenBalances.tokenDecimals?.get(tokenIdObj) ?? 0;
-    return { balance, decimals };
+    return { tokenId: tokenIdObj.toString(), balance, decimals };
   }
 
   /**
