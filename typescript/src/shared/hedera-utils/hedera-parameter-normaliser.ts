@@ -437,9 +437,11 @@ export default class HederaParameterNormaliser {
     factoryContractFunctionName: string,
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ) {
+    const resolvedToAddress = AccountResolver.resolveAccount(params.toAddress, _context, client);
     const toAddress = await AccountResolver.getHederaEVMAddress(
-      params.toAddress,
+      resolvedToAddress,
       mirrorNode,
     );
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
