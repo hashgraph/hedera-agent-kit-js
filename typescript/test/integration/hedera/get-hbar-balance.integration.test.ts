@@ -16,10 +16,11 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let recipientAccountId: AccountId;
 
   beforeAll(async () => {
+    // Create operator client & wrapper
     operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(client);
+    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // Create an intermediate executor account
+    // Create intermediate executor account
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({ key: executorKey.publicKey, initialBalance: 5 })
