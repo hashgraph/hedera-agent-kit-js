@@ -3,7 +3,7 @@ import { Client } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 
 vi.mock('@/shared/utils/account-resolver', () => ({
   AccountResolver: { resolveAccount: vi.fn() },
