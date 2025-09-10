@@ -8,7 +8,7 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse } from '../utils/general-utils';
+import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
 describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;

@@ -6,7 +6,7 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-utils';
+import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 
 describe('Get Account Query E2E Tests', () => {
   let testSetup: LangchainTestSetup;

@@ -8,7 +8,7 @@ import {
 import { AgentExecutor } from 'langchain/agents';
 import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
 import { Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse } from '../utils/general-utils';
+import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
 // Extracts accountId string (shard.realm.num) from agentExecutor result
 function extractAccountId(agentResult: any): string {

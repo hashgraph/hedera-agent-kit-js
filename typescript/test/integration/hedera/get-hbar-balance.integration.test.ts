@@ -2,11 +2,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, AccountId, Key } from '@hashgraph/sdk';
 import getHbarBalanceTool from '@/plugins/core-account-query-plugin/tools/queries/get-hbar-balance-query';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
-import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
-import { wait } from '../../utils/general-utils';
+import { wait } from '../../utils/general-util';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe('Get HBAR Balance Integration Tests', () => {
   let client: Client;
@@ -16,7 +16,7 @@ describe('Get HBAR Balance Integration Tests', () => {
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
+    client = getOperatorClientForTests();
     operatorAccountId = client.operatorAccountId!;
     hederaOperationsWrapper = new HederaOperationsWrapper(client);
 

@@ -2,10 +2,10 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { Client, PrivateKey, Key, AccountId } from '@hashgraph/sdk';
 import getAccountQueryTool from '@/plugins/core-account-query-plugin/tools/queries/get-account-query';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
+import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
-import { wait } from '../../utils/general-utils';
+import { wait } from '../../utils/general-util';
 
 describe('Get Account Query Integration Tests', () => {
   let customClient: Client;
@@ -15,7 +15,7 @@ describe('Get Account Query Integration Tests', () => {
   let createdAccountId: AccountId;
 
   beforeAll(async () => {
-    client = getClientForTests();
+    client = getOperatorClientForTests();
     hederaOperationsWrapper = new HederaOperationsWrapper(client);
   });
 

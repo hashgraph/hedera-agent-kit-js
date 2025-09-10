@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, it, expect } from 'vitest';
 import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
 import { AgentExecutor } from 'langchain/agents';
 import { AccountId, Client, Key } from '@hashgraph/sdk';
-import { wait } from '../utils/general-utils';
+import { wait } from '../utils/general-util';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 
 function extractObservation(agentResult: any): any {
