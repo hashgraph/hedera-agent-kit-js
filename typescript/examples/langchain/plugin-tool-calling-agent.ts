@@ -17,6 +17,8 @@ import {
   coreTransactionQueryPluginToolNames,
   coreEVMQueryPlugin,
   coreEVMQueryPluginToolNames,
+  coreEVMPlugin,
+  coreEVMPluginToolNames,
 } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -58,6 +60,8 @@ async function bootstrap(): Promise<void> {
 
   const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 
+  const { CREATE_ERC721_TOOL } = coreEVMPluginToolNames;
+
   // Prepare Hedera toolkit with core tools AND custom plugin
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
@@ -77,6 +81,7 @@ async function bootstrap(): Promise<void> {
         GET_TOKEN_INFO_QUERY_TOOL,
         GET_TRANSACTION_RECORD_QUERY_TOOL,
         GET_CONTRACT_INFO_QUERY_TOOL,
+        CREATE_ERC721_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
@@ -91,6 +96,7 @@ async function bootstrap(): Promise<void> {
         coreTokenQueryPlugin,
         coreTransactionQueryPlugin,
         coreEVMQueryPlugin,
+        coreEVMPlugin,
       ], // Add the example plugin
       context: {
         mode: AgentMode.AUTONOMOUS,

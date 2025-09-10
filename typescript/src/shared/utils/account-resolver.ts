@@ -1,5 +1,6 @@
 import { Client } from '@hashgraph/sdk';
 import { Context, AgentMode } from '@/shared/configuration';
+import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 
 export class AccountResolver {
   /**
@@ -45,5 +46,16 @@ export class AccountResolver {
 
   static isHederaAddress(address: string): boolean {
     return address.startsWith('0.') || address.startsWith('0.0.');
+  }
+
+  static async getHederaEVMAddress(
+    address: string,
+    mirrorNode: IHederaMirrornodeService,
+  ): Promise<string> {
+    if (!AccountResolver.isHederaAddress(address)) {
+      return address;
+    }
+    const account = await mirrorNode.getAccount(address);
+    return account.evmAddress;
   }
 }

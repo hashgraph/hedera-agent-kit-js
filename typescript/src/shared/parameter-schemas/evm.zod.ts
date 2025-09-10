@@ -5,7 +5,7 @@ export const contractExecuteTransactionParametersNormalised = (_context: Context
   z.object({
     contractId: z.string().describe('The ID of the contract to execute.'),
     functionParameters: z
-      .instanceof(Uint8Array)
+      .instanceof(Uint8Array<ArrayBufferLike>)
       .describe('The parameters of the function to execute.'),
     gas: z.number().int().describe('The gas limit for the contract call.'),
   });
@@ -40,7 +40,10 @@ export const createERC20Parameters = (_context: Context = {}) =>
 export const transferERC721Parameters = (_context: Context = {}) =>
   z.object({
     contractId: z.string().describe('The id of the ERC721 contract.'),
-    fromAddress: z.string().optional().describe('Address from which the token will be transferred.'),
+    fromAddress: z
+      .string()
+      .optional()
+      .describe('Address from which the token will be transferred.'),
     toAddress: z.string().describe('Address to which the token will be transferred.'),
     tokenId: z.number().describe('The ID of the token to transfer.'),
   });

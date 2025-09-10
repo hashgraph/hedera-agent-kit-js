@@ -1,85 +1,105 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, AccountId, Key } from '@hashgraph/sdk';
+import { Client, AccountId, Key, PrivateKey } from '@hashgraph/sdk';
 import getHbarBalanceTool from '@/plugins/core-account-query-plugin/tools/queries/get-hbar-balance-query';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
 import { wait } from '../../utils/general-utils';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 
-describe('Get HBAR Balance Integration Tests', () => {
-  let client: Client;
+describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
+  let operatorClient: Client;
+  let executorClient: Client;
   let context: Context;
-  let operatorAccountId: AccountId;
+  let executorWrapper: HederaOperationsWrapper;
   let recipientAccountId: AccountId;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getClientForTests();
-    operatorAccountId = client.operatorAccountId!;
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    operatorClient = getOperatorClientForTests();
+    const operatorWrapper = new HederaOperationsWrapper(client);
 
-    recipientAccountId = await hederaOperationsWrapper
-      .createAccount({
-        key: client.operatorPublicKey as Key,
-        initialBalance: 1,
-      })
+    // Create an intermediate executor account
+    const executorKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({ key: executorKey.publicKey, initialBalance: 5 })
       .then(resp => resp.accountId!);
 
-    // wait for the mirror node to be updated
-    await wait(4000);
+    executorClient = getCustomClient(executorAccountId, executorKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
+
+    // Create a recipient account via executor
+    recipientAccountId = await executorWrapper
+      .createAccount({ key: executorClient.operatorPublicKey as Key, initialBalance: 1 })
+      .then(resp => resp.accountId!);
+
+    await wait(4000); // wait for mirror node indexing
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: operatorAccountId.toString(),
+      accountId: executorAccountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      await hederaOperationsWrapper.deleteAccount({
+    if (executorWrapper && operatorClient) {
+      // Delete a recipient account and transfer remaining balance back to executor
+      await executorWrapper.deleteAccount({
         accountId: recipientAccountId,
-        transferAccountId: operatorAccountId,
+        transferAccountId: executorClient.operatorAccountId!,
       });
-      client.close();
+
+      // Delete an executor account and transfer remaining balance back to operator
+      await executorWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
+
+      executorClient.close();
+      operatorClient.close();
     }
   });
 
-  it('should return balance for specified account', async () => {
+  it('should return balance for the recipient account', async () => {
     const params: z.infer<ReturnType<typeof accountBalanceQueryParameters>> = {
       accountId: recipientAccountId.toString(),
     } as any;
 
     const tool = getHbarBalanceTool(context);
-    const res: any = await tool.execute(client, context, params);
+    const res: any = await tool.execute(executorClient, context, params);
 
     expect(res.raw.accountId).toBe(recipientAccountId.toString());
     expect(Number(res.raw.hbarBalance)).toBe(1);
     expect(res.humanMessage).toContain(`Account ${recipientAccountId.toString()} has a balance of`);
   });
 
-  it('should use default account when accountId not provided', async () => {
+  it('should use default executor account when accountId not provided', async () => {
     const params: z.infer<ReturnType<typeof accountBalanceQueryParameters>> = {} as any;
-    const operatorAccountBalance = await hederaOperationsWrapper.getAccountHbarBalance(
-      operatorAccountId.toString(),
+    const executorBalance = await executorWrapper.getAccountHbarBalance(
+      executorClient.operatorAccountId!.toString(),
     );
 
-    const tool = getHbarBalanceTool({ ...context, accountId: operatorAccountId.toString() });
-    const res: any = await tool.execute(client, context, params);
+    const tool = getHbarBalanceTool({
+      ...context,
+      accountId: executorClient.operatorAccountId!.toString(),
+    });
+    const res: any = await tool.execute(executorClient, context, params);
 
-    expect(res.raw.accountId).toBe(operatorAccountId.toString());
-    expect(Number(res.raw.hbarBalance)).toBe(toDisplayUnit(operatorAccountBalance, 8).toNumber());
+    expect(res.raw.accountId).toBe(executorClient.operatorAccountId!.toString());
+    expect(Number(res.raw.hbarBalance)).toBe(toDisplayUnit(executorBalance, 8).toNumber());
   });
 
-  it('should handle not finding provided account', async () => {
+  it('should handle not finding a non-existent account', async () => {
     const nonExistentAccountId = '0.0.999999999999';
     const params: z.infer<ReturnType<typeof accountBalanceQueryParameters>> = {
       accountId: nonExistentAccountId,
     } as any;
 
-    const tool = getHbarBalanceTool({ ...context, accountId: operatorAccountId.toString() });
-    const res: any = await tool.execute(client, context, params);
+    const tool = getHbarBalanceTool({
+      ...context,
+      accountId: executorClient.operatorAccountId!.toString(),
+    });
+    const res: any = await tool.execute(executorClient, context, params);
 
     expect(res.raw.accountId).toBe(nonExistentAccountId);
     expect(res.humanMessage).toContain(`Failed to fetch hbar balance for`);

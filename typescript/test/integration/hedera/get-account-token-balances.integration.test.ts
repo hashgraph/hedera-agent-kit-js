@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { AccountId, Client, PrivateKey, TokenSupplyType } from '@hashgraph/sdk';
-import { getClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
+import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
 import { AgentMode, Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '../../utils/general-util';
@@ -17,7 +17,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
   let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    operatorClient = getClientForTests();
+    operatorClient = getOperatorClientForTests();
     operatorWrapper = new HederaOperationsWrapper(operatorClient);
     operatorAccountId = operatorClient.operatorAccountId!;
 
@@ -386,7 +386,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       tokenId: tokenId.toString(),
     });
 
-    await wait(3000); // waiting for the transactions to be indexed by mirrornode
+    await wait(5000); // waiting for the transactions to be indexed by mirrornode
 
     const result = await getAccountTokenBalancesQuery(operatorClient, context, {
       accountId: targetAccountId.toString(),
