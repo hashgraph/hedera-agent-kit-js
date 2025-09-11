@@ -5,8 +5,8 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
-import { wait } from '../../utils/general-utils';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { wait } from '../../utils/general-util';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let operatorClient: Client;

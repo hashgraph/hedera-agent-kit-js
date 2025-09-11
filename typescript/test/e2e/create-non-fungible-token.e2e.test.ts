@@ -8,23 +8,12 @@ import {
   getCustomClient,
 } from '../utils';
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
-
-function extractTokenId(observation: any): string {
-  if (!observation.raw?.tokenId) {
-    throw new Error('No raw.tokenId found in observation');
-  }
-
-  // raw.tokenId may be string via toString or object; normalize
-  const tokenId = observation.raw.tokenId;
-  if (typeof tokenId === 'string') return tokenId;
-  if (tokenId.shard && tokenId.realm && tokenId.num) {
-    const { shard, realm, num } = tokenId;
-    return `${shard.low}.${realm.low}.${num.low}`;
-  }
-  if (tokenId.toString) return tokenId.toString();
-  throw new Error('Unable to parse tokenId');
-}
+import {
+  extractObservationFromLangchainResponse,
+  extractTokenIdFromObservation,
+  wait,
+} from '../utils/general-util';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
 
 describe('Create Non-Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -40,13 +29,13 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     // 1. Create executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
 
-    // 3. Start LangChain test setup with executor account
+    // 3. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
     executorWrapper = new HederaOperationsWrapper(executorClient);
@@ -55,9 +44,14 @@ describe('Create Non-Fungible Token E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      testSetup.cleanup();
+    if (operatorClient && executorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       operatorClient.close();
+      executorClient.close();
     }
   });
 
@@ -66,7 +60,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenId(observation);
+    const tokenId = extractTokenIdFromObservation(observation);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('Token created successfully');
@@ -78,7 +72,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
     expect(tokenInfo.name).toBe('MyNFT');
     expect(tokenInfo.symbol).toBe('MNFT');
-    expect(tokenInfo.tokenType.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+    expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
     expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
   });
 
@@ -87,7 +81,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenId(observation);
+    const tokenId = extractTokenIdFromObservation(observation);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('Token created successfully');
@@ -98,7 +92,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
     expect(tokenInfo.name).toBe('ArtCollection');
     expect(tokenInfo.symbol).toBe('ART');
-    expect(tokenInfo.tokenType.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+    expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
     expect(tokenInfo.maxSupply?.toInt()).toBe(500);
   });
 
@@ -108,7 +102,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenId(observation);
+    const tokenId = extractTokenIdFromObservation(observation);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('Token created successfully');
@@ -121,16 +115,5 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     expect(tokenInfo.symbol).toBe('GAME');
     expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
     expect(tokenInfo.maxSupply?.toInt()).toBe(1000);
-  });
-
-  it('handles invalid requests gracefully', async () => {
-    const input = 'Create a non-fungible token without providing required parameters';
-
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('error');
-    expect(observation.raw.error).toBeDefined();
   });
 });

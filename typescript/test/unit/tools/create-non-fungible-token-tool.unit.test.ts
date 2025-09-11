@@ -137,7 +137,8 @@ describe('create-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res).toBe('NFT creation failed');
+    expect(res.humanMessage).toBe('NFT creation failed');
+    expect(res.raw.error).toBe('NFT creation failed');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -149,6 +150,7 @@ describe('create-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res).toBe('Failed to create non-fungible token');
+    expect(res.humanMessage).toBe('Failed to create non-fungible token');
+    expect(res.raw.error).toBe('Failed to create non-fungible token');
   });
 });

@@ -5,6 +5,7 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/accounts-teardown';
 
 describe('Create Non-Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -20,7 +21,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5, // For creating NFTs
+        initialBalance: 20, // For creating NFTs
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -34,8 +35,14 @@ describe('Create Non-Fungible Token Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (operatorClient) {
+    if (operatorClient && executorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       operatorClient.close();
+      executorClient.close();
     }
   });
 
@@ -88,7 +95,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       } as any;
 
       const tool = createNonFungibleTokenTool(context);
-      const result: any = await tool.execute(operatorClient, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       const tokenInfo = await executorWrapper.getTokenInfo(result.raw.tokenId!.toString());
 
@@ -104,7 +111,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const params: any = {}; // missing tokenName and tokenSymbol
 
       const tool = createNonFungibleTokenTool(context);
-      const result: any = await tool.execute(operatorClient, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('error');
       expect(result.raw.status).toBeDefined();
@@ -117,7 +124,8 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       };
 
       const tool = createNonFungibleTokenTool(context);
-      const result: any = await tool.execute(operatorClient, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
+      console.log(JSON.stringify(result));
 
       expect(result.humanMessage).toContain('error');
       expect(result.raw.status).toBeDefined();
@@ -130,7 +138,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       };
 
       const tool = createNonFungibleTokenTool(context);
-      const result: any = await tool.execute(operatorClient, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('error');
       expect(result.raw.status).toBeDefined();
