@@ -85,7 +85,7 @@ describe('create-token tool (unit)', () => {
     supplyKey: undefined,
     tokenMemo: undefined,
     tokenType: undefined,
-    treasuryAccountId: undefined,
+    treasuryAccountId: context.accountId,
     wipeKey: undefined,
     supplyType: TokenSupplyType.Finite,
     tokenName: 'MYTOKEN',

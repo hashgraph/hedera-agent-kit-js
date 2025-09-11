@@ -82,7 +82,7 @@ describe('create-non-fungible-token tool (unit)', () => {
     supplyKey: PublicKey.unusableKey(),
     tokenMemo: undefined,
     tokenType: TokenType.NonFungibleUnique,
-    treasuryAccountId: undefined,
+    treasuryAccountId: context.accountId,
     wipeKey: undefined,
     tokenName: 'MYNFT',
     tokenSymbol: 'MNFT',
