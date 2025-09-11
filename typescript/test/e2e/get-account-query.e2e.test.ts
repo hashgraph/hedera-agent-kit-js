@@ -7,6 +7,7 @@ import {
   type LangchainTestSetup,
 } from '../utils';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Get Account Query E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -35,7 +36,7 @@ describe('Get Account Query E2E Tests', () => {
       .then(resp => resp.accountId!);
 
     // Give the mirror node a chance to sync
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const queryResult = await agentExecutor.invoke({
       input: `Get account info for ${accountId.toString()}`,

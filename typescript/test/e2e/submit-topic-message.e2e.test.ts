@@ -9,6 +9,7 @@ import {
   LangchainTestSetup,
 } from '../utils';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
   let testSetup: LangchainTestSetup;
@@ -72,7 +73,7 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
         /Message submitted successfully|submitted/i.test(observation.humanMessage),
     ).toBeTruthy();
 
-    await wait(5000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const mirrornodeMessages = await operatorWrapper.getTopicMessages(targetTopicId);
 

@@ -6,6 +6,7 @@ import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils'
 import { z } from 'zod';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { wait } from '../../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Submit Topic Message Integration Tests', () => {
   let operatorClient: Client;
@@ -48,7 +49,7 @@ describe('Submit Topic Message Integration Tests', () => {
 
     const result: any = await tool.execute(operatorClient, context, params);
 
-    await wait(4000); // wait for the message to be processed by mirror node
+    await wait(MIRROR_NODE_WAITING_TIME); // wait for the message to be processed by mirror node
 
     const mirrornodeMessages = await operatorWrapper.getTopicMessages(topicId);
 
