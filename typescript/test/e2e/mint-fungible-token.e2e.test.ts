@@ -10,6 +10,7 @@ import {
 } from '../utils';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Mint Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -55,7 +56,7 @@ describe('Mint Fungible Token E2E Tests', () => {
       })
       .then(resp => resp.tokenId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -80,7 +81,7 @@ describe('Mint Fungible Token E2E Tests', () => {
     });
 
     const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const supplyAfter = await executorWrapper
       .getTokenInfo(tokenIdFT.toString())

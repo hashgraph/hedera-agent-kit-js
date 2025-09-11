@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '../../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Mint Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -53,7 +54,7 @@ describe('Mint Fungible Token Integration Tests', () => {
       })
       .then(resp => resp.tokenId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -79,7 +80,7 @@ describe('Mint Fungible Token Integration Tests', () => {
       .getTokenInfo(tokenIdFT.toString())
       .then(info => info.totalSupply.toInt());
     const result: any = await tool.execute(executorClient, context, params);
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
     const supplyAfter = await executorWrapper
       .getTokenInfo(tokenIdFT.toString())
       .then(info => info.totalSupply.toInt());
