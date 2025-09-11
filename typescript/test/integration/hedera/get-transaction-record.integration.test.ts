@@ -5,6 +5,7 @@ import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } f
 import { Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '../../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   let operatorClient: Client;
@@ -43,7 +44,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     const txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${txIdSdkStyle.validStart!.nanos!.toString()}`;
 
-    await wait(4000); // waiting for the transaction to be indexed by mirrornode
+    await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transaction to be indexed by mirrornode
 
     const result = await getTransactionRecordQuery(executorClient, context, {
       transactionId: txIdMirrorNodeStyle,

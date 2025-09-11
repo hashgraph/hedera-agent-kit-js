@@ -11,6 +11,7 @@ import {
 import { wait } from '../utils/general-util';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -60,7 +61,7 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
       })
       .then(resp => resp.accountId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {

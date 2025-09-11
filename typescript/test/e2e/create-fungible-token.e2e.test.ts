@@ -14,6 +14,7 @@ import {
   wait,
 } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Create Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -40,7 +41,7 @@ describe('Create Fungible Token E2E Tests', () => {
     agentExecutor = testSetup.agentExecutor;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -66,7 +67,7 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(observation.humanMessage).toContain('Token created successfully');
     expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     // Verify on-chain
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
@@ -87,7 +88,7 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(observation.humanMessage).toContain('Token created successfully');
     expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
     expect(tokenInfo.name).toBe('GoldCoin');
