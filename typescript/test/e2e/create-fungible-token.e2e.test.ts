@@ -9,6 +9,7 @@ import {
 } from '../utils';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 function extractTokenId(observation: any): string {
   if (!observation.raw?.tokenId) {
@@ -51,7 +52,7 @@ describe('Create Fungible Token E2E Tests', () => {
     agentExecutor = testSetup.agentExecutor;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -72,7 +73,7 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(observation.humanMessage).toContain('Token created successfully');
     expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     // Verify on-chain
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
@@ -93,7 +94,7 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(observation.humanMessage).toContain('Token created successfully');
     expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
     expect(tokenInfo.name).toBe('GoldCoin');

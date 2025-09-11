@@ -8,7 +8,7 @@
  * @example
  * ```typescript
  * // Wait for 1 second
- * await wait(1000);
+ * await wait(4000);
  * console.log('This runs after 1 second');
  * ```
  */
