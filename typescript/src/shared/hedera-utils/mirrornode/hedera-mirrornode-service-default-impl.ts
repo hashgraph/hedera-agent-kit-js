@@ -126,6 +126,13 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getTokenInfo(tokenId: string): Promise<TokenInfo> {
     const url = `${this.baseUrl}/tokens/${tokenId}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get token info for a token ${tokenId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
     return await response.json();
   }
 
