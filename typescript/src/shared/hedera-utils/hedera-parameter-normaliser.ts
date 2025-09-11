@@ -401,14 +401,8 @@ export default class HederaParameterNormaliser {
   ) {
     // Resolve fromAddress using AccountResolver pattern, similar to transfer-hbar
     const resolvedFromAddress = AccountResolver.resolveAccount(params.fromAddress, context, client);
-    const fromAddress = await AccountResolver.getHederaEVMAddress(
-      resolvedFromAddress,
-      mirrorNode,
-    );
-    const toAddress = await AccountResolver.getHederaEVMAddress(
-      params.toAddress,
-      mirrorNode,
-    );
+    const fromAddress = await AccountResolver.getHederaEVMAddress(resolvedFromAddress, mirrorNode);
+    const toAddress = await AccountResolver.getHederaEVMAddress(params.toAddress, mirrorNode);
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
       params.contractId,
       mirrorNode,
@@ -438,10 +432,7 @@ export default class HederaParameterNormaliser {
     client: Client,
   ) {
     const resolvedToAddress = AccountResolver.resolveAccount(params.toAddress, _context, client);
-    const toAddress = await AccountResolver.getHederaEVMAddress(
-      resolvedToAddress,
-      mirrorNode,
-    );
+    const toAddress = await AccountResolver.getHederaEVMAddress(resolvedToAddress, mirrorNode);
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
       params.contractId,
       mirrorNode,
