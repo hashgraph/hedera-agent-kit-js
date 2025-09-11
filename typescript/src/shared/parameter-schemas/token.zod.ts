@@ -136,3 +136,8 @@ export const deleteTokenParameters = (_context: Context = {}) =>
 
 export const deleteTokenParametersNormalised = (_context: Context = {}) =>
   deleteTokenParameters(_context).extend({});
+
+export const tokenInfoQueryParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().optional().describe('The token ID to query.'),
+  });

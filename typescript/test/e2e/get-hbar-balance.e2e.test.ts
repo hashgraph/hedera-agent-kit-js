@@ -8,6 +8,7 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
+import { wait } from '../utils/general-util';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
@@ -59,7 +60,7 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
       })
       .then(resp => resp.accountId!);
 
-    await new Promise(resolve => setTimeout(resolve, 4000)); // wait for indexing
+    await wait(4000);
   });
 
   afterAll(async () => {

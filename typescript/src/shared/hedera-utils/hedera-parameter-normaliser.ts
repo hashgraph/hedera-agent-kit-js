@@ -17,6 +17,8 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
+  accountBalanceQueryParameters,
+  accountTokenBalancesQueryParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -26,10 +28,6 @@ import {
 import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
-import {
-  accountBalanceQueryParameters,
-  accountTokenBalancesQueryParameters,
-} from '@/shared/parameter-schemas/query.zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
 import Long from 'long';
@@ -437,9 +435,11 @@ export default class HederaParameterNormaliser {
     factoryContractFunctionName: string,
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ) {
+    const resolvedToAddress = AccountResolver.resolveAccount(params.toAddress, _context, client);
     const toAddress = await AccountResolver.getHederaEVMAddress(
-      params.toAddress,
+      resolvedToAddress,
       mirrorNode,
     );
     const contractId = await HederaParameterNormaliser.getHederaAccountId(

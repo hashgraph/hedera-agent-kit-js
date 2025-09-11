@@ -41,3 +41,26 @@ export const deleteTopicParameters = (_context: Context = {}) =>
 
 export const deleteTopicParametersNormalised = (_context: Context = {}) =>
   deleteTopicParameters(_context).extend({});
+
+export const topicMessagesQueryParameters = (_context: Context = {}) =>
+  z.object({
+    topicId: z.string().describe('The topic ID to query.'),
+    startTime: z
+      .string()
+      .datetime()
+      .optional()
+      .describe(
+        'The start time to query. If set, the messages will be returned after this timestamp.',
+      ),
+    endTime: z
+      .string()
+      .datetime()
+      .optional()
+      .describe(
+        'The end time to query. If set, the messages will be returned before this timestamp.',
+      ),
+    limit: z
+      .number()
+      .optional()
+      .describe('The limit of messages to query. If set, the number of messages to return.'),
+  });

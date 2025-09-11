@@ -92,7 +92,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       tokenId: tokenId.toString(),
     });
 
-    await wait(3000); // waiting for the transactions to be indexed by mirrornode
+    await wait(4000); // waiting for the transactions to be indexed by mirrornode
 
     const result = await getAccountTokenBalancesQuery(operatorClient, context, {
       accountId: targetAccountId.toString(),
@@ -254,7 +254,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       })
       .then(resp => resp.accountId!);
 
-    await wait(3000); // waiting for an account to be indexed by mirrornode
+    await wait(4000); // waiting for an account to be indexed by mirrornode
 
     const result = await getAccountTokenBalancesQuery(operatorClient, context, {
       accountId: emptyAccountId.toString(),
@@ -323,7 +323,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       tokenId: tokenId2.toString(),
     });
 
-    await wait(3000); // waiting for the transactions to be indexed by mirrornode
+    await wait(4000); // waiting for the transactions to be indexed by mirrornode
 
     // Query for only the first token
     const result = await getAccountTokenBalancesQuery(operatorClient, context, {

@@ -4,9 +4,9 @@ import getHbarBalanceTool from '@/plugins/core-account-query-plugin/tools/querie
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
-import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { wait } from '../../utils/general-util';
+import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let operatorClient: Client;
