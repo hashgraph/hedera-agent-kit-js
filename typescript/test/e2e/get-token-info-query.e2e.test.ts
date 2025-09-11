@@ -19,6 +19,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Get Token Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -84,7 +85,7 @@ describe('Get Token Info Query E2E Tests', () => {
       })
       .then(resp => resp.tokenId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {

@@ -16,6 +16,7 @@ import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '../../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Get Token Info Query Integration Tests', () => {
   let operatorClient: Client;
@@ -83,7 +84,7 @@ describe('Get Token Info Query Integration Tests', () => {
       })
       .then(resp => resp.tokenId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -200,10 +201,10 @@ describe('Get Token Info Query Integration Tests', () => {
       })
       .then(resp => resp.tokenId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     await executorWrapper.deleteToken({ tokenId: tempTokenId.toString() });
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = getTokenInfoQueryTool(context);
     const params: z.infer<ReturnType<typeof tokenInfoQueryParameters>> = {
