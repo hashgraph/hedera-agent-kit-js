@@ -46,3 +46,19 @@ export function extractObservationFromLangchainResponse(agentResult: any): any {
   if (!observationRaw) throw new Error('No observation found in intermediate step');
   return JSON.parse(observationRaw);
 }
+
+export function extractTokenIdFromObservation(observation: any): string {
+  if (!observation.raw?.tokenId) {
+    throw new Error('No raw.tokenId found in observation');
+  }
+
+  // raw.tokenId may be string via toString or object; normalize
+  const tokenId = observation.raw.tokenId;
+  if (typeof tokenId === 'string') return tokenId;
+  if (tokenId.shard && tokenId.realm && tokenId.num) {
+    const { shard, realm, num } = tokenId;
+    return `${shard.low}.${realm.low}.${num.low}`;
+  }
+  if (tokenId.toString) return tokenId.toString();
+  throw new Error('Unable to parse tokenId');
+}

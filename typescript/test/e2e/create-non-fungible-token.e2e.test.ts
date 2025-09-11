@@ -16,7 +16,7 @@ import {
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
-describe('Create Fungible Token E2E Tests', () => {
+describe('Create Non-Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let executorClient: Client;
@@ -30,13 +30,13 @@ describe('Create Fungible Token E2E Tests', () => {
     // 1. Create executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
 
-    // 3. Start LangChain test setup with executor account
+    // 3. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agentExecutor = testSetup.agentExecutor;
     executorWrapper = new HederaOperationsWrapper(executorClient);
@@ -56,8 +56,8 @@ describe('Create Fungible Token E2E Tests', () => {
     }
   });
 
-  it('creates a fungible token with minimal params via natural language', async () => {
-    const input = `Create a fungible token named MyToken with symbol MTK`;
+  it('creates an NFT with minimal params via natural language', async () => {
+    const input = `Create a non-fungible token named MyNFT with symbol MNFT`;
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
@@ -71,14 +71,14 @@ describe('Create Fungible Token E2E Tests', () => {
 
     // Verify on-chain
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('MyToken');
-    expect(tokenInfo.symbol).toBe('MTK');
-    expect(tokenInfo.decimals).toBe(0);
+    expect(tokenInfo.name).toBe('MyNFT');
+    expect(tokenInfo.symbol).toBe('MNFT');
+    expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+    expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
   });
 
-  it('creates a fungible token with supply, decimals, and finite supply type', async () => {
-    const input =
-      'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
+  it('creates an NFT with custom max supply', async () => {
+    const input = 'Create a non-fungible token ArtCollection with symbol ART and max supply 500';
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
@@ -91,22 +91,30 @@ describe('Create Fungible Token E2E Tests', () => {
     await wait(MIRROR_NODE_WAITING_TIME);
 
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('GoldCoin');
-    expect(tokenInfo.symbol).toBe('GLD');
-    expect(tokenInfo.decimals).toBe(2);
-    expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
-    expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
+    expect(tokenInfo.name).toBe('ArtCollection');
+    expect(tokenInfo.symbol).toBe('ART');
+    expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+    expect(tokenInfo.maxSupply?.toInt()).toBe(500);
   });
 
-  it('handles invalid requests gracefully', async () => {
-    const input =
-      'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
+  it('creates an NFT with treasury account specification', async () => {
+    const treasuryAccountId = executorClient.operatorAccountId!.toString();
+    const input = `Create a non-fungible token GameItems with symbol GAME, treasury account ${treasuryAccountId}, and max supply 1000`;
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
+    const tokenId = extractTokenIdFromObservation(observation);
 
     expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('cannot exceed max supply');
-    expect(observation.raw.error).toBeDefined();
+    expect(observation.humanMessage).toContain('Token created successfully');
+    expect(observation.raw.tokenId).toBeDefined();
+
+    await wait(MIRROR_NODE_WAITING_TIME);
+
+    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+    expect(tokenInfo.name).toBe('GameItems');
+    expect(tokenInfo.symbol).toBe('GAME');
+    expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
+    expect(tokenInfo.maxSupply?.toInt()).toBe(1000);
   });
 });
