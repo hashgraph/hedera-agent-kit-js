@@ -6,6 +6,7 @@ import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } f
 import { z } from 'zod';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { wait } from '../../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Get Account Query Integration Tests', () => {
   let customClient: Client;
@@ -29,7 +30,7 @@ describe('Get Account Query Integration Tests', () => {
       })
       .then(resp => resp.accountId!);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     customClient = getCustomClient(createdAccountId, privateKey);
 
