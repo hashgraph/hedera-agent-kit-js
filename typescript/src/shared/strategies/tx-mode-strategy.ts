@@ -1,4 +1,4 @@
-import { AccountId, Client, TokenId, TopicId, Transaction, TransactionId } from '@hashgraph/sdk';
+import { AccountId, Client, ScheduleId, TokenId, TopicId, Transaction, TransactionId } from '@hashgraph/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 
 interface TxModeStrategy {
@@ -16,6 +16,7 @@ export interface RawTransactionResponse {
   tokenId: TokenId | null;
   transactionId: string;
   topicId: TopicId | null;
+  scheduleId: ScheduleId | null;
 }
 
 export interface ExecuteStrategyResult {
@@ -42,6 +43,7 @@ export class ExecuteStrategy implements TxModeStrategy {
       tokenId: receipt.tokenId,
       transactionId: tx.transactionId?.toString() ?? '',
       topicId: receipt.topicId,
+      scheduleId: receipt.scheduleId,
     };
     return {
       raw: rawTransactionResponse,

@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, Hbar, Key } from '@hashgraph/sdk';
+import { AccountId, Hbar, Key, Transaction } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
 
@@ -123,4 +123,22 @@ export const accountTokenBalancesQueryParameters = (_context: Context = {}) =>
       .optional()
       .describe('The account ID to query. If not provided, this accountId will be used.'),
     tokenId: z.string().optional().describe('The token ID to query.'),
+  });
+
+export const signScheduleTransactionParameters = (_context: Context = {}) =>
+  z.object({
+    scheduleId: z.string().describe('The ID of the scheduled transaction to sign'),
+  });
+
+export const signScheduleTransactionParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    scheduleId: z.string(),
+  });
+
+export const createScheduleTransactionParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    scheduledTransaction: z.instanceof(Transaction),
+    params: z.object({
+      scheduleMemo: z.string().optional(),
+    }),
   });

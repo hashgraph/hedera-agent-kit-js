@@ -19,6 +19,8 @@ import {
   updateAccountParametersNormalised,
   accountBalanceQueryParameters,
   accountTokenBalancesQueryParameters,
+  signScheduleTransactionParameters,
+  signScheduleTransactionParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -541,5 +543,14 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
+  }
+
+  static normaliseSignScheduleTransactionParams(
+    params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
+    _context: Context,
+  ): z.infer<ReturnType<typeof signScheduleTransactionParametersNormalised>> {
+    return {
+      scheduleId: params.scheduleId,
+    };
   }
 }
