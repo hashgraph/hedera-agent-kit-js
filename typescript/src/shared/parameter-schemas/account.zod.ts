@@ -105,3 +105,22 @@ export const updateAccountParametersNormalised = (_context: Context = {}) =>
     accountMemo: z.string().optional(),
     declineStakingReward: z.boolean().optional(),
   });
+
+export const accountQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().describe('The account ID to query.'),
+  });
+
+export const accountBalanceQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().optional().describe('The account ID to query.'),
+  });
+
+export const accountTokenBalancesQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z
+      .string()
+      .optional()
+      .describe('The account ID to query. If not provided, this accountId will be used.'),
+    tokenId: z.string().optional().describe('The token ID to query.'),
+  });

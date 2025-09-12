@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import { Client } from '@hashgraph/sdk';
-import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import BigNumber from 'bignumber.js';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -49,10 +49,12 @@ export const getHbarBalanceQuery = async (
       humanMessage: postProcess(toHBar(balance).toString() as string, normalisedParams.accountId),
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get HBAR balance';
+    const message = error instanceof Error ? error.message : 'Error getting HBAR balance';
+
+    return {
+      raw: { accountId: params.accountId, error: message },
+      humanMessage: message,
+    };
   }
 };
 

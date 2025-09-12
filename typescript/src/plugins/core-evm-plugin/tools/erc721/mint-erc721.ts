@@ -13,6 +13,7 @@ import { mintERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 const mintERC721Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
+  const toAddressDesc = PromptGenerator.getAnyAddressParameterDescription('toAddress', context);
 
   return `
 ${contextSnippet}
@@ -21,7 +22,7 @@ This tool will mint a new ERC721 token on Hedera.
 
 Parameters:
 - contractId (str, required): The id of the ERC721 contract
-- toAddress (str, required): The address to which the token will be minted. This can be the EVM address or the Hedera account id.
+- ${toAddressDesc}
 ${usageInstructions}
 
 Example: "Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means minting the ERC721 token with contract id 0.0.6486793 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
@@ -43,6 +44,7 @@ const mintERC721 = async (
       ERC721_MINT_FUNCTION_NAME,
       context,
       mirrorNode,
+      client,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result = await handleTransaction(tx, client, context);

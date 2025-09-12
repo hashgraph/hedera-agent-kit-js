@@ -17,6 +17,8 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
+  accountBalanceQueryParameters,
+  accountTokenBalancesQueryParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -26,10 +28,6 @@ import {
 import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
-import {
-  accountBalanceQueryParameters,
-  accountTokenBalancesQueryParameters,
-} from '@/shared/parameter-schemas/query.zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
 import Long from 'long';
@@ -343,9 +341,13 @@ export default class HederaParameterNormaliser {
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
-    const decimals =
-      (await mirrorNode.getTokenInfo(params.tokenId).then(r => Number(r.decimals))) ?? 0;
-    const baseAmount = toBaseUnit(params.amount, decimals).toNumber();
+    const tokenInfo = await mirrorNode.getTokenInfo(params.tokenId);
+    const decimals = Number(tokenInfo.decimals);
+
+    // Fallback to 0 if decimals are missing or NaN
+    const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
+
+    const baseAmount = toBaseUnit(params.amount, safeDecimals).toNumber();
     return {
       tokenId: params.tokenId,
       amount: baseAmount,
@@ -371,7 +373,7 @@ export default class HederaParameterNormaliser {
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
-    const recipientAddress = await HederaParameterNormaliser.getHederaEVMAddress(
+    const recipientAddress = await AccountResolver.getHederaEVMAddress(
       params.recipientAddress,
       mirrorNode,
     );
@@ -398,17 +400,14 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof transferERC721Parameters>>,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
-    _context: Context,
+    context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ) {
-    const fromAddress = await HederaParameterNormaliser.getHederaEVMAddress(
-      params.fromAddress,
-      mirrorNode,
-    );
-    const toAddress = await HederaParameterNormaliser.getHederaEVMAddress(
-      params.toAddress,
-      mirrorNode,
-    );
+    // Resolve fromAddress using AccountResolver pattern, similar to transfer-hbar
+    const resolvedFromAddress = AccountResolver.resolveAccount(params.fromAddress, context, client);
+    const fromAddress = await AccountResolver.getHederaEVMAddress(resolvedFromAddress, mirrorNode);
+    const toAddress = await AccountResolver.getHederaEVMAddress(params.toAddress, mirrorNode);
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
       params.contractId,
       mirrorNode,
@@ -435,11 +434,10 @@ export default class HederaParameterNormaliser {
     factoryContractFunctionName: string,
     _context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ) {
-    const toAddress = await HederaParameterNormaliser.getHederaEVMAddress(
-      params.toAddress,
-      mirrorNode,
-    );
+    const resolvedToAddress = AccountResolver.resolveAccount(params.toAddress, _context, client);
+    const toAddress = await AccountResolver.getHederaEVMAddress(resolvedToAddress, mirrorNode);
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
       params.contractId,
       mirrorNode,
@@ -533,17 +531,6 @@ export default class HederaParameterNormaliser {
     }
 
     return normalised;
-  }
-
-  static async getHederaEVMAddress(
-    address: string,
-    mirrorNode: IHederaMirrornodeService,
-  ): Promise<string> {
-    if (!AccountResolver.isHederaAddress(address)) {
-      return address;
-    }
-    const account = await mirrorNode.getAccount(address);
-    return account.evmAddress;
   }
 
   static async getHederaAccountId(

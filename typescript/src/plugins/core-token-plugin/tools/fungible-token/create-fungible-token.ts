@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -25,7 +25,7 @@ This tool creates a fungible token on Hedera.
 Parameters:
 - tokenName (str, required): The name of the token
 - tokenSymbol (str, optional): The symbol of the token
-- initialSupply (int, optional): The initial supply of the token
+- initialSupply (int, optional): The initial supply of the token, defaults to 0
 - supplyType (str, optional): The supply type of the token. Can be "finite" or "infinite". Defaults to "finite"
 - maxSupply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified
 - decimals (int, optional): The number of decimals the token supports. Defaults to 0
@@ -57,10 +57,15 @@ const createFungibleToken = async (
     return result;
   } catch (error) {
     console.error('[CreateFungibleToken] Error creating fungible token:', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create fungible token';
+    const message = error instanceof Error ? error.message : 'Error creating fungible token';
+
+    return {
+      raw: {
+        status: Status.InvalidTransaction,
+        error: message,
+      },
+      humanMessage: message,
+    };
   }
 };
 

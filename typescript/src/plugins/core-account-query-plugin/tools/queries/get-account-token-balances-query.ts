@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -26,6 +26,9 @@ ${usageInstructions}
 };
 
 const postProcess = (tokenBalances: TokenBalancesResponse, accountId: string) => {
+  if (tokenBalances.tokens.length === 0) {
+    return `No token balances found for account ${accountId}`;
+  }
   const balancesText = tokenBalances.tokens
     .map(
       token => `  Token: ${token.token_id}, Balance: ${token.balance}, Decimals: ${token.decimals}`,
@@ -59,10 +62,12 @@ export const getAccountTokenBalancesQuery = async (
     };
   } catch (error) {
     console.error('Error getting account token balances', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get account token balances';
+    const message = error instanceof Error ? error.message : 'Error getting account token balances';
+
+    return {
+      raw: { accountId: params.accountId, error: message },
+      humanMessage: message,
+    };
   }
 };
 

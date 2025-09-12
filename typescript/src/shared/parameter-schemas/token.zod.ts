@@ -7,8 +7,17 @@ export const createFungibleTokenParameters = (_context: Context = {}) =>
   z.object({
     tokenName: z.string().describe('The name of the token.'),
     tokenSymbol: z.string().describe('The symbol of the token.'),
-    initialSupply: z.number().int().default(0).describe('The initial supply of the token.'),
-    supplyType: z.enum(['finite', 'infinite']).optional().describe('Supply type of the token.'),
+    initialSupply: z
+      .number()
+      .int()
+      .optional()
+      .default(0)
+      .describe('The initial supply of the token.'),
+    supplyType: z
+      .enum(['finite', 'infinite'])
+      .optional()
+      .default('finite')
+      .describe('Supply type of the token.'),
     maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
     decimals: z.number().int().optional().default(0).describe('The number of decimals.'),
     treasuryAccountId: z.string().optional().describe('The treasury account of the token.'),
@@ -20,8 +29,10 @@ export const createFungibleTokenParameters = (_context: Context = {}) =>
 
 export const createFungibleTokenParametersNormalised = (_context: Context = {}) =>
   createFungibleTokenParameters(_context).extend({
+    treasuryAccountId: z.string().describe('The treasury account of the token.'),
     autoRenewAccountId: z
       .string()
+      .optional()
       .describe(
         'The auto renew account for the token. If not provided, defaults to the operator account.',
       ),
@@ -126,3 +137,8 @@ export const deleteTokenParameters = (_context: Context = {}) =>
 
 export const deleteTokenParametersNormalised = (_context: Context = {}) =>
   deleteTokenParameters(_context).extend({});
+
+export const tokenInfoQueryParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().optional().describe('The token ID to query.'),
+  });

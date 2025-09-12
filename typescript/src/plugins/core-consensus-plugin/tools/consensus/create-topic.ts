@@ -48,10 +48,12 @@ const createTopic = async (
     return result;
   } catch (error) {
     console.error('[CreateTopic] Error creating topic:', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create topic';
+    const message = error instanceof Error ? error.message : 'Error creating topic';
+
+    return {
+      raw: { error: message },
+      humanMessage: message,
+    };
   }
 };
 

@@ -10,6 +10,7 @@ import {
 import { Client, TransactionId, PrivateKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import Long from 'long';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Get Transaction Record E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -58,7 +59,7 @@ describe('Get Transaction Record E2E Tests', () => {
     )}`;
 
     // Wait for the mirror node to index the transaction
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
