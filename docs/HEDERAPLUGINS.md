@@ -42,6 +42,8 @@ This plugin provides tools for Hedera **Account Service operations**:
 | `CREATE_ACCOUNT_TOOL` | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                       |
 | `UPDATE_ACCOUNT_TOOL` | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional). |
 | `DELETE_ACCOUNT_TOOL` | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                   |
+| `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing. |
+
 
 ---
 
