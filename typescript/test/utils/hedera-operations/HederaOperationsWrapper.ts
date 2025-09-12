@@ -34,7 +34,10 @@ import {
 import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
 import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { TopicMessagesResponse } from '@/shared/hedera-utils/mirrornode/types';
+import {
+  TokenAirdropsResponse,
+  TopicMessagesResponse,
+} from '@/shared/hedera-utils/mirrornode/types';
 
 class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
@@ -244,6 +247,14 @@ class HederaOperationsWrapper {
     const accountInfo = await this.getAccountInfo(accountId);
     const balance = accountInfo.balance;
     return new BigNumber(balance.toTinybars().toNumber());
+  }
+
+  async getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
+    return await this.mirrornode.getPendingAirdrops(accountId);
+  }
+
+  async getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
+    return await this.mirrornode.getOutstandingAirdrops(accountId);
   }
 }
 

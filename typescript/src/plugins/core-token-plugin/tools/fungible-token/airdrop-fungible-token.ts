@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { airdropFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -54,10 +54,16 @@ const airdropFungibleToken = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to airdrop fungible token';
+    console.error('[AirdropFungibleToken] Error airdropping fungible token:', error);
+    const message = error instanceof Error ? error.message : 'Error airdropping fungible token';
+
+    return {
+      raw: {
+        status: Status.InvalidTransaction,
+        error: message,
+      },
+      humanMessage: message,
+    };
   }
 };
 

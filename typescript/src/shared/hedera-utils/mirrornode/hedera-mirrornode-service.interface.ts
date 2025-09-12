@@ -6,6 +6,7 @@ import {
   TokenInfo,
   TransactionDetailsResponse,
   ContractInfo,
+  TokenAirdropsResponse,
 } from './types';
 
 export interface IHederaMirrornodeService {
@@ -16,4 +17,6 @@ export interface IHederaMirrornodeService {
   getTokenInfo(tokenId: string): Promise<TokenInfo>;
   getContractInfo(contractId: string): Promise<ContractInfo>;
   getTransactionRecord(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse>;
+  getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse>;
+  getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse>;
 }
