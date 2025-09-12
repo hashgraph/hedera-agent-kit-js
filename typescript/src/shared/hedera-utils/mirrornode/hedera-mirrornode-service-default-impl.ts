@@ -157,6 +157,13 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getContractInfo(contractId: string): Promise<ContractInfo> {
     const url = `${this.baseUrl}/contracts/${contractId}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Error getting contract info for a contract ${contractId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
     return await response.json();
   }
 }

@@ -5,7 +5,8 @@ import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } f
 import { Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '../../utils/general-util';
-import { COMPILED_ERC20_BYTECODE } from '../../utils/constants';
+import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 
 describe('Integration - Hedera Get Contract Info', () => {
   let operatorClient: Client;
@@ -14,40 +15,61 @@ describe('Integration - Hedera Get Contract Info', () => {
   let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let deployedContractId: string;
+  let mirrornodeService: IHederaMirrornodeService;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
     const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // create executor account
+    // create an executor account
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
       .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
+    mirrornodeService = getMirrornodeService(undefined, executorClient.ledgerId!);
 
     // deploy ERC20 contract
-    // const deployment = await executorWrapper.deployERC20(COMPILED_ERC20_BYTECODE);
-    // deployedContractId = deployment.contractId!;
-    deployedContractId = '0.0.6793266'; // TODO: remove this when we have a real contract to test with
+    const deployment = await executorWrapper.deployERC20(COMPILED_ERC20_BYTECODE);
+    deployedContractId = deployment.contractId!;
+
+    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirrornode sync
   });
 
   it('fetches info for a deployed smart contract', async () => {
-    const mirrornodeService = getMirrornodeService(undefined, executorClient.ledgerId!);
     context = {
       accountId: executorClient.operatorAccountId!.toString(),
       mirrornodeService,
     };
     const tool = getContractInfoTool(context);
 
-    await wait(4000); // wait for mirrornode sync
-
     const result = await tool.execute(executorClient, context, {
       contractId: deployedContractId,
     });
 
-    expect((result as any).raw.contractId.toString()).toBe(deployedContractId);
+    expect(result.raw.contractId.toString()).toBe(deployedContractId);
+    expect(result.raw.contractInfo.contract_id).toBe(deployedContractId);
+  });
+
+  it('Handles non-existing smart contract', async () => {
+    context = {
+      accountId: executorClient.operatorAccountId!.toString(),
+      mirrornodeService,
+    };
+    const tool = getContractInfoTool(context);
+
+    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirrornode sync
+
+    const nonExistingContract = 'non-existing-contract-id';
+    const result = await tool.execute(executorClient, context, {
+      contractId: nonExistingContract,
+    });
+
+    expect(result.raw.contractId.toString()).toBe(nonExistingContract);
+    expect(result.raw.contractInfo).toBeUndefined();
+    expect(result.raw.error).toContain('Error getting contract info');
+    expect(result.humanMessage).toContain('Error getting contract info');
   });
 
   afterAll(async () => {

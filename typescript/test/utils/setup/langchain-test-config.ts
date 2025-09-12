@@ -16,6 +16,8 @@ import {
   coreConsensusQueryPluginToolNames,
   coreTransactionQueryPlugin,
   coreTransactionQueryPluginToolNames,
+  coreEVMQueryPlugin,
+  coreEVMQueryPluginToolNames,
 } from '@/plugins';
 
 /**
@@ -45,7 +47,7 @@ const {
 
 const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
-
+const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
 
 /**
@@ -80,6 +82,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     GET_TOPIC_MESSAGES_QUERY_TOOL,
     GET_TOKEN_INFO_QUERY_TOOL,
     GET_TRANSACTION_RECORD_QUERY_TOOL,
+    GET_CONTRACT_INFO_QUERY_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
@@ -89,6 +92,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     coreTokenPlugin,
     coreConsensusPlugin,
     coreTransactionQueryPlugin,
+    coreEVMQueryPlugin,
   ],
   agentMode: AgentMode.AUTONOMOUS,
 };
