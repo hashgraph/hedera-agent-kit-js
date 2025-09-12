@@ -21,6 +21,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { z } from 'zod';
 import {
   createAccountParametersNormalised,
+  createScheduleTransactionParametersNormalised,
   deleteAccountParametersNormalised,
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
@@ -46,6 +47,14 @@ class HederaOperationsWrapper {
     this.mirrornode = getMirrornodeService(undefined, LedgerId.TESTNET);
   }
 
+  async createScheduleTransaction(
+    params: z.infer<ReturnType<typeof createScheduleTransactionParametersNormalised>>,
+  ): Promise<RawTransactionResponse> {
+    const tx = HederaBuilder.createScheduleTransaction(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw;
+  }
+
   // ACCOUNT OPERATIONS
   async createAccount(
     params: z.infer<ReturnType<typeof createAccountParametersNormalised>>,
@@ -58,6 +67,7 @@ class HederaOperationsWrapper {
       tokenId: null,
       topicId: null,
       transactionId: result.raw.transactionId,
+      scheduleId: null,
     };
   }
 
