@@ -33,11 +33,7 @@ const signScheduleTransaction = async (
   params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseSignScheduleTransactionParams(
-      params,
-      context,
-    );
-    const tx = HederaBuilder.signScheduleTransaction(normalisedParams);
+    const tx = HederaBuilder.signScheduleTransaction(params);
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {

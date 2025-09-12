@@ -130,11 +130,6 @@ export const signScheduleTransactionParameters = (_context: Context = {}) =>
     scheduleId: z.string().describe('The ID of the scheduled transaction to sign'),
   });
 
-export const signScheduleTransactionParametersNormalised = (_context: Context = {}) =>
-  z.object({
-    scheduleId: z.string(),
-  });
-
 export const createScheduleTransactionParametersNormalised = (_context: Context = {}) =>
   z.object({
     scheduledTransaction: z.instanceof(Transaction),

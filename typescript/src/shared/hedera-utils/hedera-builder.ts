@@ -28,8 +28,8 @@ import {
   deleteAccountParametersNormalised,
   transferHbarParametersNormalised,
   updateAccountParametersNormalised,
-  signScheduleTransactionParametersNormalised,
   createScheduleTransactionParametersNormalised,
+  signScheduleTransactionParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -116,7 +116,7 @@ export default class HederaBuilder {
   }
 
   static signScheduleTransaction(
-    params: z.infer<ReturnType<typeof signScheduleTransactionParametersNormalised>>,
+    params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
   ) {
     return new ScheduleSignTransaction(params);
   }
