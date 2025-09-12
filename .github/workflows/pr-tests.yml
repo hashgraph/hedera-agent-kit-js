@@ -14,13 +14,13 @@ jobs:
   integration-tests:
     uses: ./.github/workflows/run-integration-tests.yml
     secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPEN_API_KEY: ${{ secrets.OPEN_API_KEY }}
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
 
   e2e-tests:
     uses: ./.github/workflows/run-e2e-tests.yml
     secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPEN_API_KEY: ${{ secrets.OPEN_API_KEY }}
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
