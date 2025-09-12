@@ -26,6 +26,10 @@ ${usageInstructions}
 };
 
 const postProcess = (messages: TopicMessage[], topicId: string) => {
+  if (messages.length === 0) {
+    return `No messages found for topic ${topicId}.`;
+  }
+
   const messagesText = messages.map(
     message =>
       `${Buffer.from(message.message, 'base64').toString('utf-8')} - posted at: ${message.consensus_timestamp}\n`,
@@ -78,11 +82,15 @@ export const getTopicMessagesQuery = async (
       humanMessage: postProcess(messages.messages, params.topicId),
     };
   } catch (error) {
-    console.error('Error getting topic messages', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get topic messages';
+    console.error('[GetTopicMessages] Failed to get topic messages:', error);
+    const message = error instanceof Error ? error.message : 'Error getting topic messages';
+
+    return {
+      raw: {
+        error: message,
+      },
+      humanMessage: message,
+    };
   }
 };
 
