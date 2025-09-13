@@ -541,5 +541,5 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
-  }
+}
 }
