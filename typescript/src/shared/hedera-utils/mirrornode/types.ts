@@ -215,3 +215,15 @@ export interface ContractInfo {
     to?: string | null;
   };
 }
+
+export type ExchangeRate = {
+  hbar_equivalent: number;
+  cent_equivalent: number;
+  expiration_time: number;
+};
+
+export type ExchangeRateResponse = {
+  current_rate: ExchangeRate;
+  next_rate: ExchangeRate;
+  timestamp: string;
+};

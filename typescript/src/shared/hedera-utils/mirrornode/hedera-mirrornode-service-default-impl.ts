@@ -12,6 +12,7 @@ import {
   TopicMessagesResponse,
   TransactionDetailsResponse,
   ContractInfo,
+  ExchangeRateResponse,
 } from './types';
 import BigNumber from 'bignumber.js';
 
@@ -166,6 +167,16 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
       );
     }
 
+    return await response.json();
+  }
+
+  async getExchangeRate(timestamp?: string): Promise<ExchangeRateResponse> {
+    const timestampParam = timestamp ? `?timestamp=${encodeURIComponent(timestamp)}` : '';
+    const url = `${this.baseUrl}/network/exchangerate${timestampParam}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
+    }
     return await response.json();
   }
 }

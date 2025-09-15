@@ -34,7 +34,7 @@ export class PromptGenerator {
     return lines.join('\n');
   }
 
-  static getAnyAddressParameterDescription(   
+  static getAnyAddressParameterDescription(
     paramName: string,
     context: Context,
     isRequired: boolean = false,
