@@ -63,7 +63,7 @@ describe('get-account-query tool (unit)', () => {
     expect(getMirrornodeService).toHaveBeenCalledWith(context.mirrornodeService, client.ledgerId);
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -75,11 +75,12 @@ describe('get-account-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('boom');
+    expect(res.humanMessage).toContain('Failed to get account query');
+    expect(res.humanMessage).toContain('boom');
     expect(res.raw.accountId).toBe(params.accountId);
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns aligned generic failure response when a non-Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -91,7 +92,7 @@ describe('get-account-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Error getting account query');
+    expect(res.humanMessage).toBe('Failed to get account query');
     expect(res.raw.accountId).toBe(params.accountId);
   });
 });

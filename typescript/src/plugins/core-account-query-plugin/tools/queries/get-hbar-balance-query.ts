@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import BigNumber from 'bignumber.js';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -49,12 +49,10 @@ export const getHbarBalanceQuery = async (
       humanMessage: postProcess(toHBar(balance).toString() as string, normalisedParams.accountId),
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error getting HBAR balance';
-
-    return {
-      raw: { accountId: params.accountId, error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to get HBAR balance';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_hbar_balance_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

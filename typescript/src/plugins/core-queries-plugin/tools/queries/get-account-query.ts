@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { Tool } from '@/shared/tools';
@@ -43,11 +43,10 @@ export const getAccountQuery = async (
       humanMessage: postProcess(account),
     };
   } catch (error) {
-    console.error('Error getting account query', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get account query';
+    const desc = 'Failed to get account query';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_account_query_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

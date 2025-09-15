@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
@@ -86,11 +86,10 @@ export const getTokenInfoQuery = async (
       humanMessage: postProcess(tokenInfo),
     };
   } catch (error) {
-    console.error('Error getting token info', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get token info';
+    const desc = 'Failed to get token info';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_token_info_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

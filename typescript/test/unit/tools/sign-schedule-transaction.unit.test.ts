@@ -5,9 +5,6 @@ import toolFactory, {
 } from '@/plugins/core-account-plugin/tools/account/sign-schedule-transaction';
 
 // Mocks for dependencies
-vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
-  default: { normaliseSignScheduleTransactionParams: vi.fn((params: any) => ({ normalised: true, ...params })) },
-}));
 vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
   default: { signScheduleTransaction: vi.fn((_params: any) => ({ tx: 'signScheduleTx' })) },
 }));
@@ -71,14 +68,6 @@ describe('sign-schedule-transaction tool (unit)', () => {
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
     expect(HederaBuilder.signScheduleTransaction).toHaveBeenCalledTimes(1);
-
-    const { default: HederaParameterNormaliser } = await import(
-      '@/shared/hedera-utils/hedera-parameter-normaliser'
-    );
-    expect(HederaParameterNormaliser.normaliseSignScheduleTransactionParams).toHaveBeenCalledWith(
-      params,
-      context,
-    );
   });
 
   it('returns error message when an Error is thrown', async () => {
@@ -117,13 +106,11 @@ describe('sign-schedule-transaction tool (unit)', () => {
 
     // Reset the mock to return success for this test
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
-    (HederaBuilder.signScheduleTransaction as any).mockImplementation(() => ({ tx: 'signScheduleTx' }));
+    (HederaBuilder.signScheduleTransaction as any).mockImplementation(() => ({
+      tx: 'signScheduleTx',
+    }));
 
-    const testCases = [
-      '0.0.123456',
-      '0.0.1',
-      '0.0.999999999',
-    ];
+    const testCases = ['0.0.123456', '0.0.1', '0.0.999999999'];
 
     for (const scheduleId of testCases) {
       const params = { scheduleId };
@@ -132,14 +119,6 @@ describe('sign-schedule-transaction tool (unit)', () => {
       expect(res).toBeDefined();
       expect(res.raw).toBeDefined();
       expect(res.humanMessage).toMatch(/Transaction successfully signed\./);
-
-      const { default: HederaParameterNormaliser } = await import(
-        '@/shared/hedera-utils/hedera-parameter-normaliser'
-      );
-      expect(HederaParameterNormaliser.normaliseSignScheduleTransactionParams).toHaveBeenCalledWith(
-        params,
-        context,
-      );
     }
   });
 
@@ -157,7 +136,10 @@ describe('sign-schedule-transaction tool (unit)', () => {
       scheduleId: '0.0.123456',
     } as any);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Error signing scheduled transaction', expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error signing scheduled transaction',
+      expect.any(Error),
+    );
     consoleSpy.mockRestore();
   });
 

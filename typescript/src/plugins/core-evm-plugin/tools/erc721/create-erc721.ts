@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
+import { Client, Status, TransactionRecordQuery } from '@hashgraph/sdk';
 import { ExecuteStrategyResult, handleTransaction } from '@/shared/strategies/tx-mode-strategy';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -61,11 +61,10 @@ const createERC721 = async (
     }
     return result;
   } catch (error) {
-    console.error('[CreateERC721] Error creating ERC721 token:', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create ERC721 token';
+    const desc = 'Failed to create ERC721 token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_erc721_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

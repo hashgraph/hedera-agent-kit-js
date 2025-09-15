@@ -90,7 +90,7 @@ describe('get-token-info-query tool (unit)', () => {
     expect(getMirrornodeService).toHaveBeenCalledWith(context.mirrornodeService, client.ledgerId);
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -102,7 +102,9 @@ describe('get-token-info-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
+    expect(res.humanMessage).toContain('Failed to get token info');
     expect(res.humanMessage).toContain('token not found');
+    expect(res.raw.error).toContain('Failed to get token info');
     expect(res.raw.error).toContain('token not found');
   });
 

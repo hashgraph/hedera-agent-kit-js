@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { Tool } from '@/shared/tools';
@@ -85,14 +85,10 @@ export const getTransactionRecordQuery = async (
       humanMessage: postProcess(transactionRecord, params.transactionId),
     };
   } catch (error) {
-    console.error('Error getting transaction record', error);
-
-    const message = error instanceof Error ? error.message : 'Error getting transaction record';
-
-    return {
-      raw: { transactionId: params.transactionId, error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to get transaction record';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_transaction_record_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

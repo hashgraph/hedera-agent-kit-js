@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/account.zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -61,13 +61,10 @@ export const getAccountTokenBalancesQuery = async (
       humanMessage: postProcess(tokenBalances, normalisedParams.accountId),
     };
   } catch (error) {
-    console.error('Error getting account token balances', error);
-    const message = error instanceof Error ? error.message : 'Error getting account token balances';
-
-    return {
-      raw: { accountId: params.accountId, error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to get account token balances';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_account_token_balances_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

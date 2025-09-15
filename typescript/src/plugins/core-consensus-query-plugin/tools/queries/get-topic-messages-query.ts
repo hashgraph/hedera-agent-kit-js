@@ -1,7 +1,7 @@
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { z } from 'zod';
 import { Tool } from '@/shared/tools';
 import { TopicMessage, TopicMessagesQueryParams } from '@/shared/hedera-utils/mirrornode/types';
@@ -78,11 +78,10 @@ export const getTopicMessagesQuery = async (
       humanMessage: postProcess(messages.messages, params.topicId),
     };
   } catch (error) {
-    console.error('Error getting topic messages', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get topic messages';
+    const desc = 'Failed to get topic messages';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_topic_messages_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

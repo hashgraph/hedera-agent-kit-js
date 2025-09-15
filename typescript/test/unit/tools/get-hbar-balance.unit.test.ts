@@ -59,7 +59,7 @@ describe('get-hbar-balance tool (unit)', () => {
     expect(HederaParameterNormaliser.normaliseHbarBalanceParams).toHaveBeenCalled();
   });
 
-  it('returns error message string for Error thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -73,11 +73,12 @@ describe('get-hbar-balance tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
-    expect(res.humanMessage).toBe('boom');
+    expect(res.humanMessage).toContain('Failed to get HBAR balance');
+    expect(res.humanMessage).toContain('boom');
     expect(res.raw.accountId).toBe('0.0.x');
   });
 
-  it('returns generic message when non-Error thrown', async () => {
+  it('returns aligned generic message when non-Error thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -91,6 +92,6 @@ describe('get-hbar-balance tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
-    expect(res.humanMessage).toBe('Error getting HBAR balance');
+    expect(res.humanMessage).toBe('Failed to get HBAR balance');
   });
 });

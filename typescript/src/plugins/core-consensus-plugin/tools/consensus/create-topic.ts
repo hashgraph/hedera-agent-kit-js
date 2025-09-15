@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
@@ -47,13 +47,10 @@ const createTopic = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    console.error('[CreateTopic] Error creating topic:', error);
-    const message = error instanceof Error ? error.message : 'Error creating topic';
-
-    return {
-      raw: { error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to create topic';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_topic_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
