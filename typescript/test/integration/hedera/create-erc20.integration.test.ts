@@ -1,29 +1,44 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hashgraph/sdk';
 import { z } from 'zod';
 import createERC20Tool from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { Context, AgentMode } from '@/shared/configuration';
-import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
+import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 
 describe('Create ERC20 Integration Tests', () => {
-  let client: Client;
+  let operatorClient: Client;
+  let executorClient: Client;
   let context: Context;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let operatorWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({
+        initialBalance: 20, // For creating NFTs
+        key: executorAccountKey.publicKey,
+      })
+      .then(resp => resp.accountId!);
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: client.operatorAccountId!.toString(),
+      accountId: executorAccountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      client.close();
+    if (executorClient) {
+      executorClient.close();
+    }
+    if (operatorClient) {
+      operatorClient.close();
     }
   });
 
@@ -35,12 +50,12 @@ describe('Create ERC20 Integration Tests', () => {
       };
 
       const tool = createERC20Tool(context);
-      const result: any = await tool.execute(client, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('ERC20 token created successfully');
       expect(result.erc20Address).toMatch(/^0x[a-fA-F0-9]{40}$/);
 
-      const contractInfo = await hederaOperationsWrapper.getContractInfo(result.erc20Address);
+      const contractInfo = await executorWrapper.getContractInfo(result.erc20Address);
 
       expect(contractInfo.contractId).toBeDefined();
       expect(contractInfo.adminKey).toBeDefined();
@@ -55,12 +70,12 @@ describe('Create ERC20 Integration Tests', () => {
       };
 
       const tool = createERC20Tool(context);
-      const result: any = await tool.execute(client, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('ERC20 token created successfully');
       expect(result.erc20Address).toMatch(/^0x[a-fA-F0-9]{40}$/);
 
-      const contractInfo = await hederaOperationsWrapper.getContractInfo(result.erc20Address);
+      const contractInfo = await executorWrapper.getContractInfo(result.erc20Address);
 
       expect(contractInfo.contractId).toBeDefined();
     });
@@ -71,10 +86,16 @@ describe('Create ERC20 Integration Tests', () => {
       const params: any = {}; // no tokenName, tokenSymbol
 
       const tool = createERC20Tool(context);
-      const result: any = await tool.execute(client, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Error creating ERC20 token');
-      expect(result.raw.error).toContain('Error creating ERC20 token');
+      expect(result.humanMessage).toContain(
+        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+      );
+      expect(result.raw.error).toContain(
+        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+      );
+      expect(result.raw.error).toContain('Failed to create ERC20 token');
+      expect(result.humanMessage).toContain('Failed to create ERC20 token');
     });
 
     it('should fail when decimals is invalid', async () => {
@@ -86,9 +107,17 @@ describe('Create ERC20 Integration Tests', () => {
       };
 
       const tool = createERC20Tool(context);
-      const result: any = await tool.execute(client, context, params);
+      const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Error creating ERC20 token');
+      expect(result.raw.error).toContain('Failed to create ERC20 token');
+      expect(result.humanMessage).toContain('Failed to create ERC20 token');
+
+      expect(result.raw.error).toContain(
+        'Invalid parameters: Field "decimals" - Number must be greater than or equal to 0',
+      );
+      expect(result.humanMessage).toContain(
+        'Invalid parameters: Field "decimals" - Number must be greater than or equal to 0',
+      );
     });
   });
 });

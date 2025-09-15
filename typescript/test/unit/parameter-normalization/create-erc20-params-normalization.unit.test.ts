@@ -8,6 +8,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
   const factoryContractId = '0.0.7890';
   const factoryAbi = ERC20_FACTORY_ABI;
   const functionName = 'deployToken';
+  const context = { accountId: '0.0.1234' };
 
   let encodeSpy: any;
 
@@ -34,6 +35,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       factoryContractId,
       factoryAbi,
       functionName,
+      context,
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
@@ -65,6 +67,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       factoryContractId,
       factoryAbi,
       functionName,
+      context,
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
@@ -98,6 +101,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       factoryContractId,
       factoryAbi,
       functionName,
+      context,
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
@@ -131,6 +135,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       factoryContractId,
       factoryAbi,
       functionName,
+      context,
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
@@ -159,8 +164,9 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           factoryContractId,
           factoryAbi,
           functionName,
+          context,
         ),
-      ).toThrow(/Invalid parameters for ERC20 token creation: Field "tokenName"/);
+      ).toThrow(/Invalid parameters: Field "tokenName" - Required/);
     });
 
     it('throws when tokenSymbol is missing', () => {
@@ -172,8 +178,9 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           factoryContractId,
           factoryAbi,
           functionName,
+          context,
         ),
-      ).toThrow(/Invalid parameters for ERC20 token creation: Field "tokenSymbol"/);
+      ).toThrow(/Invalid parameters: Field "tokenSymbol" - Required/);
     });
 
     it('throws when decimals is not a number', () => {
@@ -189,6 +196,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           factoryContractId,
           factoryAbi,
           functionName,
+          context,
         ),
       ).toThrow(/Field "decimals"/);
     });
@@ -206,6 +214,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           factoryContractId,
           factoryAbi,
           functionName,
+          context,
         ),
       ).toThrow(/Field "decimals"/);
     });
@@ -223,6 +232,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           factoryContractId,
           factoryAbi,
           functionName,
+          context,
         ),
       ).toThrow(/Field "initialSupply"/);
     });
@@ -240,6 +250,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           factoryContractId,
           factoryAbi,
           functionName,
+          context,
         );
 
       // assert that all field names appear in the thrown message

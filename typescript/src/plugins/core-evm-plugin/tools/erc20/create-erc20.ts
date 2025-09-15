@@ -55,7 +55,7 @@ const createERC20 = async (
       return {
         ...(result as ExecuteStrategyResult),
         erc20Address: erc20Address?.toString(),
-        message: `ERC20 token created successfully at address ${erc20Address?.toString()}`,
+        humanMessage: `ERC20 token created successfully at address ${erc20Address?.toString()}`,
       };
     }
     return result;

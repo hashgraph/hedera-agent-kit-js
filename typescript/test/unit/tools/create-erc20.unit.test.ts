@@ -114,6 +114,7 @@ describe('createERC20 tool (unit)', () => {
       expect.any(String),
       expect.any(Array),
       'deployToken',
+      context,
     );
   });
 
