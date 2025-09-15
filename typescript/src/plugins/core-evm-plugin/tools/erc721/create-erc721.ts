@@ -47,6 +47,7 @@ const createERC721 = async (
       factoryContractAddress,
       ERC721_FACTORY_ABI,
       'deployToken',
+      context,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result = await handleTransaction(tx, client, context);
