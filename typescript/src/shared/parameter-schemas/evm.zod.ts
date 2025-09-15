@@ -32,9 +32,16 @@ export const createERC20Parameters = (_context: Context = {}) =>
       .number()
       .int()
       .min(0)
+      .optional()
       .default(18)
       .describe('The number of decimals the token supports.'),
-    initialSupply: z.number().int().min(0).default(0).describe('The initial supply of the token.'),
+    initialSupply: z
+      .number()
+      .int()
+      .min(0)
+      .optional()
+      .default(0)
+      .describe('The initial supply of the token.'),
   });
 
 export const transferERC721Parameters = (_context: Context = {}) =>
