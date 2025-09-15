@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { wait } from '../../utils/general-util';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let operatorClient: Client;
@@ -34,7 +35,7 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
       .createAccount({ key: executorClient.operatorPublicKey as Key, initialBalance: 1 })
       .then(resp => resp.accountId!);
 
-    await wait(4000); // wait for mirror node indexing
+    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirror node indexing
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -102,7 +103,6 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     });
     const res: any = await tool.execute(executorClient, context, params);
 
-    expect(res.raw.accountId).toBe(nonExistentAccountId);
-    expect(res.humanMessage).toContain(`Failed to fetch hbar balance for`);
+    expect(res.humanMessage).toContain('Failed to get HBAR balance');
   });
 });

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -52,10 +52,10 @@ const createNonFungibleToken = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create non-fungible token';
+    const desc = 'Failed to create non-fungible token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_non_fungible_token_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

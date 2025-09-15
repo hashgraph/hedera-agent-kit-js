@@ -86,6 +86,6 @@ describe('HederaParameterNormaliser.normaliseCreateTopicParams', () => {
         clientNoOp,
         mirrorNode,
       ),
-    ).rejects.toThrow('Could not determine default account ID for submit key');
+    ).rejects.toThrow('Could not determine public key for submit key');
   });
 });

@@ -85,7 +85,7 @@ describe('create-token tool (unit)', () => {
     supplyKey: undefined,
     tokenMemo: undefined,
     tokenType: undefined,
-    treasuryAccountId: undefined,
+    treasuryAccountId: context.accountId,
     wipeKey: undefined,
     supplyType: TokenSupplyType.Finite,
     tokenName: 'MYTOKEN',
@@ -133,7 +133,7 @@ describe('create-token tool (unit)', () => {
     );
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     mockedBuilder.createFungibleToken.mockImplementation(() => {
       throw new Error('boom');
     });
@@ -142,12 +142,14 @@ describe('create-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('boom');
-    expect(res.raw.error).toBe('boom');
+    expect(res.humanMessage).toContain('Failed to create fungible token');
+    expect(res.humanMessage).toContain('boom');
+    expect(res.raw.error).toContain('Failed to create fungible token');
+    expect(res.raw.error).toContain('boom');
     expect(res.raw.status).toBe(Status.InvalidTransaction);
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns aligned generic failure response when a non-Error is thrown', async () => {
     mockedBuilder.createFungibleToken.mockImplementation(() => {
       throw 'string error';
     });
@@ -156,8 +158,8 @@ describe('create-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Error creating fungible token');
-    expect(res.raw.error).toBe('Error creating fungible token');
+    expect(res.humanMessage).toBe('Failed to create fungible token');
+    expect(res.raw.error).toBe('Failed to create fungible token');
     expect(res.raw.status).toBe(Status.InvalidTransaction);
   });
 });

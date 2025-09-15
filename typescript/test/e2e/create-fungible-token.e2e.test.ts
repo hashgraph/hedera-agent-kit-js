@@ -8,23 +8,13 @@ import {
   getCustomClient,
 } from '../utils';
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
-
-function extractTokenId(observation: any): string {
-  if (!observation.raw?.tokenId) {
-    throw new Error('No raw.tokenId found in observation');
-  }
-
-  // raw.tokenId may be string via toString or object; normalize
-  const tokenId = observation.raw.tokenId;
-  if (typeof tokenId === 'string') return tokenId;
-  if (tokenId.shard && tokenId.realm && tokenId.num) {
-    const { shard, realm, num } = tokenId;
-    return `${shard.low}.${realm.low}.${num.low}`;
-  }
-  if (tokenId.toString) return tokenId.toString();
-  throw new Error('Unable to parse tokenId');
-}
+import {
+  extractObservationFromLangchainResponse,
+  extractTokenIdFromObservation,
+  wait,
+} from '../utils/general-util';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Create Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -51,13 +41,18 @@ describe('Create Fungible Token E2E Tests', () => {
     agentExecutor = testSetup.agentExecutor;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      testSetup.cleanup();
+    if (operatorClient && executorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       operatorClient.close();
+      executorClient.close();
     }
   });
 
@@ -66,13 +61,13 @@ describe('Create Fungible Token E2E Tests', () => {
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenId(observation);
+    const tokenId = extractTokenIdFromObservation(observation);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('Token created successfully');
     expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     // Verify on-chain
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
@@ -87,13 +82,13 @@ describe('Create Fungible Token E2E Tests', () => {
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenId(observation);
+    const tokenId = extractTokenIdFromObservation(observation);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('Token created successfully');
     expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
     expect(tokenInfo.name).toBe('GoldCoin');

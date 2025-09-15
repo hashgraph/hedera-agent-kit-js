@@ -99,7 +99,7 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
 
         if (!response.ok) {
           throw new Error(
-            `HTTP error! status: ${response.status}. Message: ${response.statusText}`,
+            `Failed to get topic messages for ${queryParams.topicId}: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -115,7 +115,7 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
         url = data.links.next ? this.baseUrl + data.links.next : null;
       }
     } catch (error) {
-      console.error('Failed to fetch topic messages. Error:', error);
+      console.error(`Failed to fetch topic messages for ${queryParams.topicId}. Error:`, error);
       throw error;
     }
     return {
@@ -127,6 +127,13 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getTokenInfo(tokenId: string): Promise<TokenInfo> {
     const url = `${this.baseUrl}/tokens/${tokenId}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get token info for a token ${tokenId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
     return await response.json();
   }
 
@@ -142,7 +149,9 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
+      throw new Error(
+        `Failed to get transaction record for ${transactionId}: ${response.status} ${response.statusText}`,
+      );
     }
 
     return await response.json();
@@ -151,6 +160,13 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getContractInfo(contractId: string): Promise<ContractInfo> {
     const url = `${this.baseUrl}/contracts/${contractId}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get contract info for ${contractId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
     return await response.json();
   }
 

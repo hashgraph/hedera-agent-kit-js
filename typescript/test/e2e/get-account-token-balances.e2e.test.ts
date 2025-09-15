@@ -7,6 +7,7 @@ import {
 } from '../utils';
 import { Client, TokenSupplyType } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Get Account Token Balances E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -52,7 +53,7 @@ describe('Get Account Token Balances E2E Tests', () => {
     });
 
     // wait for mirror node indexing
-    await wait(4000);
+    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   it('should fetch token balances for a valid account', async () => {
@@ -90,7 +91,6 @@ describe('Get Account Token Balances E2E Tests', () => {
 
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('Failed to fetch');
-    expect(observation.raw.accountId).toContain(nonExistentAccountId);
   });
 
   it('should handle invalid account ID format', async () => {
@@ -103,7 +103,6 @@ describe('Get Account Token Balances E2E Tests', () => {
 
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('Failed to fetch balance for an account');
-    expect(observation.raw.accountId).toContain(invalidAccountId);
   });
 
   afterAll(async () => {

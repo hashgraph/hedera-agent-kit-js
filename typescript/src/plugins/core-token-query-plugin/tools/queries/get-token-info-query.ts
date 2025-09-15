@@ -38,8 +38,7 @@ const postProcess = (tokenInfo: TokenInfo) => {
     return key._type ? `${key.key}` : 'Present';
   };
 
-  const supplyType =
-    tokenInfo.supply_type === 'INFINITE' ? 'Infinite' : tokenInfo.max_supply || 'Finite';
+  const supplyType = tokenInfo.supply_type === 'INFINITE' ? 'Infinite' : 'Finite';
   const freezeStatus = tokenInfo.freeze_default ? 'Frozen' : 'Active';
 
   return `Here are the details for token **${tokenInfo.token_id}**:
@@ -86,11 +85,10 @@ export const getTokenInfoQuery = async (
       humanMessage: postProcess(tokenInfo),
     };
   } catch (error) {
-    console.error('Error getting token info', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get token info';
+    const desc = 'Failed to get token info';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_token_info_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

@@ -29,6 +29,7 @@ export const createFungibleTokenParameters = (_context: Context = {}) =>
 
 export const createFungibleTokenParametersNormalised = (_context: Context = {}) =>
   createFungibleTokenParameters(_context).extend({
+    treasuryAccountId: z.string().describe('The treasury account of the token.'),
     autoRenewAccountId: z
       .string()
       .optional()
