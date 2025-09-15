@@ -65,6 +65,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       transactionId: 'not-a-valid-id',
     });
 
+    expect(response.humanMessage).toContain('Failed to get transaction record');
     expect(response.humanMessage).toContain('Invalid transactionId format');
   });
 

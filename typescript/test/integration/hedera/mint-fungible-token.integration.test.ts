@@ -113,6 +113,7 @@ describe('Mint Fungible Token Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
 
-    expect(result.humanMessage).toContain('INVALID_TOKEN_ID');
+    expect(result.humanMessage).toContain('Not Found');
+    expect(result.humanMessage).toContain('Failed to mint fungible token');
   });
 });
