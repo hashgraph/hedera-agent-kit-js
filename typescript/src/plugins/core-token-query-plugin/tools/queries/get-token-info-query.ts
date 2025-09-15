@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
