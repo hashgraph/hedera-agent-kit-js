@@ -8,15 +8,11 @@ import {
   getCustomClient,
 } from '../utils';
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import {
-  extractObservationFromLangchainResponse,
-  extractTokenIdFromObservation,
-  wait,
-} from '../utils/general-util';
+import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
-describe('Create Fungible Token E2E Tests', () => {
+describe('Create ERC20 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let executorClient: Client;
@@ -56,57 +52,39 @@ describe('Create Fungible Token E2E Tests', () => {
     }
   });
 
-  it('creates a fungible token with minimal params via natural language', async () => {
-    const input = `Create a fungible token named MyToken with symbol MTK`;
+  it('creates an ERC20 token with minimal params via natural language', async () => {
+    const input = 'Create an ERC20 token named MyERC20 with symbol M20';
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+    const erc20Address = observation.erc20Address;
 
     expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+    expect(observation.humanMessage).toContain('ERC20 token created successfully');
+    expect(erc20Address).toBeDefined();
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    // Verify on-chain
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('MyToken');
-    expect(tokenInfo.symbol).toBe('MTK');
-    expect(tokenInfo.decimals).toBe(0);
+    // Verify on-chain contract info
+    const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
+    expect(contractInfo).toBeDefined();
   });
 
-  it('creates a fungible token with supply, decimals, and finite supply type', async () => {
+  it('creates an ERC20 token with decimals and initial supply', async () => {
     const input =
-      'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
+      'Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000';
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+    const erc20Address = observation.erc20Address;
 
     expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+    expect(observation.humanMessage).toContain('ERC20 token created successfully');
+    expect(erc20Address).toBeDefined();
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('GoldCoin');
-    expect(tokenInfo.symbol).toBe('GLD');
-    expect(tokenInfo.decimals).toBe(2);
-    expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
-    expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
-  });
-
-  it('handles invalid requests gracefully', async () => {
-    const input =
-      'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
-
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('cannot exceed max supply');
-    expect(observation.raw.error).toBeDefined();
+    const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
+    expect(contractInfo).toBeDefined();
   });
 });

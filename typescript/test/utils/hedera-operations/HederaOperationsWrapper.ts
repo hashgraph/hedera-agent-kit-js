@@ -3,6 +3,9 @@ import {
   AccountId,
   AccountInfoQuery,
   Client,
+  ContractId,
+  ContractInfo,
+  ContractInfoQuery,
   LedgerId,
   NftId,
   TokenAssociateTransaction,
@@ -254,6 +257,13 @@ class HederaOperationsWrapper {
     const accountInfo = await this.getAccountInfo(accountId);
     const balance = accountInfo.balance;
     return new BigNumber(balance.toTinybars().toNumber());
+  }
+
+  async getContractInfo(evmContractAddress: `0x${string}`): Promise<ContractInfo> {
+    const query = new ContractInfoQuery().setContractId(
+      ContractId.fromEvmAddress(0, 0, evmContractAddress),
+    );
+    return await query.execute(this.client);
   }
 }
 
