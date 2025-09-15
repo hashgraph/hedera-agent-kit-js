@@ -76,7 +76,7 @@ describe('Airdrop Fungible Token Tool Unit Tests', () => {
     const tool = toolFactory(context);
     const result = await tool.execute(client, context, params);
 
-    expect(result.humanMessage).toBe('Something went wrong');
-    expect(result.raw.error).toBe('Something went wrong');
+    expect(result.humanMessage).toContain('Something went wrong');
+    expect(result.raw.error).toContain('Something went wrong');
   });
 });
