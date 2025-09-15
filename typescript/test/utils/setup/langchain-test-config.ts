@@ -16,6 +16,8 @@ import {
   coreConsensusQueryPluginToolNames,
   coreTransactionQueryPlugin,
   coreTransactionQueryPluginToolNames,
+  coreMiscQueriesPlugin,
+  coreMiscQueriesPluginsToolNames,
 } from '@/plugins';
 
 /**
@@ -47,6 +49,7 @@ const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
+const { GET_EXCHANGE_RATE_TOOL } = coreMiscQueriesPluginsToolNames;
 
 /**
  * Utility to return a mapping of LLM providers to their API keys from environment variables.
@@ -80,6 +83,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     GET_TOPIC_MESSAGES_QUERY_TOOL,
     GET_TOKEN_INFO_QUERY_TOOL,
     GET_TRANSACTION_RECORD_QUERY_TOOL,
+    GET_EXCHANGE_RATE_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
@@ -89,6 +93,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     coreTokenPlugin,
     coreConsensusPlugin,
     coreTransactionQueryPlugin,
+    coreMiscQueriesPlugin,
   ],
   agentMode: AgentMode.AUTONOMOUS,
 };
