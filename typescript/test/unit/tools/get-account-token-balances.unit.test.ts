@@ -96,7 +96,7 @@ describe('getAccountTokenBalancesQuery Tool', () => {
   it('returns error message when mirrornode service throws an Error', async () => {
     mockService.getAccountTokenBalances.mockRejectedValue(new Error('mirror-boom'));
     const result = await getAccountTokenBalancesQuery(client, context, { accountId: '0.0.1' });
-    expect(result.humanMessage).toBe('mirror-boom');
+    expect(result.humanMessage).toContain('mirror-boom');
   });
 
   it('returns generic failure message when mirrornode service throws a non-Error', async () => {

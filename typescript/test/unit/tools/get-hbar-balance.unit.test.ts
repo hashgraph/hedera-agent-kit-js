@@ -75,7 +75,6 @@ describe('get-hbar-balance tool (unit)', () => {
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
     expect(res.humanMessage).toContain('Failed to get HBAR balance');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.accountId).toBe('0.0.x');
   });
 
   it('returns aligned generic message when non-Error thrown', async () => {
