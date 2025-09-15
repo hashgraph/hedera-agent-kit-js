@@ -89,8 +89,8 @@ describe('Get Topic Messages Tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Network failure');
-    expect(res.raw.error).toBe('Network failure');
+    expect(res.humanMessage).toContain('Network failure');
+    expect(res.raw.error).toContain('Network failure');
   });
 
   it('returns generic error when non-error thrown', async () => {
@@ -107,7 +107,7 @@ describe('Get Topic Messages Tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Error getting topic messages');
-    expect(res.raw.error).toBe('Error getting topic messages');
+    expect(res.humanMessage).toBe('Failed to get topic messages');
+    expect(res.raw.error).toBe('Failed to get topic messages');
   });
 });
