@@ -3,6 +3,9 @@ import {
   AccountId,
   AccountInfoQuery,
   Client,
+  ContractId,
+  ContractInfo,
+  ContractInfoQuery,
   ContractCreateFlow,
   ContractFunctionParameters,
   Hbar,
@@ -274,6 +277,13 @@ class HederaOperationsWrapper {
       console.error('[HederaOperationsWrapper] Error deploying ERC20:', error);
       throw error;
     }
+  }
+
+  async getContractInfo(evmContractAddress: `0x${string}`): Promise<ContractInfo> {
+    const query = new ContractInfoQuery().setContractId(
+      ContractId.fromEvmAddress(0, 0, evmContractAddress),
+    );
+    return await query.execute(this.client);
   }
 }
 
