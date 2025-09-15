@@ -93,7 +93,7 @@ describe('create-account tool (unit)', () => {
     );
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns error response object when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -102,11 +102,15 @@ describe('create-account tool (unit)', () => {
       throw new Error('boom');
     });
 
-    const res = await tool.execute(client, context, params);
-    expect(res).toBe('boom');
+    const res: any = await tool.execute(client, context, params);
+    expect(res).toBeDefined();
+    expect(res.humanMessage).toContain('Failed to create account');
+    expect(res.humanMessage).toContain('boom');
+    expect(res.raw).toBeDefined();
+    expect(res.raw.error).toContain('Failed to create account');
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns generic failure response object when a non-Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -115,7 +119,9 @@ describe('create-account tool (unit)', () => {
       throw 'string error';
     });
 
-    const res = await tool.execute(client, context, params);
-    expect(res).toBe('Failed to create account');
+    const res: any = await tool.execute(client, context, params);
+    expect(res).toBeDefined();
+    expect(res.humanMessage).toContain('Failed to create account');
+    expect(res.raw.error).toContain('Failed to create account');
   });
 });

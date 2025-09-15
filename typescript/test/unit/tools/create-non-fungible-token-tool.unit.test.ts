@@ -128,7 +128,7 @@ describe('create-non-fungible-token tool (unit)', () => {
     );
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     mockedBuilder.createNonFungibleToken.mockImplementation(() => {
       throw new Error('NFT creation failed');
     });
@@ -137,8 +137,10 @@ describe('create-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('NFT creation failed');
-    expect(res.raw.error).toBe('NFT creation failed');
+    expect(res.humanMessage).toContain('Failed to create non-fungible token');
+    expect(res.humanMessage).toContain('NFT creation failed');
+    expect(res.raw.error).toContain('Failed to create non-fungible token');
+    expect(res.raw.error).toContain('NFT creation failed');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {

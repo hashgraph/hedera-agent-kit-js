@@ -91,7 +91,6 @@ describe('Get Account Token Balances E2E Tests', () => {
 
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('Failed to fetch');
-    expect(observation.raw.accountId).toContain(nonExistentAccountId);
   });
 
   it('should handle invalid account ID format', async () => {
@@ -104,7 +103,6 @@ describe('Get Account Token Balances E2E Tests', () => {
 
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('Failed to fetch balance for an account');
-    expect(observation.raw.accountId).toContain(invalidAccountId);
   });
 
   afterAll(async () => {

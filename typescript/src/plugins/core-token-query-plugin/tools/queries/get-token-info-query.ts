@@ -85,13 +85,10 @@ export const getTokenInfoQuery = async (
       humanMessage: postProcess(tokenInfo),
     };
   } catch (error) {
-    console.error('Error getting token info', error);
-    const message = error instanceof Error ? error.message : 'Failed to get token info';
-
-    return {
-      raw: { tokenId: params.tokenId, error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to get token info';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_token_info_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

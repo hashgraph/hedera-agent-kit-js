@@ -46,6 +46,7 @@ const createERC20 = async (
       factoryContractAddress,
       ERC20_FACTORY_ABI,
       'deployToken',
+      context,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result = await handleTransaction(tx, client, context);
@@ -54,21 +55,15 @@ const createERC20 = async (
       return {
         ...(result as ExecuteStrategyResult),
         erc20Address: erc20Address?.toString(),
-        humanMessage: `ERC20 token created successfully at address ${erc20Address?.toString()}`,
+        message: `ERC20 token created successfully at address ${erc20Address?.toString()}`,
       };
     }
     return result;
   } catch (error) {
-    console.error('[CreateERC20] Error creating fungible token:', error);
-
-    const message = `Error creating ERC20 token${
-      error instanceof Error ? `: ${error.message}` : ''
-    }`;
-
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to create ERC20 token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_erc20_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
