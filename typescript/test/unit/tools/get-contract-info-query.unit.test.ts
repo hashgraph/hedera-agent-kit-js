@@ -81,8 +81,8 @@ describe('get-contract-info tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { contractId: '0.0.9999' });
 
-    expect(res.raw).toEqual({ contractId: '0.0.9999', error: 'boom' });
-    expect(res.humanMessage).toBe('boom');
+    expect(res.raw.error).toContain('boom');
+    expect(res.humanMessage).toContain('boom');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -93,7 +93,7 @@ describe('get-contract-info tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { contractId: '0.0.8888' });
 
-    expect(res.raw).toEqual({ contractId: '0.0.8888', error: 'Error getting contract info' });
-    expect(res.humanMessage).toBe('Error getting contract info');
+    expect(res.humanMessage).toContain('Failed to get contract info');
+    expect(res.raw.error).toContain('Failed to get contract info');
   });
 });

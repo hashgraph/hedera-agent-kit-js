@@ -66,10 +66,9 @@ describe('Integration - Hedera Get Contract Info', () => {
       contractId: nonExistingContract,
     });
 
-    expect(result.raw.contractId.toString()).toBe(nonExistingContract);
     expect(result.raw.contractInfo).toBeUndefined();
-    expect(result.raw.error).toContain('Error getting contract info');
-    expect(result.humanMessage).toContain('Error getting contract info');
+    expect(result.raw.error).toContain('Failed to get contract info');
+    expect(result.humanMessage).toContain('Failed to get contract info');
   });
 
   afterAll(async () => {

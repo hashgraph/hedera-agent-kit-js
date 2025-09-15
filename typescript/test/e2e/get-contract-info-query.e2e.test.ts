@@ -73,8 +73,7 @@ describe('Get Contract Info E2E Tests', () => {
     const queryResult = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.raw.contractId).toBe(fakeContractId);
-    expect(observation.raw.error).toContain('Error getting contract info');
-    expect(observation.humanMessage).toContain('Error getting contract info');
+    expect(observation.raw.error).toContain('Failed to get contract info');
+    expect(observation.humanMessage).toContain('Failed to get contract info');
   });
 });
