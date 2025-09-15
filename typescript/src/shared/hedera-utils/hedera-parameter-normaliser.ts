@@ -10,6 +10,8 @@ import {
   mintNonFungibleTokenParameters,
 } from '@/shared/parameter-schemas/token.zod';
 import {
+  accountBalanceQueryParameters,
+  accountTokenBalancesQueryParameters,
   createAccountParameters,
   createAccountParametersNormalised,
   deleteAccountParameters,
@@ -17,8 +19,6 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
-  accountBalanceQueryParameters,
-  accountTokenBalancesQueryParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -47,24 +47,51 @@ import {
 } from '@/shared/parameter-schemas/transaction.zod';
 
 export default class HederaParameterNormaliser {
+  static parseParamsWithSchema(
+    params: any,
+    schema: any,
+    context: Context = {},
+  ): z.infer<ReturnType<typeof schema>> {
+    let parsedParams: z.infer<ReturnType<typeof schema>>;
+    try {
+      parsedParams = schema(context).parse(params);
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        const issues = this.formatZodIssues(e);
+        throw new Error(`Invalid parameters: ${issues}`);
+      }
+      throw e;
+    }
+    return parsedParams;
+  }
+
+  private static formatZodIssues(error: z.ZodError): string {
+    return error.errors.map(err => `Field "${err.path.join('.')}" - ${err.message}`).join('; ');
+  }
+
   static async normaliseCreateFungibleTokenParams(
     params: z.infer<ReturnType<typeof createFungibleTokenParameters>>,
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
   ): Promise<z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof createFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, createFungibleTokenParameters, context);
+
     const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
-    const treasuryAccountId = params.treasuryAccountId ?? defaultAccountId;
+    const treasuryAccountId = parsedParams.treasuryAccountId ?? defaultAccountId;
     if (!treasuryAccountId) throw new Error('Must include treasury account ID');
 
-    const decimals = params.decimals ?? 0;
-    const initialSupply = toBaseUnit(params.initialSupply ?? 0, decimals).toNumber();
+    const initialSupply = toBaseUnit(
+      parsedParams.initialSupply ?? 0,
+      parsedParams.decimals,
+    ).toNumber();
 
-    const isFinite = (params.supplyType ?? 'infinite') === 'finite';
+    const isFinite = (parsedParams.supplyType ?? 'infinite') === 'finite';
     const supplyType = isFinite ? TokenSupplyType.Finite : TokenSupplyType.Infinite;
 
     const maxSupply = isFinite
-      ? toBaseUnit(params.maxSupply ?? 1_000_000, decimals).toNumber() // default finite max supply
+      ? toBaseUnit(parsedParams.maxSupply ?? 1_000_000, parsedParams.decimals).toNumber() // default finite max supply
       : undefined;
 
     if (maxSupply !== undefined && initialSupply > maxSupply) {
@@ -76,14 +103,13 @@ export default class HederaParameterNormaliser {
       client.operatorPublicKey?.toStringDer();
 
     return {
-      ...params,
+      ...parsedParams,
       supplyType,
       treasuryAccountId,
       maxSupply,
-      decimals,
       initialSupply,
       autoRenewAccountId: defaultAccountId,
-      supplyKey: params.isSupplyKey === true ? PublicKey.fromString(publicKey) : undefined,
+      supplyKey: parsedParams.isSupplyKey === true ? PublicKey.fromString(publicKey) : undefined,
     };
   }
 
@@ -92,19 +118,24 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
-    const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
+  ): Promise<z.infer<ReturnType<typeof createNonFungibleTokenParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, createNonFungibleTokenParameters, context);
 
-    const treasuryAccountId = params.treasuryAccountId || defaultAccountId;
+    const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
+    const treasuryAccountId = parsedParams.treasuryAccountId ?? defaultAccountId;
     if (!treasuryAccountId) throw new Error('Must include treasury account ID');
 
     const publicKey =
       (await mirrorNode.getAccount(defaultAccountId).then(r => r.accountPublicKey)) ??
       client.operatorPublicKey?.toStringDer();
 
-    const maxSupply = params.maxSupply ?? 100;
-    const normalized: z.infer<ReturnType<typeof createNonFungibleTokenParametersNormalised>> = {
-      ...params,
+    if (!publicKey) throw new Error('Could not determine public key for supply key');
+
+    const maxSupply = parsedParams.maxSupply ?? 100;
+
+    return {
+      ...parsedParams,
       treasuryAccountId,
       maxSupply,
       supplyKey: PublicKey.fromString(publicKey), // the supply key is mandatory in the case of NFT
@@ -112,8 +143,6 @@ export default class HederaParameterNormaliser {
       autoRenewAccountId: defaultAccountId,
       tokenType: TokenType.NonFungibleUnique,
     };
-
-    return normalized;
   }
 
   static normaliseTransferHbar(
@@ -121,13 +150,19 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
   ) {
-    const sourceAccountId = AccountResolver.resolveAccount(params.sourceAccountId, context, client);
+    const parsedParams: z.infer<ReturnType<typeof transferHbarParameters>> =
+      this.parseParamsWithSchema(params, transferHbarParameters, context);
+
+    const sourceAccountId = AccountResolver.resolveAccount(
+      parsedParams.sourceAccountId,
+      context,
+      client,
+    );
 
     const hbarTransfers: TransferHbarInput[] = [];
-
     let totalTinybars = Long.ZERO;
 
-    for (const transfer of params.transfers) {
+    for (const transfer of parsedParams.transfers) {
       const amount = new Hbar(transfer.amount);
 
       if (amount.isNegative() || amount.toTinybars().equals(Long.ZERO)) {
@@ -149,7 +184,7 @@ export default class HederaParameterNormaliser {
 
     return {
       hbarTransfers,
-      transactionMemo: params.transactionMemo,
+      transactionMemo: parsedParams.transactionMemo,
     };
   }
 
@@ -159,15 +194,26 @@ export default class HederaParameterNormaliser {
     client: Client,
     mirrorNode: IHederaMirrornodeService,
   ) {
-    const sourceAccountId = AccountResolver.resolveAccount(params.sourceAccountId, context, client);
+    const parsedParams: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, airdropFungibleTokenParameters, context);
 
-    const tokenInfo = await mirrorNode.getTokenInfo(params.tokenId);
+    const sourceAccountId = AccountResolver.resolveAccount(
+      parsedParams.sourceAccountId,
+      context,
+      client,
+    );
+
+    const tokenInfo = await mirrorNode.getTokenInfo(parsedParams.tokenId);
     const tokenDecimals = parseInt(tokenInfo.decimals, 10);
+
+    if (isNaN(tokenDecimals)) {
+      throw new Error(`Invalid token decimals for token ${parsedParams.tokenId}`);
+    }
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
     let totalAmount = Long.ZERO;
 
-    for (const recipient of params.recipients) {
+    for (const recipient of parsedParams.recipients) {
       const amountRaw = Number(recipient.amount);
 
       if (amountRaw <= 0) {
@@ -179,7 +225,7 @@ export default class HederaParameterNormaliser {
       totalAmount = totalAmount.add(amount);
 
       tokenTransfers.push({
-        tokenId: params.tokenId,
+        tokenId: parsedParams.tokenId,
         accountId: recipient.accountId,
         amount,
       });
@@ -187,7 +233,7 @@ export default class HederaParameterNormaliser {
 
     // Sender negative total
     tokenTransfers.push({
-      tokenId: params.tokenId,
+      tokenId: parsedParams.tokenId,
       accountId: sourceAccountId,
       amount: totalAmount.negate(),
     });
@@ -202,19 +248,24 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof createTopicParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof createTopicParameters>> =
+      this.parseParamsWithSchema(params, createTopicParameters, context);
+
     const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
+    if (!defaultAccountId) throw new Error('Could not determine default account ID');
+
     const normalised: z.infer<ReturnType<typeof createTopicParametersNormalised>> = {
-      ...params,
+      ...parsedParams,
       autoRenewAccountId: defaultAccountId,
     };
 
-    if (params.isSubmitKey) {
+    if (parsedParams.isSubmitKey) {
       const publicKey =
         (await mirrorNode.getAccount(defaultAccountId).then(r => r.accountPublicKey)) ??
         client.operatorPublicKey?.toStringDer();
       if (!publicKey) {
-        throw new Error('Could not determine default account ID for submit key');
+        throw new Error('Could not determine public key for submit key');
       }
       normalised.submitKey = PublicKey.fromString(publicKey);
     }
@@ -227,12 +278,12 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
-    const initialBalance = params.initialBalance ?? 0;
-    const maxAssociations = params.maxAutomaticTokenAssociations ?? -1; // unlimited if -1
+  ): Promise<z.infer<ReturnType<typeof createAccountParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof createAccountParameters>> =
+      this.parseParamsWithSchema(params, createAccountParameters, context);
 
     // Try resolving the publicKey in priority order
-    let publicKey = params.publicKey ?? client.operatorPublicKey?.toStringDer();
+    let publicKey = parsedParams.publicKey ?? client.operatorPublicKey?.toStringDer();
 
     if (!publicKey) {
       const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
@@ -248,14 +299,10 @@ export default class HederaParameterNormaliser {
       );
     }
 
-    const normalised: z.infer<ReturnType<typeof createAccountParametersNormalised>> = {
-      accountMemo: params.accountMemo,
-      initialBalance,
+    return {
+      ...parsedParams,
       key: PublicKey.fromString(publicKey),
-      maxAutomaticTokenAssociations: maxAssociations,
     };
-
-    return normalised;
   }
 
   static normaliseHbarBalanceParams(
@@ -263,9 +310,12 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
   ) {
-    const accountId = AccountResolver.resolveAccount(params.accountId, context, client);
+    const parsedParams: z.infer<ReturnType<typeof accountBalanceQueryParameters>> =
+      this.parseParamsWithSchema(params, accountBalanceQueryParameters, context);
+
+    const accountId = AccountResolver.resolveAccount(parsedParams.accountId, context, client);
     return {
-      ...params,
+      ...parsedParams,
       accountId,
     };
   }
@@ -275,9 +325,12 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
   ) {
-    const accountId = AccountResolver.resolveAccount(params.accountId, context, client);
+    const parsedParams: z.infer<ReturnType<typeof accountTokenBalancesQueryParameters>> =
+      this.parseParamsWithSchema(params, accountTokenBalancesQueryParameters, context);
+
+    const accountId = AccountResolver.resolveAccount(parsedParams.accountId, context, client);
     return {
-      ...params,
+      ...parsedParams,
       accountId,
     };
   }
@@ -287,22 +340,26 @@ export default class HederaParameterNormaliser {
     factoryContractId: string,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
+    context: Context,
   ) {
-    // Create interface for encoding
+    const parsedParams: z.infer<ReturnType<typeof createERC20Parameters>> =
+      this.parseParamsWithSchema(params, createERC20Parameters, context);
+
+    // Create an interface for encoding
     const iface = new ethers.Interface(factoryContractAbi);
 
     // Encode the function call
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
-      params.tokenName,
-      params.tokenSymbol,
-      params.decimals,
-      params.initialSupply,
+      parsedParams.tokenName,
+      parsedParams.tokenSymbol,
+      parsedParams.decimals,
+      parsedParams.initialSupply,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
 
     return {
-      ...params,
+      ...parsedParams,
       contractId: factoryContractId,
       functionParameters,
       gas: 3000000, //TODO: make this configurable
@@ -314,21 +371,25 @@ export default class HederaParameterNormaliser {
     factoryContractId: string,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
+    context: Context,
   ) {
-    // Create interface for encoding
+    const parsedParams: z.infer<ReturnType<typeof createERC721Parameters>> =
+      this.parseParamsWithSchema(params, createERC721Parameters, context);
+
+    // Create an interface for encoding
     const iface = new ethers.Interface(factoryContractAbi);
 
     // Encode the function call
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
-      params.tokenName,
-      params.tokenSymbol,
-      params.baseURI,
+      parsedParams.tokenName,
+      parsedParams.tokenSymbol,
+      parsedParams.baseURI,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
 
     return {
-      ...params,
+      ...parsedParams,
       contractId: factoryContractId,
       functionParameters,
       gas: 3000000, //TODO: make this configurable
@@ -337,30 +398,36 @@ export default class HederaParameterNormaliser {
 
   static async normaliseMintFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
-    _context: Context,
+    context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
-    const tokenInfo = await mirrorNode.getTokenInfo(params.tokenId);
+    const parsedParams: z.infer<ReturnType<typeof mintFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, mintFungibleTokenParameters, context);
+
+    const tokenInfo = await mirrorNode.getTokenInfo(parsedParams.tokenId);
     const decimals = Number(tokenInfo.decimals);
 
     // Fallback to 0 if decimals are missing or NaN
     const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
 
-    const baseAmount = toBaseUnit(params.amount, safeDecimals).toNumber();
+    const baseAmount = toBaseUnit(parsedParams.amount, safeDecimals).toNumber();
     return {
-      tokenId: params.tokenId,
+      tokenId: parsedParams.tokenId,
       amount: baseAmount,
     };
   }
 
   static normaliseMintNonFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>>,
-    _context: Context,
+    context: Context,
   ) {
+    const parsedParams: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, mintNonFungibleTokenParameters, context);
+
     const encoder = new TextEncoder();
-    const metadata = params.uris.map(uri => encoder.encode(uri));
+    const metadata = parsedParams.uris.map(uri => encoder.encode(uri));
     return {
-      ...params,
+      ...parsedParams,
       metadata: metadata,
     };
   }
@@ -369,21 +436,24 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof transferERC20Parameters>>,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
-    _context: Context,
+    context: Context,
     mirrorNode: IHederaMirrornodeService,
   ) {
+    const parsedParams: z.infer<ReturnType<typeof transferERC20Parameters>> =
+      this.parseParamsWithSchema(params, transferERC20Parameters, context);
+
     const recipientAddress = await AccountResolver.getHederaEVMAddress(
-      params.recipientAddress,
+      parsedParams.recipientAddress,
       mirrorNode,
     );
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
-      params.contractId,
+      parsedParams.contractId,
       mirrorNode,
     );
     const iface = new ethers.Interface(factoryContractAbi);
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
       recipientAddress,
-      params.amount,
+      parsedParams.amount,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
@@ -403,19 +473,26 @@ export default class HederaParameterNormaliser {
     mirrorNode: IHederaMirrornodeService,
     client: Client,
   ) {
+    const parsedParams: z.infer<ReturnType<typeof transferERC721Parameters>> =
+      this.parseParamsWithSchema(params, transferERC721Parameters, context);
+
     // Resolve fromAddress using AccountResolver pattern, similar to transfer-hbar
-    const resolvedFromAddress = AccountResolver.resolveAccount(params.fromAddress, context, client);
+    const resolvedFromAddress = AccountResolver.resolveAccount(
+      parsedParams.fromAddress,
+      context,
+      client,
+    );
     const fromAddress = await AccountResolver.getHederaEVMAddress(resolvedFromAddress, mirrorNode);
-    const toAddress = await AccountResolver.getHederaEVMAddress(params.toAddress, mirrorNode);
+    const toAddress = await AccountResolver.getHederaEVMAddress(parsedParams.toAddress, mirrorNode);
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
-      params.contractId,
+      parsedParams.contractId,
       mirrorNode,
     );
     const iface = new ethers.Interface(factoryContractAbi);
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
       fromAddress,
       toAddress,
-      params.tokenId,
+      parsedParams.tokenId,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
@@ -431,14 +508,21 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof mintERC721Parameters>>,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
-    _context: Context,
+    context: Context,
     mirrorNode: IHederaMirrornodeService,
     client: Client,
   ) {
-    const resolvedToAddress = AccountResolver.resolveAccount(params.toAddress, _context, client);
+    const parsedParams: z.infer<ReturnType<typeof mintERC721Parameters>> =
+      this.parseParamsWithSchema(params, mintERC721Parameters, context);
+
+    const resolvedToAddress = AccountResolver.resolveAccount(
+      parsedParams.toAddress,
+      context,
+      client,
+    );
     const toAddress = await AccountResolver.getHederaEVMAddress(resolvedToAddress, mirrorNode);
     const contractId = await HederaParameterNormaliser.getHederaAccountId(
-      params.contractId,
+      parsedParams.contractId,
       mirrorNode,
     );
     const iface = new ethers.Interface(factoryContractAbi);
@@ -457,18 +541,23 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
   ): z.infer<ReturnType<typeof deleteAccountParametersNormalised>> {
-    if (!AccountResolver.isHederaAddress(params.accountId)) {
+    const parsedParams: z.infer<ReturnType<typeof deleteAccountParameters>> =
+      this.parseParamsWithSchema(params, deleteAccountParameters, context);
+
+    if (!AccountResolver.isHederaAddress(parsedParams.accountId)) {
       throw new Error('Account ID must be a Hedera address');
     }
 
     // if no transfer account ID is provided, use the operator account ID
-    if (!params.transferAccountId) {
-      params.transferAccountId = AccountResolver.getDefaultAccount(context, client);
+    const transferAccountId =
+      parsedParams.transferAccountId ?? AccountResolver.getDefaultAccount(context, client);
+    if (!transferAccountId) {
+      throw new Error('Could not determine transfer account ID');
     }
 
     return {
-      accountId: AccountId.fromString(params.accountId),
-      transferAccountId: AccountId.fromString(params.transferAccountId),
+      accountId: AccountId.fromString(parsedParams.accountId),
+      transferAccountId: AccountId.fromString(transferAccountId),
     };
   }
 
@@ -476,26 +565,29 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof updateAccountParameters>>,
     context: Context,
     client: Client,
-  ) {
+  ): z.infer<ReturnType<typeof updateAccountParametersNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof updateAccountParameters>> =
+      this.parseParamsWithSchema(params, updateAccountParameters, context);
+
     const accountId = AccountId.fromString(
-      AccountResolver.resolveAccount(params.accountId, context, client),
+      AccountResolver.resolveAccount(parsedParams.accountId, context, client),
     );
 
     const normalised: z.infer<ReturnType<typeof updateAccountParametersNormalised>> = {
       accountId,
     } as any;
 
-    if (params.maxAutomaticTokenAssociations !== undefined) {
-      normalised.maxAutomaticTokenAssociations = params.maxAutomaticTokenAssociations;
+    if (parsedParams.maxAutomaticTokenAssociations !== undefined) {
+      normalised.maxAutomaticTokenAssociations = parsedParams.maxAutomaticTokenAssociations;
     }
-    if (params.stakedAccountId !== undefined) {
-      normalised.stakedAccountId = params.stakedAccountId;
+    if (parsedParams.stakedAccountId !== undefined) {
+      normalised.stakedAccountId = parsedParams.stakedAccountId;
     }
-    if (params.accountMemo !== undefined) {
-      normalised.accountMemo = params.accountMemo;
+    if (parsedParams.accountMemo !== undefined) {
+      normalised.accountMemo = parsedParams.accountMemo;
     }
-    if (params.declineStakingReward !== undefined) {
-      normalised.declineStakingReward = params.declineStakingReward;
+    if (parsedParams.declineStakingReward !== undefined) {
+      normalised.declineStakingReward = parsedParams.declineStakingReward;
     }
 
     return normalised;
@@ -503,26 +595,29 @@ export default class HederaParameterNormaliser {
 
   static normaliseGetTransactionRecordParams(
     params: z.infer<ReturnType<typeof transactionRecordQueryParameters>>,
-    _context: Context,
-  ) {
+    context: Context,
+  ): z.infer<ReturnType<typeof normalisedTransactionRecordQueryParameters>> {
+    const parsedParams: z.infer<ReturnType<typeof transactionRecordQueryParameters>> =
+      this.parseParamsWithSchema(params, transactionRecordQueryParameters, context);
+
     const normalised: z.infer<ReturnType<typeof normalisedTransactionRecordQueryParameters>> = {
-      nonce: params.nonce,
+      nonce: parsedParams.nonce,
     } as any;
 
-    if (!params.transactionId) {
+    if (!parsedParams.transactionId) {
       throw new Error('transactionId is required');
     }
 
     const mirrorNodeStyleRegex = /^\d+\.\d+\.\d+-\d+-\d+$/;
     const sdkStyleRegex = /^(\d+\.\d+\.\d+)@(\d+)\.(\d+)$/;
 
-    if (mirrorNodeStyleRegex.test(params.transactionId)) {
+    if (mirrorNodeStyleRegex.test(parsedParams.transactionId)) {
       // Already in mirror-node style, use as-is
-      normalised.transactionId = params.transactionId;
+      normalised.transactionId = parsedParams.transactionId;
     } else {
-      const match = params.transactionId.match(sdkStyleRegex);
+      const match = parsedParams.transactionId.match(sdkStyleRegex);
       if (!match) {
-        throw new Error(`Invalid transactionId format: ${params.transactionId}`);
+        throw new Error(`Invalid transactionId format: ${parsedParams.transactionId}`);
       }
 
       const [, accountId, seconds, nanos] = match;
@@ -541,5 +636,5 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
-}
+  }
 }

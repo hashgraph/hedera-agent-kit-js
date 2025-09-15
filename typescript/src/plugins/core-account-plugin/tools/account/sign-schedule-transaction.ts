@@ -5,7 +5,6 @@ import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { signScheduleTransactionParameters } from '@/shared/parameter-schemas/account.zod';
-import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 
 const signScheduleTransactionPrompt = (context: Context = {}) => {
@@ -37,16 +36,10 @@ const signScheduleTransaction = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    console.error('Error signing scheduled transaction', error);
-    const errorDescription: string = 'Failed to sign scheduled transaction'
-    const message = error instanceof Error ? errorDescription + ':' + error.message : 'Failed to sign scheduled transaction';
-
-    return {
-      raw: {
-        status: Status.InvalidTransaction,
-      },
-      humanMessage: message,
-    };
+    const desc = 'Failed to sign scheduled transaction';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[sign_schedule_transaction_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

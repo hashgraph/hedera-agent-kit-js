@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
+import { Client, Status, TransactionRecordQuery } from '@hashgraph/sdk';
 import { ExecuteStrategyResult, handleTransaction } from '@/shared/strategies/tx-mode-strategy';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -46,6 +46,7 @@ const createERC20 = async (
       factoryContractAddress,
       ERC20_FACTORY_ABI,
       'deployToken',
+      context,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result = await handleTransaction(tx, client, context);
@@ -59,11 +60,10 @@ const createERC20 = async (
     }
     return result;
   } catch (error) {
-    console.error('[CreateERC20] Error creating ERC20 token:', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create ERC20 token';
+    const desc = 'Failed to create ERC20 token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_erc20_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

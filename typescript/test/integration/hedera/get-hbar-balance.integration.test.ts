@@ -103,7 +103,6 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     });
     const res: any = await tool.execute(executorClient, context, params);
 
-    expect(res.raw.accountId).toBe(nonExistentAccountId);
-    expect(res.humanMessage).toContain(`Failed to fetch hbar balance for`);
+    expect(res.humanMessage).toContain('Failed to get HBAR balance');
   });
 });

@@ -85,7 +85,7 @@ describe('transfer-hbar tool (unit)', () => {
     );
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -97,10 +97,11 @@ describe('transfer-hbar tool (unit)', () => {
     const res = await tool.execute(client, context, {
       transfers: [{ accountId: '0.0.9', amount: 1 }],
     } as any);
-    expect(res.humanMessage).toBe('boom');
+    expect(res.humanMessage).toContain('Failed to transfer HBAR');
+    expect(res.humanMessage).toContain('boom');
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns aligned generic failure response when a non-Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 

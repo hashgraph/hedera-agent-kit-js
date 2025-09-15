@@ -72,7 +72,7 @@ describe('submit-topic-message tool (unit)', () => {
     expect(HederaBuilder.submitTopicMessage).toHaveBeenCalledTimes(1);
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -82,12 +82,13 @@ describe('submit-topic-message tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    // submit-topic-message tool returns the error message string directly
-    expect(res.humanMessage).toBe('boom');
-    expect(res.raw.error).toBe('boom');
+    expect(res.humanMessage).toContain('Failed to submit message to topic');
+    expect(res.humanMessage).toContain('boom');
+    expect(res.raw.error).toContain('Failed to submit message to topic');
+    expect(res.raw.error).toContain('boom');
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns aligned generic failure response when a non-Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 

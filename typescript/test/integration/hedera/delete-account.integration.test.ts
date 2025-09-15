@@ -109,11 +109,9 @@ describe('Delete Account Integration Tests', () => {
 
       const result: any = await tool.execute(executorClient, context, params);
 
-      if (typeof result === 'string') {
-        expect(result).toMatch(/INVALID_ACCOUNT_ID/i);
-      } else {
-        expect(result.raw.status).not.toBe('SUCCESS');
-      }
+      expect(result.humanMessage).toMatch(/INVALID_ACCOUNT_ID/i);
+      expect(result.raw.error).toMatch(/INVALID_ACCOUNT_ID/i);
+      expect(result.raw.status).not.toBe('SUCCESS');
     });
   });
 });

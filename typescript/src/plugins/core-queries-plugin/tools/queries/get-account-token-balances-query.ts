@@ -58,11 +58,10 @@ export const getAccountTokenBalancesQuery = async (
       humanMessage: postProcess(tokenBalances, normalisedParams.accountId),
     };
   } catch (error) {
-    console.error('Error getting account token balances', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get account token balances';
+    const desc = 'Failed to get account token balances';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_account_token_balances_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

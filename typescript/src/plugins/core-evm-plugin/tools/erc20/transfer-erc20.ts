@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction } from '@/shared/strategies/tx-mode-strategy';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -52,10 +52,10 @@ const transferERC20 = async (
     const result = await handleTransaction(tx, client, context);
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to transfer ERC20';
+    const desc = 'Failed to transfer ERC20';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[transfer_erc20_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
