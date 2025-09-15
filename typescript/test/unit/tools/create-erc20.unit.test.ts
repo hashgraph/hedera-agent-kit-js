@@ -143,8 +143,8 @@ describe('createERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Error creating ERC20 token');
-    expect(res.raw.error).toBe('Error creating ERC20 token');
+    expect(res.humanMessage).toBe('Failed to create ERC20 token');
+    expect(res.raw.error).toBe('Failed to create ERC20 token');
     expect(res.raw.status).toBe(Status.InvalidTransaction);
   });
 });
