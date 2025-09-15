@@ -26,6 +26,10 @@ ${usageInstructions}
 };
 
 const postProcess = (messages: TopicMessage[], topicId: string) => {
+  if (messages.length === 0) {
+    return `No messages found for topic ${topicId}.`;
+  }
+
   const messagesText = messages.map(
     message =>
       `${Buffer.from(message.message, 'base64').toString('utf-8')} - posted at: ${message.consensus_timestamp}\n`,
