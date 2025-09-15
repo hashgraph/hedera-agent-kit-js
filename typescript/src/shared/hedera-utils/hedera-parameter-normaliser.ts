@@ -47,6 +47,10 @@ import {
 } from '@/shared/parameter-schemas/transaction.zod';
 
 export default class HederaParameterNormaliser {
+  private static formatZodIssues(error: z.ZodError): string {
+    return error.errors.map(err => `Field "${err.path.join('.')}" - ${err.message}`).join('; ');
+  }
+
   static async normaliseCreateFungibleTokenParams(
     params: z.infer<ReturnType<typeof createFungibleTokenParameters>>,
     context: Context,
@@ -288,21 +292,33 @@ export default class HederaParameterNormaliser {
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
   ) {
-    // Create interface for encoding
+    // Validate the parameters with schema and apply defaults if necessary
+    let parsedParams: z.infer<ReturnType<typeof createERC20Parameters>>;
+    try {
+      parsedParams = createERC20Parameters().parse(params);
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        const issues = this.formatZodIssues(e);
+        throw new Error(`Invalid parameters for ERC20 token creation: ${issues}`);
+      }
+      throw e;
+    }
+
+    // Create an interface for encoding
     const iface = new ethers.Interface(factoryContractAbi);
 
     // Encode the function call
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
-      params.tokenName,
-      params.tokenSymbol,
-      params.decimals,
-      params.initialSupply,
+      parsedParams.tokenName,
+      parsedParams.tokenSymbol,
+      parsedParams.decimals,
+      parsedParams.initialSupply,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
 
     return {
-      ...params,
+      ...parsedParams,
       contractId: factoryContractId,
       functionParameters,
       gas: 3000000, //TODO: make this configurable
@@ -541,5 +557,5 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
-}
+  }
 }
