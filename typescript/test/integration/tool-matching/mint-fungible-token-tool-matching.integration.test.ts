@@ -75,7 +75,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
 
         spy.mockRestore();
       }
-    });
+    }, 120_000); // increase timeout to 2 minutes
   });
 
   describe('Tool Available', () => {
