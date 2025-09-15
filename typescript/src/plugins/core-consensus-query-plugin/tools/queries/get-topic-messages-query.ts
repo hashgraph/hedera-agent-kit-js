@@ -82,15 +82,10 @@ export const getTopicMessagesQuery = async (
       humanMessage: postProcess(messages.messages, params.topicId),
     };
   } catch (error) {
-    console.error('[GetTopicMessages] Failed to get topic messages:', error);
-    const message = error instanceof Error ? error.message : 'Error getting topic messages';
-
-    return {
-      raw: {
-        error: message,
-      },
-      humanMessage: message,
-    };
+    const desc = 'Failed to get topic messages';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_topic_messages_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 

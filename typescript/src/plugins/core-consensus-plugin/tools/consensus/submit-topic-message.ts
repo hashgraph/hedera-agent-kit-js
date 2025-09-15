@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
@@ -34,12 +34,10 @@ const submitTopicMessage = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return { ...result, topicId: params.topicId };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to submit message to topic';
-
-    return {
-      raw: { topicId: params.topicId, error: message },
-      humanMessage: message,
-    };
+    const desc = 'Failed to submit message to topic';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[submit_topic_message_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

@@ -47,16 +47,10 @@ const mintFungibleToken = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    console.error('[MintFungibleToken] Error minting fungible token:', error);
-    const message = error instanceof Error ? error.message : 'Error minting fungible token';
-
-    return {
-      raw: {
-        status: Status.InvalidTransaction,
-        error: message,
-      },
-      humanMessage: message,
-    };
+    const desc = 'Failed to mint fungible token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[mint_fungible_token_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

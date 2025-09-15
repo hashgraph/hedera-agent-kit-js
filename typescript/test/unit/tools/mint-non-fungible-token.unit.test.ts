@@ -99,7 +99,7 @@ describe('mint-non-fungible-token tool (unit)', () => {
     );
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns aligned error response when an Error is thrown', async () => {
     mockedBuilder.mintNonFungibleToken.mockImplementation(() => {
       throw new Error('boom');
     });
@@ -108,11 +108,13 @@ describe('mint-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('boom');
-    expect(res.raw.error).toBe('boom');
+    expect(res.humanMessage).toContain('Failed to mint non-fungible token');
+    expect(res.humanMessage).toContain('boom');
+    expect(res.raw.error).toContain('Failed to mint non-fungible token');
+    expect(res.raw.error).toContain('boom');
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns aligned generic failure message when a non-Error is thrown', async () => {
     mockedBuilder.mintNonFungibleToken.mockImplementation(() => {
       throw 'string error';
     });
@@ -121,7 +123,7 @@ describe('mint-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Error minting non fungible token');
-    expect(res.raw.error).toBe('Error minting non fungible token');
+    expect(res.humanMessage).toBe('Failed to mint non-fungible token');
+    expect(res.raw.error).toBe('Failed to mint non-fungible token');
   });
 });

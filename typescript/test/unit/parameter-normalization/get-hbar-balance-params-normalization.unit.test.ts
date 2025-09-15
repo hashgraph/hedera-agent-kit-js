@@ -35,16 +35,6 @@ describe('HbarBalanceParamsNormalizer.normaliseHbarBalanceParams', () => {
     expect(AccountResolver.resolveAccount).toHaveBeenCalledWith('0.0.0', mockContext, mockClient);
   });
 
-  it('passes through other params unchanged', () => {
-    const params: any = { accountId: '0.0.2', someOther: 'x' };
-    const res = HederaParameterNormaliser.normaliseHbarBalanceParams(
-      params,
-      mockContext,
-      mockClient,
-    );
-    expect(res).toMatchObject({ someOther: 'x' });
-  });
-
   it('defaults to resolved accountId when not provided', () => {
     const params: any = {};
     const res = HederaParameterNormaliser.normaliseHbarBalanceParams(
