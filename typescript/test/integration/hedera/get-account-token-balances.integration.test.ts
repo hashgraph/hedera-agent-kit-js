@@ -234,9 +234,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
     });
 
     expect(resp.humanMessage).toContain('Not Found');
-    expect(resp.humanMessage).toContain('Failed to fetch');
-    expect(resp.raw.accountId).toBe(nonExistentAccountId);
-    expect(resp.raw.error).toContain('Failed to fetch');
+    expect(resp.humanMessage).toContain('Failed to get account token balances');
+    expect(resp.raw.error).toContain('Failed to get account token balances');
   });
 
   it('handles account with no token associations', async () => {
@@ -356,9 +355,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
     });
 
     expect(resp.humanMessage).toContain('Not Found');
-    expect(resp.humanMessage).toContain('Failed to fetch');
-    expect(resp.raw.accountId).toBe(targetAccountId.toString());
-    expect(resp.raw.error).toContain('Failed to fetch');
+    expect(resp.humanMessage).toContain('Failed to get account token balances');
+    expect(resp.raw.error).toContain('Failed to get account token balances');
   });
 
   it('handles zero token balance correctly', async () => {

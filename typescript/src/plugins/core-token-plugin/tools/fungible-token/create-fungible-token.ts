@@ -56,16 +56,10 @@ const createFungibleToken = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    console.error('[CreateFungibleToken] Error creating fungible token:', error);
-    const message = error instanceof Error ? error.message : 'Error creating fungible token';
-
-    return {
-      raw: {
-        status: Status.InvalidTransaction,
-        error: message,
-      },
-      humanMessage: message,
-    };
+    const desc = 'Failed to create fungible token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_fungible_token_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 

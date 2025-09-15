@@ -99,8 +99,10 @@ describe('Get Transaction Record E2E Tests', () => {
     const observation = extractObservationFromLangchainResponse(result);
 
     expect(observation).toBeDefined();
-    expect(observation.raw.error).toContain('HTTP error! status: 404. Message: Not Found');
-    expect(observation.raw.transactionId).toContain(invalidTxId);
+    expect(observation.raw.error).toContain('Failed to get transaction record');
+    expect(observation.raw.error).toContain('Not Found');
+    expect(observation.humanMessage).toContain('Failed to get transaction record');
+    expect(observation.humanMessage).toContain('Not Found');
   });
 
   it('handles invalid transaction ID format', async () => {
@@ -112,6 +114,7 @@ describe('Get Transaction Record E2E Tests', () => {
 
     expect(observation).toBeDefined();
     expect(observation.raw.error).toContain('Invalid transactionId format: invalid-tx-id');
-    expect(observation.raw.transactionId).toContain(invalidTxId);
+    expect(observation.raw.error).toContain('Failed to get transaction record');
+    expect(observation.humanMessage).toContain('Failed to get transaction record');
   });
 });

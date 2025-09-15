@@ -85,7 +85,7 @@ describe('create-topic tool (unit)', () => {
     );
   });
 
-  it('returns error message when an Error is thrown', async () => {
+  it('returns error response object when an Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -94,11 +94,13 @@ describe('create-topic tool (unit)', () => {
       throw new Error('boom');
     });
 
-    const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('boom');
+    const res: any = await tool.execute(client, context, params);
+    expect(res.humanMessage).toContain('Failed to create topic');
+    expect(res.humanMessage).toContain('boom');
+    expect(res.raw.error).toContain('Failed to create topic');
   });
 
-  it('returns generic failure message when a non-Error is thrown', async () => {
+  it('returns generic failure response object when a non-Error is thrown', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
@@ -107,7 +109,8 @@ describe('create-topic tool (unit)', () => {
       throw 'string error';
     });
 
-    const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Error creating topic');
+    const res: any = await tool.execute(client, context, params);
+    expect(res.humanMessage).toContain('Failed to create topic');
+    expect(res.raw.error).toContain('Failed to create topic');
   });
 });

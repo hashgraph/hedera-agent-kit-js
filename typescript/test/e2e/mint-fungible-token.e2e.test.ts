@@ -112,6 +112,11 @@ describe('Mint Fungible Token E2E Tests', () => {
 
     const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('INVALID_TOKEN_ID');
+    expect(observation.humanMessage).toContain('Not Found');
+    expect(observation.raw.error).toContain('Not Found');
+    expect(observation.humanMessage).toContain(
+      `Failed to get token info for a token ${fakeTokenId}`,
+    );
+    expect(observation.raw.error).toContain(`Failed to get token info for a token ${fakeTokenId}`);
   });
 });
