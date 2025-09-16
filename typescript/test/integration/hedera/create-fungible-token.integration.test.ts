@@ -102,9 +102,13 @@ describe('Create Fungible Token Integration Tests', () => {
       const tool = createFungibleTokenTool(context);
       const result: any = await tool.execute(client, context, params);
 
-      expect(result.humanMessage).toContain('error');
+      expect(result.humanMessage).toContain(
+        ' Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+      );
+      expect(result.raw.error).toContain(
+        ' Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+      );
       expect(result.raw.status).toBeDefined();
-      expect(result.raw.error).toBeDefined();
     });
 
     it('should fail when maxSupply < initialSupply', async () => {
