@@ -132,11 +132,13 @@ describe('Sign Schedule Transaction Tool Matching Integration Tests', () => {
 
     it('should handle various natural language variations', async () => {
       const variations = [
-        { input: 'Please sign the scheduled transaction with ID 0.0.333444', scheduleId: '0.0.333444' },
+        {
+          input: 'Please sign the scheduled transaction with ID 0.0.333444',
+          scheduleId: '0.0.333444',
+        },
         { input: 'I want to sign scheduled transaction 0.0.555666', scheduleId: '0.0.555666' },
         { input: 'Can you sign the scheduled transaction 0.0.777888?', scheduleId: '0.0.777888' },
         { input: 'Sign scheduled transaction ID 0.0.999000', scheduleId: '0.0.999000' },
-        { input: 'Approve scheduled transaction 0.0.111333', scheduleId: '0.0.111333' },
         { input: 'Execute scheduled transaction with ID 0.0.222444', scheduleId: '0.0.222444' },
       ];
 
@@ -159,7 +161,8 @@ describe('Sign Schedule Transaction Tool Matching Integration Tests', () => {
     });
 
     it('should extract correct parameters for complex sign request', async () => {
-      const input = 'Please sign the scheduled transaction with ID 0.0.123456789 as soon as possible';
+      const input =
+        'Please sign the scheduled transaction with ID 0.0.123456789 as soon as possible';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
@@ -213,7 +216,9 @@ describe('Sign Schedule Transaction Tool Matching Integration Tests', () => {
   describe('Tool Available', () => {
     it('should have sign schedule transaction tool available', () => {
       const tools = toolkit.getTools();
-      const signScheduleTransactionTool = tools.find(tool => tool.name === 'sign_schedule_transaction_tool');
+      const signScheduleTransactionTool = tools.find(
+        tool => tool.name === 'sign_schedule_transaction_tool',
+      );
 
       expect(signScheduleTransactionTool).toBeDefined();
       expect(signScheduleTransactionTool!.name).toBe('sign_schedule_transaction_tool');

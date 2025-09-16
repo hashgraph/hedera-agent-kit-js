@@ -113,9 +113,13 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('error');
+      expect(result.humanMessage).toContain(
+        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+      );
+      expect(result.raw.error).toContain(
+        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+      );
       expect(result.raw.status).toBeDefined();
-      expect(result.raw.error).toBeDefined();
     });
 
     it('should fail when tokenName is missing', async () => {
@@ -127,9 +131,9 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const result: any = await tool.execute(executorClient, context, params);
       console.log(JSON.stringify(result));
 
-      expect(result.humanMessage).toContain('error');
+      expect(result.humanMessage).toContain('Invalid parameters: Field "tokenName" - Required');
+      expect(result.raw.error).toContain('Invalid parameters: Field "tokenName" - Required');
       expect(result.raw.status).toBeDefined();
-      expect(result.raw.error).toBeDefined();
     });
 
     it('should fail when tokenSymbol is missing', async () => {
@@ -140,9 +144,9 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('error');
+      expect(result.humanMessage).toContain('Invalid parameters: Field "tokenSymbol" - Required');
+      expect(result.raw.error).toContain('Invalid parameters: Field "tokenSymbol" - Required');
       expect(result.raw.status).toBeDefined();
-      expect(result.raw.error).toBeDefined();
     });
   });
 });
