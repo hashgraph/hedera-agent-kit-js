@@ -140,6 +140,16 @@ Tools for **transaction-related operations** on Hedera.
 
 ---
 
+### Core Misc Queries Plugin Tools (`core-misc-query-plugin`)
+
+This plugin provides tools for fetching miscellaneous information from the Hedera Mirror Node.
+
+| Tool Name                 | Description                                              | Usage                                                                                       |
+|---------------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `GET_EXCHANGE_RATE_TOOL`  | Returns the Hedera network HBAR exchange rate            | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate.   |
+
+---
+
 ## Using Hedera Plugins
 
 Take a look at the example [tool-calling-agent.ts](../typescript/examples/langchain/tool-calling-agent.ts) for a
@@ -171,6 +181,7 @@ import {
   coreConsensusQueryPlugin,
   coreTokenQueryPlugin,
   coreEVMQueryPlugin,
+  coreMiscQueriesPlugin,
 } from 'hedera-agent-kit';
 ```
 
@@ -202,6 +213,7 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
       coreTokenQueryPlugin,
       coreEVMPlugin,
       coreEVMQueryPlugin,
+      coreMiscQueriesPlugin,
     ],
   },
 });
