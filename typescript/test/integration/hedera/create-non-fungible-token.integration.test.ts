@@ -5,7 +5,7 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { returnHbarsAndDeleteAccount } from '../../utils/teardown/accounts-teardown';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Create Non-Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -129,7 +129,6 @@ describe('Create Non-Fungible Token Integration Tests', () => {
 
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
-      console.log(JSON.stringify(result));
 
       expect(result.humanMessage).toContain('Invalid parameters: Field "tokenName" - Required');
       expect(result.raw.error).toContain('Invalid parameters: Field "tokenName" - Required');
