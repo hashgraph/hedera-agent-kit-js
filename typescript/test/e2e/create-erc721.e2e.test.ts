@@ -8,15 +8,11 @@ import {
   getCustomClient,
 } from '../utils';
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import {
-  extractObservationFromLangchainResponse,
-  extractTokenIdFromObservation,
-  wait,
-} from '../utils/general-util';
-import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
+import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
-describe('Create Fungible Token E2E Tests', () => {
+describe('Create ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let executorClient: Client;
@@ -56,57 +52,56 @@ describe('Create Fungible Token E2E Tests', () => {
     }
   });
 
-  it('creates a fungible token with minimal params via natural language', async () => {
-    const input = `Create a fungible token named MyToken with symbol MTK`;
+  it('creates an ERC721 token with minimal params via natural language', async () => {
+    const input = 'Create an ERC721 token named MyERC721 with symbol M721';
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+    const erc721Address = observation.erc721Address;
 
     expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+    expect(observation.message).toContain('ERC721 token created successfully');
+    expect(erc721Address).toBeDefined();
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    // Verify on-chain
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('MyToken');
-    expect(tokenInfo.symbol).toBe('MTK');
-    expect(tokenInfo.decimals).toBe(0);
+    // Verify on-chain contract info
+    const contractInfo = await executorWrapper.getContractInfo(erc721Address!);
+    expect(contractInfo).toBeDefined();
   });
 
-  it('creates a fungible token with supply, decimals, and finite supply type', async () => {
+  it('creates an ERC721 token with baseURI', async () => {
     const input =
-      'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
+      'Create an ERC721 token ArtCollection with symbol ART and base URI https://example.com/metadata/';
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+    const erc721Address = observation.erc721Address;
 
     expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+    expect(observation.message).toContain('ERC721 token created successfully');
+    expect(erc721Address).toBeDefined();
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('GoldCoin');
-    expect(tokenInfo.symbol).toBe('GLD');
-    expect(tokenInfo.decimals).toBe(2);
-    expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
-    expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
+    const contractInfo = await executorWrapper.getContractInfo(erc721Address!);
+    expect(contractInfo).toBeDefined();
   });
 
-  it('handles invalid requests gracefully', async () => {
-    const input =
-      'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
+  it('creates an ERC721 token using NFT terminology', async () => {
+    const input = 'Deploy an EVM standard NFT collection called GameItems with symbol GAME';
 
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
+    const erc721Address = observation.erc721Address;
 
     expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('cannot exceed max supply');
-    expect(observation.raw.error).toBeDefined();
+    expect(observation.message).toContain('ERC721 token created successfully');
+    expect(erc721Address).toBeDefined();
+
+    await wait(MIRROR_NODE_WAITING_TIME);
+
+    const contractInfo = await executorWrapper.getContractInfo(erc721Address!);
+    expect(contractInfo).toBeDefined();
   });
 });

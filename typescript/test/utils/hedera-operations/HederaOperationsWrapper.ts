@@ -6,6 +6,9 @@ import {
   ContractId,
   ContractInfo,
   ContractInfoQuery,
+  ContractCreateFlow,
+  ContractFunctionParameters,
+  Hbar,
   LedgerId,
   NftId,
   TokenAssociateTransaction,
@@ -14,6 +17,7 @@ import {
   TokenNftInfoQuery,
   TopicId,
   TopicInfoQuery,
+  TransactionRecordQuery,
   TransferTransaction,
 } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
@@ -35,13 +39,16 @@ import {
   deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
-import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
+import { ExecuteStrategy, ExecuteStrategyResult } from '@/shared/strategies/tx-mode-strategy';
 import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import {
   TokenAirdropsResponse,
   TopicMessagesResponse,
 } from '@/shared/hedera-utils/mirrornode/types';
+import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
+import { ERC20_FACTORY_ABI, getERC20FactoryAddress } from '@/shared';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
@@ -262,6 +269,23 @@ class HederaOperationsWrapper {
     return new BigNumber(balance.toTinybars().toNumber());
   }
 
+  async deployERC20(bytecode: string) {
+    try {
+      const tx = new ContractCreateFlow().setGas(3_000_000).setBytecode(bytecode);
+
+      const response = await tx.execute(this.client);
+      const receipt = await response.getReceipt(this.client);
+
+      return {
+        contractId: receipt.contractId?.toString(),
+        transactionId: response.transactionId.toString(),
+      };
+    } catch (error) {
+      console.error('[HederaOperationsWrapper] Error deploying ERC20:', error);
+      throw error;
+    }
+  }
+
   async getContractInfo(evmContractAddress: `0x${string}`): Promise<ContractInfo> {
     const query = new ContractInfoQuery().setContractId(
       ContractId.fromEvmAddress(0, 0, evmContractAddress),
@@ -275,6 +299,30 @@ class HederaOperationsWrapper {
 
   async getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
     return await this.mirrornode.getOutstandingAirdrops(accountId);
+  }
+
+  async createERC20(params: z.infer<ReturnType<typeof createERC20Parameters>>) {
+    const factoryContractAddress = getERC20FactoryAddress(this.client.ledgerId!);
+    const normalisedParams = HederaParameterNormaliser.normaliseCreateERC20Params(
+      params,
+      factoryContractAddress,
+      ERC20_FACTORY_ABI,
+      'deployToken',
+      {},
+    );
+    const tx = HederaBuilder.executeTransaction(normalisedParams);
+    const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
+    const erc20Address = await this.getERC20Address(result.raw.transactionId);
+    return {
+      ...(result as ExecuteStrategyResult),
+      erc20Address: erc20Address?.toString(),
+      humanMessage: `ERC20 token created successfully at address ${erc20Address?.toString()}`,
+    };
+  }
+
+  async getERC20Address(txId: string) {
+    const record = await new TransactionRecordQuery().setTransactionId(txId).execute(this.client);
+    return '0x' + record.contractFunctionResult?.getAddress(0);
   }
 }
 

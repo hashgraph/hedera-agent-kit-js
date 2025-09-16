@@ -35,6 +35,7 @@ import { TokenTransferMinimalParams, TransferHbarInput } from '@/shared/hedera-u
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
 import {
+  contractExecuteTransactionParametersNormalised,
   createERC20Parameters,
   createERC721Parameters,
   mintERC721Parameters,
@@ -341,7 +342,7 @@ export default class HederaParameterNormaliser {
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
     context: Context,
-  ) {
+  ): z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof createERC20Parameters>> =
       this.parseParamsWithSchema(params, createERC20Parameters, context);
 

@@ -23,7 +23,7 @@ import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
  * ```typescript
  * import { AccountId } from '@hashgraph/sdk';
  * import { HederaOperationsWrapper } from '../index';
- * import { returnHbarsAndDeleteAccount } from './accounts-teardown';
+ * import { returnHbarsAndDeleteAccount } from './account-teardown';
  *
  * // Clean up a test account after test completion
  * const testAccountWrapper = new HederaOperationsWrapper(testClient);
@@ -56,7 +56,10 @@ export const returnHbarsAndDeleteAccount = async (
       transferAccountId: accountToReturn,
     });
   } catch (error) {
-    console.log('Error deleting account:', error);
+    console.log(
+      'Error deleting account. The HBARs will be transferred to the operator account but this account wont be deleted. Error:',
+      error,
+    );
     // if we can't delete the account, at least return the hbars to the operator account
     const accountToDeleteBalance = await accountToDeleteWrapper.getAccountHbarBalance(
       accountToDelete.toString(),
