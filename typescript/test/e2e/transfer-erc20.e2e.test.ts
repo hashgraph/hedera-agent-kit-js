@@ -9,7 +9,7 @@ import {
 } from '../utils';
 import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
-import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { z } from 'zod';

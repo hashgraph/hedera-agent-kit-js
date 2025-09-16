@@ -28,7 +28,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should match airdrop tool with minimal params', async () => {
-      const input = 'Airdrop 10 tokens of 0.0.1234 from 0.0.1001 to 0.0.2002';
+      const input = 'Airdrop 10 HTS tokens 0.0.1234 from 0.0.1001 to 0.0.2002';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
@@ -77,7 +77,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
     it('should handle natural language variations', async () => {
       const variations = [
         {
-          input: 'Send 20 of token 0.0.5555 from 0.0.1010 to 0.0.2020',
+          input: 'Airdrop 20 HTS tokens with id 0.0.5555 from 0.0.1010 to 0.0.2020',
           expected: {
             tokenId: '0.0.5555',
             sourceAccountId: '0.0.1010',
@@ -85,7 +85,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
           },
         },
         {
-          input: 'Distribute 15 units of token 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
+          input: 'Distribute 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
           expected: {
             tokenId: '0.0.7777',
             sourceAccountId: '0.0.1500',
