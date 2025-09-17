@@ -1,0 +1,98 @@
+{
+    "id": "hedera-plugin-hello-101",
+    "title": "Build a Hello Plugin inside the Next.js app (TypeScript)",
+    "estimated_minutes": 25,
+    "prereqs": [
+        "Node.js >= 20",
+        "Next.js app scaffolded via `npm create hedera-agent@latest`"
+    ],
+    "teacher_instructions": {
+        "role": "You are a step-by-step instructor, not an auto-coder.",
+        "rules": [
+            "Explain WHY before WHAT: briefly justify each step so the learner builds mental models.",
+            "Guide one step at a time following this lesson. Do not paste the full solution unless explicitly asked.",
+            "Encourage the learner to make edits, then run the acceptance check.",
+            "If a check fails, give up to 3 escalating hints before offering a minimal patch diff.",
+            "Keep messages concise and end with an invitation, e.g., '✅ Ready to run the check?'"
+        ],
+        "tone": "Encouraging, patient, and explanatory. Act like a mentor who teaches reasoning, not a code generator."
+    },
+    "objectives": [
+        "Understand in-app plugin structure under src/lib/plugins (no separate package).",
+        "Create a Hello plugin with one tool method in TypeScript.",
+        "Register the plugin and test it through the agent."
+    ],
+    "steps": [
+        {
+            "id": "scaffold",
+            "title": "Scaffold the Hello plugin file (TypeScript)",
+            "instructions": "Create `src/lib/plugins/hello.ts`. Add a default export placeholder object: `{ name, version, description, tools }`.",
+            "why": "We place plugins under `src/lib/plugins` so the app can import them directly. A minimal plugin object lets the agent toolkit discover tools later.",
+            "acceptance": {
+                "command": "node .teacher/checks/check-scaffold.mjs",
+                "success_text": "✅ Scaffold detected."
+            },
+            "hints": [
+                "Create the folder if needed: `mkdir -p src/lib/plugins`.",
+                "Start with:\n```ts\nexport default { name: 'hello-plugin', version: '0.1.0', description: 'Hello plugin', tools: () => [] };\n```",
+                "Keep it `.ts` so you get type safety and IntelliSense."
+            ]
+        },
+        {
+            "id": "tool-method",
+            "title": "Implement the `hello` tool",
+            "instructions": "In `src/lib/plugins/hello.ts`, define a tool that accepts `{ name: string }` and returns: `Hello, {name}, I'm the Hedera Agent!`. Use Zod to validate input.",
+            "why": "Each tool declares input and behavior. Using Zod makes the tool self-documenting and safely validated by the agent runtime.",
+            "acceptance": {
+                "command": "node .teacher/checks/check-tool-method.mjs",
+                "success_text": "✅ Hello tool method output is correct."
+            },
+            "hints": [
+                "Import zod: `import { z } from 'zod'`.",
+                "Return a Tool-like object: `{ method: 'HELLO', name: 'Hello', description, parameters, execute }`.",
+                "`execute` just formats the string; no Hedera SDK required here."
+            ]
+        },
+        {
+            "id": "metadata",
+            "title": "Add plugin metadata and register the tool",
+            "instructions": "Ensure the default export has `name`, `version`, `description`, and `tools()` returns an array including your Hello tool. Export `HELLO` for integration.",
+            "why": "Metadata helps discoverability and DX. Returning tools from a function lets the agent initialize them with context if needed.",
+            "acceptance": {
+                "command": "node .teacher/checks/check-metadata.mjs",
+                "success_text": "✅ Plugin metadata and tool registration complete."
+            },
+            "hints": [
+                "Set `name: 'hello-plugin'`, `version: '0.1.0'`, and a short `description`.",
+                "Ensure `tools: () => [helloTool]` returns your tool.",
+                "Export `export const HELLO = 'HELLO'`."
+            ]
+        },
+        {
+            "id": "integration",
+            "title": "Integrate the plugin into the agent and test",
+            "instructions": "Import the Hello plugin and its tool constant into the agent config (e.g., `src/lib/agent.ts`). Add the plugin to `plugins` and the tool ID to `tools`. Test via the UI.",
+            "why": "Registering the plugin and tool allows the agent to choose and call it in response to user prompts.",
+            "acceptance": {
+                "command": "node .teacher/checks/check-integration.mjs",
+                "success_text": "✅ Plugin integrated and responding as expected."
+            },
+            "hints": [
+                "Typical pattern:\n```ts\nimport helloPlugin, { HELLO } from '@/lib/plugins/hello'\n// ...\nplugins: [helloPlugin, /* existing */],\ntools: [HELLO, /* existing */]\n```",
+                "Restart dev server and try: “Introduce yourself to Alice”.",
+                "If it doesn’t trigger, verify the `HELLO` constant matches the tool’s `method` string."
+            ]
+        }
+    ],
+    "grading": {
+        "rubric": [
+            "Hello plugin file exists and exports required fields",
+            "Hello tool validates input and returns correct greeting",
+            "Agent config includes plugin and tool identifier"
+        ]
+    },
+    "reflection": [
+        "What extra parameters could the Hello tool accept (e.g., tone or language)?",
+        "How would you organize multiple tools in the same plugin cleanly?"
+    ]
+}
