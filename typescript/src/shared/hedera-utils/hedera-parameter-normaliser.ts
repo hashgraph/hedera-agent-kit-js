@@ -8,6 +8,8 @@ import {
   createNonFungibleTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
+  associateTokenParameters,
+  associateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
@@ -636,5 +638,20 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
+  }
+
+  static normaliseAssociateTokenParams(
+    params: z.infer<ReturnType<typeof associateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof associateTokenParametersNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof associateTokenParameters>> =
+      this.parseParamsWithSchema(params, associateTokenParameters, context);
+
+    const accountId = AccountResolver.resolveAccount(parsedParams.accountId, context, client);
+    return {
+      accountId,
+      tokenIds: parsedParams.tokenIds,
+    };
   }
 }

@@ -8,11 +8,14 @@ import {
   TransferTransaction,
   ContractExecuteTransaction,
   TokenMintTransaction,
+  TokenAssociateTransaction,
   AccountCreateTransaction,
   AccountDeleteTransaction,
   AccountUpdateTransaction,
   ScheduleSignTransaction,
   ScheduleCreateTransaction,
+  AccountId,
+  TokenId,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
@@ -119,5 +122,12 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
   ) {
     return new ScheduleSignTransaction(params);
+  }
+
+  static associateToken(params: { accountId: string; tokenIds: string[] }) {
+    return new TokenAssociateTransaction({
+      accountId: AccountId.fromString(params.accountId),
+      tokenIds: params.tokenIds.map(t => TokenId.fromString(t)),
+    });
   }
 }
