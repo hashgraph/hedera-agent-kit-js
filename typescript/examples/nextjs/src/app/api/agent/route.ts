@@ -1,25 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { HederaLangchainToolkit } from 'hedera-agent-kit';
-import { createAgentBootstrap, createHederaClient, createToolkitConfiguration } from '@/lib/agent';
-import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
-import { AIMessage, HumanMessage } from '@langchain/core/messages';
-import { createLLMFromEnv } from '@/lib/llm';
+import { NextRequest } from 'next/server';
+import {
+    RequestSchema,
+    createErrorResponse,
+    createSuccessResponse,
+    transformMessagesToHistory,
+} from '@/lib/api-utils';
+import {
+    initializeLLM,
+    createHederaToolkit,
+    createChatPrompt,
+    createAgentExecutorWithPrompt,
+    extractResultFromResponse,
+} from '@/lib/agent-factory';
 
 export const runtime = 'nodejs';
-
-const RequestSchema = z.object({
-    input: z.string().min(1),
-    messages: z
-        .array(
-            z.object({
-                role: z.enum(['user', 'assistant']),
-                content: z.string(),
-            }),
-        )
-        .optional(),
-});
 
 export async function POST(req: NextRequest) {
     try {
@@ -28,40 +22,29 @@ export async function POST(req: NextRequest) {
         const input = parsed.input;
         const history = parsed.messages || [];
 
-        const bootstrap = createAgentBootstrap();
-        const client = createHederaClient(bootstrap);
-        const configuration = createToolkitConfiguration(bootstrap);
-
-        const hederaToolkit = new HederaLangchainToolkit({ client, configuration });
-        const tools = hederaToolkit.getTools();
-
-        const historyMessages = history.map(m =>
-            m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content),
-        );
-        const chatPrompt = ChatPromptTemplate.fromMessages([
-            ['system', 'You are a helpful assistant that uses Hedera tools.'],
-            new MessagesPlaceholder('history'),
-            ['human', '{input}'],
-            ['placeholder', '{agent_scratchpad}'],
-        ]);
+        const { bootstrap, tools } = createHederaToolkit();
+        const historyMessages = transformMessagesToHistory(history);
+        const chatPrompt = createChatPrompt('You are a helpful assistant that uses Hedera tools.');
+        
         let llm;
         try {
-            llm = createLLMFromEnv();
+            llm = initializeLLM();
         } catch (e) {
-            const message = e instanceof Error ? e.message : 'Invalid AI provider configuration';
-            return NextResponse.json({ ok: false, error: message }, { status: 400 });
+            return createErrorResponse(e instanceof Error ? e.message : 'Invalid AI provider configuration');
         }
-        const executor = new AgentExecutor({
-            agent: createToolCallingAgent({ llm, tools, prompt: chatPrompt }),
-            tools,
-            returnIntermediateSteps: false,
-        });
 
+        const executor = createAgentExecutorWithPrompt(llm, tools, chatPrompt, false);
         const response = await executor.invoke({ input, history: historyMessages });
-        return NextResponse.json({ ok: true, mode: bootstrap.mode, network: bootstrap.network, result: response });
+        const result = extractResultFromResponse(response);
+
+        return createSuccessResponse({ 
+            mode: bootstrap.mode, 
+            network: bootstrap.network, 
+            result 
+        });
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 400 });
+        return createErrorResponse(message);
     }
 }
 

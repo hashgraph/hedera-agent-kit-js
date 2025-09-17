@@ -26,8 +26,9 @@ build/
 *.swp
 *.swo
 *~
-.claude/
-.cursor/
+.cursor
+.claude
+tasks
 
 # OS generated files
 .DS_Store

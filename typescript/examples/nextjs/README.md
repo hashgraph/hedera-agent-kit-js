@@ -62,7 +62,7 @@ Create a `.env.local` file based on the provided `.env.local.example`:
    - DER hex starting with `303002...` OR
    - 0x-prefixed 64-character hex string
 
-> **Important:** It is possible to use ED25519 keys for autonomous mode, however, this example application is configured for ECDSA keys. If you want to use ED25519 you can update the `createHederaClient` function in `src/lib/agent.ts`
+> **Important:** It is possible to use ED25519 keys for autonomous mode, however, this example application is configured for ECDSA keys. If you want to use ED25519 you can update the `createHederaClient` function in `src/lib/agent-config.ts`
 
 ## Project Structure
 
@@ -82,15 +82,28 @@ nextjs/
 │   │   └── favicon.ico
 │   ├── components/
 │   │   ├── Chat.tsx                # Main chat interface
+│   │   ├── MessageInput.tsx        # Chat input
+│   │   ├── MessageList.tsx         # Chat message list
+│   │   ├── TransactionStatus.tsx   # Transaction status display
 │   │   ├── WalletConnect.tsx       # WalletConnect integration
 │   │   ├── WalletConnectClient.tsx # WalletConnect client wrapper
 │   │   └── ui/                     # Reusable UI components (shadcn/ui)
-│   └── lib/
-│       ├── agent.ts                # Agent configuration and utilities
-│       ├── llm.ts                  # LLM integration
-│       ├── schemas.ts              # Zod validation schemas
-│       ├── utils.ts                # General utilities
-│       └── walletconnect.ts        # WalletConnect setup
+│   ├── hooks/
+│   │   ├── useAutoSign.ts          # Auto-signing hook (autonomous mode)
+│   │   ├── useMessageSubmit.ts     # Chat submit handling
+│   │   └── useWalletConnect.tsx    # WalletConnect lifecycle hook
+│   ├── lib/
+│   │   ├── agent-config.ts         # Agent bootstrap and toolkit configuration
+│   │   ├── agent-factory.ts        # LLM/toolkit/agent executor factory
+│   │   ├── api-utils.ts            # API helpers
+│   │   ├── bytes-utils.ts          # Byte encoding/decoding helpers
+│   │   ├── constants.ts            # App constants
+│   │   ├── llm.ts                  # LLM integration
+│   │   ├── schemas.ts              # Zod validation schemas
+│   │   ├── utils.ts                # General utilities
+│   │   └── walletconnect.ts        # WalletConnect setup
+│   └── types/
+│       └── index.ts                # App types
 ├── public/                         # Static assets
 ├── package.json                    # Scripts and dependencies
 ├── tsconfig.json                   # TypeScript configuration
