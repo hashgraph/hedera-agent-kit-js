@@ -1,6 +1,6 @@
 {
   "name": "create-hedera-agent",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Scaffold a Next.js app wired with Hedera Agent Kit and WalletConnect",
   "bin": {
     "create-hedera-agent": "dist/index.js"
