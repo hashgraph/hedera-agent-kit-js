@@ -31,6 +31,7 @@ import {
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
   deleteTokenParametersNormalised,
+  airdropFungibleTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import {
   createTopicParametersNormalised,
@@ -162,6 +163,14 @@ class HederaOperationsWrapper {
     params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>,
   ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.transferHbar(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw;
+  }
+
+  async airdropToken(params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>
+  ): Promise<RawTransactionResponse> {
+    console.log('params', JSON.stringify(params));
+    const tx = HederaBuilder.airdropFungibleToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
     return result.raw;
   }
