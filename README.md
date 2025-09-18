@@ -41,14 +41,14 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
 - [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
 
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+  GitHub repository: https://github.com/buidler-labs/hak-memejob-plugin
 
 
 ---
 ## Developer Examples
 You can try out examples of the different types of agents you can build by followin the instructions in the [Developer Examples](docs/DEVEXAMPLES.md) doc in this repo.
 
-First follow instructions in the [Developer Examples to clone and configure the example](docs/DEVEXAMPLES.md), then choose from one of the examples to run:
+First, follow the instructions in the [Developer Examples to clone and configure the example](docs/DEVEXAMPLES.md), then choose from one of the examples to run:
 
 * **Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
 * **Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
@@ -84,7 +84,7 @@ npm init -y
 npm install hedera-agent-kit @langchain/core langchain @hashgraph/sdk dotenv
 ```
 
-Then install ONE of these AI provider packages:
+Then install ONE of these AI provider packages, depending on which provider you would like to use:
 ```bash
 # Option 1: OpenAI (requires API key)
 npm install @langchain/openai
@@ -123,7 +123,7 @@ GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com
 
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
-Create a a new file called `index.js` in the `hello-hedera-agent-kit` folder.
+Create a new `index.js` file in the `hello-hedera-agent-kit` folder.
 
 ```bash
 touch index.js
@@ -139,7 +139,7 @@ dotenv.config();
 const { ChatPromptTemplate } = require('@langchain/core/prompts');
 const { AgentExecutor, createToolCallingAgent } = require('langchain/agents');
 const { Client, PrivateKey } = require('@hashgraph/sdk');
-const { HederaLangchainToolkit, coreQueriesPlugin } = require('hedera-agent-kit');
+const { HederaLangchainToolkit, AgentMode, coreAccountQueryPlugin } = require('hedera-agent-kit');
 
 // Choose your AI provider (install the one you want to use)
 function createLLM() {
@@ -189,7 +189,8 @@ async function main() {
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      plugins: [coreQueriesPlugin] // all our core plugins here https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/src/plugins
+      mode: AgentMode.AUTONOMOUS,
+      plugins: [coreAccountQueryPlugin] // all our core plugins here https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/src/plugins
     },
   });
   
@@ -235,13 +236,13 @@ If you would like, try adding in other prompts to the agent to see what it can d
 
 ```javascript
 ... 
-//original
+// original (requires: coreAccountQueryPlugin)
   const response = await agentExecutor.invoke({ input: "what's my balance?" });
-// or
+// or (requires: coreTokenPlugin)
   const response = await agentExecutor.invoke({ input: "create a new token called 'TestToken' with symbol 'TEST'" });
-// or
+// or (requires: coreAccountPlugin)
   const response = await agentExecutor.invoke({ input: "transfer 5 HBAR to account 0.0.1234" });
-// or
+// or (requires: coreConsensusPlugin)
   const response = await agentExecutor.invoke({ input: "create a new topic for project updates" });
 ...
    console.log(response);
@@ -253,9 +254,12 @@ If you would like, try adding in other prompts to the agent to see what it can d
 ## About the Agent Kit
 
 ### Agent Execution Modes
-This tool has two execution modes with AI agents;  autonomous excution and return bytes. If you set:
- * `mode: AgentMode.RETURN_BYTE` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned. 
+This tool has two execution modes with AI agents: autonomous execution and return bytes. If you set:
+ * `mode: AgentMode.RETURN_BYTES` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned. 
  * `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
+
+
+
 
 ### Hedera Plugins & Tools
 The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
@@ -290,7 +294,7 @@ _See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
 
 * This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
-* If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
+* If you would like to contribute and suggest improvements for the core SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
 ## License
 Apache 2.0
