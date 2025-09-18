@@ -57,7 +57,7 @@ npm install
 2. Then, run the example
 
 ```bash
-npm run langchain:plugin-tool-calling-agent
+npm run langchain:tool-calling-agent
 ```
 
 3. interact with the agent. First, tell the agent who you are (your name) and try out some of the interactions by asking questions: 

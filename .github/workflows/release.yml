@@ -29,7 +29,7 @@ jobs:
     runs-on: hedera-agent-linux-medium
     environment:
       name: release
-    needs: [ unit-tests, integration-tests, e2e-tests ]
+    needs: [ e2e-tests ]
     steps:
       - name: Checkout repository (full history)
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -71,6 +71,7 @@ jobs:
     uses: ./.github/workflows/run-unit-tests.yml
 
   integration-tests:
+    needs: [ unit-tests ]
     uses: ./.github/workflows/run-integration-tests.yml
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -78,6 +79,7 @@ jobs:
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
 
   e2e-tests:
+    needs: [ integration-tests ]
     uses: ./.github/workflows/run-e2e-tests.yml
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -47,6 +47,8 @@ jobs:
         working-directory: ${{ inputs.workdir }}
         run: npm ci
 
-      - name: Run E2E tests
+      - name: Run E2E tests (throttled)
         working-directory: ${{ inputs.workdir }}
-        run: npm run test e2e
+        env:
+          SLOW_TEST_DELAY_MS: '30000'
+        run: npm run test e2e -- --sequence.concurrent=false

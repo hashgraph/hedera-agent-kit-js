@@ -49,6 +49,8 @@ jobs:
         working-directory: ${{ inputs.workdir }}
         run: npm ci
 
-      - name: Run integration tests
+      - name: Run integration tests (throttled)
         working-directory: ${{ inputs.workdir }}
-        run: npm run test integration
+        env:
+          SLOW_TEST_DELAY_MS: '30000'
+        run: npm run test integration -- --sequence.concurrent=false

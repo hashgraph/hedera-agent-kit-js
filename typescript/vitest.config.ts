@@ -4,6 +4,13 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
 
+// Build setupFiles conditionally. We only enable the slowdown setup when
+// SLOW_TEST_DELAY_MS is defined, so unit tests are not affected.
+const setupFiles: string[] = [];
+if (process.env.SLOW_TEST_DELAY_MS !== undefined) {
+  setupFiles.push(path.resolve(__dirname, 'test/setup/slowdown.ts'));
+}
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -29,7 +36,7 @@ export default defineConfig({
       reporter: ['text', 'html'],
       enabled: false,
     },
-    setupFiles: [],
+    setupFiles,
     testTimeout: 120000,
     hookTimeout: 120000,
   },
