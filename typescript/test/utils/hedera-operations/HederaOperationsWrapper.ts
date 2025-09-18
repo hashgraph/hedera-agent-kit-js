@@ -6,6 +6,7 @@ import {
   ContractId,
   ContractInfo,
   ContractInfoQuery,
+  ContractCreateFlow,
   LedgerId,
   NftId,
   TokenAssociateTransaction,
@@ -14,6 +15,7 @@ import {
   TokenNftInfoQuery,
   TopicId,
   TopicInfoQuery,
+  TransactionRecordQuery,
   TransferTransaction,
 } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
@@ -35,10 +37,27 @@ import {
   deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
-import { ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
+import { ExecuteStrategy, ExecuteStrategyResult } from '@/shared/strategies/tx-mode-strategy';
 import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { TopicMessagesResponse } from '@/shared/hedera-utils/mirrornode/types';
+import {
+  TokenAirdropsResponse,
+  TopicMessagesResponse,
+} from '@/shared/hedera-utils/mirrornode/types';
+import {
+  createERC20Parameters,
+  createERC721Parameters,
+  mintERC721Parameters,
+} from '@/shared/parameter-schemas/evm.zod';
+import {
+  ERC20_FACTORY_ABI,
+  ERC721_FACTORY_ABI,
+  ERC721_MINT_FUNCTION_ABI,
+  ERC721_MINT_FUNCTION_NAME,
+  getERC20FactoryAddress,
+  getERC721FactoryAddress,
+} from '@/shared';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
@@ -259,11 +278,94 @@ class HederaOperationsWrapper {
     return new BigNumber(balance.toTinybars().toNumber());
   }
 
+  async deployERC20(bytecode: string) {
+    try {
+      const tx = new ContractCreateFlow().setGas(3_000_000).setBytecode(bytecode);
+
+      const response = await tx.execute(this.client);
+      const receipt = await response.getReceipt(this.client);
+
+      return {
+        contractId: receipt.contractId?.toString(),
+        transactionId: response.transactionId.toString(),
+      };
+    } catch (error) {
+      console.error('[HederaOperationsWrapper] Error deploying ERC20:', error);
+      throw error;
+    }
+  }
+
   async getContractInfo(evmContractAddress: `0x${string}`): Promise<ContractInfo> {
     const query = new ContractInfoQuery().setContractId(
       ContractId.fromEvmAddress(0, 0, evmContractAddress),
     );
     return await query.execute(this.client);
+  }
+
+  async getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
+    return await this.mirrornode.getPendingAirdrops(accountId);
+  }
+
+  async getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
+    return await this.mirrornode.getOutstandingAirdrops(accountId);
+  }
+
+  async createERC20(params: z.infer<ReturnType<typeof createERC20Parameters>>) {
+    const factoryContractAddress = getERC20FactoryAddress(this.client.ledgerId!);
+    const normalisedParams = HederaParameterNormaliser.normaliseCreateERC20Params(
+      params,
+      factoryContractAddress,
+      ERC20_FACTORY_ABI,
+      'deployToken',
+      {},
+    );
+    const tx = HederaBuilder.executeTransaction(normalisedParams);
+    const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
+    const erc20Address = await this.getERCAddress(result.raw.transactionId);
+    return {
+      ...(result as ExecuteStrategyResult),
+      erc20Address: erc20Address?.toString(),
+      humanMessage: `ERC20 token created successfully at address ${erc20Address?.toString()}`,
+    };
+  }
+
+  async createERC721(params: z.infer<ReturnType<typeof createERC721Parameters>>) {
+    const factoryContractAddress = getERC721FactoryAddress(this.client.ledgerId!);
+    const normalisedParams = HederaParameterNormaliser.normaliseCreateERC721Params(
+      params,
+      factoryContractAddress,
+      ERC721_FACTORY_ABI,
+      'deployToken',
+      {},
+    );
+    const tx = HederaBuilder.executeTransaction(normalisedParams);
+    const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
+    console.log(JSON.stringify(result, null, 2));
+    const erc721Address = await this.getERCAddress(result.raw.transactionId);
+    return {
+      ...(result as ExecuteStrategyResult),
+      erc721Address: erc721Address?.toString(),
+      humanMessage: `ERC20 token created successfully at address ${erc721Address?.toString()}`,
+    };
+  }
+
+  async mintERC721(params: z.infer<ReturnType<typeof mintERC721Parameters>>) {
+    const normalisedParams = await HederaParameterNormaliser.normaliseMintERC721Params(
+      params,
+      ERC721_MINT_FUNCTION_ABI,
+      ERC721_MINT_FUNCTION_NAME,
+      {},
+      this.mirrornode,
+      this.client,
+    );
+
+    const tx = HederaBuilder.executeTransaction(normalisedParams);
+    return await this.executeStrategy.handle(tx, this.client, {});
+  }
+
+  async getERCAddress(txId: string) {
+    const record = await new TransactionRecordQuery().setTransactionId(txId).execute(this.client);
+    return '0x' + record.contractFunctionResult?.getAddress(0);
   }
 }
 

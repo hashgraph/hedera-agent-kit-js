@@ -227,3 +227,26 @@ export type ExchangeRateResponse = {
   next_rate: ExchangeRate;
   timestamp: string;
 };
+
+export interface TokenAirdropsResponse {
+  airdrops: TokenAirdrop[];
+  links: Links;
+}
+
+export interface TokenAirdrop {
+  amount: number;
+  receiver_id: string | null;
+  sender_id: string | null;
+  serial_number: number | null;
+  timestamp: TimestampRange;
+  token_id: string | null;
+}
+
+export interface TimestampRange {
+  from: string;
+  to: string | null;
+}
+
+export interface Links {
+  next: string | null;
+}

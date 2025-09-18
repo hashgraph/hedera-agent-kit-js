@@ -13,6 +13,7 @@ import {
   AccountUpdateTransaction,
   ScheduleSignTransaction,
   ScheduleCreateTransaction,
+  ScheduleDeleteTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
@@ -30,6 +31,7 @@ import {
   updateAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
   signScheduleTransactionParameters,
+  scheduleDeleteTransactionParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -119,5 +121,11 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
   ) {
     return new ScheduleSignTransaction(params);
+  }
+
+  static deleteScheduleTransaction(
+    params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
+  ) {
+    return new ScheduleDeleteTransaction(params as any);
   }
 }

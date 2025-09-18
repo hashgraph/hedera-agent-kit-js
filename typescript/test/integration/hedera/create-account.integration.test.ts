@@ -3,8 +3,6 @@ import { Client, Key, PrivateKey } from '@hashgraph/sdk';
 import createAccountTool from '@/plugins/core-account-plugin/tools/account/create-account';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
-import { z } from 'zod';
-import { createAccountParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe('Create Account Integration Tests', () => {
   let operatorClient: Client;
@@ -53,7 +51,7 @@ describe('Create Account Integration Tests', () => {
 
   describe('Valid Create Account Scenarios', () => {
     it('should create an account with executor public key by default', async () => {
-      const params: z.infer<ReturnType<typeof createAccountParameters>> = {};
+      const params = {};
 
       const tool = createAccountTool(context);
       const result = await tool.execute(executorClient, context, params);
@@ -71,7 +69,7 @@ describe('Create Account Integration Tests', () => {
     });
 
     it('should create an account with initial balance and memo', async () => {
-      const params: z.infer<ReturnType<typeof createAccountParameters>> = {
+      const params = {
         initialBalance: 0.05,
         accountMemo: 'Integration test account',
       };
@@ -93,7 +91,7 @@ describe('Create Account Integration Tests', () => {
 
     it('should create an account with explicit public key', async () => {
       const publicKey = executorClient.operatorPublicKey as Key;
-      const params: z.infer<ReturnType<typeof createAccountParameters>> = {
+      const params = {
         publicKey: publicKey.toString(),
       };
 
@@ -107,7 +105,7 @@ describe('Create Account Integration Tests', () => {
 
   describe('Invalid Create Account Scenarios', () => {
     it('should fail with invalid public key', async () => {
-      const params: z.infer<ReturnType<typeof createAccountParameters>> = {
+      const params = {
         publicKey: 'not-a-valid-public-key',
       };
 
@@ -124,7 +122,7 @@ describe('Create Account Integration Tests', () => {
     });
 
     it('should fail with negative initial balance', async () => {
-      const params: z.infer<ReturnType<typeof createAccountParameters>> = {
+      const params = {
         initialBalance: -1,
       };
 

@@ -13,7 +13,7 @@ import {
   extractTokenIdFromObservation,
   wait,
 } from '../utils/general-util';
-import { returnHbarsAndDeleteAccount } from '../utils/teardown/accounts-teardown';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Create Fungible Token E2E Tests', () => {

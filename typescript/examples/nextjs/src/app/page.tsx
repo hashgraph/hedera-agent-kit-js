@@ -1,4 +1,4 @@
-import { createAgentBootstrap } from "@/lib/agent";
+import { createAgentBootstrap } from "@/lib/agent-config";
 import WalletConnectClient from "@/components/WalletConnectClient";
 import Chat from "@/components/Chat";
 import { Separator } from "@/components/ui/separator";

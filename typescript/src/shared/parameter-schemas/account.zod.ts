@@ -137,5 +137,11 @@ export const createScheduleTransactionParametersNormalised = (_context: Context 
     scheduledTransaction: z.instanceof(Transaction),
     params: z.object({
       scheduleMemo: z.string().optional(),
+      adminKey: z.instanceof(Key).optional(),
     }),
+  });
+
+export const scheduleDeleteTransactionParameters = (_context: Context = {}) =>
+  z.object({
+    scheduleId: z.string().describe('The ID of the scheduled transaction to delete'),
   });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { AgentMode, coreAccountPlugin, coreTokenPlugin, coreConsensusPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin, type Context } from 'hedera-agent-kit';
-import { Client, AccountId, PrivateKey, LedgerId } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey } from '@hashgraph/sdk';
 import type { Configuration } from 'hedera-agent-kit';
 
 export type AppMode = 'autonomous' | 'human';
@@ -36,7 +36,6 @@ export type AgentBootstrap = {
 
 /**
  * Creates a minimal bootstrap object for wiring the Agent Kit.
- * - Does not instantiate a Hedera Client (done in 2.2)
  * - Contains a Context with the appropriate mode set
  */
 export function createAgentBootstrap(): AgentBootstrap {
@@ -72,5 +71,3 @@ export function createToolkitConfiguration(bootstrap: AgentBootstrap): Configura
         plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin],
     };
 }
-
-

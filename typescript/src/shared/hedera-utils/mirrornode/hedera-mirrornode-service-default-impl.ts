@@ -12,6 +12,7 @@ import {
   TopicMessagesResponse,
   TransactionDetailsResponse,
   ContractInfo,
+  TokenAirdropsResponse,
   ExchangeRateResponse,
 } from './types';
 import BigNumber from 'bignumber.js';
@@ -164,6 +165,32 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     if (!response.ok) {
       throw new Error(
         `Failed to get contract info for ${contractId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    return await response.json();
+  }
+
+  async getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
+    const url = `${this.baseUrl}/accounts/${accountId}/airdrops/pending`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch pending airdrops for an account ${accountId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    return await response.json();
+  }
+
+  async getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
+    const url = `${this.baseUrl}/accounts/${accountId}/airdrops/outstanding`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch outstanding airdrops for an account ${accountId}: ${response.status} ${response.statusText}`,
       );
     }
 
