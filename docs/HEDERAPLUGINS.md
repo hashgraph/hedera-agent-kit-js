@@ -75,9 +75,10 @@ A plugin for **Consensus Service (HCS)**, enabling creation and posting to topic
 
 This plugin provides tools for fetching **Consensus Service (HCS)** related information from Hedera Mirror Node.
 
-| Tool Name                       | Description                                                       | Usage                                                                                                      |
-|---------------------------------|-------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| Tool Name                    | Description                                                          | Usage                                                                                                      |
+|------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic    | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| `GET_TOPIC_INFO_QUERY_TOOL`     | Returns information for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required).                                                                           |
 
 ---
 
