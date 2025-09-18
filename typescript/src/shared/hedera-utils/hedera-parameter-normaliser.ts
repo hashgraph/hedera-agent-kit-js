@@ -23,9 +23,19 @@ import {
 import {
   createTopicParameters,
   createTopicParametersNormalised,
+  updateTokenParameters,
+  updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 
-import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import {
+  AccountId,
+  Client,
+  Hbar,
+  PublicKey,
+  TokenId,
+  TokenSupplyType,
+  TokenType,
+} from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
@@ -636,5 +646,65 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
+  }
+
+  static async normaliseUpdateToken(
+    params: z.infer<ReturnType<typeof updateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof updateTokenParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof updateTokenParameters>> =
+      this.parseParamsWithSchema(params, updateTokenParameters, context);
+
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+    const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
+
+    const normalised: z.infer<ReturnType<typeof updateTokenParametersNormalised>> = {
+      tokenId,
+    } as any;
+
+    // Keys
+    const maybeKeys: Record<string, string | boolean | undefined> = {
+      adminKey: parsedParams.adminKey,
+      supplyKey: parsedParams.supplyKey,
+      wipeKey: parsedParams.wipeKey,
+      freezeKey: parsedParams.freezeKey,
+      kycKey: parsedParams.kycKey,
+      feeScheduleKey: parsedParams.feeScheduleKey,
+      pauseKey: parsedParams.pauseKey,
+      metadataKey: parsedParams.metadataKey,
+    };
+
+    for (const [field, rawVal] of Object.entries(maybeKeys)) {
+      const resolved = this.resolveKey(rawVal, userPublicKey);
+      if (resolved) {
+        (normalised as any)[field] = resolved;
+      }
+    }
+
+    // Other optional props
+    if (parsedParams.tokenName) normalised.tokenName = parsedParams.tokenName;
+    if (parsedParams.tokenSymbol) normalised.tokenSymbol = parsedParams.tokenSymbol;
+    if (parsedParams.treasuryAccountId)
+      normalised.treasuryAccountId = parsedParams.treasuryAccountId;
+    if (parsedParams.tokenMemo) normalised.tokenMemo = parsedParams.tokenMemo;
+    if (parsedParams.metadata)
+      normalised.metadata = new TextEncoder().encode(parsedParams.metadata);
+
+    return normalised;
+  }
+
+  private static resolveKey(
+    rawValue: string | boolean | undefined,
+    userKey: PublicKey,
+  ): PublicKey | undefined {
+    if (rawValue === undefined) return undefined;
+    if (typeof rawValue === 'string') {
+      return PublicKey.fromStringED25519(rawValue);
+    }
+    if (rawValue) {
+      return userKey;
+    }
+    return undefined;
   }
 }

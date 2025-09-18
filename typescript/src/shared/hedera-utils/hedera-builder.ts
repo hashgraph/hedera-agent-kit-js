@@ -13,6 +13,7 @@ import {
   AccountUpdateTransaction,
   ScheduleSignTransaction,
   ScheduleCreateTransaction,
+  TokenUpdateTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
@@ -35,6 +36,7 @@ import {
   createTopicParametersNormalised,
   deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
+  updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
 
@@ -42,7 +44,9 @@ export default class HederaBuilder {
   static createScheduleTransaction(
     params: z.infer<ReturnType<typeof createScheduleTransactionParametersNormalised>>,
   ) {
-    return new ScheduleCreateTransaction(params.params).setScheduledTransaction(params.scheduledTransaction);
+    return new ScheduleCreateTransaction(params.params).setScheduledTransaction(
+      params.scheduledTransaction,
+    );
   }
 
   static createFungibleToken(
@@ -65,6 +69,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>,
   ) {
     return new TokenAirdropTransaction(params as any);
+  }
+
+  static updateToken(params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>) {
+    return new TokenUpdateTransaction(params);
   }
 
   static createTopic(params: z.infer<ReturnType<typeof createTopicParametersNormalised>>) {

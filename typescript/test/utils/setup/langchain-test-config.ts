@@ -46,6 +46,7 @@ const {
   AIRDROP_FUNGIBLE_TOKEN_TOOL,
   MINT_FUNGIBLE_TOKEN_TOOL,
   MINT_NON_FUNGIBLE_TOKEN_TOOL,
+  UPDATE_TOKEN_TOOL,
 } = coreTokenPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 const {
@@ -107,6 +108,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     CREATE_ERC20_TOOL,
     TRANSFER_ERC20_TOOL,
     CREATE_ERC721_TOOL,
+    UPDATE_TOKEN_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
