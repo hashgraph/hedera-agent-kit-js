@@ -58,12 +58,19 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
     // Create recipient with 0 auto-associations to ensure airdrop is pending
     const recipientKey = PrivateKey.generateED25519();
     recipientId = await executorWrapper
-      .createAccount({ key: recipientKey.publicKey, initialBalance: 0, maxAutomaticTokenAssociations: 0 })
+      .createAccount({
+        key: recipientKey.publicKey,
+        initialBalance: 0,
+        maxAutomaticTokenAssociations: 0,
+      })
       .then(resp => resp.accountId!);
 
     // Airdrop tokens to recipient so they appear as pending
     await executorWrapper.airdropToken({
-      tokenTransfers: [{ tokenId: tokenIdFT.toString(), accountId: recipientId.toString(), amount: 100 }],
+      tokenTransfers: [
+        { tokenId: tokenIdFT.toString(), accountId: recipientId.toString(), amount: 100 },
+        { tokenId: tokenIdFT.toString(), accountId: executorAccountId.toString(), amount: -100 },
+      ],
     });
 
     await wait(MIRROR_NODE_WAITING_TIME);
@@ -89,7 +96,9 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
 
-    expect(result.humanMessage).toContain(`pending airdrops for account **${recipientId.toString()}**`);
+    expect(result.humanMessage).toContain(
+      `pending airdrops for account **${recipientId.toString()}**`,
+    );
     expect(Array.isArray(result.raw.pendingAirdrops.airdrops)).toBe(true);
     expect(result.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
   });
@@ -101,9 +110,7 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
     };
 
     const result: any = await tool.execute(executorClient, context, params);
-    expect(result.humanMessage).toContain('Failed to get pending airdrops');
+    expect(result.humanMessage).toContain('No pending airdrops found for account');
     expect(result.raw.error).toBeDefined();
   });
 });
-
-
