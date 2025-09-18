@@ -257,7 +257,7 @@ If you would like, try adding in other prompts to the agent to see what it can d
 
 ### Agent Execution Modes
 This tool has two execution modes with AI agents: autonomous execution and return bytes. If you set:
- * `mode: AgentMode.RETURN_BYTES` the transaction will be executed if you have provided a script for signing a transaction and submitting it to the Hedera network.. 
+ * `mode: AgentMode.RETURN_BYTES` the Hedera transaction bytes will be returned and must be signed and executed separately e.g. with WalletConnect. 
  * `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
 
 ### Hedera Plugins & Tools
