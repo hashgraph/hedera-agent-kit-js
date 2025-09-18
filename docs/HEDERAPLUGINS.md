@@ -45,7 +45,6 @@ This plugin provides tools for Hedera **Account Service operations**:
 | `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                               |
 | `SCHEDULE_DELETE_TOOL`           | Delete a scheduled transaction so it will not execute                                                          | Provide the schedule ID (required) of the scheduled transaction to delete. Returns the transaction ID upon successful deletion.                                                                            |
 
-
 ---
 
 ### Core Account Query Plugin Tools (`core-account-query-plugin`)
@@ -93,6 +92,7 @@ and non-fungible tokens.
 | `AIRDROP_FUNGIBLE_TOKEN_TOOL`    | Airdrops a fungible token to multiple recipients          | Provide the token ID and recipients array. Optionally specify a source account ID (defaults to operator) and transaction memo.                                                                    |
 | `MINT_NON_FUNGIBLE_TOKEN_TOOL`   | Mints NFTs with unique metadata for an existing NFT class | Provide the token ID and metadata URIs.                                                                                                                                                           |
 | `MINT_FUNGIBLE_TOKEN_TOOL`       | Mints additional supply of an existing fungible token     | Provide the token ID and amount to mint.                                                                                                                                                          |
+| `DISSOCIATE_FUNGIBLE_TOKEN_TOOL` | Dissociates fungible tokens from an account               | Provide an array of token IDs to dissociate. Optionally specify the account ID (defaults to operator) and a transaction memo                                                                      |                                                                                                                                                       |
 
 ---
 
@@ -145,9 +145,9 @@ Tools for **transaction-related operations** on Hedera.
 
 This plugin provides tools for fetching miscellaneous information from the Hedera Mirror Node.
 
-| Tool Name                 | Description                                              | Usage                                                                                       |
-|---------------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `GET_EXCHANGE_RATE_TOOL`  | Returns the Hedera network HBAR exchange rate            | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate.   |
+| Tool Name                | Description                                   | Usage                                                                                     |
+|--------------------------|-----------------------------------------------|-------------------------------------------------------------------------------------------|
+| `GET_EXCHANGE_RATE_TOOL` | Returns the Hedera network HBAR exchange rate | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate. |
 
 ---
 
