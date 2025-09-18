@@ -189,7 +189,9 @@ async function main() {
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      mode: AgentMode.AUTONOMOUS,
+      context: {
+        mode: AgentMode.AUTONOMOUS,
+      },
       plugins: [coreAccountQueryPlugin] // all our core plugins here https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/src/plugins
     },
   });
@@ -255,11 +257,8 @@ If you would like, try adding in other prompts to the agent to see what it can d
 
 ### Agent Execution Modes
 This tool has two execution modes with AI agents: autonomous execution and return bytes. If you set:
- * `mode: AgentMode.RETURN_BYTES` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned. 
+ * `mode: AgentMode.RETURN_BYTES` the transaction will be executed if you have provided a script for signing a transaction and submitting it to the Hedera network.. 
  * `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
-
-
-
 
 ### Hedera Plugins & Tools
 The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
