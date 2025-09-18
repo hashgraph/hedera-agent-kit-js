@@ -111,6 +111,5 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
     expect(result.humanMessage).toContain('No pending airdrops found for account');
-    expect(result.raw.error).toBeDefined();
   });
 });

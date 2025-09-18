@@ -55,7 +55,7 @@ const {
 } = coreAccountQueryPluginToolNames;
 
 const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
-const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
+const { GET_TOKEN_INFO_QUERY_TOOL, GET_PENDING_AIRDROP_TOOL } = coreTokenQueryPluginToolNames;
 const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
 const { GET_EXCHANGE_RATE_TOOL } = coreMiscQueriesPluginsToolNames;
@@ -107,6 +107,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     CREATE_ERC20_TOOL,
     TRANSFER_ERC20_TOOL,
     CREATE_ERC721_TOOL,
+    GET_PENDING_AIRDROP_TOOL,
   ],
   plugins: [
     coreAccountPlugin,

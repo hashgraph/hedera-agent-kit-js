@@ -65,6 +65,8 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
     await executorWrapper.airdropToken({
       tokenTransfers: [
         { tokenId: tokenIdFT.toString(), accountId: recipientId.toString(), amount: 10 },
+        { tokenId: tokenIdFT.toString(), accountId: executorAccountId.toString(), amount: -10 },
+
       ],
     });
 
