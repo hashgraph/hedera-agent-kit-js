@@ -39,6 +39,7 @@ const {
   DELETE_ACCOUNT_TOOL,
   UPDATE_ACCOUNT_TOOL,
   SIGN_SCHEDULE_TRANSACTION_TOOL,
+  SCHEDULE_DELETE_TOOL,
 } = coreAccountPluginToolNames;
 const {
   CREATE_FUNGIBLE_TOKEN_TOOL,
@@ -108,6 +109,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     CREATE_ERC20_TOOL,
     TRANSFER_ERC20_TOOL,
     CREATE_ERC721_TOOL,
+    SCHEDULE_DELETE_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
