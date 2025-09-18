@@ -99,9 +99,10 @@ and non-fungible tokens.
 
 This plugin provides tools for fetching **Token Service (HTS)** related information from Hedera Mirror Node.
 
-| Tool Name                   | Description                            | Usage                            |
-|-----------------------------|----------------------------------------|----------------------------------|
-| `GET_TOKEN_INFO_QUERY_TOOL` | Returns details of a given token (HTS) | Provide the token ID (required). |
+| Tool Name                    | Description                                   | Usage                                             |
+|------------------------------|-----------------------------------------------|---------------------------------------------------|
+| `GET_TOKEN_INFO_QUERY_TOOL`  | Returns details of a given token (HTS)        | Provide the token ID (required).                  |
+| `GET_PENDING_AIRDROP_TOOL`   | Returns pending airdrops for a Hedera account | Provide the account ID (optional, defaults to operator). |
 
 ---
 
