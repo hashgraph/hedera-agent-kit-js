@@ -6,6 +6,8 @@ import {
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParameters,
   createNonFungibleTokenParametersNormalised,
+  dissociateTokenParameters,
+  dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
 } from '@/shared/parameter-schemas/token.zod';
@@ -25,7 +27,15 @@ import {
   createTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 
-import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import {
+  AccountId,
+  Client,
+  Hbar,
+  PublicKey,
+  TokenId,
+  TokenSupplyType,
+  TokenType,
+} from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
@@ -240,6 +250,29 @@ export default class HederaParameterNormaliser {
 
     return {
       tokenTransfers,
+    };
+  }
+
+  static async normaliseDissociateTokenParams(
+    params: z.infer<ReturnType<typeof dissociateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof dissociateTokenParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof dissociateTokenParameters>> =
+      this.parseParamsWithSchema(params, dissociateTokenParameters, context);
+
+    if (parsedParams.accountId === undefined) {
+      parsedParams.accountId = AccountResolver.getDefaultAccount(context, client);
+
+      if (!parsedParams.accountId) {
+        throw new Error('Could not determine default account ID');
+      }
+    }
+
+    return {
+      ...parsedParams,
+      accountId: AccountId.fromString(parsedParams.accountId),
+      tokenIds: parsedParams.tokenIds.map(id => TokenId.fromString(id)),
     };
   }
 
