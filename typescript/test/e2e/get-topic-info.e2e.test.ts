@@ -61,6 +61,13 @@ describe('Get Topic Info Query E2E Tests', () => {
   afterAll(async () => {
     // Cleanup topic and executor account
     await executorWrapper.deleteTopic({ topicId: createdTopicId.toString() });
+
+    // delete an executor account and transfer remaining balance to operator
+    await executorWrapper.deleteAccount({
+      accountId: executorClient.operatorAccountId!,
+      transferAccountId: operatorClient.operatorAccountId!,
+    });
+
     operatorClient.close();
     executorClient.close();
     testSetup.cleanup();

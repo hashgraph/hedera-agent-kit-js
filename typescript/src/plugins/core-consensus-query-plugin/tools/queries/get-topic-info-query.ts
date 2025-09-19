@@ -5,6 +5,7 @@ import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TopicInfo } from '@/shared/hedera-utils/mirrornode/types';
+import { getTopicInfoParameters } from '@/shared/parameter-schemas/consensus.zod';
 
 export const getTopicInfoQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -20,11 +21,6 @@ Parameters:
 ${usageInstructions}
 `;
 };
-
-const parameters = (_context: Context = {}) =>
-  z.object({
-    topicId: z.string().describe('The topic ID to query.'),
-  });
 
 const postProcess = (topic: TopicInfo) => {
   const formatKey = (key?: { _type?: string; key?: string } | null) => {
@@ -61,7 +57,7 @@ const postProcess = (topic: TopicInfo) => {
 export const getTopicInfoQuery = async (
   client: Client,
   context: Context,
-  params: z.infer<ReturnType<typeof parameters>>,
+  params: z.infer<ReturnType<typeof getTopicInfoParameters>>,
 ) => {
   try {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
@@ -88,10 +84,8 @@ const tool = (context: Context): Tool => ({
   method: GET_TOPIC_INFO_QUERY_TOOL,
   name: 'Get Topic Info',
   description: getTopicInfoQueryPrompt(context),
-  parameters: parameters(context),
+  parameters: getTopicInfoParameters(context),
   execute: getTopicInfoQuery,
 });
 
 export default tool;
-
-

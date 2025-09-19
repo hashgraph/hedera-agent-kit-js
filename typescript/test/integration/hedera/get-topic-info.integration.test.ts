@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hashgraph/sdk';
 import getTopicInfoQueryTool from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-info-query';
 import { Context, AgentMode } from '@/shared/configuration';
@@ -82,6 +82,17 @@ describe('Get Topic Info Query Integration Tests', () => {
     // Cleanup: delete topic
     await executorWrapper.deleteTopic({ topicId: createdTopicId.toString() });
   });
+
+  afterAll(async () => {
+    if (executorWrapper && operatorClient) {
+      // Delete an executor account and transfer remaining balance back to operator
+      await executorWrapper.deleteAccount({
+        accountId: executorClient.operatorAccountId!,
+        transferAccountId: operatorClient.operatorAccountId!,
+      });
+
+      executorClient.close();
+      operatorClient.close();
+    }
+  });
 });
-
-
