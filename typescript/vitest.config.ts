@@ -15,6 +15,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'hedera-agent-kit': path.resolve(__dirname, 'src'),
     },
   },
   test: {
