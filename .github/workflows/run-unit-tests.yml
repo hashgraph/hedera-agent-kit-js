@@ -1,0 +1,42 @@
+name: Run Unit Tests (typescript)
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node.js version
+        required: false
+        default: '20'
+        type: string
+      workdir:
+        description: Working directory
+        required: false
+        default: 'typescript'
+        type: string
+
+jobs:
+  unit-tests:
+    runs-on: hedera-agent-linux-medium
+    env:
+      WORKDIR: typescript
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: 'typescript/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.workdir }}
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: ${{ inputs.workdir }}
+        run: npm run test unit
