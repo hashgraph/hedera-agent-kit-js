@@ -18,6 +18,7 @@ This tool will create a new topic on the Hedera network.
 
 Parameters:
 - topicMemo (str, optional): A memo for the topic
+- transactionMemo (str, optional): An optional memo to include on the submitted transaction
 - isSubmitKey (bool, optional): Whether to set a submit key for the topic. Set to true if user wants to set a submit key, otherwise false
 ${usageInstructions}
 `;

@@ -16,6 +16,7 @@ This tool will submit a message to a topic on the Hedera network.
 Parameters:
 - topicId (str, required): The ID of the topic to submit the message to
 - message (str, required): The message to submit to the topic
+- transactionMemo (str, optional): An optional memo to include on the transaction
 ${usageInstructions}
 `;
 };

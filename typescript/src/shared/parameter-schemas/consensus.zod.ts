@@ -10,6 +10,10 @@ export const createTopicParameters = (_context: Context = {}) => {
       .default(false)
       .describe('Whether to set a submit key for the topic (optional)'),
     topicMemo: z.string().optional().describe('Memo for the topic (optional)'),
+    transactionMemo: z
+      .string()
+      .optional()
+      .describe('An optional memo to include on the submitted transaction (optional).'),
   });
 };
 
@@ -28,11 +32,15 @@ export const submitTopicMessageParameters = (_context: Context = {}) => {
   return z.object({
     topicId: z.string().describe('The ID of the topic to submit the message to'),
     message: z.string().describe('The message to submit to the topic'),
+    transactionMemo: z
+      .string()
+      .optional()
+      .describe('An optional memo to include on the submitted transaction (optional).'),
   });
 };
 
 export const submitTopicMessageParametersNormalised = (_context: Context = {}) =>
-  submitTopicMessageParameters(_context).extend({}); // currently no additional fields are needed
+  submitTopicMessageParameters(_context).extend({});
 
 export const deleteTopicParameters = (_context: Context = {}) =>
   z.object({
