@@ -56,7 +56,7 @@ const {
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
   GET_HBAR_BALANCE_QUERY_TOOL,
 } = coreAccountQueryPluginToolNames;
-const { GET_TOPIC_MESSAGES_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
+const { GET_TOPIC_MESSAGES_QUERY_TOOL, GET_TOPIC_INFO_QUERY_TOOL } = coreConsensusQueryPluginToolNames;
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
@@ -112,6 +112,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     CREATE_ERC721_TOOL,
     DISSOCIATE_TOKEN_TOOL,
     SCHEDULE_DELETE_TOOL,
+    GET_TOPIC_INFO_QUERY_TOOL,
   ],
   plugins: [
     coreAccountPlugin,

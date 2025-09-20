@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { PublicKey } from '@hashgraph/sdk';
 
+export const getTopicInfoParameters = (_context: Context = {}) => {
+  return z.object({
+    topicId: z.string().describe('The topic ID to query.'),
+  });
+};
+
 export const createTopicParameters = (_context: Context = {}) => {
   return z.object({
     isSubmitKey: z

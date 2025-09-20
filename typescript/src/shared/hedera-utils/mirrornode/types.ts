@@ -29,6 +29,27 @@ export type TopicMessagesResponse = {
   messages: TopicMessage[];
 };
 
+// Mirrors Hedera Mirror Node /topics/{topicId} response shape (fields optional to be resilient)
+export type TopicInfo = {
+  topic_id?: string;
+  memo?: string | null;
+  admin_key?: {
+    _type?: string;
+    key?: string;
+  } | null;
+  submit_key?: {
+    _type?: string;
+    key?: string;
+  } | null;
+  auto_renew_account?: string | null;
+  auto_renew_period?: number | null;
+  created_timestamp?: string | null;
+  deleted?: boolean;
+  sequence_number?: number | null;
+  running_hash?: string | null;
+  running_hash_version?: number | null;
+};
+
 export type TokenBalance = {
   automatic_association: boolean;
   created_timestamp: string;
