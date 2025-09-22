@@ -163,4 +163,21 @@ describe('Update Token Integration Tests', () => {
     expect(result.humanMessage).toContain('Failed to update token:');
     expect(result.humanMessage).toContain('Not Found');
   });
+
+  it('fails with too long token name', async () => {
+    const tool = updateTokenTool(context);
+    const params: z.infer<ReturnType<typeof updateTokenParameters>> = {
+      tokenId: tokenId.toString(),
+      tokenName: 'UpdatedTokenName'.repeat(30),
+    } as any;
+
+    const result: any = await tool.execute(executorClient, context, params);
+
+    expect(result.humanMessage).toContain(
+      'Invalid parameters: Field "tokenName" - String must contain at most 100 character(s)',
+    );
+    expect(result.raw.error).toContain(
+      'Invalid parameters: Field "tokenName" - String must contain at most 100 character(s)',
+    );
+  });
 });

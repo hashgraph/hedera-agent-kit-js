@@ -702,7 +702,7 @@ export default class HederaParameterNormaliser {
 
     const normalised: z.infer<ReturnType<typeof updateTokenParametersNormalised>> = {
       tokenId,
-    } as any;
+    };
 
     // Keys
     const maybeKeys: Record<string, string | boolean | undefined> = {
@@ -724,15 +724,24 @@ export default class HederaParameterNormaliser {
     }
 
     // Other optional props
-    if (parsedParams.tokenName) normalised.tokenName = parsedParams.tokenName;
-    if (parsedParams.tokenSymbol) normalised.tokenSymbol = parsedParams.tokenSymbol;
-    if (parsedParams.treasuryAccountId)
+    if (parsedParams.tokenName) {
+      normalised.tokenName = parsedParams.tokenName;
+    }
+    if (parsedParams.tokenSymbol) {
+      normalised.tokenSymbol = parsedParams.tokenSymbol;
+    }
+    if (parsedParams.treasuryAccountId) {
       normalised.treasuryAccountId = parsedParams.treasuryAccountId;
-    if (parsedParams.tokenMemo) normalised.tokenMemo = parsedParams.tokenMemo;
-    if (parsedParams.metadata)
+    }
+    if (parsedParams.tokenMemo) {
+      normalised.tokenMemo = parsedParams.tokenMemo;
+    }
+    if (parsedParams.metadata) {
       normalised.metadata = new TextEncoder().encode(parsedParams.metadata);
-    if (parsedParams.autoRenewAccountId)
+    }
+    if (parsedParams.autoRenewAccountId) {
       normalised.autoRenewAccountId = parsedParams.autoRenewAccountId;
+    }
 
     return normalised;
   }
