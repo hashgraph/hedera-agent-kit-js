@@ -22,6 +22,7 @@ import {
   deleteTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
+  updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -36,7 +37,6 @@ import {
   createTopicParametersNormalised,
   deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
-  updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
 

@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import { AccountId, PublicKey, TokenId, TokenSupplyType, TokenType } from '@hashgraph/sdk';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 
 export const createFungibleTokenParameters = (_context: Context = {}) =>
@@ -141,4 +141,113 @@ export const deleteTokenParametersNormalised = (_context: Context = {}) =>
 export const tokenInfoQueryParameters = (_context: Context = {}) =>
   z.object({
     tokenId: z.string().optional().describe('The token ID to query.'),
+  });
+
+export const updateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().describe('The ID of the token to update (e.g., 0.0.12345).'),
+    tokenDesc: z
+      .string()
+      .optional()
+      .describe('Optional description of the token update operation.'),
+    tokenName: z
+      .string()
+      .max(100)
+      .optional()
+      .describe('New name for the token. Up to 100 characters.'),
+    tokenSymbol: z
+      .string()
+      .max(100)
+      .optional()
+      .describe('New symbol for the token. Up to 100 characters.'),
+    treasuryAccountId: z
+      .string()
+      .optional()
+      .describe('New treasury account for the token (Hedera account ID).'),
+    adminKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New admin key. Pass boolean `true` to use the operator/user key, or provide a Hedera-compatible public key string. Required for most property updates.',
+      ),
+    kycKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New KYC key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    freezeKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New freeze key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    wipeKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New wipe key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    supplyKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New supply key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    feeScheduleKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New fee schedule key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    pauseKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New pause key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    metadataKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New metadata key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    metadata: z
+      .string()
+      .optional()
+      .describe('New metadata for the token, in bytes (as base64 or hex).'),
+    tokenMemo: z
+      .string()
+      .max(100)
+      .optional()
+      .describe('Short public memo for the token, up to 100 characters.'),
+    autoRenewAccountId: z
+      .string()
+      .optional()
+      .describe('Account to automatically pay for token renewal (Hedera account ID).'),
+  });
+
+export const updateTokenParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.instanceof(TokenId),
+
+    // Strings
+    tokenName: z.string().optional(),
+    tokenSymbol: z.string().optional(),
+    tokenMemo: z.string().optional(),
+    metadata: z.instanceof(Uint8Array<ArrayBufferLike>).optional(),
+
+    // IDs
+    treasuryAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
+    autoRenewAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
+
+    // Keys
+    adminKey: z.instanceof(PublicKey).optional(),
+    supplyKey: z.instanceof(PublicKey).optional(),
+    wipeKey: z.instanceof(PublicKey).optional(),
+    freezeKey: z.instanceof(PublicKey).optional(),
+    kycKey: z.instanceof(PublicKey).optional(),
+    feeScheduleKey: z.instanceof(PublicKey).optional(),
+    pauseKey: z.instanceof(PublicKey).optional(),
+    metadataKey: z.instanceof(PublicKey).optional(),
   });

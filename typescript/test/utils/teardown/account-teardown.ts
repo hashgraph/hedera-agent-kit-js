@@ -56,7 +56,7 @@ export const returnHbarsAndDeleteAccount = async (
       transferAccountId: accountToReturn,
     });
   } catch (error) {
-    console.log(
+    console.error(
       'Error deleting account. The HBARs will be transferred to the operator account but this account wont be deleted. Error:',
       error,
     );

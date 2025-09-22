@@ -8,6 +8,8 @@ import {
   createNonFungibleTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
+  updateTokenParameters,
+  updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
@@ -23,8 +25,6 @@ import {
 import {
   createTopicParameters,
   createTopicParametersNormalised,
-  updateTokenParameters,
-  updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 
 import {
@@ -690,6 +690,8 @@ export default class HederaParameterNormaliser {
     if (parsedParams.tokenMemo) normalised.tokenMemo = parsedParams.tokenMemo;
     if (parsedParams.metadata)
       normalised.metadata = new TextEncoder().encode(parsedParams.metadata);
+    if (parsedParams.autoRenewAccountId)
+      normalised.autoRenewAccountId = parsedParams.autoRenewAccountId;
 
     return normalised;
   }
@@ -700,7 +702,12 @@ export default class HederaParameterNormaliser {
   ): PublicKey | undefined {
     if (rawValue === undefined) return undefined;
     if (typeof rawValue === 'string') {
-      return PublicKey.fromStringED25519(rawValue);
+      // we do not get the info what type of key the user is passing, so we try both ED25519 and ECDSA
+      try {
+        return PublicKey.fromStringED25519(rawValue);
+      } catch {
+        return PublicKey.fromStringECDSA(rawValue);
+      }
     }
     if (rawValue) {
       return userKey;

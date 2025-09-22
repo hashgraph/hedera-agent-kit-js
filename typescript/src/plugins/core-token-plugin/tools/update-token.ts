@@ -10,17 +10,28 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import {
   updateTokenParameters,
   updateTokenParametersNormalised,
-} from '@/shared/parameter-schemas/consensus.zod';
+} from '@/shared/parameter-schemas/token.zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { AccountResolver } from '@/shared';
 
 const checkValidityOfUpdates = async (
   params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>,
   mirrornode: IHederaMirrornodeService,
+  userPublicKey: PublicKey,
 ) => {
   const tokenDetails: TokenInfo = await mirrornode.getTokenInfo(params.tokenId.toString());
   if (!tokenDetails) {
     throw new Error('Token not found');
+  }
+
+  if (tokenDetails.admin_key?.key !== userPublicKey.toStringRaw()) {
+    console.error(
+      `tokenDetails.admin_key.key: ${tokenDetails.admin_key?.key} vs userPublicKey: ${userPublicKey.toStringRaw()}`,
+    );
+    throw new Error(
+      'You do not have permission to update this token. The adminKey does not match your public key.',
+    );
   }
 
   const keyChecks: Partial<Record<keyof typeof params, keyof TokenInfo>> = {
@@ -78,14 +89,15 @@ Parameters:
 - metadataKey (boolean|string, optional): New metadata key. Pass true to use your operator key, or provide a public key string.
 - metadata (string, optional): New metadata for the token, in bytes (hex or base64).
 - tokenMemo (string, optional): Short public memo for the token, up to 100 characters.
-- expirationTime (string, optional): New expiry for the token (ISO 8601 string).
 - autoRenewAccountId (string, optional): Account to automatically pay for renewal.
-- autoRenewPeriod (number, optional): Auto-renew interval in seconds.
 
 Examples:
 - If the user asks for "my key" → set the field to \`true\`.
 - If the user does not mention the key → do not set the field.
 - If the user provides a key → set the field to the provided public key string.
+
+If the user provides multiple fields in a single request, 
+combine them into **one tool call** with all parameters together.
 
 ${usageInstructions}
 `;
@@ -107,8 +119,9 @@ const updateToken = async (
       client,
     );
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
+    const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
 
-    await checkValidityOfUpdates(normalisedParams, mirrornodeService);
+    await checkValidityOfUpdates(normalisedParams, mirrornodeService, userPublicKey);
 
     const tx = HederaBuilder.updateToken(normalisedParams);
 
