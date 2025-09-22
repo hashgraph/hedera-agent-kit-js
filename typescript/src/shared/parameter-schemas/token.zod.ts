@@ -251,3 +251,24 @@ export const updateTokenParametersNormalised = (_context: Context = {}) =>
     pauseKey: z.instanceof(PublicKey).optional(),
     metadataKey: z.instanceof(PublicKey).optional(),
   });
+
+export const dissociateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenIds: z
+      .array(z.string())
+      .min(1)
+      .describe('The list of Hedera token IDs (strings) to dissociate. Must provide at least one.'),
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'The account ID from which to dissociate the tokens. Defaults to operator account.',
+      ),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
+  });
+
+export const dissociateTokenParametersNormalised = (_context: Context = {}) =>
+  dissociateTokenParameters(_context).extend({
+    tokenIds: z.array(z.instanceof(TokenId)),
+    accountId: z.instanceof(AccountId),
+  });

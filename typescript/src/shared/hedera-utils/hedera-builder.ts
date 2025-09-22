@@ -14,12 +14,15 @@ import {
   ScheduleSignTransaction,
   ScheduleCreateTransaction,
   TokenUpdateTransaction,
+  ScheduleDeleteTransaction,
+  TokenDissociateTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
   deleteTokenParametersNormalised,
+  dissociateTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
@@ -32,6 +35,7 @@ import {
   updateAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
   signScheduleTransactionParameters,
+  scheduleDeleteTransactionParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -103,6 +107,10 @@ export default class HederaBuilder {
     return new TokenMintTransaction(params);
   }
 
+  static dissociateToken(params: z.infer<ReturnType<typeof dissociateTokenParametersNormalised>>) {
+    return new TokenDissociateTransaction(params);
+  }
+
   static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
     return new AccountCreateTransaction(params);
   }
@@ -127,5 +135,11 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
   ) {
     return new ScheduleSignTransaction(params);
+  }
+
+  static deleteScheduleTransaction(
+    params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
+  ) {
+    return new ScheduleDeleteTransaction(params as any);
   }
 }
