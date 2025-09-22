@@ -27,6 +27,8 @@ import {
   createTopicParametersNormalised,
   deleteTopicParameters,
   deleteTopicParametersNormalised,
+  updateTopicParameters,
+  updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 
 import {
@@ -37,6 +39,7 @@ import {
   TokenId,
   TokenSupplyType,
   TokenType,
+  TopicId,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -321,6 +324,49 @@ export default class HederaParameterNormaliser {
     // Then, validate against the normalized schema delete topic schema
     return this.parseParamsWithSchema(parsedParams, deleteTopicParametersNormalised, context);
   }
+
+  static normaliseUpdateTopic = async (
+    params: z.infer<ReturnType<typeof updateTopicParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof updateTopicParametersNormalised>>> => {
+    const parsedParams: z.infer<ReturnType<typeof updateTopicParameters>> =
+      this.parseParamsWithSchema(params, updateTopicParameters, context);
+
+    const topicId = TopicId.fromString(parsedParams.topicId);
+    const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
+
+    const normalised: z.infer<ReturnType<typeof updateTopicParametersNormalised>> = {
+      topicId,
+    } as any;
+
+    // Keys
+    const maybeKeys: Record<string, string | boolean | undefined> = {
+      adminKey: parsedParams.adminKey,
+      submitKey: parsedParams.submitKey,
+    };
+
+    for (const [field, rawVal] of Object.entries(maybeKeys)) {
+      const resolved = this.resolveKey(rawVal, userPublicKey);
+      if (resolved) {
+        (normalised as any)[field] = resolved;
+      }
+    }
+
+    // Other optional props
+    if (parsedParams.topicMemo) normalised.topicMemo = parsedParams.topicMemo;
+    if (parsedParams.autoRenewAccountId)
+      normalised.autoRenewAccountId = parsedParams.autoRenewAccountId;
+    if (parsedParams.autoRenewPeriod) normalised.autoRenewPeriod = parsedParams.autoRenewPeriod;
+    if (parsedParams.expirationTime) {
+      normalised.expirationTime =
+        parsedParams.expirationTime instanceof Date
+          ? parsedParams.expirationTime
+          : new Date(parsedParams.expirationTime);
+    }
+
+    return normalised;
+  };
 
   static async normaliseCreateAccount(
     params: z.infer<ReturnType<typeof createAccountParameters>>,
@@ -685,5 +731,24 @@ export default class HederaParameterNormaliser {
     }
     const account = await mirrorNode.getAccount(address);
     return account.accountId;
+  }
+
+  private static resolveKey(
+    rawValue: string | boolean | undefined,
+    userKey: PublicKey,
+  ): PublicKey | undefined {
+    if (rawValue === undefined) return undefined;
+    if (typeof rawValue === 'string') {
+      // we do not get the info what type of key the user is passing, so we try both ED25519 and ECDSA
+      try {
+        return PublicKey.fromStringED25519(rawValue);
+      } catch {
+        return PublicKey.fromStringECDSA(rawValue);
+      }
+    }
+    if (rawValue) {
+      return userKey;
+    }
+    return undefined;
   }
 }

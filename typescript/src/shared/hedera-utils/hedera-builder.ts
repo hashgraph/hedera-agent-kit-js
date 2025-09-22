@@ -15,6 +15,7 @@ import {
   ScheduleCreateTransaction,
   ScheduleDeleteTransaction,
   TokenDissociateTransaction,
+  TopicUpdateTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
@@ -39,6 +40,7 @@ import {
   createTopicParametersNormalised,
   deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
+  updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
 
@@ -81,6 +83,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
   ) {
     return new TopicMessageSubmitTransaction(params);
+  }
+
+  static updateTopic(params: z.infer<ReturnType<typeof updateTopicParametersNormalised>>) {
+    return new TopicUpdateTransaction(params);
   }
 
   static executeTransaction(
