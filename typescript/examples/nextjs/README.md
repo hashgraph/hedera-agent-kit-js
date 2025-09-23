@@ -18,8 +18,21 @@ This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera
 
    ```bash
    cp .env.local.example .env.local
-   # Edit .env.local to set your keys and mode
    ```
+Edit your `.env.local` to set your keys and mode:
+
+| Variable                    | Mode       | Description                                 |
+| --------------------------- | ---------- | ------------------------------------------- |
+| `NEXT_PUBLIC_AGENT_MODE`    | all        | `autonomous` or `human` (RETURN_BYTES/HITL) |
+| `NEXT_PUBLIC_NETWORK`       | all        | `testnet` (default) or `mainnet`            |
+| `AI_PROVIDER`               | all        | AI provider (`openai`, `anthropic`, `groq`, or `ollama)` |
+| `HEDERA_OPERATOR_ID`        | autonomous | Operator account ID (server only)           |
+| `HEDERA_OPERATOR_KEY`       | autonomous | Operator private key (server only)          |
+| `NEXT_PUBLIC_WC_PROJECT_ID` | human/HITL | WalletConnect Project ID (client safe)      |
+| `WC_RELAY_URL`              | human/HITL | (Optional) Custom WalletConnect relay URL   |
+| `OPENAI_API_KEY`            | optional   | (Optional) For OpenAI integration           |
+
+> **Note:** Never expose `HEDERA_OPERATOR_KEY` or non-public AI keys to the client.
 
 3. **Run the development server:**
 
@@ -32,22 +45,6 @@ This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Environment Variables
-
-Create a `.env.local` file based on the provided `.env.local.example`:
-
-| Variable                    | Mode       | Description                                 |
-| --------------------------- | ---------- | ------------------------------------------- |
-| `NEXT_PUBLIC_AGENT_MODE`    | all        | `autonomous` or `human` (RETURN_BYTES/HITL) |
-| `NEXT_PUBLIC_NETWORK`       | all        | `testnet` (default) or `mainnet`            |
-| `HEDERA_OPERATOR_ID`        | autonomous | Operator account ID (server only)           |
-| `HEDERA_OPERATOR_KEY`       | autonomous | Operator private key (server only)          |
-| `NEXT_PUBLIC_WC_PROJECT_ID` | human/HITL | WalletConnect Project ID (client safe)      |
-| `WC_RELAY_URL`              | human/HITL | (Optional) Custom WalletConnect relay URL   |
-| `OPENAI_API_KEY`            | optional   | (Optional) For OpenAI integration           |
-
-> **Note:** Never expose `HEDERA_OPERATOR_KEY` or non-public AI keys to the client.
 
 ## Autonomous Mode: ECDSA Key Requirement
 

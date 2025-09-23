@@ -30,6 +30,8 @@ Parameters:
   - amount (number or string): The amount of tokens to send to that recipient (in base units)
 - transactionMemo (str, optional): Optional memo for the transaction
 ${usageInstructions}
+
+If the user specifies multiple recipients in a single request, include them all in **one tool call** as a list of recipients.
 `;
 };
 

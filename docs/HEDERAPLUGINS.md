@@ -45,7 +45,6 @@ This plugin provides tools for Hedera **Account Service operations**:
 | `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                               |
 | `SCHEDULE_DELETE_TOOL`           | Delete a scheduled transaction so it will not execute                                                          | Provide the schedule ID (required) of the scheduled transaction to delete. Returns the transaction ID upon successful deletion.                                                                            |
 
-
 ---
 
 ### Core Account Query Plugin Tools (`core-account-query-plugin`)
@@ -68,6 +67,7 @@ A plugin for **Consensus Service (HCS)**, enabling creation and posting to topic
 |-----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------|
 | `CREATE_TOPIC_TOOL`         | Create a new topic on the Hedera network          | Optionally provide a topic memo (string) and whether to set a submit key (boolean). |
 | `SUBMIT_TOPIC_MESSAGE_TOOL` | Submit a message to a topic on the Hedera network | Provide the topic ID (required) and the message to submit (required).               |
+| `DELETE_TOPIC_TOOL`         | Delete a topic on the Hedera network              | Provide the topic ID (required)                                                     |
 
 ---
 
@@ -75,9 +75,10 @@ A plugin for **Consensus Service (HCS)**, enabling creation and posting to topic
 
 This plugin provides tools for fetching **Consensus Service (HCS)** related information from Hedera Mirror Node.
 
-| Tool Name                       | Description                                                       | Usage                                                                                                      |
-|---------------------------------|-------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| Tool Name                    | Description                                                          | Usage                                                                                                      |
+|------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic    | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| `GET_TOPIC_INFO_QUERY_TOOL`     | Returns information for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required).                                                                           |
 
 ---
 
@@ -93,6 +94,7 @@ and non-fungible tokens.
 | `AIRDROP_FUNGIBLE_TOKEN_TOOL`    | Airdrops a fungible token to multiple recipients          | Provide the token ID and recipients array. Optionally specify a source account ID (defaults to operator) and transaction memo.                                                                    |
 | `MINT_NON_FUNGIBLE_TOKEN_TOOL`   | Mints NFTs with unique metadata for an existing NFT class | Provide the token ID and metadata URIs.                                                                                                                                                           |
 | `MINT_FUNGIBLE_TOKEN_TOOL`       | Mints additional supply of an existing fungible token     | Provide the token ID and amount to mint.                                                                                                                                                          |
+| `DISSOCIATE_FUNGIBLE_TOKEN_TOOL` | Dissociates fungible tokens from an account               | Provide an array of token IDs to dissociate. Optionally specify the account ID (defaults to operator) and a transaction memo                                                                      |                                                                                                                                                       |
 
 ---
 
@@ -145,9 +147,9 @@ Tools for **transaction-related operations** on Hedera.
 
 This plugin provides tools for fetching miscellaneous information from the Hedera Mirror Node.
 
-| Tool Name                 | Description                                              | Usage                                                                                       |
-|---------------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `GET_EXCHANGE_RATE_TOOL`  | Returns the Hedera network HBAR exchange rate            | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate.   |
+| Tool Name                | Description                                   | Usage                                                                                     |
+|--------------------------|-----------------------------------------------|-------------------------------------------------------------------------------------------|
+| `GET_EXCHANGE_RATE_TOOL` | Returns the Hedera network HBAR exchange rate | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate. |
 
 ---
 
