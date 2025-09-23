@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
 import submitTopicMessageTool from '@/plugins/core-consensus-plugin/tools/consensus/submit-topic-message';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
@@ -45,6 +45,7 @@ describe('Submit Topic Message Integration Tests', () => {
     const params: z.infer<ReturnType<typeof submitTopicMessageParameters>> = {
       topicId,
       message: 'hello from integration test',
+      transactionMemo: 'integration tx memo',
     };
 
     const result: any = await tool.execute(operatorClient, context, params);
@@ -62,6 +63,10 @@ describe('Submit Topic Message Integration Tests', () => {
         m => Buffer.from(m.message, 'base64').toString('utf8') === params.message,
       ),
     ).toBeTruthy();
+    const record = await new TransactionRecordQuery()
+      .setTransactionId(result.raw.transactionId)
+      .execute(operatorClient);
+    expect(record.transactionMemo).toBe(params.transactionMemo);
   });
 
   it('fails with invalid topic id', async () => {
