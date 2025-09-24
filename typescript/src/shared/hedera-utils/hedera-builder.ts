@@ -20,10 +20,10 @@ import {
   TopicUpdateTransaction,
   AccountId,
   TokenId,
+  AccountAllowanceApproveTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
-  associateTokenParameters,
   associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
@@ -42,6 +42,7 @@ import {
   createScheduleTransactionParametersNormalised,
   signScheduleTransactionParameters,
   scheduleDeleteTransactionParameters,
+  approveHbarAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -165,5 +166,20 @@ export default class HederaBuilder {
       accountId: AccountId.fromString(params.accountId),
       tokenIds: params.tokenIds.map(t => TokenId.fromString(t)),
     });
+  }
+
+  static approveHbarAllowance(
+    params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
+  ) {
+    const tx = new AccountAllowanceApproveTransaction();
+    tx.approveHbarAllowance(
+      params.ownerAccountId as any,
+      params.spenderAccountId as any,
+      params.amount as any as any,
+    );
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+    return tx;
   }
 }

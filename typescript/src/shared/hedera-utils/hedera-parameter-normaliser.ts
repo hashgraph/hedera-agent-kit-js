@@ -26,6 +26,8 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
+  approveHbarAllowanceParameters,
+  approveHbarAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -206,6 +208,35 @@ export default class HederaParameterNormaliser {
       hbarTransfers,
       transactionMemo: parsedParams.transactionMemo,
     };
+  }
+
+  static normaliseApproveHbarAllowance(
+    params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const parsedParams: z.infer<ReturnType<typeof approveHbarAllowanceParameters>> =
+      this.parseParamsWithSchema(params, approveHbarAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const spenderAccountId = parsedParams.spenderAccountId;
+
+    const amount = new Hbar(parsedParams.amount);
+    if (amount.isNegative()) {
+      throw new Error(`Invalid allowance amount: ${parsedParams.amount}`);
+    }
+
+    return {
+      ownerAccountId,
+      spenderAccountId,
+      amount,
+      transactionMemo: parsedParams.transactionMemo,
+    } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
   }
 
   static async normaliseAirdropFungibleTokenParams(

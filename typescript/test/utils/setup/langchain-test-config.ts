@@ -40,6 +40,7 @@ const {
   UPDATE_ACCOUNT_TOOL,
   SIGN_SCHEDULE_TRANSACTION_TOOL,
   SCHEDULE_DELETE_TOOL,
+  APPROVE_HBAR_ALLOWANCE_TOOL,
 } = coreAccountPluginToolNames;
 const {
   CREATE_FUNGIBLE_TOKEN_TOOL,
@@ -121,6 +122,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     SCHEDULE_DELETE_TOOL,
     GET_TOPIC_INFO_QUERY_TOOL,
     UPDATE_TOPIC_TOOL,
+    APPROVE_HBAR_ALLOWANCE_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
