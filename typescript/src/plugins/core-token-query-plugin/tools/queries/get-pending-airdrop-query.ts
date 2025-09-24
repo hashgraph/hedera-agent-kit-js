@@ -6,6 +6,8 @@ import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenAirdropsResponse, TokenAirdrop } from '@/shared/hedera-utils/mirrornode/types';
+import { pendingAirdropQueryParameters } from '@/shared/parameter-schemas/token.zod';
+import { AccountResolver } from '@/shared/utils/account-resolver';
 
 export const getPendingAirdropQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -47,10 +49,10 @@ const postProcess = (accountId: string, response: TokenAirdropsResponse) => {
 export const getPendingAirdropQuery = async (
   client: Client,
   context: Context,
-  params: z.infer<ReturnType<typeof accountBalanceQueryParameters>>,
+  params: z.infer<ReturnType<typeof pendingAirdropQueryParameters>>,
 ) => {
   try {
-    const accountId = params.accountId ?? context.accountId ?? client.operatorAccountId?.toString();
+    const accountId = params.accountId ?? AccountResolver.getDefaultAccount(context, client);
     if (!accountId) throw new Error('Account ID is required and was not provided');
 
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
@@ -74,7 +76,7 @@ const tool = (context: Context): Tool => ({
   method: GET_PENDING_AIRDROP_TOOL,
   name: 'Get Pending Airdrops',
   description: getPendingAirdropQueryPrompt(context),
-  parameters: accountBalanceQueryParameters(context),
+  parameters: pendingAirdropQueryParameters(context),
   execute: getPendingAirdropQuery,
 });
 

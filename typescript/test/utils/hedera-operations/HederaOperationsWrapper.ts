@@ -169,7 +169,6 @@ class HederaOperationsWrapper {
 
   async airdropToken(params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>
   ): Promise<RawTransactionResponse> {
-    console.log('params', JSON.stringify(params));
     const tx = HederaBuilder.airdropFungibleToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
     return result.raw;

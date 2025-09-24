@@ -142,3 +142,8 @@ export const tokenInfoQueryParameters = (_context: Context = {}) =>
   z.object({
     tokenId: z.string().optional().describe('The token ID to query.'),
   });
+
+export const pendingAirdropQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().optional().describe('The account ID to query.'),
+  });
