@@ -76,13 +76,19 @@ export default class HederaBuilder {
   }
 
   static createTopic(params: z.infer<ReturnType<typeof createTopicParametersNormalised>>) {
-    return new TopicCreateTransaction(params);
+    const { transactionMemo, ...rest } = params as any;
+    const tx = new TopicCreateTransaction(rest);
+    if (transactionMemo) tx.setTransactionMemo(transactionMemo);
+    return tx;
   }
 
   static submitTopicMessage(
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
   ) {
-    return new TopicMessageSubmitTransaction(params);
+    const { transactionMemo, ...rest } = params as any;
+    const tx = new TopicMessageSubmitTransaction(rest);
+    if (transactionMemo) tx.setTransactionMemo(transactionMemo);
+    return tx;
   }
 
   static updateTopic(params: z.infer<ReturnType<typeof updateTopicParametersNormalised>>) {

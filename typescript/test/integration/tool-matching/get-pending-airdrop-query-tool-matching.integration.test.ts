@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { AgentExecutor } from 'langchain/agents';
-import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
-import { coreEVMQueryPluginToolNames } from '@/plugins';
+import { HederaLangchainToolkit } from '@/langchain';
+import { coreTokenQueryPluginToolNames } from 'hedera-agent-kit';
 
-const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
+const { GET_PENDING_AIRDROP_TOOL } = coreTokenQueryPluginToolNames;
 
-describe.skip('Get Contract Info - Tool Matching Integration Tests', () => {
+describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -21,35 +21,37 @@ describe.skip('Get Contract Info - Tool Matching Integration Tests', () => {
     if (testSetup) testSetup.cleanup();
   });
 
-  it('should match get contract info tool for a direct request', async () => {
+  it('should match get pending airdrops tool for "pending airdrops" query', async () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
-    const contractId = '0.0.5005';
-    const input = `Get the contract info for contract ID ${contractId}`;
+    const accountId = '0.0.1231233';
+    const input = `Show pending airdrops for account ${accountId}`;
 
     await agentExecutor.invoke({ input });
 
     expect(spy).toHaveBeenCalledOnce();
     expect(spy).toHaveBeenCalledWith(
-      GET_CONTRACT_INFO_QUERY_TOOL,
-      expect.objectContaining({ contractId }),
+      GET_PENDING_AIRDROP_TOOL,
+      expect.objectContaining({ accountId }),
     );
   });
 
-  it('should match get contract info tool even when phrased differently', async () => {
+  it('should match get pending airdrops tool for "get pending airdrops" phrase', async () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
-    const contractId = '0.0.6006';
-    const input = `Please fetch details about the Hedera smart contract ${contractId}`;
+    const accountId = '0.0.8888';
+    const input = `Get pending airdrops for ${accountId}`;
 
     await agentExecutor.invoke({ input });
 
     expect(spy).toHaveBeenCalledOnce();
     expect(spy).toHaveBeenCalledWith(
-      GET_CONTRACT_INFO_QUERY_TOOL,
-      expect.objectContaining({ contractId }),
+      GET_PENDING_AIRDROP_TOOL,
+      expect.objectContaining({ accountId }),
     );
   });
 });
+
+

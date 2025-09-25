@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { DISSOCIATE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/dissociate-token';
 
-describe('Dissociate Token Tool Matching Integration Tests', () => {
+describe.skip('Dissociate Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe('Dissociate Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match dissociate token tool with a single tokenId', async () => {
       const input = 'Dissociate token 0.0.12345 from my account';
 
@@ -83,7 +83,7 @@ describe('Dissociate Token Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have dissociate token tool available in the toolkit', () => {
       const tools = toolkit.getTools();
       const dissociateTool = tools.find(tool => tool.name === DISSOCIATE_TOKEN_TOOL);

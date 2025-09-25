@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
-describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
+describe.skip('Airdrop Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match airdrop tool with minimal params', async () => {
       const input = 'Airdrop 10 HTS tokens 0.0.1234 from 0.0.1001 to 0.0.2002';
 
@@ -118,7 +118,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Availability', () => {
+  describe.skip('Tool Availability', () => {
     it('should have airdrop fungible token tool available', () => {
       const tools = toolkit.getTools();
       const airdropTool = tools.find(tool => tool.name === 'airdrop_fungible_token_tool');

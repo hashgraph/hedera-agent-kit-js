@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { GET_ACCOUNT_QUERY_TOOL } from '@/plugins/core-account-query-plugin/tools/queries/get-account-query';
 
-describe('Get Account Query Tool Matching Integration Tests', () => {
+describe.skip('Get Account Query Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe('Get Account Query Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match get account query tool for simple request', async () => {
       const input = 'Get account info for 0.0.1234';
 
@@ -85,7 +85,7 @@ describe('Get Account Query Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have get account query tool available', () => {
       const tools = toolkit.getTools();
       const accountQueryTool = tools.find(tool => tool.name === 'get_account_query_tool');

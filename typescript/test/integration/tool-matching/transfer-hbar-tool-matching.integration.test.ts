@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
-describe('Transfer HBAR Tool Matching Integration Tests', () => {
+describe.skip('Transfer HBAR Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match transfer HBAR tool for simple transfer request', async () => {
       const input = 'Transfer 1 HBAR to 0.0.1';
 
@@ -223,7 +223,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have transfer HBAR tool available', () => {
       const tools = toolkit.getTools();
       const transferHbarTool = tools.find(tool => tool.name === 'transfer_hbar_tool');

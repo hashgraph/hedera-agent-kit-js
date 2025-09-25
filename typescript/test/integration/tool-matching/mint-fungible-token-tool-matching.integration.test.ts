@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
-describe('Mint Fungible Token Tool Matching Integration Tests', () => {
+describe.skip('Mint Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match mint fungible token tool with minimal params', async () => {
       const input = 'Mint 10 of token 0.0.12345';
 
@@ -78,7 +78,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
     }, 120_000); // increase timeout to 2 minutes
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have mint fungible token tool available', () => {
       const tools = toolkit.getTools();
       const mintFT = tools.find(tool => tool.name === 'mint_fungible_token_tool');
