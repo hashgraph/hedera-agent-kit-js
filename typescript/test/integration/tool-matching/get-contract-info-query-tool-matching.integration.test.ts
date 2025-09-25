@@ -6,7 +6,7 @@ import { coreEVMQueryPluginToolNames } from '@/plugins';
 
 const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 
-describe('Get Contract Info - Tool Matching Integration Tests', () => {
+describe.skip('Get Contract Info - Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;

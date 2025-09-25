@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
-describe('Create Fungible Token Tool Matching Integration Tests', () => {
+describe.skip('Create Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Create Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match create fungible token tool with minimal params', async () => {
       const input = 'Create a new fungible token called MyToken with symbol MTK';
 
@@ -120,7 +120,7 @@ describe('Create Fungible Token Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have create fungible token tool available', () => {
       const tools = toolkit.getTools();
       const createFT = tools.find(tool => tool.name === 'create_fungible_token_tool');

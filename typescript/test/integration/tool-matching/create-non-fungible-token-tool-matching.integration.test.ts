@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
-describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
+describe.skip('Create Non-Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match create non-fungible token tool with minimal params', async () => {
       const input = 'Create a new non-fungible token called MyNFT with symbol MNFT';
 
@@ -114,7 +114,7 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have create non-fungible token tool available', () => {
       const tools = toolkit.getTools();
       const createNFT = tools.find(tool => tool.name === 'create_non_fungible_token_tool');

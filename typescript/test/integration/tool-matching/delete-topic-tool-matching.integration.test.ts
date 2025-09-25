@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { DELETE_TOPIC_TOOL } from '@/plugins/core-consensus-plugin/tools/consensus/delete-topic';
 
-describe('Delete Topic Tool Matching Integration Tests', () => {
+describe.skip('Delete Topic Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;

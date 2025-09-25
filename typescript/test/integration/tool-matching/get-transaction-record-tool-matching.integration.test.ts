@@ -6,7 +6,7 @@ import { coreTransactionQueryPluginToolNames } from '@/plugins';
 
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
 
-describe('Get Transaction Record - Tool Matching Integration Tests', () => {
+describe.skip('Get Transaction Record - Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;

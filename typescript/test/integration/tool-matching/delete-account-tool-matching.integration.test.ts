@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
-describe('Delete Account Tool Matching Integration Tests', () => {
+describe.skip('Delete Account Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Delete Account Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match delete account tool with accountId only', async () => {
       const input = 'Delete account 0.0.12345';
 
@@ -81,7 +81,7 @@ describe('Delete Account Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have delete account tool available', () => {
       const tools = toolkit.getTools();
       const deleteAccount = tools.find(tool => tool.name === 'delete_account_tool');

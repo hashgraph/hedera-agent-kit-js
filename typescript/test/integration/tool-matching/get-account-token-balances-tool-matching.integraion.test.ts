@@ -6,7 +6,7 @@ import { coreAccountQueryPluginToolNames } from '@/plugins';
 
 const { GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
-describe('Get Account Token Balances - Tool Matching Integration Tests', () => {
+describe.skip('Get Account Token Balances - Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;

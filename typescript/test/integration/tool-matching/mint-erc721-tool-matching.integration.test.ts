@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { MINT_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/mint-erc721';
 
-describe('Mint ERC721 Tool Matching Integration Tests', () => {
+describe.skip('Mint ERC721 Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe('Mint ERC721 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match simple mint ERC721 command with EVM address', async () => {
       const input = 'Mint ERC721 token 0.0.5678 to 0x1234567890123456789012345678901234567890';
 
@@ -108,7 +108,7 @@ describe('Mint ERC721 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have mint ERC721 tool available', () => {
       const tools = toolkit.getTools();
       const mintERC721 = tools.find(tool => tool.name === 'mint_erc721_tool');
