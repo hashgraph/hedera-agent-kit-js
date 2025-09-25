@@ -14,13 +14,14 @@ const delayMs = getDelayMs();
 
 // If delay is zero, don't register hook to avoid overhead.
 if (delayMs > 0) {
-  console.log(`Slowing down tests by ${delayMs}ms`);
+  let updatedDelayMs = delayMs * 2;
+  console.log(`Slowing down tests by ${updatedDelayMs}ms`);
   beforeEach(async (ctx) => {
     const currentFilepath = ctx?.task?.file?.filepath ?? '';
     // Skip slowdown for Hedera integration tests
     if (currentFilepath.includes('/integration/hedera/')) {
       return;
     }
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    await new Promise((resolve) => setTimeout(resolve, updatedDelayMs));
   });
 }
