@@ -35,7 +35,7 @@ describe('Update Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 25 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 100 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -199,6 +199,7 @@ describe('Update Token Integration Tests', () => {
     expect(result.raw.error).toContain(
       'Invalid parameters: Field "tokenName" - String must contain at most 100 character(s)',
     );
+  });
 
   it('updates topic memo', async () => {
     const tool = updateTopicTool(context);
@@ -304,3 +305,4 @@ describe('Update Token Integration Tests', () => {
 
   });
 });
+
