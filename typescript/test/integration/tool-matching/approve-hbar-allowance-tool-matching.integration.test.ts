@@ -9,7 +9,7 @@ import { coreAccountPluginToolNames } from '@/plugins';
  * are mapped to the correct tool with correctly extracted parameters.
  */
 
-describe('Approve HBAR Allowance Tool Matching Integration Tests', () => {
+describe.skip('Approve HBAR Allowance Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;

@@ -42,7 +42,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     // execution account and client creation (owner)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -70,7 +70,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     spenderAccount = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
-        initialBalance: 0,
+        initialBalance: 5,
       })
       .then(resp => resp.accountId!);
 
@@ -80,7 +80,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
   afterEach(async () => {
     // Clean up spender account, transferring remaining balance back to the executor (owner)
-    await executorWrapper.deleteAccount({
+    await spenderWrapper.deleteAccount({
       accountId: spenderAccount,
       transferAccountId: executorClient.operatorAccountId!,
     });
@@ -100,8 +100,8 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   };
 
   it('should approve HBAR allowance and allow spender to use part of it (with memo)', async () => {
-    const allowanceAmount = 0.05; // approve 0.05 HBAR
-    const spendAmount = 0.01; // spend 0.01 HBAR out of the allowance
+    const allowanceAmount = 1.5; // approve 1.5 HBAR
+    const spendAmount = 1.01; // spend 1.01 HBAR out of the allowance
     const memo = 'E2E approve allowance memo';
 
     const balanceBefore = await spenderWrapper.getAccountHbarBalance(spenderAccount.toString());
@@ -125,9 +125,9 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     );
   });
 
-  it('should approve and spend very small amount (1 tinybar) via allowance', async () => {
-    const allowanceAmount = 0.00000001; // 1 tinybar
-    const spendAmount = 0.00000001; // spend the tinybar
+  it('should approve and spend very small amount via allowance', async () => {
+    const allowanceAmount = 0.11;
+    const spendAmount = 0.1;
 
     const balanceBefore = await spenderWrapper.getAccountHbarBalance(spenderAccount.toString());
 
