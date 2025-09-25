@@ -163,6 +163,12 @@ export const associateTokenParametersNormalised = (_context: Context = {}) =>
     tokenIds: z.array(z.string()).min(1).describe('Array of token IDs to associate'),
   });
 
+
+export const pendingAirdropQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().optional().describe('The account ID to query.'),
+  });
+
 export const dissociateTokenParameters = (_context: Context = {}) =>
   z.object({
     tokenIds: z

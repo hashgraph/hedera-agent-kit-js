@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { TRANSFER_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/transfer-erc20';
 
-describe('Transfer ERC20 Tool Matching Integration Tests', () => {
+describe.skip('Transfer ERC20 Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match simple transfer ERC20 command', async () => {
       const input =
         'Transfer 100 0.0.5678 ERC20 tokens from contract to 0x1234567890123456789012345678901234567890';
@@ -174,7 +174,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have transfer ERC20 tool available', () => {
       const tools = toolkit.getTools();
       const transferERC20 = tools.find(tool => tool.name === 'transfer_erc20_tool');

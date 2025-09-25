@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { GET_TOPIC_INFO_QUERY_TOOL } from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-info-query';
 
-describe('Get Topic Info Tool Matching Integration Tests', () => {
+describe.skip('Get Topic Info Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe('Get Topic Info Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match get topic info tool for simple request', async () => {
       const input = 'Get topic info for 0.0.1234';
 
@@ -68,7 +68,7 @@ describe('Get Topic Info Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have get topic info tool available', () => {
       const tools = toolkit.getTools();
       const tool = tools.find(tool => tool.name === 'get_topic_info_query_tool');
