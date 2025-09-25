@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
 import { AgentExecutor } from 'langchain/agents';
 import {
   createLangchainTestSetup,
@@ -54,6 +54,10 @@ describe('Create Fungible Token E2E Tests', () => {
       operatorClient.close();
       executorClient.close();
     }
+  });
+
+  beforeEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 30000));
   });
 
   it('creates a fungible token with minimal params via natural language', async () => {

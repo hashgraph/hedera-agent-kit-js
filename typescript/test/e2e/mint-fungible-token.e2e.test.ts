@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { Client, PrivateKey, AccountId, TokenId, TokenSupplyType, PublicKey } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import {
@@ -69,6 +69,10 @@ describe('Mint Fungible Token E2E Tests', () => {
       executorClient.close();
       operatorClient.close();
     }
+  });
+
+  beforeEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 30000));
   });
 
   it('should mint additional supply successfully', async () => {
