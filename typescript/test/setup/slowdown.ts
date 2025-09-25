@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach } from 'vitest';
+import { beforeEach } from 'vitest';
 
 const DEFAULT_DELAY_MS = 500;
 
@@ -15,7 +15,12 @@ const delayMs = getDelayMs();
 // If delay is zero, don't register hook to avoid overhead.
 if (delayMs > 0) {
   console.log(`Slowing down tests by ${delayMs}ms`);
-  beforeEach(async () => {
+  beforeEach(async (ctx) => {
+    const currentFilepath = ctx?.task?.file?.filepath ?? '';
+    // Skip slowdown for Hedera integration tests
+    if (currentFilepath.includes('/integration/hedera/')) {
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   });
 }
