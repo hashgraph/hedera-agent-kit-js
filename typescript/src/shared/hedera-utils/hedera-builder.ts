@@ -171,12 +171,7 @@ export default class HederaBuilder {
   static approveHbarAllowance(
     params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
   ) {
-    const tx = new AccountAllowanceApproveTransaction();
-    tx.approveHbarAllowance(
-      params.ownerAccountId as any,
-      params.spenderAccountId as any,
-      params.amount as any as any,
-    );
+    const tx = new AccountAllowanceApproveTransaction(params as any);
     if (params.transactionMemo) {
       tx.setTransactionMemo(params.transactionMemo);
     }

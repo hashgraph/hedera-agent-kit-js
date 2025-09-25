@@ -47,6 +47,7 @@ import {
   TokenSupplyType,
   TokenType,
   TopicId,
+  HbarAllowance,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -232,9 +233,13 @@ export default class HederaParameterNormaliser {
     }
 
     return {
-      ownerAccountId,
-      spenderAccountId,
-      amount,
+      hbarApprovals: [
+        new HbarAllowance({
+          ownerAccountId: AccountId.fromString(ownerAccountId),
+          spenderAccountId: AccountId.fromString(spenderAccountId),
+          amount,
+        }),
+      ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
   }

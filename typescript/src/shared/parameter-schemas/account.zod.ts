@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, Hbar, Key, Transaction } from '@hashgraph/sdk';
+import { AccountId, Hbar, Key, Transaction, HbarAllowance } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
 
@@ -159,8 +159,6 @@ export const approveHbarAllowanceParameters = (_context: Context = {}) =>
 
 export const approveHbarAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
-    ownerAccountId: z.union([z.string(), z.instanceof(AccountId)]),
-    spenderAccountId: z.union([z.string(), z.instanceof(AccountId)]),
-    amount: z.union([z.number(), z.string(), z.instanceof(Hbar)]),
+    hbarApprovals: z.array(z.instanceof(HbarAllowance)).optional(),
     transactionMemo: z.string().optional(),
   });

@@ -41,11 +41,11 @@ describe('HederaParameterNormaliser.normaliseApproveHbarAllowance', () => {
       mockClient,
     );
 
-    expect(res.ownerAccountId).toBe(operatorId);
-    expect(res.spenderAccountId).toBe('0.0.2222');
+    expect(res.hbarApprovals?.at(0)?.ownerAccountId?.toString()).toBe(operatorId);
+    expect(res.hbarApprovals?.at(0)?.spenderAccountId?.toString()).toBe('0.0.2222');
     expect(res.transactionMemo).toBe('approve memo');
-    expect(res.amount).toBeInstanceOf(Hbar);
-    expect((res.amount as Hbar).toString()).toBe('0.12345678 ℏ');
+    expect(res.hbarApprovals?.at(0)?.amount).toBeInstanceOf(Hbar);
+    expect((res.hbarApprovals?.at(0)?.amount as Hbar).toString()).toBe('0.12345678 ℏ');
   });
 
   it('defaults ownerAccountId using AccountResolver when not provided', () => {
@@ -60,14 +60,11 @@ describe('HederaParameterNormaliser.normaliseApproveHbarAllowance', () => {
       mockClient,
     );
 
-    expect(AccountResolver.resolveAccount).toHaveBeenCalledWith(
-      undefined,
-      mockContext,
-      mockClient,
-    );
-    expect(res.ownerAccountId).toBe(operatorId);
-    expect(res.spenderAccountId).toBe('0.0.3333');
-    expect((res.amount as Hbar).toString()).toBe('1 ℏ');
+    expect(AccountResolver.resolveAccount).toHaveBeenCalledWith(undefined, mockContext, mockClient);
+
+    expect(res.hbarApprovals?.at(0)?.ownerAccountId?.toString()).toBe(operatorId);
+    expect(res.hbarApprovals?.at(0)?.spenderAccountId?.toString()).toBe('0.0.3333');
+    expect((res.hbarApprovals?.at(0)?.amount as Hbar).toString()).toBe('1 ℏ');
   });
 
   it('throws for negative amounts', () => {
