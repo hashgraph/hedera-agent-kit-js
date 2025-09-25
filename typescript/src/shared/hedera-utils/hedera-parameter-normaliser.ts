@@ -6,6 +6,8 @@ import {
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParameters,
   createNonFungibleTokenParametersNormalised,
+  dissociateTokenParameters,
+  dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
 } from '@/shared/parameter-schemas/token.zod';
@@ -23,9 +25,19 @@ import {
 import {
   createTopicParameters,
   createTopicParametersNormalised,
+  deleteTopicParameters,
+  deleteTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 
-import { AccountId, Client, Hbar, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import {
+  AccountId,
+  Client,
+  Hbar,
+  PublicKey,
+  TokenId,
+  TokenSupplyType,
+  TokenType,
+} from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
@@ -243,6 +255,29 @@ export default class HederaParameterNormaliser {
     };
   }
 
+  static async normaliseDissociateTokenParams(
+    params: z.infer<ReturnType<typeof dissociateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof dissociateTokenParametersNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof dissociateTokenParameters>> =
+      this.parseParamsWithSchema(params, dissociateTokenParameters, context);
+
+    if (parsedParams.accountId === undefined) {
+      parsedParams.accountId = AccountResolver.getDefaultAccount(context, client);
+
+      if (!parsedParams.accountId) {
+        throw new Error('Could not determine default account ID');
+      }
+    }
+
+    return {
+      ...parsedParams,
+      accountId: AccountId.fromString(parsedParams.accountId),
+      tokenIds: parsedParams.tokenIds.map(id => TokenId.fromString(id)),
+    };
+  }
+
   static async normaliseCreateTopicParams(
     params: z.infer<ReturnType<typeof createTopicParameters>>,
     context: Context,
@@ -271,6 +306,20 @@ export default class HederaParameterNormaliser {
     }
 
     return normalised;
+  }
+
+  static normaliseDeleteTopic(
+    params: z.infer<ReturnType<typeof deleteTopicParameters>>,
+    context: Context,
+    _client: Client,
+    _mirrorNode: IHederaMirrornodeService,
+  ): z.infer<ReturnType<typeof deleteTopicParametersNormalised>> {
+    // First, validate against the basic schema
+    const parsedParams: z.infer<ReturnType<typeof deleteTopicParameters>> =
+      this.parseParamsWithSchema(params, deleteTopicParameters, context);
+
+    // Then, validate against the normalized schema delete topic schema
+    return this.parseParamsWithSchema(parsedParams, deleteTopicParametersNormalised, context);
   }
 
   static async normaliseCreateAccount(

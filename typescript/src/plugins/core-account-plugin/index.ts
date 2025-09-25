@@ -18,6 +18,9 @@ import updateAccountTool, {
 import signScheduleTransactionTool, {
   SIGN_SCHEDULE_TRANSACTION_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/sign-schedule-transaction';
+import scheduleDeleteTool, {
+  SCHEDULE_DELETE_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/schedule-delete';
 
 export const coreAccountPlugin: Plugin = {
   name: 'core-account-plugin',
@@ -30,6 +33,7 @@ export const coreAccountPlugin: Plugin = {
       updateAccountTool(context),
       createAccountTool(context),
       signScheduleTransactionTool(context),
+      scheduleDeleteTool(context),
     ];
   },
 };
@@ -40,6 +44,7 @@ export const coreAccountPluginToolNames = {
   DELETE_ACCOUNT_TOOL,
   UPDATE_ACCOUNT_TOOL,
   SIGN_SCHEDULE_TRANSACTION_TOOL,
+  SCHEDULE_DELETE_TOOL,
 } as const;
 
 export default { coreAccountPlugin, coreAccountPluginToolNames };

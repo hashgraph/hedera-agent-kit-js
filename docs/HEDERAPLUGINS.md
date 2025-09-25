@@ -36,14 +36,14 @@ Plugins can be found in [typescript/src/plugins](../typescript/src/plugins)
 
 This plugin provides tools for Hedera **Account Service operations**:
 
-| Tool Name             | Description                                                                                                    | Usage                                                                                                                                                                                                      |
-|-----------------------|----------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `TRANSFER_HBAR_TOOL`  | Transfer HBAR between accounts                                                                                 | Provide the amount of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                                                                                                    |
-| `CREATE_ACCOUNT_TOOL` | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                       |
-| `UPDATE_ACCOUNT_TOOL` | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional). |
-| `DELETE_ACCOUNT_TOOL` | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                   |
-| `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing. |
-
+| Tool Name                        | Description                                                                                                    | Usage                                                                                                                                                                                                      |
+|----------------------------------|----------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `TRANSFER_HBAR_TOOL`             | Transfer HBAR between accounts                                                                                 | Provide the amount of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                                                                                                    |
+| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                       |
+| `UPDATE_ACCOUNT_TOOL`            | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional). |
+| `DELETE_ACCOUNT_TOOL`            | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                   |
+| `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                               |
+| `SCHEDULE_DELETE_TOOL`           | Delete a scheduled transaction so it will not execute                                                          | Provide the schedule ID (required) of the scheduled transaction to delete. Returns the transaction ID upon successful deletion.                                                                            |
 
 ---
 
@@ -67,6 +67,7 @@ A plugin for **Consensus Service (HCS)**, enabling creation and posting to topic
 |-----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------|
 | `CREATE_TOPIC_TOOL`         | Create a new topic on the Hedera network          | Optionally provide a topic memo (string) and whether to set a submit key (boolean). |
 | `SUBMIT_TOPIC_MESSAGE_TOOL` | Submit a message to a topic on the Hedera network | Provide the topic ID (required) and the message to submit (required).               |
+| `DELETE_TOPIC_TOOL`         | Delete a topic on the Hedera network              | Provide the topic ID (required)                                                     |
 
 ---
 
@@ -74,9 +75,10 @@ A plugin for **Consensus Service (HCS)**, enabling creation and posting to topic
 
 This plugin provides tools for fetching **Consensus Service (HCS)** related information from Hedera Mirror Node.
 
-| Tool Name                       | Description                                                       | Usage                                                                                                      |
-|---------------------------------|-------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| Tool Name                    | Description                                                          | Usage                                                                                                      |
+|------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic    | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| `GET_TOPIC_INFO_QUERY_TOOL`     | Returns information for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required).                                                                           |
 
 ---
 
@@ -92,6 +94,7 @@ and non-fungible tokens.
 | `AIRDROP_FUNGIBLE_TOKEN_TOOL`    | Airdrops a fungible token to multiple recipients          | Provide the token ID and recipients array. Optionally specify a source account ID (defaults to operator) and transaction memo.                                                                    |
 | `MINT_NON_FUNGIBLE_TOKEN_TOOL`   | Mints NFTs with unique metadata for an existing NFT class | Provide the token ID and metadata URIs.                                                                                                                                                           |
 | `MINT_FUNGIBLE_TOKEN_TOOL`       | Mints additional supply of an existing fungible token     | Provide the token ID and amount to mint.                                                                                                                                                          |
+| `DISSOCIATE_FUNGIBLE_TOKEN_TOOL` | Dissociates fungible tokens from an account               | Provide an array of token IDs to dissociate. Optionally specify the account ID (defaults to operator) and a transaction memo                                                                      |                                                                                                                                                       |
 
 ---
 
@@ -145,9 +148,9 @@ Tools for **transaction-related operations** on Hedera.
 
 This plugin provides tools for fetching miscellaneous information from the Hedera Mirror Node.
 
-| Tool Name                 | Description                                              | Usage                                                                                       |
-|---------------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `GET_EXCHANGE_RATE_TOOL`  | Returns the Hedera network HBAR exchange rate            | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate.   |
+| Tool Name                | Description                                   | Usage                                                                                     |
+|--------------------------|-----------------------------------------------|-------------------------------------------------------------------------------------------|
+| `GET_EXCHANGE_RATE_TOOL` | Returns the Hedera network HBAR exchange rate | Optionally provide `timestamp` (seconds or nanos since epoch) to query a historical rate. |
 
 ---
 

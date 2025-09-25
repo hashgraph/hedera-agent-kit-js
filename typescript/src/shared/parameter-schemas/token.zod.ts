@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import { AccountId, PublicKey, TokenId, TokenSupplyType, TokenType } from '@hashgraph/sdk';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 
 export const createFungibleTokenParameters = (_context: Context = {}) =>
@@ -143,7 +143,29 @@ export const tokenInfoQueryParameters = (_context: Context = {}) =>
     tokenId: z.string().optional().describe('The token ID to query.'),
   });
 
+
 export const pendingAirdropQueryParameters = (_context: Context = {}) =>
   z.object({
     accountId: z.string().optional().describe('The account ID to query.'),
+  });
+
+export const dissociateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenIds: z
+      .array(z.string())
+      .min(1)
+      .describe('The list of Hedera token IDs (strings) to dissociate. Must provide at least one.'),
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'The account ID from which to dissociate the tokens. Defaults to operator account.',
+      ),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
+  });
+
+export const dissociateTokenParametersNormalised = (_context: Context = {}) =>
+  dissociateTokenParameters(_context).extend({
+    tokenIds: z.array(z.instanceof(TokenId)),
+    accountId: z.instanceof(AccountId),
   });

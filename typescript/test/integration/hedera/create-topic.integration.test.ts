@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
 import createTopicTool from '@/plugins/core-consensus-plugin/tools/consensus/create-topic';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
@@ -80,6 +80,27 @@ describe('Create Topic Integration Tests', () => {
       expect(result.raw.topicId).toBeDefined();
       expect(topicInfo.topicMemo).toBe(params.topicMemo);
       expect(topicInfo.submitKey).toBe(null);
+    });
+
+    it('should create a topic with a transaction memo', async () => {
+      const params: z.infer<ReturnType<typeof createTopicParameters>> = {
+        transactionMemo: 'integration tx memo',
+      } as any;
+
+      const tool = createTopicTool(context);
+      const result: any = await tool.execute(client, context, params);
+
+      const topicInfo = await hederaOperationsWrapper.getTopicInfo(result.raw.topicId!.toString());
+
+      expect(result.humanMessage).toContain('Topic created successfully');
+      expect(result.raw.topicId).toBeDefined();
+      expect(topicInfo).toBeDefined();
+
+      expect(result.raw.transactionId).toBeDefined();
+      const record = await new TransactionRecordQuery()
+        .setTransactionId(result.raw.transactionId)
+        .execute(client);
+      expect(record.transactionMemo).toBe(params.transactionMemo);
     });
   });
 });

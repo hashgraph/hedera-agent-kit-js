@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
 import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup } from '../utils';
 import { AgentExecutor } from 'langchain/agents';
-import { Client } from '@hashgraph/sdk';
+import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
 function extractTopicId(agentResult: any): string {
@@ -81,6 +81,21 @@ describe('Create Topic E2E Tests', () => {
       expect(typeof topicId).toBe('string');
       expect(topicId).toMatch(/\d+\.\d+\.\d+/);
       expect(topicInfo.submitKey).toBeNull();
+    });
+    it('should create a topic with a transaction memo', async () => {
+      const txMemo = 'E2E transaction memo check';
+      const input = `Create a new Hedera topic with transaction memo "${txMemo}"`;
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      expect(observation.raw?.transactionId).toBeDefined();
+
+      const record = await new TransactionRecordQuery()
+        .setTransactionId(observation.raw.transactionId)
+        .execute(client);
+
+      expect(record.transactionMemo).toBe(txMemo);
     });
   });
 });

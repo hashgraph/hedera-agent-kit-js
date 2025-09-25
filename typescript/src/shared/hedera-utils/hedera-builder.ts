@@ -13,12 +13,15 @@ import {
   AccountUpdateTransaction,
   ScheduleSignTransaction,
   ScheduleCreateTransaction,
+  ScheduleDeleteTransaction,
+  TokenDissociateTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
   deleteTokenParametersNormalised,
+  dissociateTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
@@ -30,6 +33,7 @@ import {
   updateAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
   signScheduleTransactionParameters,
+  scheduleDeleteTransactionParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -42,7 +46,9 @@ export default class HederaBuilder {
   static createScheduleTransaction(
     params: z.infer<ReturnType<typeof createScheduleTransactionParametersNormalised>>,
   ) {
-    return new ScheduleCreateTransaction(params.params).setScheduledTransaction(params.scheduledTransaction);
+    return new ScheduleCreateTransaction(params.params).setScheduledTransaction(
+      params.scheduledTransaction,
+    );
   }
 
   static createFungibleToken(
@@ -68,13 +74,19 @@ export default class HederaBuilder {
   }
 
   static createTopic(params: z.infer<ReturnType<typeof createTopicParametersNormalised>>) {
-    return new TopicCreateTransaction(params);
+    const { transactionMemo, ...rest } = params as any;
+    const tx = new TopicCreateTransaction(rest);
+    if (transactionMemo) tx.setTransactionMemo(transactionMemo);
+    return tx;
   }
 
   static submitTopicMessage(
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
   ) {
-    return new TopicMessageSubmitTransaction(params);
+    const { transactionMemo, ...rest } = params as any;
+    const tx = new TopicMessageSubmitTransaction(rest);
+    if (transactionMemo) tx.setTransactionMemo(transactionMemo);
+    return tx;
   }
 
   static executeTransaction(
@@ -93,6 +105,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>>,
   ) {
     return new TokenMintTransaction(params);
+  }
+
+  static dissociateToken(params: z.infer<ReturnType<typeof dissociateTokenParametersNormalised>>) {
+    return new TokenDissociateTransaction(params);
   }
 
   static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
@@ -119,5 +135,11 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
   ) {
     return new ScheduleSignTransaction(params);
+  }
+
+  static deleteScheduleTransaction(
+    params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
+  ) {
+    return new ScheduleDeleteTransaction(params as any);
   }
 }
