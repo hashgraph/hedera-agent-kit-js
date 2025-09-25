@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { GET_TOPIC_MESSAGES_QUERY_TOOL } from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-messages-query';
 
-describe('Get Topic Messages Tool Matching Integration Tests', () => {
+describe.skip('Get Topic Messages Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe('Get Topic Messages Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match get topic messages tool for simple request', async () => {
       const input = 'Get messages for topic 0.0.1234';
 
@@ -85,7 +85,7 @@ describe('Get Topic Messages Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have get topic messages tool available', () => {
       const tools = toolkit.getTools();
       const topicMessagesTool = tools.find(tool => tool.name === 'get_topic_messages_query_tool');

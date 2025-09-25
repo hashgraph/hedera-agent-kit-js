@@ -252,6 +252,32 @@ export const updateTokenParametersNormalised = (_context: Context = {}) =>
     metadataKey: z.instanceof(PublicKey).optional(),
   });
 
+    // Associate Token
+export const associateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    // If not passed, will be injected from context in normalisation
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'Account ID to associate tokens with (e.g., 0.0.xxxxx). If not provided, operator account ID will be used',
+      ),
+    // One or more token IDs to associate
+    tokenIds: z.array(z.string()).min(1).describe('Array of token IDs to associate'),
+  });
+
+export const associateTokenParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().describe('Resolved account ID to associate tokens with'),
+    tokenIds: z.array(z.string()).min(1).describe('Array of token IDs to associate'),
+  });
+
+
+export const pendingAirdropQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().optional().describe('The account ID to query.'),
+  });
+
 export const dissociateTokenParameters = (_context: Context = {}) =>
   z.object({
     tokenIds: z

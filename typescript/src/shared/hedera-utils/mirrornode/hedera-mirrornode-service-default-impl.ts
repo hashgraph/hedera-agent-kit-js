@@ -6,6 +6,7 @@ import {
   LedgerIdToBaseUrl,
   TokenBalancesResponse,
   TokenInfo,
+  TopicInfo,
   TopicMessage,
   TopicMessagesAPIResponse,
   TopicMessagesQueryParams,
@@ -132,6 +133,19 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     if (!response.ok) {
       throw new Error(
         `Failed to get token info for a token ${tokenId}: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    return await response.json();
+  }
+
+  async getTopicInfo(topicId: string): Promise<TopicInfo> {
+    const url = `${this.baseUrl}/topics/${topicId}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get topic info for ${topicId}: ${response.status} ${response.statusText}`,
       );
     }
 

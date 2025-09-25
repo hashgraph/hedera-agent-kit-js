@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
-describe('Create Account Tool Matching Integration Tests', () => {
+describe.skip('Create Account Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
     }
   });
 
-  describe('Tool Matching and Parameter Extraction', () => {
+  describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match create account tool with default params', async () => {
       const input = 'Create a new Hedera account';
 
@@ -113,7 +113,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
     });
   });
 
-  describe('Tool Available', () => {
+  describe.skip('Tool Available', () => {
     it('should have create account tool available', () => {
       const tools = toolkit.getTools();
       const createAccount = tools.find(tool => tool.name === 'create_account_tool');

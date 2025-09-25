@@ -8,10 +8,13 @@ import {
   createNonFungibleTokenParametersNormalised,
   dissociateTokenParameters,
   dissociateTokenParametersNormalised,
+  associateTokenParameters,
+  associateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
   updateTokenParameters,
   updateTokenParametersNormalised,
+
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
@@ -29,6 +32,8 @@ import {
   createTopicParametersNormalised,
   deleteTopicParameters,
   deleteTopicParametersNormalised,
+  updateTopicParameters,
+  updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 
 import {
@@ -39,6 +44,7 @@ import {
   TokenId,
   TokenSupplyType,
   TokenType,
+  TopicId,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -257,6 +263,22 @@ export default class HederaParameterNormaliser {
     };
   }
 
+
+  static normaliseAssociateTokenParams(
+    params: z.infer<ReturnType<typeof associateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof associateTokenParametersNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof associateTokenParameters>> =
+      this.parseParamsWithSchema(params, associateTokenParameters, context);
+
+    const accountId = AccountResolver.resolveAccount(parsedParams.accountId, context, client);
+    return {
+      accountId,
+      tokenIds: parsedParams.tokenIds,
+    };
+  }
+
   static async normaliseDissociateTokenParams(
     params: z.infer<ReturnType<typeof dissociateTokenParameters>>,
     context: Context,
@@ -323,6 +345,49 @@ export default class HederaParameterNormaliser {
     // Then, validate against the normalized schema delete topic schema
     return this.parseParamsWithSchema(parsedParams, deleteTopicParametersNormalised, context);
   }
+
+  static normaliseUpdateTopic = async (
+    params: z.infer<ReturnType<typeof updateTopicParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof updateTopicParametersNormalised>>> => {
+    const parsedParams: z.infer<ReturnType<typeof updateTopicParameters>> =
+      this.parseParamsWithSchema(params, updateTopicParameters, context);
+
+    const topicId = TopicId.fromString(parsedParams.topicId);
+    const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
+
+    const normalised: z.infer<ReturnType<typeof updateTopicParametersNormalised>> = {
+      topicId,
+    } as any;
+
+    // Keys
+    const maybeKeys: Record<string, string | boolean | undefined> = {
+      adminKey: parsedParams.adminKey,
+      submitKey: parsedParams.submitKey,
+    };
+
+    for (const [field, rawVal] of Object.entries(maybeKeys)) {
+      const resolved = this.resolveKey(rawVal, userPublicKey);
+      if (resolved) {
+        (normalised as any)[field] = resolved;
+      }
+    }
+
+    // Other optional props
+    if (parsedParams.topicMemo) normalised.topicMemo = parsedParams.topicMemo;
+    if (parsedParams.autoRenewAccountId)
+      normalised.autoRenewAccountId = parsedParams.autoRenewAccountId;
+    if (parsedParams.autoRenewPeriod) normalised.autoRenewPeriod = parsedParams.autoRenewPeriod;
+    if (parsedParams.expirationTime) {
+      normalised.expirationTime =
+        parsedParams.expirationTime instanceof Date
+          ? parsedParams.expirationTime
+          : new Date(parsedParams.expirationTime);
+    }
+
+    return normalised;
+  };
 
   static async normaliseCreateAccount(
     params: z.infer<ReturnType<typeof createAccountParameters>>,
@@ -745,7 +810,7 @@ export default class HederaParameterNormaliser {
 
     return normalised;
   }
-
+  
   private static resolveKey(
     rawValue: string | boolean | undefined,
     userKey: PublicKey,
@@ -763,5 +828,6 @@ export default class HederaParameterNormaliser {
       return userKey;
     }
     return undefined;
-  }
+  };
+
 }

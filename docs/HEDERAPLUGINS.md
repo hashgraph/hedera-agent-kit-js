@@ -63,11 +63,12 @@ This plugin provides tools for fetching **Account Service (HAS)** related inform
 
 A plugin for **Consensus Service (HCS)**, enabling creation and posting to topics.
 
-| Tool Name                   | Description                                       | Usage                                                                               |
-|-----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------|
-| `CREATE_TOPIC_TOOL`         | Create a new topic on the Hedera network          | Optionally provide a topic memo (string) and whether to set a submit key (boolean). |
-| `SUBMIT_TOPIC_MESSAGE_TOOL` | Submit a message to a topic on the Hedera network | Provide the topic ID (required) and the message to submit (required).               |
-| `DELETE_TOPIC_TOOL`         | Delete a topic on the Hedera network              | Provide the topic ID (required)                                                     |
+| Tool Name                   | Description                                       | Usage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|-----------------------------|---------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CREATE_TOPIC_TOOL`         | Create a new topic on the Hedera network          | Optionally provide a topic memo (string) and whether to set a submit key (boolean).                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `SUBMIT_TOPIC_MESSAGE_TOOL` | Submit a message to a topic on the Hedera network | Provide the topic ID (required) and the message to submit (required).                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `DELETE_TOPIC_TOOL`         | Delete a topic on the Hedera network              | Provide the topic ID (required)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `UPDATE_TOPIC_TOOL`         | Update a topic on the Hedera network              | Provide the topic ID (required) and any optional fields to update: topicMemo, autoRenewAccountId, autoRenewPeriod, expirationTime, and key fields (adminKey, submitKey). For key fields, you can either specify a Hedera public key explicitly or indicate “use my key,” in which case the tool will automatically use the public key of your connected account. Only keys that were specified on topic creation can be updated; Hedera does not allow deleting keys. Only the fields included will be updated. |
 
 ---
 
@@ -75,9 +76,10 @@ A plugin for **Consensus Service (HCS)**, enabling creation and posting to topic
 
 This plugin provides tools for fetching **Consensus Service (HCS)** related information from Hedera Mirror Node.
 
-| Tool Name                       | Description                                                       | Usage                                                                                                      |
-|---------------------------------|-------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| Tool Name                       | Description                                                          | Usage                                                                                                      |
+|---------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `GET_TOPIC_MESSAGES_QUERY_TOOL` | Returns messages for a given Hedera Consensus Service (HCS) topic    | Provide the topic ID (required). Optionally provide start time, end time, and limit for message filtering. |
+| `GET_TOPIC_INFO_QUERY_TOOL`     | Returns information for a given Hedera Consensus Service (HCS) topic | Provide the topic ID (required).                                                                           |
 
 ---
 
@@ -94,17 +96,17 @@ and non-fungible tokens.
 | `MINT_NON_FUNGIBLE_TOKEN_TOOL`   | Mints NFTs with unique metadata for an existing NFT class | Provide the token ID and metadata URIs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `MINT_FUNGIBLE_TOKEN_TOOL`       | Mints additional supply of an existing fungible token     | Provide the token ID and amount to mint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `DISSOCIATE_FUNGIBLE_TOKEN_TOOL` | Dissociates fungible tokens from an account               | Provide an array of token IDs to dissociate. Optionally specify the account ID (defaults to operator) and a transaction memo                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |                                                                                                                                                       |
+| `ASSOCIATE_TOKEN_TOOL`           | Associates one or more tokens with an account             | Provide an array of token IDs to associate (required). Optionally specify the account ID to associate (defaults to operator account).                                                             |
 | `UPDATE_TOKEN_TOOL`              | Update token's metadata                                   | Provide the token ID (required) and any optional fields to update: tokenName, tokenSymbol, treasuryAccountId, tokenMemo, autoRenewAccountId, metadata, and key fields (adminKey, kycKey, freezeKey, wipeKey, supplyKey, feeScheduleKey, pauseKey, metadataKey). For key fields, you can either specify a Hedera public key explicitly or indicate “use my key,” in which case the tool will automatically use the public key of your connected account. Only keys that were specified on token creation can be updated; Hedera does not allow deleting keys. Only the fields included will be updated. |
-
----
 
 ### Core Token Query Plugin Tools (`core-token-query-plugin`)
 
 This plugin provides tools for fetching **Token Service (HTS)** related information from Hedera Mirror Node.
 
-| Tool Name                   | Description                            | Usage                            |
-|-----------------------------|----------------------------------------|----------------------------------|
-| `GET_TOKEN_INFO_QUERY_TOOL` | Returns details of a given token (HTS) | Provide the token ID (required). |
+| Tool Name                    | Description                                   | Usage                                             |
+|------------------------------|-----------------------------------------------|---------------------------------------------------|
+| `GET_TOKEN_INFO_QUERY_TOOL`  | Returns details of a given token (HTS)        | Provide the token ID (required).                  |
+| `GET_PENDING_AIRDROP_TOOL`   | Returns pending airdrops for a Hedera account | Provide the account ID (optional, defaults to operator). |
 
 ---
 

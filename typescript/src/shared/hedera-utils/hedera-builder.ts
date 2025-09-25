@@ -8,6 +8,7 @@ import {
   TransferTransaction,
   ContractExecuteTransaction,
   TokenMintTransaction,
+  TokenAssociateTransaction,
   AccountCreateTransaction,
   AccountDeleteTransaction,
   AccountUpdateTransaction,
@@ -16,9 +17,14 @@ import {
   TokenUpdateTransaction,
   ScheduleDeleteTransaction,
   TokenDissociateTransaction,
+  TopicUpdateTransaction,
+  AccountId,
+  TokenId,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
+  associateTokenParameters,
+  associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
   deleteTokenParametersNormalised,
@@ -41,6 +47,7 @@ import {
   createTopicParametersNormalised,
   deleteTopicParametersNormalised,
   submitTopicMessageParametersNormalised,
+  updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
 
@@ -80,13 +87,23 @@ export default class HederaBuilder {
   }
 
   static createTopic(params: z.infer<ReturnType<typeof createTopicParametersNormalised>>) {
-    return new TopicCreateTransaction(params);
+    const { transactionMemo, ...rest } = params as any;
+    const tx = new TopicCreateTransaction(rest);
+    if (transactionMemo) tx.setTransactionMemo(transactionMemo);
+    return tx;
   }
 
   static submitTopicMessage(
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
   ) {
-    return new TopicMessageSubmitTransaction(params);
+    const { transactionMemo, ...rest } = params as any;
+    const tx = new TopicMessageSubmitTransaction(rest);
+    if (transactionMemo) tx.setTransactionMemo(transactionMemo);
+    return tx;
+  }
+
+  static updateTopic(params: z.infer<ReturnType<typeof updateTopicParametersNormalised>>) {
+    return new TopicUpdateTransaction(params);
   }
 
   static executeTransaction(
@@ -141,5 +158,12 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
   ) {
     return new ScheduleDeleteTransaction(params as any);
+  }
+
+  static associateToken(params: z.infer<ReturnType<typeof associateTokenParametersNormalised>>) {
+    return new TokenAssociateTransaction({
+      accountId: AccountId.fromString(params.accountId),
+      tokenIds: params.tokenIds.map(t => TokenId.fromString(t)),
+    });
   }
 }
