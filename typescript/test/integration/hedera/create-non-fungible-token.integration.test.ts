@@ -29,8 +29,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     context = {
-      mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      mode: AgentMode.AUTONOMOUS
     };
   });
 
@@ -90,7 +89,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
         tokenName: 'TreasuryNFT',
         tokenSymbol: 'TRFNFT',
-        treasuryAccountId: context.accountId!,
+        treasuryAccountId: executorClient.operatorAccountId!.toString(),
         maxSupply: 200,
       } as any;
 

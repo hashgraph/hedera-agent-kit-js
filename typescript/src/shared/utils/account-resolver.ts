@@ -9,12 +9,12 @@ export class AccountResolver {
    * In AUTONOMOUS mode or when no context account, uses operator account.
    */
   static getDefaultAccount(context: Context, client: Client): string {
-    // In returnBytes mode, prefer context.accountId (user's account)
-    if (context.mode === AgentMode.RETURN_BYTES && context.accountId) {
+    // Prefer context.accountId (user's account) if it is set
+    if(context.accountId) {
       return context.accountId;
     }
 
-    // In autonomous mode or when no context account, use operator
+    // Use operator account if context.accountId is not set
     const operatorAccount = client.operatorAccountId?.toString();
     if (!operatorAccount) {
       throw new Error('No account available: neither context.accountId nor operator account');
