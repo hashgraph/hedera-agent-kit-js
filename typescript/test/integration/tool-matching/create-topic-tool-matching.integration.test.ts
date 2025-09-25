@@ -62,6 +62,7 @@ describe('Create Topic Tool Matching Integration Tests', () => {
         { input: 'Open a new consensus topic', expected: {} },
         { input: 'Create topic with memo "My memo"', expected: { topicMemo: 'My memo' } },
         { input: 'Create topic and set submit key', expected: { isSubmitKey: true } },
+        { input: 'Create topic with transaction memo "TX: memo"', expected: { transactionMemo: 'TX: memo' } },
       ];
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
