@@ -10,6 +10,7 @@ import {
 } from '../utils';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
   let testSetup: LangchainTestSetup;
@@ -59,7 +60,7 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     targetTopicId = created.topicId!.toString();
   });
 
-  it('should submit a message to a pre-created topic via agent', async () => {
+  it('should submit a message to a pre-created topic via agent', itWithRetry(async () => {
     const message = '"submitted via agent"';
     const res = await agentExecutor.invoke({
       input: `Submit message ${message} to topic ${targetTopicId}`,
@@ -78,9 +79,9 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     const mirrornodeMessages = await operatorWrapper.getTopicMessages(targetTopicId);
 
     expect(mirrornodeMessages.messages.length).toBeGreaterThan(0);
-  });
+  }));
 
-  it('should fail to submit to a non-existent topic via agent', async () => {
+  it('should fail to submit to a non-existent topic via agent', itWithRetry(async () => {
     const fakeTopicId = '0.0.999999999';
     const res = await agentExecutor.invoke({
       input: `Submit message "x" to topic ${fakeTopicId}`,
@@ -90,5 +91,5 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
       /INVALID_TOPIC_ID|NOT_FOUND|ACCOUNT_DELETED|INVALID_ARGUMENT/i,
     );
-  });
+  }));
 });

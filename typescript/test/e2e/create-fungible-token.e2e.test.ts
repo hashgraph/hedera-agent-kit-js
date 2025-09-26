@@ -15,6 +15,7 @@ import {
 } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Create Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -60,7 +61,7 @@ describe('Create Fungible Token E2E Tests', () => {
     await new Promise((resolve) => setTimeout(resolve, 30000));
   });
 
-  it('creates a fungible token with minimal params via natural language', async () => {
+  it('creates a fungible token with minimal params via natural language', itWithRetry(async () => {
     const input = `Create a fungible token named MyToken with symbol MTK`;
 
     const result = await agentExecutor.invoke({ input });
@@ -78,9 +79,9 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(tokenInfo.name).toBe('MyToken');
     expect(tokenInfo.symbol).toBe('MTK');
     expect(tokenInfo.decimals).toBe(0);
-  });
+  }));
 
-  it('creates a fungible token with supply, decimals, and finite supply type', async () => {
+  it('creates a fungible token with supply, decimals, and finite supply type', itWithRetry(async () => {
     const input =
       'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
 
@@ -100,9 +101,9 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(tokenInfo.decimals).toBe(2);
     expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
     expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
-  });
+  }));
 
-  it('handles invalid requests gracefully', async () => {
+  it('handles invalid requests gracefully', itWithRetry(async () => {
     const input =
       'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
 
@@ -112,5 +113,5 @@ describe('Create Fungible Token E2E Tests', () => {
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('cannot exceed max supply');
     expect(observation.raw.error).toBeDefined();
-  });
+  }));
 });

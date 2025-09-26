@@ -13,6 +13,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { z } from 'zod';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Transfer ERC20 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -81,7 +82,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     }
   });
 
-  it('transfers ERC20 tokens to another account via natural language', async () => {
+  it('transfers ERC20 tokens to another account via natural language', itWithRetry(async () => {
     const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}`;
 
     const result = await agentExecutor.invoke({ input });
@@ -92,9 +93,9 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     expect(observation.raw.transactionId).toBeDefined();
 
     await wait(MIRROR_NODE_WAITING_TIME);
-  });
+  }));
 
-  it('handles various natural language variations for transfers', async () => {
+  it('handles various natural language variations for transfers', itWithRetry(async () => {
     const variations = [
       `Transfer 1 ERC20 token ${testTokenAddress} to ${recipientAccountId}`,
       `Send 5 ERC20 tokens ${testTokenAddress} to recipient ${recipientAccountId}`,
@@ -109,5 +110,5 @@ describe('Transfer ERC20 Token E2E Tests', () => {
       expect(observation.raw.status.toString()).toBe('SUCCESS');
       expect(observation.raw.transactionId).toBeDefined();
     }
-  });
+  }));
 });

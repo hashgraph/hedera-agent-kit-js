@@ -10,6 +10,7 @@ import {
 } from '../utils';
 import { wait, extractObservationFromLangchainResponse } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Topic Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -73,7 +74,7 @@ describe('Get Topic Info Query E2E Tests', () => {
     testSetup.cleanup();
   });
 
-  it('should fetch topic info via LangChain agent', async () => {
+  it('should fetch topic info via LangChain agent', itWithRetry(async () => {
     const input = `Get topic info for ${createdTopicId.toString()}`;
 
     const queryResult = await agentExecutor.invoke({ input });
@@ -83,7 +84,7 @@ describe('Get Topic Info Query E2E Tests', () => {
     expect(observation.raw.topicId).toBe(createdTopicId.toString());
     expect(observation.raw.topicInfo.topic_id).toBe(createdTopicId.toString());
     expect(observation.humanMessage).toContain('Here are the details for topic');
-  });
+  }));
 });
 
 

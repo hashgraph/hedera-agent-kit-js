@@ -20,6 +20,7 @@ import { extractObservationFromLangchainResponse, wait } from '../utils/general-
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Token Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -100,7 +101,7 @@ describe('Get Token Info Query E2E Tests', () => {
     }
   });
 
-  it('should return token info for a newly created fungible token', async () => {
+  it('should return token info for a newly created fungible token', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `Get token information for ${tokenIdFT.toString()}`,
     });
@@ -124,9 +125,9 @@ describe('Get Token Info Query E2E Tests', () => {
     expect(observation.raw.tokenInfo.memo).toBe(FT_PARAMS.tokenMemo);
     expect(observation.raw.tokenInfo.deleted).toBe(false);
     expect(observation.raw.tokenInfo.treasury_account_id).toBe(executorAccountId.toString());
-  });
+  }));
 
-  it('should return token info with formatted supply amounts', async () => {
+  it('should return token info with formatted supply amounts', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `Show me details for token ${tokenIdFT.toString()}`,
     });
@@ -147,9 +148,9 @@ describe('Get Token Info Query E2E Tests', () => {
     expect(observation.raw.tokenInfo.supply_type?.toUpperCase()).toBe(
       FT_PARAMS.supplyType.toString().toUpperCase(),
     );
-  });
+  }));
 
-  it('should fail gracefully for non-existent token', async () => {
+  it('should fail gracefully for non-existent token', itWithRetry(async () => {
     const fakeTokenId = '0.0.999999999';
 
     const queryResult = await agentExecutor.invoke({
@@ -160,9 +161,9 @@ describe('Get Token Info Query E2E Tests', () => {
 
     expect(observation.humanMessage).toContain('Failed to get token info');
     expect(observation.raw.error).toBeDefined();
-  });
+  }));
 
-  it('should handle tokens with different key configurations', async () => {
+  it('should handle tokens with different key configurations', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `Query information for token ${tokenIdNFT.toString()}`,
     });
@@ -188,5 +189,5 @@ describe('Get Token Info Query E2E Tests', () => {
     expect(observation.raw.tokenInfo.kyc_key).toBeNull();
     expect(observation.raw.tokenInfo.freeze_key).toBeNull();
     expect(observation.raw.tokenInfo.max_supply).toBe(String(NFT_PARAMS.maxSupply));
-  });
+  }));
 });

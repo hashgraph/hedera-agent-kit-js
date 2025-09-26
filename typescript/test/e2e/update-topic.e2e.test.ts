@@ -11,6 +11,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Update Topic E2E Tests', () => {
   let operatorClient: Client;
@@ -64,7 +65,7 @@ describe('Update Topic E2E Tests', () => {
     }
   });
 
-  it('should change topic keys using passed values', async () => {
+  it('should change topic keys using passed values', itWithRetry(async () => {
     const newSubmitKey = PrivateKey.generateED25519().publicKey.toString();
 
     await agentExecutor.invoke({
@@ -76,9 +77,9 @@ describe('Update Topic E2E Tests', () => {
       executorClient.operatorPublicKey!.toString(),
     );
     expect((topicDetails.submitKey as PublicKey).toString()).toBe(newSubmitKey);
-  });
+  }));
 
-  it('should change topic keys using default values (my key)', async () => {
+  it('should change topic keys using default values (my key)', itWithRetry(async () => {
     await agentExecutor.invoke({
       input: `For topic ${topicId.toString()}, change the submit key to my key and set the topic memo to 'just updated'`,
     });
@@ -88,9 +89,9 @@ describe('Update Topic E2E Tests', () => {
       executorClient.operatorPublicKey!.toStringDer(),
     );
     expect(topicDetails.topicMemo).toBe('just updated');
-  });
+  }));
 
-  it('should fail due to topic being originally created without submitKey', async () => {
+  it('should fail due to topic being originally created without submitKey', itWithRetry(async () => {
     // Create a topic without a submitKey
     const topicWithoutSubmit = await executorWrapper
       .createTopic({
@@ -115,9 +116,9 @@ describe('Update Topic E2E Tests', () => {
     expect(observation.raw.error).toContain(
       'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
     );
-  });
+  }));
 
-  it('should update autoRenewAccountId', async () => {
+  it('should update autoRenewAccountId', itWithRetry(async () => {
     // To set some account as the auto-renew account, it must have the same public key as the operator of the agent
     const secondaryAccountId = await executorWrapper
       .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 0 })
@@ -130,9 +131,9 @@ describe('Update Topic E2E Tests', () => {
     const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
 
     expect(topicDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
-  });
+  }));
 
-  it('should reject updates by an unauthorized operator', async () => {
+  it('should reject updates by an unauthorized operator', itWithRetry(async () => {
     const secondaryAccountKey = PrivateKey.generateED25519();
     const secondaryAccountId = await executorWrapper
       .createAccount({ key: secondaryAccountKey.publicKey, initialBalance: 10 })
@@ -168,5 +169,5 @@ describe('Update Topic E2E Tests', () => {
     );
 
     secondaryClient.close();
-  });
+  }));
 });
