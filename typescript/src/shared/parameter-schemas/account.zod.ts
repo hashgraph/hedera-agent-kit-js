@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, Hbar, Key, Transaction } from '@hashgraph/sdk';
+import { AccountId, Hbar, Key, Transaction, HbarAllowance } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
 
@@ -144,4 +144,21 @@ export const createScheduleTransactionParametersNormalised = (_context: Context 
 export const scheduleDeleteTransactionParameters = (_context: Context = {}) =>
   z.object({
     scheduleId: z.string().describe('The ID of the scheduled transaction to delete'),
+  });
+
+export const approveHbarAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    spenderAccountId: z.string().describe('Spender account ID'),
+    amount: z.number().describe('Amount of HBAR to approve as allowance (can be decimal, not negative)'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const approveHbarAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    hbarApprovals: z.array(z.instanceof(HbarAllowance)).optional(),
+    transactionMemo: z.string().optional(),
   });
