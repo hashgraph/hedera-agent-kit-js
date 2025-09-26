@@ -14,7 +14,8 @@ import {
   mintNonFungibleTokenParameters,
   updateTokenParameters,
   updateTokenParametersNormalised,
-
+  approveNftAllowanceParameters,
+  approveNftAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
@@ -48,12 +49,13 @@ import {
   TokenType,
   TopicId,
   HbarAllowance,
+  TokenNftAllowance,
+  Long,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
-import Long from 'long';
 import { TokenTransferMinimalParams, TransferHbarInput } from '@/shared/hedera-utils/types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -244,6 +246,44 @@ export default class HederaParameterNormaliser {
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
   }
 
+  static normaliseApproveNftAllowance(
+    params: z.infer<ReturnType<typeof approveNftAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const parsedParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> =
+      this.parseParamsWithSchema(params, approveNftAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const spenderAccountId = parsedParams.spenderAccountId;
+
+    const serials = parsedParams.serialNumbers || [];
+    if (!serials.length) {
+      throw new Error('serialNumbers must contain at least one serial');
+    }
+
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    return {
+      nftApprovals: [
+        new TokenNftAllowance({
+          allSerials: null,
+          delegatingSpender: null,
+          ownerAccountId: AccountId.fromString(ownerAccountId),
+          spenderAccountId: AccountId.fromString(spenderAccountId),
+          tokenId,
+          serialNumbers: serials?.map(serialNumber => Long.fromNumber(serialNumber)),
+        }),
+      ],
+      transactionMemo: parsedParams.transactionMemo,
+    } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
+  }
+
   static async normaliseAirdropFungibleTokenParams(
     params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>>,
     context: Context,
@@ -298,7 +338,6 @@ export default class HederaParameterNormaliser {
       tokenTransfers,
     };
   }
-
 
   static normaliseAssociateTokenParams(
     params: z.infer<ReturnType<typeof associateTokenParameters>>,
@@ -846,7 +885,7 @@ export default class HederaParameterNormaliser {
 
     return normalised;
   }
-  
+
   private static resolveKey(
     rawValue: string | boolean | undefined,
     userKey: PublicKey,
@@ -864,6 +903,5 @@ export default class HederaParameterNormaliser {
       return userKey;
     }
     return undefined;
-  };
-
+  }
 }

@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, PublicKey, TokenId, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import { AccountId, PublicKey, TokenId, TokenSupplyType, TokenType, TokenNftAllowance } from '@hashgraph/sdk';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 
 export const createFungibleTokenParameters = (_context: Context = {}) =>
@@ -297,4 +297,26 @@ export const dissociateTokenParametersNormalised = (_context: Context = {}) =>
   dissociateTokenParameters(_context).extend({
     tokenIds: z.array(z.instanceof(TokenId)),
     accountId: z.instanceof(AccountId),
+  });
+
+// Approve NFT Allowance
+export const approveNftAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    spenderAccountId: z.string().describe('Spender account ID'),
+    tokenId: z.string().describe('The NFT token ID'),
+    serialNumbers: z
+      .array(z.number().int().nonnegative())
+      .min(1)
+      .describe('Array of NFT serial numbers to approve'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const approveNftAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    nftApprovals: z.array(z.instanceof(TokenNftAllowance)).optional(),
+    transactionMemo: z.string().optional(),
   });
