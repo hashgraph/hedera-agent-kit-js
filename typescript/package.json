@@ -74,7 +74,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hashgraph/hedera-agent-kit.git"
+    "url": "git+https://github.com/hashgraph/hedera-agent-kit-js.git"
   },
   "release": {
     "branches": [
