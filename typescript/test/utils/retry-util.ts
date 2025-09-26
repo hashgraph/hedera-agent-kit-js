@@ -17,7 +17,7 @@ export interface RetryOptions {
  */
 const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
   maxRetries: 3,
-  delayMs: 1000,
+  delayMs: 30000,
   logRetries: true,
 };
 
