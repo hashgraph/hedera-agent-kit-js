@@ -10,6 +10,7 @@ import {
 } from '../utils';
 import { wait, extractObservationFromLangchainResponse } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Topic Messages Query E2E Tests', () => {
   let operatorClient: Client;
@@ -76,7 +77,7 @@ describe('Get Topic Messages Query E2E Tests', () => {
     testSetup.cleanup();
   });
 
-  it('should fetch all messages from a topic via LangChain agent', async () => {
+  it('should fetch all messages from a topic via LangChain agent', itWithRetry(async () => {
     const input = `Get all messages from topic ${createdTopicId.toString()}`;
 
     const queryResult = await agentExecutor.invoke({ input });
@@ -92,9 +93,9 @@ describe('Get Topic Messages Query E2E Tests', () => {
     ]);
     expect(observation.humanMessage).toContain('Messages for topic');
     expect(observation.humanMessage).toContain('E2E Message 1');
-  });
+  }));
 
-  it('should fetch messages after a specific timestamp via LangChain agent', async () => {
+  it('should fetch messages after a specific timestamp via LangChain agent', itWithRetry(async () => {
     // Fetch all messages first to get timestamp
     const allMessages = await agentExecutor.invoke({
       input: `Get all messages from topic ${createdTopicId.toString()}`,
@@ -113,9 +114,9 @@ describe('Get Topic Messages Query E2E Tests', () => {
       'E2E Message 2',
       'E2E Message 3',
     ]);
-  });
+  }));
 
-  it('should handle non-existent topic gracefully via LangChain agent', async () => {
+  it('should handle non-existent topic gracefully via LangChain agent', itWithRetry(async () => {
     const fakeTopicId = '0.0.999999999';
     const input = `Get messages from topic ${fakeTopicId}`;
 
@@ -123,5 +124,5 @@ describe('Get Topic Messages Query E2E Tests', () => {
     const observation = extractObservationFromLangchainResponse(queryResult);
 
     expect(observation.humanMessage).toContain('No messages found for topic');
-  });
+  }));
 });

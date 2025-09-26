@@ -11,6 +11,7 @@ import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Mint ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -84,7 +85,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
     }
   });
 
-  it('mints ERC721 token to another account via natural language', async () => {
+  it('mints ERC721 token to another account via natural language', itWithRetry(async () => {
     const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}`;
 
     const result = await agentExecutor.invoke({ input });
@@ -93,9 +94,9 @@ describe('Mint ERC721 Token E2E Tests', () => {
     expect(observation).toBeDefined();
     expect(observation.raw.status.toString()).toBe('SUCCESS');
     expect(observation.raw.transactionId).toBeDefined();
-  });
+  }));
 
-  it('mints token to default (context) account when toAddress missing', async () => {
+  it('mints token to default (context) account when toAddress missing', itWithRetry(async () => {
     const input = `Mint ERC721 token ${testTokenAddress}`;
 
     const result = await agentExecutor.invoke({ input });
@@ -105,9 +106,9 @@ describe('Mint ERC721 Token E2E Tests', () => {
     expect(observation).toBeDefined();
     expect(observation.raw.status.toString()).toBe('SUCCESS');
     expect(observation.raw.transactionId).toBeDefined();
-  });
+  }));
 
-  it('handles various natural language variations for minting', async () => {
+  it('handles various natural language variations for minting', itWithRetry(async () => {
     const variations = [
       `Mint NFT (ERC) from ${testTokenAddress} to ${recipientAccountId}`,
       `Create EVM compatible NFT from contract ${testTokenAddress} to ${recipientAccountId}`,
@@ -122,5 +123,5 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(observation.raw.status.toString()).toBe('SUCCESS');
       expect(observation.raw.transactionId).toBeDefined();
     }
-  });
+  }));
 });

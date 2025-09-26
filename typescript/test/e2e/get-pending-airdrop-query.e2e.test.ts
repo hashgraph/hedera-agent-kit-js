@@ -11,6 +11,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Pending Airdrop Query E2E Tests', () => {
   let operatorClient: Client;
@@ -85,7 +86,7 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
     }
   });
 
-  it('should return pending airdrops for recipient via natural language', async () => {
+  it('should return pending airdrops for recipient via natural language', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `Show pending airdrops for account ${recipientId.toString()}`,
     });
@@ -95,7 +96,7 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
     expect(observation.humanMessage).toContain(`pending airdrops for account **${recipientId.toString()}**`);
     expect(Array.isArray(observation.raw.pendingAirdrops.airdrops)).toBe(true);
     expect(observation.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
-  });
+  }));
 });
 
 

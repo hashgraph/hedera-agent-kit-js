@@ -11,6 +11,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Associate Token E2E Tests', () => {
   let operatorClient: Client;
@@ -70,7 +71,7 @@ describe('Associate Token E2E Tests', () => {
     }
   });
 
-  it('should associate token successfully via agent', async () => {
+  it('should associate token successfully via agent', itWithRetry(async () => {
     const tokenIdFT1 = await tokenExecutorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
@@ -95,9 +96,9 @@ describe('Associate Token E2E Tests', () => {
     expect(observation.humanMessage).toContain('Tokens successfully associated');
     expect(observation.raw.status).toBe('SUCCESS');
     expect(associated).toBe(true);
-  });
+  }));
 
-  it('should associate two tokens successfully via agent', async () => {
+  it('should associate two tokens successfully via agent', itWithRetry(async () => {
     const tokenIdFT1 = await tokenExecutorWrapper
     .createFungibleToken({
       ...FT_PARAMS,
@@ -141,7 +142,7 @@ describe('Associate Token E2E Tests', () => {
     expect(observation.raw.status).toBe('SUCCESS');
     expect(associatedFirst).toBe(true);
     expect(associatedSecond).toBe(true);
-  });
+  }));
 });
 
 

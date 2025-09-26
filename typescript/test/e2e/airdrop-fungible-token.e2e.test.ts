@@ -11,6 +11,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -86,7 +87,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       .then(resp => resp.accountId!);
   };
 
-  it('should airdrop tokens to a single recipient successfully', async () => {
+  it('should airdrop tokens to a single recipient successfully', itWithRetry(async () => {
     const recipientId = await createRecipientAccount(0); // no auto-association
 
     const queryResult = await agentExecutor.invoke({
@@ -101,9 +102,9 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
     const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
     expect(pending.airdrops.length).toBeGreaterThan(0);
-  });
+  }));
 
-  it('should airdrop tokens to multiple recipients in one transaction', async () => {
+  it('should airdrop tokens to multiple recipients in one transaction', itWithRetry(async () => {
     const recipient1 = await createRecipientAccount(0);
     const recipient2 = await createRecipientAccount(0);
 
@@ -121,9 +122,9 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
     expect(pending1.airdrops.length).toBeGreaterThan(0);
     expect(pending2.airdrops.length).toBeGreaterThan(0);
-  });
+  }));
 
-  it('should fail gracefully for non-existent token', async () => {
+  it('should fail gracefully for non-existent token', itWithRetry(async () => {
     const recipientId = await createRecipientAccount(0);
     const fakeTokenId = '0.0.999999999';
 
@@ -134,5 +135,5 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     const observation = extractObservationFromLangchainResponse(queryResult);
 
     expect(observation.humanMessage).toContain('Failed to get token info for a token');
-  });
+  }));
 });

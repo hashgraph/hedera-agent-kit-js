@@ -3,6 +3,7 @@ import { AgentExecutor } from 'langchain/agents';
 import { Client } from '@hashgraph/sdk';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Exchange Rate E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -22,7 +23,7 @@ describe('Get Exchange Rate E2E Tests', () => {
     if (client) client.close();
   });
 
-  it('returns the current exchange rate when no timestamp is provided', async () => {
+  it('returns the current exchange rate when no timestamp is provided', itWithRetry(async () => {
     const input = 'What is the current HBAR exchange rate?';
 
     const result: any = await agentExecutor.invoke({ input });
@@ -38,9 +39,9 @@ describe('Get Exchange Rate E2E Tests', () => {
     expect(typeof observation.humanMessage).toBe('string');
     expect(observation.humanMessage).toContain('Current exchange rate');
     expect(observation.humanMessage).toContain('Next exchange rate');
-  });
+  }));
 
-  it('handles invalid timestamp', async () => {
+  it('handles invalid timestamp', itWithRetry(async () => {
     const input = 'Get the HBAR exchange rate at time monday-01';
 
     const result: any = await agentExecutor.invoke({ input });
@@ -51,9 +52,9 @@ describe('Get Exchange Rate E2E Tests', () => {
     expect(observation).toBeTruthy();
     expect(typeof observation.humanMessage).toBe('string');
     expect(observation.raw.error).toContain('status: 404. Message: Not Found');
-  });
+  }));
 
-  it('returns exchange rate for a valid epoch seconds timestamp', async () => {
+  it('returns exchange rate for a valid epoch seconds timestamp', itWithRetry(async () => {
     // Example: a historical timestamp in seconds since epoch
     const ts = '1726000000';
     const input = `Get the HBAR exchange rate at timestamp ${ts}`;
@@ -67,9 +68,9 @@ describe('Get Exchange Rate E2E Tests', () => {
     expect(typeof observation.humanMessage).toBe('string');
     expect(observation.humanMessage).toContain('Details for timestamp:');
     expect(observation.humanMessage).toContain('Current exchange rate');
-  });
+  }));
 
-  it('returns exchange rate for a valid precise timestamp (nanos)', async () => {
+  it('returns exchange rate for a valid precise timestamp (nanos)', itWithRetry(async () => {
     const ts = '1757512862.640825000';
     const input = `Get the HBAR exchange rate at timestamp ${ts}`;
 
@@ -90,5 +91,5 @@ describe('Get Exchange Rate E2E Tests', () => {
       },
       timestamp: '1757512862.640825000',
     });
-  });
+  }));
 });

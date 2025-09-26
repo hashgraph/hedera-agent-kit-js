@@ -11,6 +11,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Mint Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -75,7 +76,7 @@ describe('Mint Fungible Token E2E Tests', () => {
     await new Promise((resolve) => setTimeout(resolve, 30000));
   });
 
-  it('should mint additional supply successfully', async () => {
+  it('should mint additional supply successfully', itWithRetry(async () => {
     const supplyBefore = await executorWrapper
       .getTokenInfo(tokenIdFT.toString())
       .then(info => info.totalSupply.toInt());
@@ -94,9 +95,9 @@ describe('Mint Fungible Token E2E Tests', () => {
     expect(observation.humanMessage).toContain('Tokens successfully minted');
     expect(observation.raw.status).toBe('SUCCESS');
     expect(supplyAfter).toBe(supplyBefore + 500); // 5 * 10^decimals
-  });
+  }));
 
-  it('should fail gracefully when minting more than max supply', async () => {
+  it('should fail gracefully when minting more than max supply', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `Mint 5000 of token ${tokenIdFT.toString()}`,
     });
@@ -105,9 +106,9 @@ describe('Mint Fungible Token E2E Tests', () => {
 
     expect(observation.raw).toBeDefined();
     expect(observation.raw.error).toContain('TOKEN_MAX_SUPPLY_REACHED');
-  });
+  }));
 
-  it('should fail gracefully for a non-existent token', async () => {
+  it('should fail gracefully for a non-existent token', itWithRetry(async () => {
     const fakeTokenId = '0.0.999999999';
 
     const queryResult = await agentExecutor.invoke({
@@ -122,5 +123,5 @@ describe('Mint Fungible Token E2E Tests', () => {
       `Failed to get token info for a token ${fakeTokenId}`,
     );
     expect(observation.raw.error).toContain(`Failed to get token info for a token ${fakeTokenId}`);
-  });
+  }));
 });

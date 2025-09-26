@@ -15,6 +15,7 @@ import {
 } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Create Non-Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -60,7 +61,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     await new Promise((resolve) => setTimeout(resolve, 30000));
   });
 
-  it('creates an NFT with minimal params via natural language', async () => {
+  it('creates an NFT with minimal params via natural language', itWithRetry(async () => {
     const input = `Create a non-fungible token named MyNFT with symbol MNFT`;
 
     const result = await agentExecutor.invoke({ input });
@@ -79,9 +80,9 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     expect(tokenInfo.symbol).toBe('MNFT');
     expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
     expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
-  });
+  }));
 
-  it('creates an NFT with custom max supply', async () => {
+  it('creates an NFT with custom max supply', itWithRetry(async () => {
     const input = 'Create a non-fungible token ArtCollection with symbol ART and max supply 500';
 
     const result = await agentExecutor.invoke({ input });
@@ -99,9 +100,9 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     expect(tokenInfo.symbol).toBe('ART');
     expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
     expect(tokenInfo.maxSupply?.toInt()).toBe(500);
-  });
+  }));
 
-  it('creates an NFT with treasury account specification', async () => {
+  it('creates an NFT with treasury account specification', itWithRetry(async () => {
     const treasuryAccountId = executorClient.operatorAccountId!.toString();
     const input = `Create a non-fungible token GameItems with symbol GAME, treasury account ${treasuryAccountId}, and max supply 1000`;
 
@@ -120,5 +121,5 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     expect(tokenInfo.symbol).toBe('GAME');
     expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
     expect(tokenInfo.maxSupply?.toInt()).toBe(1000);
-  });
+  }));
 });

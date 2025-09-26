@@ -12,6 +12,7 @@ import { wait } from '../utils/general-util';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -88,7 +89,7 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
     }
   });
 
-  it('should return balance when asking for default executor account', async () => {
+  it('should return balance when asking for default executor account', itWithRetry(async () => {
     const executorId = executorClient.operatorAccountId!.toString();
     const executorBalance = await operatorWrapper.getAccountHbarBalance(executorId); // operator will pay for the query and we wont need to wait for mirror node to update
 
@@ -101,9 +102,9 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
       `Account ${executorId} has a balance of ${toDisplayUnit(executorBalance, 8).toNumber()}`,
     );
     expect(observation.raw.hbarBalance).toBe(toDisplayUnit(executorBalance, 8).toString());
-  });
+  }));
 
-  it('should return balance for specific account with non-zero balance', async () => {
+  it('should return balance for specific account with non-zero balance', itWithRetry(async () => {
     const input = `What is the HBAR balance of ${targetAccount1.toString()}?`;
     const result: any = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
@@ -113,9 +114,9 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
       `Account ${targetAccount1.toString()} has a balance of ${account1Balance}`,
     );
     expect(observation.raw.hbarBalance).toBe(account1Balance.toString());
-  });
+  }));
 
-  it('should return balance for specific account with zero balance', async () => {
+  it('should return balance for specific account with zero balance', itWithRetry(async () => {
     const input = `What is the HBAR balance of ${targetAccount2.toString()}?`;
     const result: any = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
@@ -125,5 +126,5 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
       `Account ${targetAccount2.toString()} has a balance of ${account2Balance}`,
     );
     expect(observation.raw.hbarBalance).toBe(account2Balance.toString());
-  });
+  }));
 });

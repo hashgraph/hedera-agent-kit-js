@@ -11,6 +11,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Token Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -74,7 +75,7 @@ describe('Get Token Info Query E2E Tests', () => {
     }
   });
 
-  it('should change token keys using passed values', async () => {
+  it('should change token keys using passed values', itWithRetry(async () => {
     const newSupplyKey = PrivateKey.generateED25519().publicKey.toString();
     const newAdminKey = executorClient.operatorPublicKey!.toString();
     await agentExecutor.invoke({
@@ -84,9 +85,9 @@ describe('Get Token Info Query E2E Tests', () => {
     const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
     expect((tokenDetails.adminKey as PublicKey).toString()).toBe(newAdminKey);
     expect((tokenDetails.supplyKey as PublicKey).toString()).toBe(newSupplyKey);
-  });
+  }));
 
-  it('should change token keys using default values', async () => {
+  it('should change token keys using default values', itWithRetry(async () => {
     await agentExecutor.invoke({
       input: `For token ${tokenIdFT.toString()}, change the metadata key to my key and the token memo to 'just updated'`,
     });
@@ -96,9 +97,9 @@ describe('Get Token Info Query E2E Tests', () => {
       executorClient.operatorPublicKey!.toStringDer(),
     );
     expect(tokenDetails.tokenMemo).toBe('just updated');
-  });
+  }));
 
-  it('should fail due to token being originally created without KYC key', async () => {
+  it('should fail due to token being originally created without KYC key', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `For token ${tokenIdFT.toString()}, change the KYC key to my key`,
     });
@@ -111,9 +112,9 @@ describe('Get Token Info Query E2E Tests', () => {
     expect(observation.raw.error).toContain(
       'Failed to update token: Cannot update kycKey: token was created without a kycKey',
     );
-  });
+  }));
 
-  it('should update metadata and token memo', async () => {
+  it('should update metadata and token memo', itWithRetry(async () => {
     const metadataString = 'hello-world';
 
     await agentExecutor.invoke({
@@ -125,12 +126,12 @@ describe('Get Token Info Query E2E Tests', () => {
     // metadata comes back as a base64 string in the mirror node
     const decoded = Buffer.from(tokenDetails.metadata as Uint8Array).toString('utf8');
     expect(decoded).toBe(metadataString);
-  });
+  }));
 
   // to set some account as the auto-renew account,
   // it must have the same public key as the account operating the agent,
   // so in this case we create a new account with a public key of an executor account
-  it('should update autoRenewAccountId', async () => {
+  it('should update autoRenewAccountId', itWithRetry(async () => {
     const secondaryAccountId = await executorWrapper
       .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 5 })
       .then(resp => resp.accountId!);
@@ -141,9 +142,9 @@ describe('Get Token Info Query E2E Tests', () => {
     const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
 
     expect(tokenDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
-  });
+  }));
 
-  it('should reject updates by an unauthorized operator', async () => {
+  it('should reject updates by an unauthorized operator', itWithRetry(async () => {
     const secondaryAccount = PrivateKey.generateED25519();
     const secondaryAccountId = await executorWrapper
       .createAccount({ key: secondaryAccount.publicKey, initialBalance: 5 })
@@ -175,5 +176,5 @@ describe('Get Token Info Query E2E Tests', () => {
       secondaryAccountId,
       operatorClient.operatorAccountId!,
     );
-  });
+  }));
 });

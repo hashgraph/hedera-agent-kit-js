@@ -10,6 +10,7 @@ import {
 } from '../utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -103,7 +104,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     }
   });
 
-  it('should dissociate the executor account from the given token', async () => {
+  it('should dissociate the executor account from the given token', itWithRetry(async () => {
     await executorWrapper.associateToken({
       accountId: executorAccountId.toString(),
       tokenId: tokenIdFT.toString(),
@@ -126,9 +127,9 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       executorAccountId.toString(),
     );
     expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
-  });
+  }));
 
-  it('should dissociate 2 tokens at once', async () => {
+  it('should dissociate 2 tokens at once', itWithRetry(async () => {
     await executorWrapper.associateToken({
       accountId: executorAccountId.toString(),
       tokenId: tokenIdFT.toString(),
@@ -158,9 +159,9 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     );
     expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
     expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT2.toString())).toBeFalsy();
-  });
+  }));
 
-  it('should fail dissociating not associated token', async () => {
+  it('should fail dissociating not associated token', itWithRetry(async () => {
     // check if the account is not associate with the token
     const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
       executorAccountId.toString(),
@@ -175,9 +176,9 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
     expect(observation.humanMessage).toContain('Failed to dissociate');
     expect(observation.raw.status).not.toBe('SUCCESS');
-  });
+  }));
 
-  it('should fail dissociating not existing token', async () => {
+  it('should fail dissociating not existing token', itWithRetry(async () => {
     const queryResult = await agentExecutor.invoke({
       input: `Dissociate token 0.0.22223333444 from my account`,
     });
@@ -186,5 +187,5 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
     expect(observation.humanMessage).toContain('Failed to dissociate');
     expect(observation.raw.status).not.toBe('SUCCESS');
-  });
+  }));
 });

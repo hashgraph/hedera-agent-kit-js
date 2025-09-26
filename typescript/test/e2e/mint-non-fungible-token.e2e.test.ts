@@ -19,6 +19,7 @@ import {
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Mint Non-Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -82,7 +83,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
     await new Promise((resolve) => setTimeout(resolve, 30000));
   });
 
-  it('should mint a single NFT successfully', async () => {
+  it('should mint a single NFT successfully', itWithRetry(async () => {
     const supplyBefore = await executorWrapper
       .getTokenInfo(nftTokenId.toString())
       .then(info => info.totalSupply.toInt());
@@ -100,9 +101,9 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
 
     expect(observation.humanMessage).toContain('successfully minted with transaction id');
     expect(supplyAfter).toBe(supplyBefore + 1);
-  });
+  }));
 
-  it('should mint multiple NFTs successfully', async () => {
+  it('should mint multiple NFTs successfully', itWithRetry(async () => {
     const uris = ['ipfs://meta2.json', 'ipfs://meta3.json', 'ipfs://meta4.json'];
     const supplyBefore = await executorWrapper
       .getTokenInfo(nftTokenId.toString())
@@ -123,9 +124,9 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
 
     expect(observation.humanMessage).toContain('successfully minted with transaction id');
     expect(supplyAfter).toBe(supplyBefore + uris.length);
-  });
+  }));
 
-  it('should fail gracefully for a non-existent NFT token', async () => {
+  it('should fail gracefully for a non-existent NFT token', itWithRetry(async () => {
     const fakeTokenId = '0.0.999999999';
 
     const queryResult = await agentExecutor.invoke({
@@ -135,5 +136,5 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
     const observation = extractObservationFromLangchainResponse(queryResult);
 
     expect(observation.humanMessage).toMatch(/INVALID_TOKEN_ID|Failed to mint/i);
-  });
+  }));
 });

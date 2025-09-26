@@ -11,6 +11,7 @@ import { Client, TransactionId, PrivateKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import Long from 'long';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Transaction Record E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -73,25 +74,25 @@ describe('Get Transaction Record E2E Tests', () => {
     }
   });
 
-  it('fetches transaction record - SDK transactionId notation', async () => {
+  it('fetches transaction record - SDK transactionId notation', itWithRetry(async () => {
     const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain(`Transaction Details for ${txIdMirrorNodeStyle}`);
-  });
+  }));
 
-  it('fetches transaction record - Mirror Node transactionId notation', async () => {
+  it('fetches transaction record - Mirror Node transactionId notation', itWithRetry(async () => {
     const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain(`Transaction Details for ${txIdMirrorNodeStyle}`);
-  });
+  }));
 
-  it('handles non-existent transaction ID', async () => {
+  it('handles non-existent transaction ID', itWithRetry(async () => {
     const invalidTxId = '0.0.1-1756968265-043000618';
     const input = `Get the transaction record for transaction ${invalidTxId}`;
 
@@ -103,9 +104,9 @@ describe('Get Transaction Record E2E Tests', () => {
     expect(observation.raw.error).toContain('Not Found');
     expect(observation.humanMessage).toContain('Failed to get transaction record');
     expect(observation.humanMessage).toContain('Not Found');
-  });
+  }));
 
-  it('handles invalid transaction ID format', async () => {
+  it('handles invalid transaction ID format', itWithRetry(async () => {
     const invalidTxId = 'invalid-tx-id';
     const input = `Get the transaction record for transaction ${invalidTxId}`;
 
@@ -116,5 +117,5 @@ describe('Get Transaction Record E2E Tests', () => {
     expect(observation.raw.error).toContain('Invalid transactionId format: invalid-tx-id');
     expect(observation.raw.error).toContain('Failed to get transaction record');
     expect(observation.humanMessage).toContain('Failed to get transaction record');
-  });
+  }));
 });

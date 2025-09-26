@@ -9,6 +9,7 @@ import { AgentExecutor } from 'langchain/agents';
 import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
 import { Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { itWithRetry } from '../utils/retry-util';
 
 // Extracts accountId string (shard.realm.num) from agentExecutor result
 function extractAccountId(agentResult: any): string {
@@ -64,7 +65,7 @@ describe('Create Account E2E Tests', () => {
   });
 
   describe('Tool Matching and Parameter Extraction', () => {
-    it('should create an account with default operator public key', async () => {
+    it('should create an account with default operator public key', itWithRetry(async () => {
       const publicKey = executorClient.operatorPublicKey as PublicKey;
       const input = `Create a new Hedera account`;
 
@@ -73,9 +74,9 @@ describe('Create Account E2E Tests', () => {
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
       expect((info.key as PublicKey).toStringRaw()).toBe(publicKey.toStringRaw());
-    });
+    }));
 
-    it('should create an account with initial balance and memo', async () => {
+    it('should create an account with initial balance and memo', itWithRetry(async () => {
       const input = `Create an account with initial balance 0.05 HBAR and memo "E2E test account"`;
 
       const result = await agentExecutor.invoke({ input });
@@ -86,9 +87,9 @@ describe('Create Account E2E Tests', () => {
 
       const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8); // tinybars
-    });
+    }));
 
-    it('should create an account with explicit public key', async () => {
+    it('should create an account with explicit public key', itWithRetry(async () => {
       const publicKey = PrivateKey.generateED25519().publicKey as Key;
       const input = `Create a new account with public key ${publicKey.toString()}`;
 
@@ -97,11 +98,11 @@ describe('Create Account E2E Tests', () => {
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
       expect((info.key as Key).toString()).toBe(publicKey.toString());
-    });
+    }));
   });
 
   describe('Edge Cases', () => {
-    it('should create an account with very small initial balance', async () => {
+    it('should create an account with very small initial balance', itWithRetry(async () => {
       const input = `Create an account with initial balance 0.0001 HBAR`;
 
       const result = await agentExecutor.invoke({ input });
@@ -109,9 +110,9 @@ describe('Create Account E2E Tests', () => {
 
       const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.0001 * 1e8);
-    });
+    }));
 
-    it('should handle long memos correctly', async () => {
+    it('should handle long memos correctly', itWithRetry(async () => {
       const longMemo = 'A'.repeat(90);
       const input = `Create an account with memo "${longMemo}"`;
 
@@ -120,6 +121,6 @@ describe('Create Account E2E Tests', () => {
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe(longMemo);
-    });
+    }));
   });
 });

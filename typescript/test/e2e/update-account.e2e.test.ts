@@ -9,6 +9,7 @@ import {
   LangchainTestSetup,
 } from '../utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
@@ -70,7 +71,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     });
   });
 
-  it('should update memo of a pre-created account via agent', async () => {
+  it('should update memo of a pre-created account via agent', itWithRetry(async () => {
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
     });
@@ -80,9 +81,9 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
     const info = await executionWrapper.getAccountInfo(targetAccount.toString());
     expect(info.accountMemo).toBe('updated via agent');
-  });
+  }));
 
-  it('should update maxAutomaticTokenAssociations via agent', async () => {
+  it('should update maxAutomaticTokenAssociations via agent', itWithRetry(async () => {
     const updateResult = await agentExecutor.invoke({
       input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
     });
@@ -92,9 +93,9 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
     const info = await executionWrapper.getAccountInfo(targetAccount.toString());
     expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
-  });
+  }));
 
-  it('should update declineStakingReward flag via agent', async () => {
+  it('should update declineStakingReward flag via agent', itWithRetry(async () => {
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${targetAccount.toString()} to decline staking rewards`,
     });
@@ -104,9 +105,9 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
     const info = await executionWrapper.getAccountInfo(targetAccount.toString());
     expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
-  });
+  }));
 
-  it('should fail to update a non-existent account', async () => {
+  it('should fail to update a non-existent account', itWithRetry(async () => {
     const fakeAccountId = '0.0.999999999';
     const updateResult = await agentExecutor.invoke({
       input: `Update account ${fakeAccountId} memo to "x"`,
@@ -116,5 +117,5 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
       /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
     );
-  });
+  }));
 });

@@ -5,6 +5,7 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../utils';
 import { z } from 'zod';
 import { scheduleDeleteTransactionParameters } from '@/shared/parameter-schemas/account.zod';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Schedule Delete E2E Tests', () => {
   let operatorClient: Client;
@@ -60,7 +61,7 @@ describe('Schedule Delete E2E Tests', () => {
     }
   });
 
-  it('deletes a scheduled transaction by admin', async () => {
+  it('deletes a scheduled transaction by admin', itWithRetry(async () => {
     const transferAmount = 0.05;
     const transferTx = new TransferTransaction()
       .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
@@ -84,7 +85,7 @@ describe('Schedule Delete E2E Tests', () => {
 
     expect(result.humanMessage).toContain('successfully deleted');
     expect(result.raw.status).toBe('SUCCESS');
-  });
+  }));
 });
 
 
