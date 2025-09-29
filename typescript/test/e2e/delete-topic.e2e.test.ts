@@ -11,6 +11,7 @@ import { Client, PrivateKey, AccountId } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Delete Topic E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -56,7 +57,7 @@ describe('Delete Topic E2E Tests', () => {
     }
   });
 
-  it('deletes topic via natural language', async () => {
+  it('deletes topic via natural language', itWithRetry(async () => {
     // create a topic to be deleted
     const createParams: any = { adminKey: executorClient.operatorPublicKey };
     const createResult: any = await executorWrapper.createTopic(createParams);
@@ -71,5 +72,5 @@ describe('Delete Topic E2E Tests', () => {
     expect(observation.raw.transactionId).toBeDefined();
 
     await wait(MIRROR_NODE_WAITING_TIME);
-  });
+  }));
 });

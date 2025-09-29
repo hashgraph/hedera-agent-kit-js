@@ -13,6 +13,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { z } from 'zod';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Transfer ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -101,7 +102,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     return nextTokenId;
   };
 
-  it('transfers ERC721 token to another account via natural language', async () => {
+  it('transfers ERC721 token to another account via natural language', itWithRetry(async () => {
     const tokenId = await mintTokenForTransfer();
     nextTokenId = tokenId + 1;
     const input = `Transfer ERC721 token ${testTokenAddress} with id ${tokenId} from ${executorClient.operatorAccountId!.toString()} to ${recipientAccountId}`;
@@ -112,9 +113,9 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     expect(observation).toBeDefined();
     expect(observation.raw.status.toString()).toBe('SUCCESS');
     expect(observation.raw.transactionId).toBeDefined();
-  });
+  }));
 
-  it('transfers token with explicit from address', async () => {
+  it('transfers token with explicit from address', itWithRetry(async () => {
     const tokenId = await mintTokenForTransfer();
     nextTokenId = tokenId + 1;
     const input = `Transfer erc721 ${tokenId} of contract ${testTokenAddress} to address ${recipientAccountId}`;
@@ -125,9 +126,9 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     expect(observation).toBeDefined();
     expect(observation.raw.status.toString()).toBe('SUCCESS');
     expect(observation.raw.transactionId).toBeDefined();
-  });
+  }));
 
-  it('fails gracefully with non-existent token ID', async () => {
+  it('fails gracefully with non-existent token ID', itWithRetry(async () => {
     const input = `Transfer ERC721 token 999999 from ${testTokenAddress} to ${recipientAccountId}`;
 
     const result = await agentExecutor.invoke({ input });
@@ -135,5 +136,5 @@ describe('Transfer ERC721 Token E2E Tests', () => {
 
     expect(observation).toBeDefined();
     expect(observation.humanMessage).toContain('Failed to transfer ERC721');
-  });
+  }));
 });

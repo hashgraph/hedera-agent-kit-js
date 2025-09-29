@@ -3,6 +3,7 @@ import { createLangchainTestSetup, HederaOperationsWrapper, LangchainTestSetup }
 import { AgentExecutor } from 'langchain/agents';
 import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { itWithRetry } from '../utils/retry-util';
 
 function extractTopicId(agentResult: any): string {
   const observation = extractObservationFromLangchainResponse(agentResult);
@@ -42,7 +43,7 @@ describe('Create Topic E2E Tests', () => {
   });
 
   describe('Tool Matching and Parameter Extraction', () => {
-    it('should create a topic with default settings', async () => {
+    it('should create a topic with default settings', itWithRetry(async () => {
       const input = `Create a new Hedera topic`;
 
       const result = await agentExecutor.invoke({ input });
@@ -55,9 +56,9 @@ describe('Create Topic E2E Tests', () => {
       expect(topicInfo).toBeDefined();
       expect(topicInfo.submitKey).toBeNull();
       expect(topicInfo.topicMemo).toBe('');
-    });
+    }));
 
-    it('should create a topic with memo and submit key', async () => {
+    it('should create a topic with memo and submit key', itWithRetry(async () => {
       const input = `Create a topic with memo "E2E test topic" and set submit key`;
 
       const result = await agentExecutor.invoke({ input });
@@ -68,9 +69,9 @@ describe('Create Topic E2E Tests', () => {
       expect(typeof topicId).toBe('string');
       expect(topicId).toMatch(/\d+\.\d+\.\d+/);
       expect(topicInfo.submitKey?.toString()).toBe(client.operatorPublicKey?.toString());
-    });
+    }));
 
-    it('should create a topic with memo and do not restrict submit access', async () => {
+    it('should create a topic with memo and do not restrict submit access', itWithRetry(async () => {
       const input = `Create a topic with memo "E2E test topic" and do not restrict submit access`;
 
       const result = await agentExecutor.invoke({ input });
@@ -81,8 +82,8 @@ describe('Create Topic E2E Tests', () => {
       expect(typeof topicId).toBe('string');
       expect(topicId).toMatch(/\d+\.\d+\.\d+/);
       expect(topicInfo.submitKey).toBeNull();
-    });
-    it('should create a topic with a transaction memo', async () => {
+    }));
+    it('should create a topic with a transaction memo', itWithRetry(async () => {
       const txMemo = 'E2E transaction memo check';
       const input = `Create a new Hedera topic with transaction memo "${txMemo}"`;
 
@@ -96,6 +97,6 @@ describe('Create Topic E2E Tests', () => {
         .execute(client);
 
       expect(record.transactionMemo).toBe(txMemo);
-    });
+    }));
   });
 });

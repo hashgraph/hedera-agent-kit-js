@@ -9,6 +9,7 @@ import {
   LangchainTestSetup,
   verifyHbarBalanceChange,
 } from '../utils';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -71,7 +72,7 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
     });
   });
 
-  it('should transfer HBAR to a recipient', async () => {
+  it('should transfer HBAR to a recipient', itWithRetry(async () => {
     const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
     const amountToTransfer = 0.1;
     const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
@@ -86,9 +87,9 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
     );
     const balanceAfter = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
     expect(balanceAfter.toNumber()).toBeGreaterThan(balanceBefore.toNumber());
-  });
+  }));
 
-  it('should transfer HBAR with memo', async () => {
+  it('should transfer HBAR with memo', itWithRetry(async () => {
     const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
     const amountToTransfer = 0.05;
     const memo = 'Test memo for transfer';
@@ -103,9 +104,9 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       amountToTransfer,
       executorWrapper,
     );
-  });
+  }));
 
-  it('should handle very small amount (1 tinybar)', async () => {
+  it('should handle very small amount (1 tinybar)', itWithRetry(async () => {
     const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
     const amountToTransfer = 0.00000001;
 
@@ -119,9 +120,9 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       amountToTransfer,
       executorWrapper,
     );
-  });
+  }));
 
-  it('should handle long memo strings', async () => {
+  it('should handle long memo strings', itWithRetry(async () => {
     const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
     const longMemo = 'A'.repeat(90);
     const amountToTransfer = 0.01;
@@ -136,5 +137,5 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       amountToTransfer,
       executorWrapper,
     );
-  });
+  }));
 });

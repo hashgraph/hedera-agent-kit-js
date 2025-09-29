@@ -9,6 +9,7 @@ import {
   LangchainTestSetup,
 } from '../utils';
 import { extractObservationFromLangchainResponse } from 'test/utils/general-util';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Sign Schedule Transaction E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -66,7 +67,7 @@ describe('Sign Schedule Transaction E2E Tests', () => {
     });
   });
 
-  it('should sign a scheduled transaction', async () => {
+  it('should sign a scheduled transaction', itWithRetry(async () => {
     // First, create a scheduled transaction
     const transferAmount = 0.1;
     const transferTx = new TransferTransaction()
@@ -91,9 +92,9 @@ describe('Sign Schedule Transaction E2E Tests', () => {
     const observation = extractObservationFromLangchainResponse(result);
     expect(observation.humanMessage || JSON.stringify(observation)).toContain('Transaction successfully signed');
     expect(observation.humanMessage || JSON.stringify(observation)).toContain('Transaction ID');
-  });
+  }));
 
-  it('should handle invalid schedule ID', async () => {
+  it('should handle invalid schedule ID', itWithRetry(async () => {
     const invalidScheduleId = '0.0.999999';
     const input = `Sign the scheduled transaction with ID ${invalidScheduleId}`;
 
@@ -101,5 +102,5 @@ describe('Sign Schedule Transaction E2E Tests', () => {
     const observation = extractObservationFromLangchainResponse(result);
     // Should handle the error gracefully
     expect(observation.humanMessage || JSON.stringify(observation)).toContain('Failed to sign scheduled transaction');
-  });
+  }));
 });

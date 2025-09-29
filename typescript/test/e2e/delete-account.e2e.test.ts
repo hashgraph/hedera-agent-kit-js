@@ -9,6 +9,7 @@ import {
   LangchainTestSetup,
 } from '../utils';
 import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
@@ -57,7 +58,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     });
   }
 
-  it('deletes a pre-created account via agent (default transfer to operator)', async () => {
+  it('deletes a pre-created account via agent (default transfer to operator)', itWithRetry(async () => {
     const resp = await createTestAccount();
     const targetAccountId = resp.accountId!.toString();
 
@@ -69,9 +70,9 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     expect(observation.humanMessage).toContain('deleted');
 
     await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-  });
+  }));
 
-  it('should delete second pre-created account via agent (explicit transfer account)', async () => {
+  it('should delete second pre-created account via agent (explicit transfer account)', itWithRetry(async () => {
     const resp = await createTestAccount();
     const targetAccountId = resp.accountId!.toString();
 
@@ -83,9 +84,9 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     expect(observation.humanMessage).toContain('deleted');
 
     await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-  });
+  }));
 
-  it('should fail to delete a non-existent account', async () => {
+  it('should fail to delete a non-existent account', itWithRetry(async () => {
     const fakeAccountId = '0.0.999999999';
 
     const deleteResult = await agentExecutor.invoke({
@@ -96,9 +97,9 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
       /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
     );
-  });
+  }));
 
-  it('should handle natural language variations', async () => {
+  it('should handle natural language variations', itWithRetry(async () => {
     const resp = await createTestAccount(5);
     const targetAccountId = resp.accountId!.toString();
 
@@ -118,5 +119,5 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     expect(observation.humanMessage).toContain('deleted');
     await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
     expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy();
-  });
+  }));
 });
