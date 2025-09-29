@@ -51,6 +51,7 @@ const {
   UPDATE_TOKEN_TOOL,
   DISSOCIATE_TOKEN_TOOL,
   ASSOCIATE_TOKEN_TOOL,
+  APPROVE_NFT_ALLOWANCE_TOOL,
 } = coreTokenPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL, DELETE_TOPIC_TOOL, UPDATE_TOPIC_TOOL } =
   coreConsensusPluginToolNames;
@@ -123,6 +124,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     GET_TOPIC_INFO_QUERY_TOOL,
     UPDATE_TOPIC_TOOL,
     APPROVE_HBAR_ALLOWANCE_TOOL,
+    APPROVE_NFT_ALLOWANCE_TOOL,
   ],
   plugins: [
     coreAccountPlugin,
