@@ -74,12 +74,13 @@ describe('HederaParameterNormaliser.normaliseApproveNftAllowance', () => {
     expect(approval.serialNumbers?.map(s => (s as Long).toNumber())).toEqual([10]);
   });
 
-  it('throws when serialNumbers is empty', () => {
+  it('throws when allSerials=true and serialNumbers are provided (mutually exclusive)', () => {
     const params = {
       ownerAccountId: '0.0.1111',
       spenderAccountId: '0.0.2222',
       tokenId: '0.0.7777',
-      serialNumbers: [],
+      allSerials: true,
+      serialNumbers: [1, 2],
     };
 
     expect(() =>
@@ -88,6 +89,44 @@ describe('HederaParameterNormaliser.normaliseApproveNftAllowance', () => {
         mockContext,
         mockClient,
       ),
-    ).toThrowError(/Invalid parameters:.*serialNumbers.*at least 1 element/i);
+    ).toThrowError(/allSerials=true.*serialNumbers.*must not be provided/i);
+  });
+
+  it('throws when allSerials is not true and serialNumbers is empty or omitted', () => {
+    const cases = [
+      { spenderAccountId: '0.0.2222', tokenId: '0.0.7777', serialNumbers: [] },
+      { spenderAccountId: '0.0.2222', tokenId: '0.0.7777' },
+    ];
+
+    for (const p of cases) {
+      expect(() =>
+        HederaParameterNormaliser.normaliseApproveNftAllowance(
+          p as any,
+          mockContext,
+          mockClient,
+        ),
+      ).toThrowError(/serialNumbers must contain at least one serial/i);
+    }
+  });
+
+  it('normalises approve-all with allSerials=true to TokenNftAllowance with allSerials=true and serialNumbers=null', () => {
+    const params = {
+      ownerAccountId: '0.0.1111',
+      spenderAccountId: '0.0.2222',
+      tokenId: '0.0.7777',
+      allSerials: true,
+      transactionMemo: 'approve all',
+    } as any;
+
+    const res = HederaParameterNormaliser.normaliseApproveNftAllowance(
+      params,
+      mockContext,
+      mockClient,
+    );
+
+    const approval = res.nftApprovals![0] as TokenNftAllowance;
+    expect(approval.allSerials).toBe(true);
+    expect(approval.serialNumbers).toBeNull();
+    expect(approval.tokenId?.toString()).toBe(TokenId.fromString('0.0.7777').toString());
   });
 });

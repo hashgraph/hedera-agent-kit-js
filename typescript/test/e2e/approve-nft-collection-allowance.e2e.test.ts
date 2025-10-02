@@ -12,8 +12,6 @@ import {
   TokenType,
   TransferTransaction,
 } from '@hashgraph/sdk';
-import approveNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
-import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -21,19 +19,17 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { wait } from '../utils/general-util';
+import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
-import { z } from 'zod';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
 
 /**
- * E2E test: Create an HTS NFT, approve NFT allowance for a spender, then verify the spender
- * can transfer the NFT using an approved transfer.
+ * E2E: Approve allowance for the entire NFT collection (all serials)
  */
-
-describe('Approve NFT Allowance E2E', () => {
+describe('Approve NFT Collection Allowance (all serials) E2E', () => {
   let testSetup: LangchainTestSetup;
+  let agentExecutor: any;
 
   let operatorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
@@ -41,17 +37,17 @@ describe('Approve NFT Allowance E2E', () => {
   let ownerClient: Client; // owner/treasury/executor
   let ownerWrapper: HederaOperationsWrapper;
 
-  let spenderAccount: AccountId; // Account A (spender)
+  let spenderAccount: AccountId; // spender who will get collection-wide approval
   let spenderKey: PrivateKey;
   let spenderClient: Client;
   let spenderWrapper: HederaOperationsWrapper;
 
-  let nftTokenId: string;
-  const serialToUse = 1; // we'll mint at least one NFT and use serial 1
-
-  let recipientAccount: AccountId; // separate recipient to receive NFT
+  let recipientAccount: AccountId; // recipient to receive NFT in approved transfer
+  let recipientKey: PrivateKey;
   let recipientClient: Client;
   let recipientWrapper: HederaOperationsWrapper;
+
+  let nftTokenId: string;
 
   beforeAll(async () => {
     // 1) Operator funds accounts
@@ -67,31 +63,31 @@ describe('Approve NFT Allowance E2E', () => {
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
 
-    // 3) Create a spender account with its own key and client
+    // 3) Create spender account + client
     spenderKey = PrivateKey.generateED25519();
     spenderAccount = await ownerWrapper
       .createAccount({ key: spenderKey.publicKey as Key, initialBalance: 15 })
       .then(resp => resp.accountId!);
-
     spenderClient = getCustomClient(spenderAccount, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);
 
-    // 3b) Create a separate recipient account (simple key, no custom client needed for transfer)
-    const recipientKey = PrivateKey.generateED25519();
+    // 4) Create a recipient account + client
+    recipientKey = PrivateKey.generateED25519();
     recipientAccount = await ownerWrapper
       .createAccount({ key: recipientKey.publicKey as Key, initialBalance: 15 })
       .then(resp => resp.accountId!);
     recipientClient = getCustomClient(recipientAccount, recipientKey);
     recipientWrapper = new HederaOperationsWrapper(recipientClient);
 
-    // 4) Start LangChain test setup with the owner client
+    // 5) Start LangChain test setup with the owner client (so the agent acts as owner)
     testSetup = await createLangchainTestSetup(undefined, undefined, ownerClient);
+    agentExecutor = testSetup.agentExecutor;
 
-    // 5) Create an HTS NFT with an owner as treasury/admin/supply keys
+    // 6) Create an HTS NFT with owner as treasury/admin/supply
     const createResp = await ownerWrapper.createNonFungibleToken({
-      tokenName: 'AK-NFT-E2E',
-      tokenSymbol: 'AKNE',
-      tokenMemo: 'Approve NFT allowance E2E',
+      tokenName: 'AK-NFT-ALL-E2E',
+      tokenSymbol: 'AKNA',
+      tokenMemo: 'Approve ALL serials allowance E2E',
       tokenType: TokenType.NonFungibleUnique,
       supplyType: TokenSupplyType.Finite,
       maxSupply: 10,
@@ -102,14 +98,7 @@ describe('Approve NFT Allowance E2E', () => {
     });
     nftTokenId = createResp.tokenId!.toString();
 
-    // 6) Mint at least one serial for the NFT using the SDK directly (no other tool)
-    const mintTx = new TokenMintTransaction()
-      .setTokenId(TokenId.fromString(nftTokenId))
-      .setMetadata([Buffer.from('ipfs://meta-1.json')]);
-    const mintResp = await mintTx.execute(ownerClient);
-    await mintResp.getReceipt(ownerClient);
-
-    // 7) Associate spender and recipient with the NFT token (must be signed by each account)
+    // 7) Associate spender and recipient with the NFT token
     await spenderWrapper.associateToken({
       accountId: spenderAccount.toString(),
       tokenId: nftTokenId,
@@ -155,39 +144,49 @@ describe('Approve NFT Allowance E2E', () => {
   });
 
   it(
-    'should approve NFT allowance and allow spender to transfer via approved transfer',
+    'approves allowance for all serials and transfers a newly minted serial',
     itWithRetry(async () => {
-      // Approve NFT allowance (explicit tool invocation for determinism)
-      const approveTool = approveNftAllowanceTool({});
-      const approveParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
-        ownerAccountId: ownerClient.operatorAccountId!.toString(),
-        spenderAccountId: spenderAccount.toString(),
-        tokenId: nftTokenId,
-        serialNumbers: [serialToUse],
-        transactionMemo: 'E2E approve NFT allowance',
-      };
-      const approveResult = await approveTool.execute(ownerClient, {}, approveParams);
-      expect(approveResult.raw.status).toBe('SUCCESS');
+      // Approve for all serials
+      const input = `Approve NFT allowance for all serials of token ${nftTokenId} from ${ownerClient.operatorAccountId!.toString()} to ${spenderAccount.toString()}`;
 
-      // Give the network a moment to process the allowance
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      expect(observation).toBeDefined();
+      expect(observation.raw.status.toString()).toBe('SUCCESS');
+      expect(observation.raw.transactionId).toBeDefined();
+
+      // Wait for mirror node/allowance propagation
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      // Now, using a spender client, perform an approved NFT transfer from owner to recipient via SDK directly
-      const nft = new NftId(TokenId.fromString(nftTokenId), serialToUse);
+      // Mint a new serial AFTER approval to ensure future serials are covered
+      const mintTx = new TokenMintTransaction()
+        .setTokenId(TokenId.fromString(nftTokenId))
+        .setMetadata([Buffer.from('ipfs://meta-future-1.json')]);
+      const mintResp = await mintTx.execute(ownerClient);
+      const rcpt = await mintResp.getReceipt(ownerClient);
+      expect(rcpt.status.toString()).toBe('SUCCESS');
+
+      // The minted serial will be the next available; for simplicity, query info to get the latest serial
+      // However, we can attempt with serial 1 as well by minting earlier; to keep minimal, we assume first mint => serial 1
+      const serialToTransfer = 1; // first minted serial for this token in this test
+
+      // Using a spender client, perform an approved transfer from owner to recipient
+      const nft = new NftId(TokenId.fromString(nftTokenId), serialToTransfer);
       const tx = new TransferTransaction().addApprovedNftTransfer(
         nft,
         AccountId.fromString(ownerClient.operatorAccountId!.toString()),
         AccountId.fromString(recipientAccount.toString()),
       );
       const exec = await tx.execute(spenderClient);
-      const rcpt = await exec.getReceipt(spenderClient);
-      expect(rcpt.status.toString()).toBe('SUCCESS');
+      const transferRcpt = await exec.getReceipt(spenderClient);
+      expect(transferRcpt.status.toString()).toBe('SUCCESS');
 
-      // Optional: verify ownership moved to recipient
-      const nftInfo = await spenderWrapper.getNftInfo(nftTokenId, serialToUse);
-      expect(nftInfo).toBeDefined();
-      // @ts-ignore checked above
-      expect(nftInfo.at(0).accountId?.toString()).toBe(recipientAccount.toString());
+      // Verify ownership now belongs to the recipient
+      const info = await spenderWrapper.getNftInfo(nftTokenId, serialToTransfer);
+      expect(info).toBeDefined();
+      // @ts-ignore validated existence above
+      expect(info.at(0).accountId?.toString()).toBe(recipientAccount.toString());
     }),
     180_000,
   );

@@ -116,6 +116,79 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
     });
   });
 
+  describe('Approve-all (allSerials) parameter extraction', () => {
+    it('matches requests to approve for all serials (entire collection) with allSerials=true and no serialNumbers', async () => {
+      const variations = [
+        {
+          input: 'Approve NFT allowance for all serials of token 0.0.5555 to spender 0.0.6666',
+          tokenId: '0.0.5555',
+          spenderAccountId: '0.0.6666',
+        },
+        {
+          input: 'Grant approval for the entire collection token 0.0.1010 to account 0.0.2020',
+          tokenId: '0.0.1010',
+          spenderAccountId: '0.0.2020',
+        },
+        {
+          input: 'Give spending rights for all NFTs of token 0.0.3030 to 0.0.4040 with memo "bulk"',
+          tokenId: '0.0.3030',
+          spenderAccountId: '0.0.4040',
+          transactionMemo: 'bulk',
+        },
+      ];
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+
+      for (const v of variations) {
+        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+        await agentExecutor.invoke({ input: v.input });
+
+        expect(spy).toHaveBeenCalledOnce();
+        expect(spy).toHaveBeenCalledWith(
+          APPROVE_NFT_ALLOWANCE_TOOL,
+          expect.objectContaining({
+            tokenId: v.tokenId,
+            spenderAccountId: v.spenderAccountId,
+            allSerials: true,
+            ...(v.transactionMemo ? { transactionMemo: v.transactionMemo } : {}),
+          }),
+        );
+        // Ensure serialNumbers is not set when approving for all
+        expect(spy).toHaveBeenCalledWith(
+          APPROVE_NFT_ALLOWANCE_TOOL,
+          expect.not.objectContaining({ serialNumbers: expect.anything() }),
+        );
+
+        spy.mockRestore();
+      }
+    });
+
+    it('understands alternate phrasing like approve entire NFT collection for a spender', async () => {
+      const input = 'Approve the entire NFT collection 0.0.7777 to spender 0.0.8888';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        APPROVE_NFT_ALLOWANCE_TOOL,
+        expect.objectContaining({
+          allSerials: true,
+          tokenId: '0.0.7777',
+          spenderAccountId: '0.0.8888',
+        }),
+      );
+      expect(spy).toHaveBeenCalledWith(
+        APPROVE_NFT_ALLOWANCE_TOOL,
+        expect.not.objectContaining({ serialNumbers: expect.anything() }),
+      );
+
+      spy.mockRestore();
+    });
+  });
+
   describe('Tool Available', () => {
     it('has approve NFT allowance tool available', () => {
       const tools = toolkit.getTools();

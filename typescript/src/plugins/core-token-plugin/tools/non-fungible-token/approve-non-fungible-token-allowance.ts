@@ -19,13 +19,14 @@ const approveNftAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool approves an NFT allowance from the owner to the spender for specific NFT serial numbers of a token.
+This tool approves an NFT allowance from the owner to the spender for specific NFT serial numbers of a token, or for all serials in the NFT collection.
 
 Parameters:
 - ${ownerAccountDesc}
 - spenderAccountId (string, required): Spender account ID
 - tokenId (string, required): The NFT token ID (e.g., 0.0.xxxxx)
-- serialNumbers (number[], required): Array of NFT serial numbers to approve
+- allSerials (boolean, optional): If true, approves allowance for all current and future serials of the NFT. When true, do not provide serialNumbers.
+- serialNumbers (number[], conditionally required): Array of NFT serial numbers to approve. Required when allSerials is not true.
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
 `;
@@ -56,7 +57,7 @@ const tool = (context: Context): Tool => ({
   method: APPROVE_NFT_ALLOWANCE_TOOL,
   name: 'Approve NFT Allowance',
   description: approveNftAllowancePrompt(context),
-  parameters: approveNftAllowanceParameters(context),
+  parameters: approveNftAllowanceParameters(context).innerType(),
   execute: approveNftAllowance,
 });
 

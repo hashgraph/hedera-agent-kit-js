@@ -2,24 +2,26 @@
 
 import {
   airdropFungibleTokenParameters,
+  approveNftAllowanceParameters,
+  approveNftAllowanceParametersNormalised,
+  associateTokenParameters,
+  associateTokenParametersNormalised,
   createFungibleTokenParameters,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParameters,
   createNonFungibleTokenParametersNormalised,
   dissociateTokenParameters,
   dissociateTokenParametersNormalised,
-  associateTokenParameters,
-  associateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
   updateTokenParameters,
   updateTokenParametersNormalised,
-  approveNftAllowanceParameters,
-  approveNftAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
   accountTokenBalancesQueryParameters,
+  approveHbarAllowanceParameters,
+  approveHbarAllowanceParametersNormalised,
   createAccountParameters,
   createAccountParametersNormalised,
   deleteAccountParameters,
@@ -27,8 +29,6 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
-  approveHbarAllowanceParameters,
-  approveHbarAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -43,14 +43,14 @@ import {
   AccountId,
   Client,
   Hbar,
+  HbarAllowance,
+  Long,
   PublicKey,
   TokenId,
+  TokenNftAllowance,
   TokenSupplyType,
   TokenType,
   TopicId,
-  HbarAllowance,
-  TokenNftAllowance,
-  Long,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -261,23 +261,36 @@ export default class HederaParameterNormaliser {
     );
 
     const spenderAccountId = parsedParams.spenderAccountId;
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
 
-    const serials = parsedParams.serialNumbers || [];
-    if (!serials.length) {
+    const approveAll = !!parsedParams.allSerials;
+    const serials = parsedParams.serialNumbers ?? [];
+
+    // Validate mutual exclusivity and required inputs
+    if (approveAll && serials.length > 0) {
+      throw new Error(
+        'When approving for all serials (allSerials=true), serialNumbers must not be provided.',
+      );
+    }
+    if (!approveAll && serials.length === 0) {
       throw new Error('serialNumbers must contain at least one serial');
     }
 
-    const tokenId = TokenId.fromString(parsedParams.tokenId);
+    // Compute values for unified return
+    const allSerialsValue: boolean | null = approveAll ? true : null;
+    const serialNumbersValue: Long[] | null = approveAll
+      ? null
+      : serials.map(serialNumber => Long.fromNumber(serialNumber));
 
     return {
       nftApprovals: [
         new TokenNftAllowance({
-          allSerials: null,
+          allSerials: allSerialsValue,
           delegatingSpender: null,
           ownerAccountId: AccountId.fromString(ownerAccountId),
           spenderAccountId: AccountId.fromString(spenderAccountId),
           tokenId,
-          serialNumbers: serials?.map(serialNumber => Long.fromNumber(serialNumber)),
+          serialNumbers: serialNumbersValue,
         }),
       ],
       transactionMemo: parsedParams.transactionMemo,
