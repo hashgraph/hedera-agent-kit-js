@@ -14,7 +14,6 @@ import {
   mintNonFungibleTokenParameters,
   updateTokenParameters,
   updateTokenParametersNormalised,
-
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
@@ -28,6 +27,7 @@ import {
   updateAccountParametersNormalised,
   approveHbarAllowanceParameters,
   approveHbarAllowanceParametersNormalised,
+  deleteHbarAllowanceParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -244,6 +244,47 @@ export default class HederaParameterNormaliser {
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
   }
 
+  /**
+   * Normalizes parameters for deleting an HBAR allowance.
+   *
+   * This function sets the allowance `amount` to **0**, which is the Hedera
+   * convention for revoking an existing allowance. It validates and resolves
+   * the provided parameters, then returns an object compatible with
+   * `approveHbarAllowanceParametersNormalised`.
+   * @param params
+   * @param context
+   * @param client
+   */
+  static normaliseDeleteHbarAllowance(
+    params: z.infer<ReturnType<typeof deleteHbarAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof deleteHbarAllowanceParameters>> =
+      this.parseParamsWithSchema(params, deleteHbarAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const spenderAccountId = parsedParams.spenderAccountId;
+
+    const amount = new Hbar(0); // hardcoded amount 0 to delete allowance
+
+    return {
+      hbarApprovals: [
+        new HbarAllowance({
+          ownerAccountId: AccountId.fromString(ownerAccountId),
+          spenderAccountId: AccountId.fromString(spenderAccountId),
+          amount,
+        }),
+      ],
+      transactionMemo: parsedParams.transactionMemo,
+    } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
+  }
+
   static async normaliseAirdropFungibleTokenParams(
     params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>>,
     context: Context,
@@ -298,7 +339,6 @@ export default class HederaParameterNormaliser {
       tokenTransfers,
     };
   }
-
 
   static normaliseAssociateTokenParams(
     params: z.infer<ReturnType<typeof associateTokenParameters>>,
@@ -846,7 +886,7 @@ export default class HederaParameterNormaliser {
 
     return normalised;
   }
-  
+
   private static resolveKey(
     rawValue: string | boolean | undefined,
     userKey: PublicKey,
@@ -864,6 +904,5 @@ export default class HederaParameterNormaliser {
       return userKey;
     }
     return undefined;
-  };
-
+  }
 }
