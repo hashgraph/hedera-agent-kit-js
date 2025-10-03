@@ -28,6 +28,8 @@ import {
   updateAccountParametersNormalised,
   approveHbarAllowanceParameters,
   approveHbarAllowanceParametersNormalised,
+  approveTokenAllowanceParameters,
+  approveTokenAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -48,6 +50,7 @@ import {
   TokenType,
   TopicId,
   HbarAllowance,
+  TokenAllowance, 
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -242,6 +245,41 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
+  }
+
+  static normaliseApproveTokenAllowance(
+    params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const parsedParams: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> =
+      this.parseParamsWithSchema(params, approveTokenAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const spenderAccountId = parsedParams.spenderAccountId;
+
+    const tokenAllowances = parsedParams.tokenAllowances.map(ta => {
+      const amountNum = Number(ta.amount);
+      if (!Number.isFinite(amountNum) || amountNum <= 0 || !Number.isInteger(amountNum)) {
+        throw new Error(`Invalid token allowance amount for token ${ta.tokenId}: ${ta.amount}`);
+      }
+      return new TokenAllowance({
+        ownerAccountId: AccountId.fromString(ownerAccountId),
+        spenderAccountId: AccountId.fromString(spenderAccountId),
+        tokenId: TokenId.fromString(ta.tokenId),
+        amount: Long.fromNumber(amountNum),
+      });
+    });
+
+    return {
+      tokenAllowances,
+      transactionMemo: parsedParams.transactionMemo,
+    } as z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>;
   }
 
   static async normaliseAirdropFungibleTokenParams(

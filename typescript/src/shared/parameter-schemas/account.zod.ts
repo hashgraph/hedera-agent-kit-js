@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, Hbar, Key, Transaction, HbarAllowance } from '@hashgraph/sdk';
+import { AccountId, Hbar, Key, Transaction, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
 
@@ -160,5 +160,30 @@ export const approveHbarAllowanceParameters = (_context: Context = {}) =>
 export const approveHbarAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
     hbarApprovals: z.array(z.instanceof(HbarAllowance)).optional(),
+    transactionMemo: z.string().optional(),
+  });
+
+export const approveTokenAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    spenderAccountId: z.string().describe('Spender account ID'),
+    tokenAllowances: z
+      .array(
+        z.object({
+          tokenId: z.string().describe('Token ID'),
+          amount: z.number().describe('Amount of tokens to approve (must be positive integer)'),
+        }),
+      )
+      .nonempty()
+      .describe('List of token allowances to approve'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const approveTokenAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    tokenAllowances: z.array(z.instanceof(TokenAllowance)).optional(),
     transactionMemo: z.string().optional(),
   });

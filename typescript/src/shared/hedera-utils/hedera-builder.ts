@@ -43,6 +43,7 @@ import {
   signScheduleTransactionParameters,
   scheduleDeleteTransactionParameters,
   approveHbarAllowanceParametersNormalised,
+  approveTokenAllowanceParametersNormalised, 
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -170,6 +171,16 @@ export default class HederaBuilder {
 
   static approveHbarAllowance(
     params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
+  ) {
+    const tx = new AccountAllowanceApproveTransaction(params as any);
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+    return tx;
+  }
+
+  static approveTokenAllowance(
+    params: z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>,
   ) {
     const tx = new AccountAllowanceApproveTransaction(params as any);
     if (params.transactionMemo) {

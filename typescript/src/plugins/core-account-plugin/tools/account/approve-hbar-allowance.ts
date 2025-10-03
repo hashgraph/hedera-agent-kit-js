@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import {
@@ -41,14 +41,21 @@ const approveHbarAllowance = async (
   context: Context,
   params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
 ) => {
-  const normalisedParams = HederaParameterNormaliser.normaliseApproveHbarAllowance(
-    params,
-    context,
-    client,
-  );
-  const tx = HederaBuilder.approveHbarAllowance(normalisedParams);
-  const result = await handleTransaction(tx, client, context, postProcess);
-  return result;
+  try {
+    const normalisedParams = HederaParameterNormaliser.normaliseApproveHbarAllowance(
+      params,
+      context,
+      client,
+    );
+    const tx = HederaBuilder.approveHbarAllowance(normalisedParams);
+    const result = await handleTransaction(tx, client, context, postProcess);
+    return result;
+  } catch (error) {
+    const desc = 'Failed to approve HBAR allowance';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[approve_hbar_allowance_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+  }
 };
 
 export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
