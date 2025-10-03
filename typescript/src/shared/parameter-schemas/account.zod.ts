@@ -174,9 +174,3 @@ export const deleteHbarAllowanceParameters = (_context: Context = {}) =>
     spenderAccountId: z.string().describe('Spender account ID'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
-
-export const deleteHbarAllowanceParametersNormalised = (_context: Context = {}) =>
-  z.object({
-    hbarAllowances: z.array(z.instanceof(HbarAllowance)).optional(),
-    transactionMemo: z.string().optional(),
-  });
