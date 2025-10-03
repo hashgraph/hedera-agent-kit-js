@@ -111,8 +111,8 @@ If you already have a **testnet** account, you can use it. Otherwise, you can cr
 Add the following to the .env file:
 ```env
 # Required: Hedera credentials (get free testnet account at https://portal.hedera.com/dashboard)
-HEDERA_ACCOUNT_ID="0.0.xxxxx"
-HEDERA_PRIVATE_KEY="0x..." # ECDSA encoded private key
+ACCOUNT_ID="0.0.xxxxx"
+PRIVATE_KEY="0x..." # ECDSA encoded private key
 
 # Optional: Add the API key for your chosen AI provider
 OPENAI_API_KEY="sk-proj-..."      # For OpenAI (https://platform.openai.com/api-keys)
@@ -182,8 +182,8 @@ async function main() {
 
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
-    process.env.HEDERA_ACCOUNT_ID,
-    PrivateKey.fromStringECDSA(process.env.HEDERA_PRIVATE_KEY),
+    process.env.ACCOUNT_ID,
+    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY),
   );
 
   const hederaAgentToolkit = new HederaLangchainToolkit({
