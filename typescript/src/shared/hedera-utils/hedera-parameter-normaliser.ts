@@ -2,14 +2,16 @@
 
 import {
   airdropFungibleTokenParameters,
+  approveNftAllowanceParameters,
+  approveNftAllowanceParametersNormalised,
+  associateTokenParameters,
+  associateTokenParametersNormalised,
   createFungibleTokenParameters,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParameters,
   createNonFungibleTokenParametersNormalised,
   dissociateTokenParameters,
   dissociateTokenParametersNormalised,
-  associateTokenParameters,
-  associateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
   updateTokenParameters,
@@ -18,6 +20,8 @@ import {
 import {
   accountBalanceQueryParameters,
   accountTokenBalancesQueryParameters,
+  approveHbarAllowanceParameters,
+  approveHbarAllowanceParametersNormalised,
   createAccountParameters,
   createAccountParametersNormalised,
   deleteAccountParameters,
@@ -25,8 +29,6 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
-  approveHbarAllowanceParameters,
-  approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParameters,
   approveTokenAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
@@ -43,8 +45,10 @@ import {
   AccountId,
   Client,
   Hbar,
+  Long,
   PublicKey,
   TokenId,
+  TokenNftAllowance,
   TokenSupplyType,
   TokenType,
   TopicId,
@@ -55,7 +59,6 @@ import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
-import Long from 'long';
 import { TokenTransferMinimalParams, TransferHbarInput } from '@/shared/hedera-utils/types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -244,6 +247,57 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
+  }
+
+  static normaliseApproveNftAllowance(
+    params: z.infer<ReturnType<typeof approveNftAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const parsedParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> =
+      this.parseParamsWithSchema(params, approveNftAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const spenderAccountId = parsedParams.spenderAccountId;
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    const approveAll = !!parsedParams.allSerials;
+    const serials = parsedParams.serialNumbers ?? [];
+
+    // Validate mutual exclusivity and required inputs
+    if (approveAll && serials.length > 0) {
+      throw new Error(
+        'When approving for all serials (allSerials=true), serialNumbers must not be provided.',
+      );
+    }
+    if (!approveAll && serials.length === 0) {
+      throw new Error('serialNumbers must contain at least one serial');
+    }
+
+    // Compute values for unified return
+    const allSerialsValue: boolean | null = approveAll ? true : null;
+    const serialNumbersValue: Long[] | null = approveAll
+      ? null
+      : serials.map(serialNumber => Long.fromNumber(serialNumber));
+
+    return {
+      nftApprovals: [
+        new TokenNftAllowance({
+          allSerials: allSerialsValue,
+          delegatingSpender: null,
+          ownerAccountId: AccountId.fromString(ownerAccountId),
+          spenderAccountId: AccountId.fromString(spenderAccountId),
+          tokenId,
+          serialNumbers: serialNumbersValue,
+        }),
+      ],
+      transactionMemo: parsedParams.transactionMemo,
+    } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
   }
 
   static async normaliseApproveTokenAllowance(

@@ -205,12 +205,30 @@ class HederaOperationsWrapper {
     to: string;
     memo?: string;
   }): Promise<RawTransactionResponse> {
+    const operatorId = (this.client as any)._operatorAccountId.toString();
+    const fromId = params.from ?? operatorId;
     const nft = new NftId(TokenId.fromString(params.tokenId), params.serial);
-    const tx = new TransferTransaction().addNftTransfer(
-      nft,
-      AccountId.fromString(params.from ?? (this.client as any)._operatorAccountId.toString()),
-      AccountId.fromString(params.to),
-    );
+
+    let tx = new TransferTransaction();
+
+    // If the caller (client operator) is not the owner (from), use approved transfer path
+    if (fromId !== operatorId) {
+      tx = tx.addApprovedNftTransfer(
+        nft,
+        AccountId.fromString(fromId),
+        AccountId.fromString(params.to),
+      );
+    } else {
+      tx = tx.addNftTransfer(
+        nft,
+        AccountId.fromString(fromId),
+        AccountId.fromString(params.to),
+      );
+    }
+
+    if (params.memo) {
+      tx.setTransactionMemo(params.memo);
+    }
 
     const result = await this.executeStrategy.handle(tx, this.client, {});
     return result.raw;
