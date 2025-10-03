@@ -36,15 +36,16 @@ Plugins can be found in [typescript/src/plugins](../typescript/src/plugins)
 
 This plugin provides tools for Hedera **Account Service operations**:
 
-| Tool Name                        | Description                                                                                                    | Usage                                                                                                                                                                                                         |
-|----------------------------------|----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `TRANSFER_HBAR_TOOL`             | Transfer HBAR between accounts                                                                                 | Provide the amount of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                                                                                                       |
-| `APPROVE_HBAR_ALLOWANCE_TOOL`    | Approve an HBAR spending allowance for a spender account                                                       | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), the HBAR amount to approve (decimal supported, cannot be negative), and an optional transaction memo. |
-| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                          |
-| `UPDATE_ACCOUNT_TOOL`            | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional).    |
-| `DELETE_ACCOUNT_TOOL`            | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                      |
-| `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                                  |
-| `SCHEDULE_DELETE_TOOL`           | Delete a scheduled transaction so it will not execute                                                          | Provide the schedule ID (required) of the scheduled transaction to delete. Returns the transaction ID upon successful deletion.                                                                               |
+| Tool Name                        | Description                                                                                                    | Usage                                                                                                                                                                                                                   |
+|----------------------------------|----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `TRANSFER_HBAR_TOOL`             | Transfer HBAR between accounts                                                                                 | Provide the amount of HBAR to transfer, the account to transfer to, and optionally, a transaction memo.                                                                                                                 |
+| `APPROVE_HBAR_ALLOWANCE_TOOL`    | Approve an HBAR spending allowance for a spender account                                                       | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), the HBAR amount to approve (decimal supported, cannot be negative), and an optional transaction memo.           |
+| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                                    |
+| `UPDATE_ACCOUNT_TOOL`            | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional).              |
+| `DELETE_ACCOUNT_TOOL`            | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                                |
+| `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                                            |
+| `SCHEDULE_DELETE_TOOL`           | Delete a scheduled transaction so it will not execute                                                          | Provide the schedule ID (required) of the scheduled transaction to delete. Returns the transaction ID upon successful deletion.                                                                                         |
+| `APPROVE_TOKEN_ALLOWANCE_TOOL`   | Approve fungible token spending allowances                                                                     | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), an array of token allowances each with tokenId and amount (positive integer), and an optional transaction memo. |
 
 ---
 
@@ -173,22 +174,22 @@ this, only the tools specified will be usable. You will need to import the const
 
 ```javascript
 import {
-    AgentMode,
-    Configuration,
-    Context,
-    coreAccountPlugin,
-    coreAccountPluginToolNames,
-    coreConsensusPlugin,
-    coreConsensusPluginToolNames,
-    coreTokenPlugin,
-    coreTokenPluginToolNames,
-    coreEVMPlugin,
-    coreEVMPluginToolNames,
-    coreAccountQueryPlugin,
-    coreConsensusQueryPlugin,
-    coreTokenQueryPlugin,
-    coreEVMQueryPlugin,
-    coreMiscQueriesPlugin,
+  AgentMode,
+  Configuration,
+  Context,
+  coreAccountPlugin,
+  coreAccountPluginToolNames,
+  coreConsensusPlugin,
+  coreConsensusPluginToolNames,
+  coreTokenPlugin,
+  coreTokenPluginToolNames,
+  coreEVMPlugin,
+  coreEVMPluginToolNames,
+  coreAccountQueryPlugin,
+  coreConsensusQueryPlugin,
+  coreTokenQueryPlugin,
+  coreEVMQueryPlugin,
+  coreMiscQueriesPlugin,
 } from 'hedera-agent-kit';
 ```
 
@@ -197,31 +198,31 @@ and mode (AUTONOMOUS or RETURN_BYTES for human in the loop), as well as the plug
 
 ```javascript
  const hederaAgentToolkit = new HederaLangchainToolkit({
-    client,
-    configuration: {
-        tools: [
-            CREATE_FUNGIBLE_TOKEN_TOOL,
-            MINT_FUNGIBLE_TOKEN_TOOL,
-            CREATE_ERC20_TOOL,
-            TRANSFER_HBAR_TOOL,
-            GET_ACCOUNT_QUERY_TOOL,
-            GET_CONTRACT_INFO_QUERY_TOOL,
-            // etc.
-        ], // use an empty array if you want to load all tools
-        context: {
-            mode: AgentMode.AUTONOMOUS,
-        },
-        plugins: [
-            coreAccountPlugin,
-            coreAccountQueryPlugin,
-            coreConsensusPlugin,
-            coreConsensusQueryPlugin,
-            coreTokenPlugin,
-            coreTokenQueryPlugin,
-            coreEVMPlugin,
-            coreEVMQueryPlugin,
-            coreMiscQueriesPlugin,
-        ],
+  client,
+  configuration: {
+    tools: [
+      CREATE_FUNGIBLE_TOKEN_TOOL,
+      MINT_FUNGIBLE_TOKEN_TOOL,
+      CREATE_ERC20_TOOL,
+      TRANSFER_HBAR_TOOL,
+      GET_ACCOUNT_QUERY_TOOL,
+      GET_CONTRACT_INFO_QUERY_TOOL,
+      // etc.
+    ], // use an empty array if you want to load all tools
+    context: {
+      mode: AgentMode.AUTONOMOUS,
     },
+    plugins: [
+      coreAccountPlugin,
+      coreAccountQueryPlugin,
+      coreConsensusPlugin,
+      coreConsensusQueryPlugin,
+      coreTokenPlugin,
+      coreTokenQueryPlugin,
+      coreEVMPlugin,
+      coreEVMQueryPlugin,
+      coreMiscQueriesPlugin,
+    ],
+  },
 });
   ```

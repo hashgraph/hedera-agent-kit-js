@@ -271,3 +271,22 @@ export interface TimestampRange {
 export interface Links {
   next: string | null;
 }
+
+export interface TokenAllowanceResponse {
+  allowances: TokenAllowance[];
+  links: {
+    next: string | null;
+  };
+}
+
+export interface TokenAllowance {
+  amount: number;
+  amount_granted: number;
+  owner: string; // e.g. "0.0.6941870"
+  spender: string; // e.g. "0.0.6941872"
+  timestamp: {
+    from: string; // Hedera consensus timestamp, e.g. "1759488103.097757000"
+    to: string | null;
+  };
+  token_id: string; // e.g. "0.0.6941871"
+}
