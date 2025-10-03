@@ -1,6 +1,13 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, PublicKey, TokenId, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import {
+  AccountId,
+  PublicKey,
+  TokenId,
+  TokenNftAllowance,
+  TokenSupplyType,
+  TokenType,
+} from '@hashgraph/sdk';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 
 export const createFungibleTokenParameters = (_context: Context = {}) =>
@@ -252,7 +259,7 @@ export const updateTokenParametersNormalised = (_context: Context = {}) =>
     metadataKey: z.instanceof(PublicKey).optional(),
   });
 
-    // Associate Token
+// Associate Token
 export const associateTokenParameters = (_context: Context = {}) =>
   z.object({
     // If not passed, will be injected from context in normalisation
@@ -271,7 +278,6 @@ export const associateTokenParametersNormalised = (_context: Context = {}) =>
     accountId: z.string().describe('Resolved account ID to associate tokens with'),
     tokenIds: z.array(z.string()).min(1).describe('Array of token IDs to associate'),
   });
-
 
 export const pendingAirdropQueryParameters = (_context: Context = {}) =>
   z.object({
@@ -297,4 +303,52 @@ export const dissociateTokenParametersNormalised = (_context: Context = {}) =>
   dissociateTokenParameters(_context).extend({
     tokenIds: z.array(z.instanceof(TokenId)),
     accountId: z.instanceof(AccountId),
+  });
+
+// Approve NFT Allowance
+export const approveNftAllowanceParameters = (_context: Context = {}) =>
+  z
+    .object({
+      ownerAccountId: z
+        .string()
+        .optional()
+        .describe('Owner account ID (defaults to operator account ID if omitted)'),
+      spenderAccountId: z.string().describe('Spender account ID'),
+      tokenId: z.string().describe('The NFT token ID'),
+      allSerials: z
+        .boolean()
+        .optional()
+        .describe(
+          'If true, approve allowance for all current and future serials of the NFT collection. If true, do not provide serialNumbers.',
+        ),
+      serialNumbers: z
+        .array(z.number().int().nonnegative())
+        .optional()
+        .describe('Array of NFT serial numbers to approve. Required if allSerials is not true.'),
+      transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+    })
+    .superRefine((val, ctx) => {
+      const all = !!val.allSerials;
+      const serials = val.serialNumbers ?? [];
+      if (all && serials.length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            'When approving for all serials (allSerials=true), serialNumbers must not be provided.',
+          path: ['serialNumbers'],
+        });
+      }
+      if (!all && serials.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'serialNumbers must contain at least one serial when allSerials is not true.',
+          path: ['serialNumbers'],
+        });
+      }
+    });
+
+export const approveNftAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    nftApprovals: z.array(z.instanceof(TokenNftAllowance)).optional(),
+    transactionMemo: z.string().optional(),
   });

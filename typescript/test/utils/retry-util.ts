@@ -37,10 +37,10 @@ export function withRetry<T extends any[]>(
   options: RetryOptions = {}
 ): (...args: T) => Promise<void> {
   const config = { ...DEFAULT_RETRY_OPTIONS, ...options };
-  
+
   return async (...args: T): Promise<void> => {
     let lastError: Error | undefined;
-    
+
     for (let attempt = 1; attempt <= config.maxRetries; attempt++) {
       try {
         await testFn(...args);
@@ -51,23 +51,23 @@ export function withRetry<T extends any[]>(
         return;
       } catch (error) {
         lastError = error as Error;
-        
+
         if (config.logRetries) {
           console.log(`❌ Test failed on attempt ${attempt}/${config.maxRetries}: ${lastError.message}`);
         }
-        
+
         // If this was the last attempt, don't wait
         if (attempt === config.maxRetries) {
           break;
         }
-        
+
         // Wait before retrying
         if (config.delayMs > 0) {
           await sleep(config.delayMs);
         }
       }
     }
-    
+
     // If we get here, all retries failed
     throw lastError;
   };
@@ -85,12 +85,12 @@ export function withE2ERetry<T extends any[]>(
 ): (...args: T) => Promise<void> {
   // E2E tests typically need longer delays and fewer retries
   const e2eOptions: RetryOptions = {
-    maxRetries: 3,
-    delayMs: 2000, // 2 seconds between retries for e2e tests
+    maxRetries: 1,
+    delayMs: 1000, // 2 seconds between retries for e2e tests
     logRetries: true,
     ...options,
   };
-  
+
   return withRetry(testFn, e2eOptions);
 }
 
