@@ -22,6 +22,7 @@ import BigNumber from 'bignumber.js';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { z } from 'zod';
 import {
+  approveHbarAllowanceParametersNormalised,
   createAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
   deleteAccountParametersNormalised,
@@ -167,7 +168,8 @@ class HederaOperationsWrapper {
     return result.raw;
   }
 
-  async airdropToken(params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>
+  async airdropToken(
+    params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>,
   ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.airdropFungibleToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
@@ -348,7 +350,6 @@ class HederaOperationsWrapper {
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
-    console.log(JSON.stringify(result, null, 2));
     const erc721Address = await this.getERCAddress(result.raw.transactionId);
     return {
       ...(result as ExecuteStrategyResult),
@@ -374,6 +375,13 @@ class HederaOperationsWrapper {
   async getERCAddress(txId: string) {
     const record = await new TransactionRecordQuery().setTransactionId(txId).execute(this.client);
     return '0x' + record.contractFunctionResult?.getAddress(0);
+  }
+
+  async approveHbarAllowance(
+    params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
+  ) {
+    const tx = HederaBuilder.approveHbarAllowance(params);
+    return await this.executeStrategy.handle(tx, this.client, {});
   }
 }
 
