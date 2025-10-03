@@ -4,11 +4,11 @@ import type { Tool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
-import { approveHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
+import { deleteHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 
-const approveHbarAllowancePrompt = (context: Context = {}) => {
+const deleteHbarAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const ownerAccountDesc = PromptGenerator.getAccountParameterDescription(
     'ownerAccountId',
@@ -19,28 +19,30 @@ const approveHbarAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool approves an HBAR allowance from the owner to the spender.
+This tool deletes an HBAR allowance from the owner to the spender.
 
 Parameters:
 - ${ownerAccountDesc}
 - spenderAccountId (string, required): Spender account ID
-- amount (number, required): Amount of HBAR to approve (can be decimal, cannot be negative)
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
+
+Example: "Delete HBAR allowance from 0.0.123 to 0.0.456". Spender account ID is 0.0.456 and the owner account ID is 0.0.789.
+Example 2: "Delete HBAR allowance for 0.0.123". Spender account ID is 0.0.123 and the owner account ID was not specified.
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `HBAR allowance approved successfully. Transaction ID: ${response.transactionId}`;
+  return `HBAR allowance deleted successfully. Transaction ID: ${response.transactionId}`;
 };
 
-const approveHbarAllowance = async (
+const deleteHbarAllowance = async (
   client: Client,
   context: Context,
-  params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
+  params: z.infer<ReturnType<typeof deleteHbarAllowanceParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseApproveHbarAllowance(
+    const normalisedParams = HederaParameterNormaliser.normaliseDeleteHbarAllowance(
       params,
       context,
       client,
@@ -48,21 +50,21 @@ const approveHbarAllowance = async (
     const tx = HederaBuilder.approveHbarAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
-    const desc = 'Failed to approve hbar allowance.';
+    const desc = 'Failed to delete hbar allowance.';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[approve_hbar_allowance_tool]', message);
+    console.error('[delete_hbar_allowance_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
-export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
+export const DELETE_HBAR_ALLOWANCE_TOOL = 'delete_hbar_allowance_tool';
 
 const tool = (context: Context): Tool => ({
-  method: APPROVE_HBAR_ALLOWANCE_TOOL,
-  name: 'Approve HBAR Allowance',
-  description: approveHbarAllowancePrompt(context),
-  parameters: approveHbarAllowanceParameters(context),
-  execute: approveHbarAllowance,
+  method: DELETE_HBAR_ALLOWANCE_TOOL,
+  name: 'Delete HBAR Allowance',
+  description: deleteHbarAllowancePrompt(context),
+  parameters: deleteHbarAllowanceParameters(context),
+  execute: deleteHbarAllowance,
 });
 
 export default tool;
