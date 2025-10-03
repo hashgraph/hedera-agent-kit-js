@@ -32,6 +32,7 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
+  approveNftAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -168,13 +169,30 @@ export default class HederaBuilder {
     });
   }
 
+  private static buildAccountAllowanceApproveTx(
+    params: z.infer<
+      ReturnType<
+        | typeof approveHbarAllowanceParametersNormalised
+        | typeof approveNftAllowanceParametersNormalised
+      >
+    >,
+  ) {
+    const tx = new AccountAllowanceApproveTransaction(params as any);
+    if ((params as any).transactionMemo) {
+      tx.setTransactionMemo((params as any).transactionMemo);
+    }
+    return tx;
+  }
+
   static approveHbarAllowance(
     params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
   ) {
-    const tx = new AccountAllowanceApproveTransaction(params as any);
-    if (params.transactionMemo) {
-      tx.setTransactionMemo(params.transactionMemo);
-    }
-    return tx;
+    return this.buildAccountAllowanceApproveTx(params);
+  }
+
+  static approveNftAllowance(
+    params: z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>,
+  ) {
+    return this.buildAccountAllowanceApproveTx(params);
   }
 }
