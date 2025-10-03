@@ -27,8 +27,8 @@ Parameters:
 - tokenIds (array, required): List of token IDs whose allowances should be removed
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
-Example: "Delete token allowance for 0.0.123 on token 0.0.456". 
-Example 2: "Delete all token allowances for 0.0.123". 
+Example: "Delete token allowance for account 0.0.123 on token 0.0.456". Means that 0.0.123 is the spenderId, 0.0.456 is the tokenId and the ownerId is taken from context or default operator.
+Example 2: "Delete token allowance given from 0.0.1001 to account 0.0.2002 for token 0.0.3003". Means that 0.0.1001 is the ownerId, 0.0.2002 is the spenderId and 0.0.3003 is the tokenId.
 `;
 };
 
