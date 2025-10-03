@@ -1,9 +1,10 @@
-import { HederaAIToolkit, AgentMode, coreTokenPlugin, coreQueriesPlugin, coreAccountPlugin } from 'hedera-agent-kit';
+import { AgentMode, HederaAIToolkit } from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { openai } from '@ai-sdk/openai';
 import { generateText, wrapLanguageModel } from 'ai';
+
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -16,11 +17,7 @@ async function bootstrap(): Promise<void> {
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
-      plugins: [
-        coreTokenPlugin,
-        coreQueriesPlugin,
-        coreAccountPlugin
-      ],
+      plugins: [], //Load all plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
@@ -35,11 +32,13 @@ async function bootstrap(): Promise<void> {
   console.log('Hedera Agent CLI Chatbot with Plugin Support — type "exit" to quit');
   console.log('Available plugin tools:');
   console.log('- example_greeting_tool: Generate personalized greetings');
-  console.log('- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)');
+  console.log(
+    '- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)',
+  );
   console.log('');
 
   // Chat memory: conversation history
-  const conversationHistory: { role: 'user' | 'assistant', content: string }[] = [];
+  const conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
 
   while (true) {
     const { userInput } = await prompts({
@@ -76,9 +75,11 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal error during CLI bootstrap:', err);
-  process.exit(1);
-}).then(() => {
-  process.exit(0);
-});
+bootstrap()
+  .catch(err => {
+    console.error('Fatal error during CLI bootstrap:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    process.exit(0);
+  });
