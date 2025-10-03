@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
@@ -41,14 +41,21 @@ const approveNftAllowance = async (
   context: Context,
   params: z.infer<ReturnType<typeof approveNftAllowanceParameters>>,
 ) => {
-  const normalisedParams = HederaParameterNormaliser.normaliseApproveNftAllowance(
-    params,
-    context,
-    client,
-  );
-  const tx = HederaBuilder.approveNftAllowance(normalisedParams);
+  try {
+    const normalisedParams = HederaParameterNormaliser.normaliseApproveNftAllowance(
+      params,
+      context,
+      client,
+    );
+    const tx = HederaBuilder.approveNftAllowance(normalisedParams);
 
-  return await handleTransaction(tx, client, context, postProcess);
+    return await handleTransaction(tx, client, context, postProcess);
+  } catch (error) {
+    const desc = 'Failed to Approve NFT allowance';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[approve_nft_allowance_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+  }
 };
 
 export const APPROVE_NFT_ALLOWANCE_TOOL = 'approve_nft_allowance_tool';
