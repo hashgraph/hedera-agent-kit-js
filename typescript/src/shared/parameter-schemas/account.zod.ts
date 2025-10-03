@@ -178,11 +178,11 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
           tokenId: z.string().describe('Token ID'),
           amount: z
             .number()
-            .positive()
+            .nonnegative()
             .describe('Amount of tokens to approve (must be positive integer)'),
         }),
       )
-      .nonempty()
+      .min(1)
       .describe('List of token allowances to approve'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
@@ -190,5 +190,13 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
 export const approveTokenAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
     tokenApprovals: z.array(z.instanceof(TokenAllowance)).optional(),
+    transactionMemo: z.string().optional(),
+  });
+
+export const deleteTokenAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z.string().optional(),
+    spenderAccountId: z.string(),
+    tokenIds: z.array(z.string()), // list of token IDs whose allowances we’re deleting
     transactionMemo: z.string().optional(),
   });
