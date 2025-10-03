@@ -9,6 +9,7 @@ import {
   ContractInfo,
   ExchangeRateResponse,
   TokenAirdropsResponse,
+  TokenAllowanceResponse,
 } from './types';
 
 export interface IHederaMirrornodeService {
@@ -23,4 +24,8 @@ export interface IHederaMirrornodeService {
   getExchangeRate(timestamp?: string): Promise<ExchangeRateResponse>;
   getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse>;
   getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse>;
+  getTokenAllowances(
+    ownerAccountId: string,
+    spenderAccountId: string,
+  ): Promise<TokenAllowanceResponse>;
 }

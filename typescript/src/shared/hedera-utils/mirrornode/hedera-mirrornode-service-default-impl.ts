@@ -15,6 +15,7 @@ import {
   ContractInfo,
   TokenAirdropsResponse,
   ExchangeRateResponse,
+  TokenAllowanceResponse,
 } from './types';
 import BigNumber from 'bignumber.js';
 
@@ -214,6 +215,18 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getExchangeRate(timestamp?: string): Promise<ExchangeRateResponse> {
     const timestampParam = timestamp ? `?timestamp=${encodeURIComponent(timestamp)}` : '';
     const url = `${this.baseUrl}/network/exchangerate${timestampParam}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
+    }
+    return await response.json();
+  }
+
+  async getTokenAllowances(
+    ownerAccountId: string,
+    spenderAccountId: string,
+  ): Promise<TokenAllowanceResponse> {
+    const url = `${this.baseUrl}/accounts/${ownerAccountId}/allowances/tokens?spender.id=${spenderAccountId}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);

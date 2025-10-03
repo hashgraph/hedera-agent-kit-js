@@ -30,6 +30,8 @@ import {
   updateAccountParameters,
   updateAccountParametersNormalised,
   deleteHbarAllowanceParameters,
+  approveTokenAllowanceParameters,
+  approveTokenAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -44,7 +46,6 @@ import {
   AccountId,
   Client,
   Hbar,
-  HbarAllowance,
   Long,
   PublicKey,
   TokenId,
@@ -52,6 +53,8 @@ import {
   TokenSupplyType,
   TokenType,
   TopicId,
+  HbarAllowance,
+  TokenAllowance,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -326,6 +329,46 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
+  }
+
+  static async normaliseApproveTokenAllowance(
+    params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
+    context: Context,
+    client: Client,
+    mirrorNode: IHederaMirrornodeService,
+  ) {
+    const parsedParams: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> =
+      this.parseParamsWithSchema(params, approveTokenAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const spenderAccountId = parsedParams.spenderAccountId;
+
+    const tokenAllowancesPromises = parsedParams.tokenApprovals.map(async tokenAllowance => {
+      const tokenInfo = await mirrorNode.getTokenInfo(tokenAllowance.tokenId);
+      const decimals = Number(tokenInfo.decimals);
+
+      // Fallback to 0 if decimals are missing or NaN
+      const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
+
+      const baseAmount = toBaseUnit(tokenAllowance.amount, safeDecimals).toNumber();
+
+      return new TokenAllowance({
+        ownerAccountId: AccountId.fromString(ownerAccountId),
+        spenderAccountId: AccountId.fromString(spenderAccountId),
+        tokenId: TokenId.fromString(tokenAllowance.tokenId),
+        amount: Long.fromNumber(baseAmount),
+      });
+    });
+
+    return {
+      transactionMemo: parsedParams.transactionMemo,
+      tokenApprovals: await Promise.all(tokenAllowancesPromises),
+    } as z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>;
   }
 
   static async normaliseAirdropFungibleTokenParams(
