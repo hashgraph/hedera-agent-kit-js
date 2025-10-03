@@ -153,7 +153,9 @@ export const approveHbarAllowanceParameters = (_context: Context = {}) =>
       .optional()
       .describe('Owner account ID (defaults to operator account ID if omitted)'),
     spenderAccountId: z.string().describe('Spender account ID'),
-    amount: z.number().describe('Amount of HBAR to approve as allowance (can be decimal, not negative)'),
+    amount: z
+      .number()
+      .describe('Amount of HBAR to approve as allowance (can be decimal, not negative)'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
 
@@ -170,11 +172,14 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
       .optional()
       .describe('Owner account ID (defaults to operator account ID if omitted)'),
     spenderAccountId: z.string().describe('Spender account ID'),
-    tokenAllowances: z
+    tokenApprovals: z
       .array(
         z.object({
           tokenId: z.string().describe('Token ID'),
-          amount: z.number().describe('Amount of tokens to approve (must be positive integer)'),
+          amount: z
+            .number()
+            .positive()
+            .describe('Amount of tokens to approve (must be positive integer)'),
         }),
       )
       .nonempty()
@@ -184,6 +189,6 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
 
 export const approveTokenAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
-    tokenAllowances: z.array(z.instanceof(TokenAllowance)).optional(),
+    tokenApprovals: z.array(z.instanceof(TokenAllowance)).optional(),
     transactionMemo: z.string().optional(),
   });

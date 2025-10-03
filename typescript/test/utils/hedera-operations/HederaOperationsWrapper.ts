@@ -43,6 +43,7 @@ import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import {
   TokenAirdropsResponse,
+  TokenAllowanceResponse,
   TopicMessagesResponse,
 } from '@/shared/hedera-utils/mirrornode/types';
 import {
@@ -167,7 +168,8 @@ class HederaOperationsWrapper {
     return result.raw;
   }
 
-  async airdropToken(params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>
+  async airdropToken(
+    params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>,
   ): Promise<RawTransactionResponse> {
     const tx = HederaBuilder.airdropFungibleToken(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
@@ -374,6 +376,13 @@ class HederaOperationsWrapper {
   async getERCAddress(txId: string) {
     const record = await new TransactionRecordQuery().setTransactionId(txId).execute(this.client);
     return '0x' + record.contractFunctionResult?.getAddress(0);
+  }
+
+  async getTokenAllowances(
+    ownerAccountId: string,
+    spenderAccountId: string,
+  ): Promise<TokenAllowanceResponse> {
+    return await this.mirrornode.getTokenAllowances(ownerAccountId, spenderAccountId);
   }
 }
 

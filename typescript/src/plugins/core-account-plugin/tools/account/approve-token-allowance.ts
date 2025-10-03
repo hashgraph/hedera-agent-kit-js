@@ -7,6 +7,7 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 
 const approveTokenAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -24,7 +25,7 @@ This tool approves allowances for one or more fungible tokens from the owner to 
 Parameters:
 - ${ownerAccountDesc}
 - spenderAccountId (string, required): Spender account ID
-- tokenAllowances (array, required): List of approvals. Each item:
+- tokenApprovals (array, required): List of approvals. Each item:
   - tokenId (string): Token ID
   - amount (number): Amount of tokens to approve (must be a positive integer)
 - transactionMemo (string, optional): Optional memo for the transaction
@@ -42,11 +43,14 @@ const approveTokenAllowance = async (
   params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseApproveTokenAllowance(
+    const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
+    const normalisedParams = await HederaParameterNormaliser.normaliseApproveTokenAllowance(
       params,
       context,
       client,
+      mirrornodeService,
     );
+
     const tx = HederaBuilder.approveTokenAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {

@@ -14,7 +14,6 @@ import {
   mintNonFungibleTokenParameters,
   updateTokenParameters,
   updateTokenParametersNormalised,
-
 } from '@/shared/parameter-schemas/token.zod';
 import {
   accountBalanceQueryParameters,
@@ -50,7 +49,7 @@ import {
   TokenType,
   TopicId,
   HbarAllowance,
-  TokenAllowance, 
+  TokenAllowance,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -247,10 +246,11 @@ export default class HederaParameterNormaliser {
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
   }
 
-  static normaliseApproveTokenAllowance(
+  static async normaliseApproveTokenAllowance(
     params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
     context: Context,
     client: Client,
+    mirrorNode: IHederaMirrornodeService,
   ) {
     const parsedParams: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> =
       this.parseParamsWithSchema(params, approveTokenAllowanceParameters, context);
@@ -263,22 +263,26 @@ export default class HederaParameterNormaliser {
 
     const spenderAccountId = parsedParams.spenderAccountId;
 
-    const tokenAllowances = parsedParams.tokenAllowances.map(ta => {
-      const amountNum = Number(ta.amount);
-      if (!Number.isFinite(amountNum) || amountNum <= 0 || !Number.isInteger(amountNum)) {
-        throw new Error(`Invalid token allowance amount for token ${ta.tokenId}: ${ta.amount}`);
-      }
+    const tokenAllowancesPromises = parsedParams.tokenApprovals.map(async tokenAllowance => {
+      const tokenInfo = await mirrorNode.getTokenInfo(tokenAllowance.tokenId);
+      const decimals = Number(tokenInfo.decimals);
+
+      // Fallback to 0 if decimals are missing or NaN
+      const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
+
+      const baseAmount = toBaseUnit(tokenAllowance.amount, safeDecimals).toNumber();
+
       return new TokenAllowance({
         ownerAccountId: AccountId.fromString(ownerAccountId),
         spenderAccountId: AccountId.fromString(spenderAccountId),
-        tokenId: TokenId.fromString(ta.tokenId),
-        amount: Long.fromNumber(amountNum),
+        tokenId: TokenId.fromString(tokenAllowance.tokenId),
+        amount: Long.fromNumber(baseAmount),
       });
     });
 
     return {
-      tokenAllowances,
       transactionMemo: parsedParams.transactionMemo,
+      tokenApprovals: await Promise.all(tokenAllowancesPromises),
     } as z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>;
   }
 
@@ -336,7 +340,6 @@ export default class HederaParameterNormaliser {
       tokenTransfers,
     };
   }
-
 
   static normaliseAssociateTokenParams(
     params: z.infer<ReturnType<typeof associateTokenParameters>>,
@@ -884,7 +887,7 @@ export default class HederaParameterNormaliser {
 
     return normalised;
   }
-  
+
   private static resolveKey(
     rawValue: string | boolean | undefined,
     userKey: PublicKey,
@@ -902,6 +905,5 @@ export default class HederaParameterNormaliser {
       return userKey;
     }
     return undefined;
-  };
-
+  }
 }
