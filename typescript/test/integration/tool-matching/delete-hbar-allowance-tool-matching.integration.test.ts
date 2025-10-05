@@ -89,7 +89,7 @@ describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
     it('handles various natural language variations', async () => {
       const variations = [
         {
-          input: 'Revoke allowance to 0.0.5555',
+          input: 'Revoke allowance for HBAR spending given to 0.0.5555',
           expected: { spenderAccountId: '0.0.5555' },
         },
         {
