@@ -46,6 +46,7 @@ This plugin provides tools for Hedera **Account Service operations**:
 | `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                                            |
 | `SCHEDULE_DELETE_TOOL`           | Delete a scheduled transaction so it will not execute                                                          | Provide the schedule ID (required) of the scheduled transaction to delete. Returns the transaction ID upon successful deletion.                                                                                         |
 | `APPROVE_TOKEN_ALLOWANCE_TOOL`   | Approve fungible token spending allowances                                                                     | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), an array of token allowances each with tokenId and amount (positive integer), and an optional transaction memo. |
+| `DELETE_TOKEN_ALLOWANCE_TOOL`    | Delete fungible token allowance(ies)                                                                           | Provide optional owner account ID (defaults to operator if omitted), the spenderAccountId (required), an array of tokenIds (required) specifying which allowances to remove, and an optional transaction memo.           |
 
 ---
 
