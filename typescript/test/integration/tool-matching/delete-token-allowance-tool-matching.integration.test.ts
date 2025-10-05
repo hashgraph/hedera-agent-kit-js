@@ -1,4 +1,3 @@
-// tests/integration/langchain/delete-token-allowance.tool-matching.test.ts
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest';
 import { AgentExecutor } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
@@ -49,7 +48,7 @@ describe('Delete Token Allowance Tool Matching Integration Tests', () => {
     });
 
     it('matches delete token allowance with memo included', async () => {
-      const input = 'Revoke token allowance for 0.0.4444 with memo "cleanup"';
+      const input = 'Delete allowance for account 0.0.4444 for token 0.12345 with memo "cleanup"';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
@@ -61,6 +60,7 @@ describe('Delete Token Allowance Tool Matching Integration Tests', () => {
         DELETE_TOKEN_ALLOWANCE_TOOL,
         expect.objectContaining({
           spenderAccountId: '0.0.4444',
+          tokenIds: ['0.12345'],
           transactionMemo: 'cleanup',
         }),
       );
