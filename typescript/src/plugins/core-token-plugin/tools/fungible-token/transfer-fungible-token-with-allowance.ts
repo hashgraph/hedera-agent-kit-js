@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 
 const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -22,9 +23,12 @@ Parameters:
 - sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
 - transfers (array of objects, required): List of token transfers. Each object should contain:
   - accountId (string): Recipient account ID
-  - amount (number): Amount of tokens to transfer
+  - amount (number): Amount of tokens to transfer in display unit
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
+
+Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
+Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
 `;
 };
 
@@ -38,11 +42,14 @@ const transferFungibleTokenWithAllowance = async (
   params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
-      params,
-      context,
-      client,
-    );
+    const mirrornode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
+    const normalisedParams =
+      await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+        params,
+        context,
+        client,
+        mirrornode,
+      );
 
     const tx = HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);

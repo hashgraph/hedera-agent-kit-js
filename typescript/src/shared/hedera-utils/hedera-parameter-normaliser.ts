@@ -375,25 +375,28 @@ export default class HederaParameterNormaliser {
     return this.normaliseApproveTokenAllowance(approveParams, context, client, mirrorNode);
   }
 
-  static normaliseTransferFungibleTokenWithAllowance(
+  static async normaliseTransferFungibleTokenWithAllowance(
     params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
     context: Context,
     _client: Client,
-  ): z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>> {
+    mirrodnode: IHederaMirrornodeService,
+  ): Promise<z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>>> {
     const parsed = this.parseParamsWithSchema(
       params,
       transferFungibleTokenWithAllowanceParameters,
       context,
     );
+    const tokenInfo = await mirrodnode.getTokenInfo(parsed.tokenId);
+    const tokenDecimals = tokenInfo.decimals;
 
-    const tokenTransfers = [];
+    const tokenTransfers: TokenTransferMinimalParams[] = [];
     let totalAmount = 0;
 
     for (const transfer of parsed.transfers) {
       totalAmount += transfer.amount;
       tokenTransfers.push({
         accountId: transfer.accountId,
-        amount: transfer.amount,
+        amount: toBaseUnit(transfer.amount, Number(tokenDecimals)).toNumber(),
         tokenId: parsed.tokenId,
       });
     }
@@ -403,7 +406,7 @@ export default class HederaParameterNormaliser {
       tokenTransfers,
       approvedTransfer: {
         ownerAccountId: parsed.sourceAccountId,
-        amount: -totalAmount,
+        amount: toBaseUnit(-totalAmount, Number(tokenDecimals)).toNumber(),
       },
       transactionMemo: parsed.transactionMemo,
     };

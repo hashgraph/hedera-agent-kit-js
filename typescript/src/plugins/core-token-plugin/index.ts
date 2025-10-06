@@ -3,7 +3,7 @@ import { Plugin } from '@/shared/plugin';
 import airdropFungibleToken, {
   AIRDROP_FUNGIBLE_TOKEN_TOOL,
 } from '@/plugins/core-token-plugin/tools/fungible-token/airdrop-fungible-token';
-import transferFungibleTokenWithAllowance, {
+import transferFungibleTokenWithAllowanceTool, {
   TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 } from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token-with-allowance';
 import createFungibleTokenTool, {
@@ -44,7 +44,7 @@ export const coreTokenPlugin: Plugin = {
       updateTokenTool(context),
       dissociateTokenTool(context),
       associateTokenTool(context),
-      transferFungibleTokenWithAllowance(context),
+      transferFungibleTokenWithAllowanceTool(context),
     ];
   },
 };

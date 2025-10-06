@@ -361,7 +361,9 @@ export const transferFungibleTokenWithAllowanceParameters = (_context: Context =
       .array(
         z.object({
           accountId: z.string().describe('Recipient account ID'),
-          amount: z.number().positive().gt(0).describe('Amount of tokens to transfer'),
+          amount: z
+            .union([z.number(), z.string()])
+            .describe('Amount of tokens to transfer in display unit.'),
         }),
       )
       .min(1)
@@ -372,13 +374,7 @@ export const transferFungibleTokenWithAllowanceParameters = (_context: Context =
 export const transferFungibleTokenWithAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
     tokenId: z.string(),
-    tokenTransfers: z.array(
-      z.object({
-        accountId: z.string(),
-        amount: z.number(),
-        tokenId: z.string(),
-      }),
-    ),
+    tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
     approvedTransfer: z.object({
       ownerAccountId: z.string(),
       amount: z.number(),

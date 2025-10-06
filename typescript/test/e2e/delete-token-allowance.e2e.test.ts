@@ -126,8 +126,6 @@ describe('Delete Token Allowance E2E Tests', () => {
     };
     await executorWrapper.approveTokenAllowance(approveParams);
 
-    // await wait(MIRROR_NODE_WAITING_TIME);
-
     // Step 2: Delete the token allowance via natural language input
     const input = `Delete token allowance given from ${executorAccountId.toString()} to account ${spenderAccountId.toString()} for token ${tokenId.toString()}`;
     const queryResult = await agentExecutor.invoke({ input });

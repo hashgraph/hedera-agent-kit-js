@@ -89,7 +89,7 @@ export default class HederaBuilder {
   static transferFungibleTokenWithAllowance(
     params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>>,
   ) {
-    const tx = new TransferTransaction(params);
+    const tx = new TransferTransaction();
 
     // Add approved (allowance-based) owner transfer - constructor does not support setting approved transfers
     tx.addApprovedTokenTransfer(
@@ -98,6 +98,12 @@ export default class HederaBuilder {
       params.approvedTransfer.amount,
     );
 
+    // adding token transfers manually - passing through constructor results in a TRANSFERS_NOT_ZERO_SUM_FOR_TOKEN error
+    for (const t of params.tokenTransfers) {
+      tx.addTokenTransfer(t.tokenId, t.accountId, t.amount);
+    }
+
+    // Add approved (allowance-based) owner transfer - constructor does not support setting approved transfers
     if (params.transactionMemo) {
       tx.setTransactionMemo(params.transactionMemo);
     }
