@@ -45,6 +45,7 @@ import {
   scheduleDeleteTransactionParameters,
   approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParametersNormalised,
+  transferHbarWithAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -77,6 +78,25 @@ export default class HederaBuilder {
 
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
     return new TransferTransaction(params);
+  }
+
+  static transferHbarWithAllowance(
+    params: z.infer<ReturnType<typeof transferHbarWithAllowanceParametersNormalised>>,
+  ) {
+    // transfers are passed through the constructor
+    const tx = new TransferTransaction(params);
+
+    // Add approved transfer (allowance-based) - approved transfer passing through a constructor is not supported
+    tx.addApprovedHbarTransfer(
+      params.hbarApprovedTransfer.ownerAccountId,
+      params.hbarApprovedTransfer.amount,
+    );
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static airdropFungibleToken(
