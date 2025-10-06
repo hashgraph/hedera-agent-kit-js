@@ -35,21 +35,51 @@ describe('HbarTransferWithAllowanceNormalizer.normaliseTransferHbarWithAllowance
   describe('Valid transfers', () => {
     it('should normalize a single HBAR transfer with allowance correctly', () => {
       const params = makeParams([{ accountId: '0.0.1002', amount: 10 }], 'Test transfer');
+
       const result = HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
         params,
         mockContext,
         mockClient,
       );
-      expect(result.hbarTransfers).toHaveLength(2);
-      expect(result.hbarTransfers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ accountId: '0.0.1002', amount: tinybars(10) }),
-          expect.objectContaining({ accountId: mockSourceAccountId, amount: tinybars(-10) }),
-        ]),
+
+      // ✅ Expect recipient transfer only in hbarTransfers
+      expect(result.hbarTransfers).toHaveLength(1);
+      expect(result.hbarTransfers[0]).toEqual(
+        expect.objectContaining({
+          accountId: '0.0.1002',
+          amount: expect.any(Hbar),
+        }),
       );
+      expect(result.hbarTransfers[0].amount.toTinybars()).toEqual(tinybars(10));
+
+      // ✅ Expect owner’s approved transfer (negative)
+      expect(result.hbarApprovedTransfer.ownerAccountId).toBe(mockSourceAccountId);
+      expect(result.hbarApprovedTransfer.amount.toTinybars()).toEqual(tinybars(-10));
+
       expect(result.transactionMemo).toBe('Test transfer');
     });
 
+    it('should handle multiple recipient transfers correctly', () => {
+      const params = makeParams([
+        { accountId: '0.0.2002', amount: 5 },
+        { accountId: '0.0.3003', amount: 7 },
+      ]);
+
+      const result = HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
+        params,
+        mockContext,
+        mockClient,
+      );
+
+      expect(result.hbarTransfers).toHaveLength(2);
+      const totalTinybars = tinybars(5).add(tinybars(7));
+
+      expect(result.hbarApprovedTransfer.ownerAccountId).toBe(mockSourceAccountId);
+      expect(result.hbarApprovedTransfer.amount.toTinybars()).toEqual(totalTinybars.negate());
+    });
+  });
+
+  describe('Invalid transfers', () => {
     it('should throw if no transfers are provided', () => {
       const params = makeParams([]);
       expect(() =>
@@ -58,7 +88,24 @@ describe('HbarTransferWithAllowanceNormalizer.normaliseTransferHbarWithAllowance
           mockContext,
           mockClient,
         ),
-      ).toThrow();
+      ).toThrow(/transfer/i);
+    });
+
+    it('should throw on zero or negative amount', () => {
+      const invalidParamsList = [
+        makeParams([{ accountId: '0.0.1002', amount: 0 }]),
+        makeParams([{ accountId: '0.0.1002', amount: -5 }]),
+      ];
+
+      for (const params of invalidParamsList) {
+        expect(() =>
+          HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
+            params,
+            mockContext,
+            mockClient,
+          ),
+        ).toThrow(/Invalid transfer amount/);
+      }
     });
   });
 });
