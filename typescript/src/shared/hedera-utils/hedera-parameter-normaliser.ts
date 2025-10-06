@@ -33,6 +33,7 @@ import {
   approveTokenAllowanceParametersNormalised,
   transferHbarWithAllowanceParameters,
   transferHbarWithAllowanceParametersNormalised,
+  deleteTokenAllowanceParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -374,6 +375,38 @@ export default class HederaParameterNormaliser {
       transactionMemo: parsedParams.transactionMemo,
       tokenApprovals: await Promise.all(tokenAllowancesPromises),
     } as z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>;
+  }
+
+  /**
+   * Normalizes parameters for deleting a Fungible Token allowance.
+   *
+   * This function sets the allowance `amount` to **0**, which is the Hedera
+   * convention for revoking an existing allowance. It validates and resolves
+   * the provided parameters, then returns an object compatible with
+   * `approveTokenAllowanceParametersNormalised`.
+   * @param params
+   * @param context
+   * @param client
+   * @param mirrorNode
+   */
+  static async normaliseDeleteTokenAllowance(
+    params: z.infer<ReturnType<typeof deleteTokenAllowanceParameters>>,
+    context: Context,
+    client: Client,
+    mirrorNode: IHederaMirrornodeService,
+  ) {
+    const parsedParams: z.infer<ReturnType<typeof deleteTokenAllowanceParameters>> =
+      this.parseParamsWithSchema(params, deleteTokenAllowanceParameters, context);
+
+    // Build approve params with amount = 0 (Hedera convention for revoke)
+    const approveParams: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> = {
+      ownerAccountId: parsedParams.ownerAccountId,
+      spenderAccountId: parsedParams.spenderAccountId,
+      tokenApprovals: parsedParams.tokenIds.map(tokenId => ({ tokenId: tokenId, amount: 0 })),
+      transactionMemo: parsedParams.transactionMemo,
+    };
+    // Delegate to the approval normalizer
+    return this.normaliseApproveTokenAllowance(approveParams, context, client, mirrorNode);
   }
 
   static async normaliseAirdropFungibleTokenParams(

@@ -23,6 +23,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { z } from 'zod';
 import {
   approveHbarAllowanceParametersNormalised,
+  approveTokenAllowanceParametersNormalised,
   createAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
   deleteAccountParametersNormalised,
@@ -405,6 +406,14 @@ class HederaOperationsWrapper {
   ) {
     const tx = HederaBuilder.approveHbarAllowance(params);
     return await this.executeStrategy.handle(tx, this.client, {});
+  }
+
+  async approveTokenAllowance(
+    params: z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>,
+  ): Promise<RawTransactionResponse> {
+    const tx = HederaBuilder.approveTokenAllowance(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw;
   }
 }
 
