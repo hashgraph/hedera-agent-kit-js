@@ -362,7 +362,8 @@ export const transferFungibleTokenWithAllowanceParameters = (_context: Context =
         z.object({
           accountId: z.string().describe('Recipient account ID'),
           amount: z
-            .union([z.number(), z.string()])
+            .number()
+            .nonnegative()
             .describe('Amount of tokens to transfer in display unit.'),
         }),
       )

@@ -1,19 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Client, AccountId } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
-import { AccountResolver } from '@/shared/utils/account-resolver';
-import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 
-// ---- Mock dependencies ----
+// ---- Mock dependencies (MUST come before the import of HederaParameterNormaliser) ----
 vi.mock('@/shared/utils/account-resolver', () => ({
   AccountResolver: {
     resolveAccount: vi.fn(),
   },
 }));
+vi.mock('@/shared/utils/token-unit-utils', () => ({
+  toBaseUnit: vi.fn((amount: number, decimals: number) => ({
+    toNumber: () => amount * Math.pow(10, decimals),
+  })),
+}));
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
-describe('Transfer FT with allowance normalization', () => {
+describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance', () => {
   let mockContext: Context;
   let mockClient: Client;
+  let mockMirrornode: IHederaMirrornodeService;
   const mockSourceAccountId = AccountId.fromString('0.0.1001').toString();
   const mockTokenId = '0.0.9999';
 
@@ -33,89 +39,93 @@ describe('Transfer FT with allowance normalization', () => {
     vi.clearAllMocks();
     mockContext = {};
     mockClient = {} as Client;
-    vi.mocked(AccountResolver.resolveAccount).mockReturnValue(mockSourceAccountId);
+    mockMirrornode = {
+      getTokenInfo: vi.fn().mockResolvedValue({ decimals: 2 }),
+    } as Partial<IHederaMirrornodeService> as IHederaMirrornodeService;
   });
 
-  describe('Valid transfers', () => {
-    it('should normalise a single fungible token transfer with allowance correctly', () => {
-      const params = makeParams([{ accountId: '0.0.2002', amount: 100 }], 'Token test');
+  describe('Valid normalization', () => {
+    it('should normalise a single fungible token transfer correctly', async () => {
+      const params = makeParams([{ accountId: '0.0.2002', amount: 100 }], 'Test memo');
 
-      const result = HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
         params,
         mockContext,
         mockClient,
+        mockMirrornode,
       );
 
+      expect(mockMirrornode.getTokenInfo).toHaveBeenCalledWith(mockTokenId);
       expect(result.tokenId).toBe(mockTokenId);
+
       expect(result.tokenTransfers).toHaveLength(1);
       expect(result.tokenTransfers[0]).toEqual(
         expect.objectContaining({
           accountId: '0.0.2002',
-          amount: 100,
+          amount: 100 * Math.pow(10, 2),
+          tokenId: mockTokenId,
         }),
       );
 
       expect(result.approvedTransfer).toEqual(
         expect.objectContaining({
           ownerAccountId: mockSourceAccountId,
-          amount: -100,
+          amount: -100 * Math.pow(10, 2),
         }),
       );
-
-      expect(result.transactionMemo).toBe('Token test');
+      expect(result.transactionMemo).toBe('Test memo');
     });
 
-    it('should handle multiple recipients correctly', () => {
+    it('should normalise multiple transfers correctly and sum total amount', async () => {
       const params = makeParams([
         { accountId: '0.0.2002', amount: 50 },
         { accountId: '0.0.3003', amount: 75 },
       ]);
 
-      const result = HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
         params,
         mockContext,
         mockClient,
+        mockMirrornode,
       );
 
       expect(result.tokenTransfers).toHaveLength(2);
       expect(result.tokenTransfers).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ accountId: '0.0.2002', amount: 50 }),
-          expect.objectContaining({ accountId: '0.0.3003', amount: 75 }),
+          expect.objectContaining({ accountId: '0.0.2002', amount: 50 * 10 ** 2 }),
+          expect.objectContaining({ accountId: '0.0.3003', amount: 75 * 10 ** 2 }),
         ]),
       );
 
-      expect(result.approvedTransfer.amount).toBe(-125);
+      expect(result.approvedTransfer.amount).toBe(-(125 * 10 ** 2));
     });
   });
 
-  describe('Invalid transfers', () => {
-    it('should throw if no transfers are provided', () => {
+  describe('Validation errors', () => {
+    it('should throw an error if no transfers are provided', async () => {
       const params = makeParams([]);
-      expect(() =>
+
+      await expect(
         HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
           params,
           mockContext,
           mockClient,
+          mockMirrornode,
         ),
-      ).toThrow(/transfer/i);
+      ).rejects.toThrow(/transfer/i);
     });
 
-    it('should throw on zero or negative amount', () => {
-      const invalidParamsList = [
-        makeParams([{ accountId: '0.0.2002', amount: 0 }]),
-        makeParams([{ accountId: '0.0.2002', amount: -50 }]),
-      ];
+    it('should throw an error if transfer amount is negative', async () => {
+      const invalidParams = makeParams([{ accountId: '0.0.2002', amount: -50 }]);
 
-      for (const params of invalidParamsList) {
-        expect(() =>
-          HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
-            params,
-            mockContext,
-            mockClient,
-          ),
-        ).toThrow(/Number must be greater than 0/);
-      }
+      await expect(
+        HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+          invalidParams,
+          mockContext,
+          mockClient,
+          mockMirrornode,
+        ),
+      ).rejects.toThrow(/Number must be greater than or equal to 0/i);
     });
   });
 });
