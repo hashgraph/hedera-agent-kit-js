@@ -97,7 +97,7 @@ describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
           expected: { spenderAccountId: '0.0.6666', transactionMemo: 'expired' },
         },
         {
-          input: 'Remove HBAR allowance from 0.0.7777 to spender 0.0.8888',
+          input: 'Remove HBAR allowance from account 0.0.7777 given to spender 0.0.8888',
           expected: { ownerAccountId: '0.0.7777', spenderAccountId: '0.0.8888' },
         },
       ];
