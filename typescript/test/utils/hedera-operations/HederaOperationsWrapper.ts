@@ -22,6 +22,7 @@ import BigNumber from 'bignumber.js';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { z } from 'zod';
 import {
+  approveHbarAllowanceParametersNormalised,
   createAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
   deleteAccountParametersNormalised,
@@ -219,11 +220,7 @@ class HederaOperationsWrapper {
         AccountId.fromString(params.to),
       );
     } else {
-      tx = tx.addNftTransfer(
-        nft,
-        AccountId.fromString(fromId),
-        AccountId.fromString(params.to),
-      );
+      tx = tx.addNftTransfer(nft, AccountId.fromString(fromId), AccountId.fromString(params.to));
     }
 
     if (params.memo) {
@@ -401,6 +398,13 @@ class HederaOperationsWrapper {
     spenderAccountId: string,
   ): Promise<TokenAllowanceResponse> {
     return await this.mirrornode.getTokenAllowances(ownerAccountId, spenderAccountId);
+  }
+
+  async approveHbarAllowance(
+    params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
+  ) {
+    const tx = HederaBuilder.approveHbarAllowance(params);
+    return await this.executeStrategy.handle(tx, this.client, {});
   }
 }
 
