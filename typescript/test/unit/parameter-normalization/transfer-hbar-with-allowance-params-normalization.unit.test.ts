@@ -42,7 +42,7 @@ describe('HbarTransferWithAllowanceNormalizer.normaliseTransferHbarWithAllowance
         mockClient,
       );
 
-      // ✅ Expect recipient transfer only in hbarTransfers
+      // Expect recipient transfer only in hbarTransfers
       expect(result.hbarTransfers).toHaveLength(1);
       expect(result.hbarTransfers[0]).toEqual(
         expect.objectContaining({
@@ -50,9 +50,9 @@ describe('HbarTransferWithAllowanceNormalizer.normaliseTransferHbarWithAllowance
           amount: expect.any(Hbar),
         }),
       );
-      expect(result.hbarTransfers[0].amount.toTinybars()).toEqual(tinybars(10));
+      expect((result.hbarTransfers[0].amount as Hbar).toTinybars()).toEqual(tinybars(10));
 
-      // ✅ Expect owner’s approved transfer (negative)
+      // Expect owner’s approved transfer (negative)
       expect(result.hbarApprovedTransfer.ownerAccountId).toBe(mockSourceAccountId);
       expect(result.hbarApprovedTransfer.amount.toTinybars()).toEqual(tinybars(-10));
 
