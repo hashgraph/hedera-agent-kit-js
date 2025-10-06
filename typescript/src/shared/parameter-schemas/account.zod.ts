@@ -178,11 +178,11 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
           tokenId: z.string().describe('Token ID'),
           amount: z
             .number()
-            .positive()
+            .nonnegative()
             .describe('Amount of tokens to approve (must be positive integer)'),
         }),
       )
-      .nonempty()
+      .min(1)
       .describe('List of token allowances to approve'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
@@ -201,4 +201,12 @@ export const deleteHbarAllowanceParameters = (_context: Context = {}) =>
       .describe('Owner account ID (defaults to operator account ID if omitted)'),
     spenderAccountId: z.string().describe('Spender account ID'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const deleteTokenAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z.string().optional(),
+    spenderAccountId: z.string(),
+    tokenIds: z.array(z.string()), // list of token IDs whose allowances we’re deleting
+    transactionMemo: z.string().optional(),
   });
