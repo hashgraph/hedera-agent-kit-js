@@ -15,7 +15,7 @@ const transferHbarWithAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer HBAR to an account.
+This tool will transfer HBAR using an existing allowance.
 
 Parameters:
 - sourceAccountId (string, required): Account ID of the HBAR owner (the allowance granter)

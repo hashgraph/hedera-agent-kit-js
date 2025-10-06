@@ -13,7 +13,8 @@ export const transferHbarParameters = (_context: Context = {}) =>
           amount: z.number().describe('Amount of HBAR to transfer'),
         }),
       )
-      .describe('Array of HBAR transfers'),
+      .describe('Array of HBAR transfers')
+      .min(1),
     sourceAccountId: z
       .string()
       .optional()
