@@ -1,88 +1,122 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, AccountId, Hbar, Long } from '@hashgraph/sdk';
-import { Context } from '@/shared/configuration';
-import { AccountResolver } from '@/shared/utils/account-resolver';
-import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Client } from '@hashgraph/sdk';
+import toolFactory, {
+  TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 
 // ---- Mock dependencies ----
-vi.mock('@/shared/utils/account-resolver', () => ({
-  AccountResolver: {
-    resolveAccount: vi.fn(),
+vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
+  default: {
+    normaliseTransferHbarWithAllowance: vi.fn((params: any) => ({ normalised: true, ...params })),
+  },
+}));
+vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
+  default: { transferHbarWithAllowance: vi.fn((_params: any) => ({ tx: 'transferTx' })) },
+}));
+vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
+  handleTransaction: vi.fn(async (_tx: any, _client: any, _context: any, post?: any) => {
+    const raw = {
+      status: 22,
+      accountId: null,
+      tokenId: null,
+      transactionId: '0.0.1234@1700000000.000000001',
+      topicId: null,
+    };
+    return { raw, humanMessage: post ? post(raw) : JSON.stringify(raw) };
+  }),
+  RawTransactionResponse: {} as any,
+}));
+vi.mock('@/shared/utils/prompt-generator', () => ({
+  PromptGenerator: {
+    getContextSnippet: vi.fn(() => 'CTX'),
+    getAccountParameterDescription: vi.fn(() => 'sourceAccountId (string): Sender account ID'),
+    getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
   },
 }));
 
-describe('HbarTransferWithAllowanceNormalizer.normaliseTransferHbarWithAllowance', () => {
-  let mockContext: Context;
-  let mockClient: Client;
-  const mockSourceAccountId = AccountId.fromString('0.0.1001').toString();
+const makeClient = () => Client.forNetwork({});
 
-  const hbar = (amount: number | string | Long) => new Hbar(amount);
-  const tinybars = (amount: number | string | Long) => hbar(amount).toTinybars();
-
-  const makeParams = (
-    transfers: { accountId: string; amount: number }[],
-    memo?: string,
-    sourceId = '0.0.1001',
-  ) => ({
-    sourceAccountId: sourceId,
-    transfers,
-    transactionMemo: memo,
-  });
+describe('transfer-hbar-with-allowance tool (unit)', () => {
+  const context: any = { accountId: '0.0.1001' };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockContext = {};
-    mockClient = {} as Client;
-    vi.mocked(AccountResolver.resolveAccount).mockReturnValue(mockSourceAccountId);
   });
 
-  describe('Valid transfers', () => {
-    it('should normalize a single HBAR transfer with allowance correctly', () => {
-      const params = makeParams([{ accountId: '0.0.1002', amount: 10 }], 'Test transfer');
+  it('exposes correct metadata', () => {
+    const tool = toolFactory(context);
+    expect(tool.method).toBe(TRANSFER_HBAR_WITH_ALLOWANCE_TOOL);
+    expect(tool.name).toBe('Transfer HBAR with allowance');
+    expect(typeof tool.description).toBe('string');
+    expect(tool.description).toContain('This tool will transfer HBAR using an existing allowance');
+    expect(tool.parameters).toBeTruthy();
+  });
 
-      const result = HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
-        params,
-        mockContext,
-        mockClient,
-      );
+  it('executes happy path and returns formatted human message with tx id', async () => {
+    const tool = toolFactory(context);
+    const client = makeClient();
 
-      expect(result.hbarTransfers).toHaveLength(1);
-      expect(result.hbarTransfers[0]).toEqual(
-        expect.objectContaining({
-          accountId: '0.0.1002',
-          amount: expect.any(Hbar),
-        }),
-      );
-      expect(result.hbarApprovedTransfer).toEqual(
-        expect.objectContaining({
-          ownerAccountId: mockSourceAccountId,
-          amount: expect.any(Hbar),
-        }),
-      );
-      expect(result.hbarApprovedTransfer.amount.toTinybars()).toEqual(tinybars(-10));
-      expect(result.transactionMemo).toBe('Test transfer');
+    const params = {
+      transfers: [{ accountId: '0.0.2002', amount: 1 }],
+      sourceAccountId: '0.0.1001',
+      transactionMemo: 'unit test',
+    };
+
+    const res: any = await tool.execute(client, context, params);
+
+    expect(res).toBeDefined();
+    expect(res.raw).toBeDefined();
+    expect(res.humanMessage).toMatch(/HBAR successfully transferred/);
+    expect(res.humanMessage).toMatch(/Transaction ID:/);
+
+    const { handleTransaction } = await import('@/shared/strategies/tx-mode-strategy');
+    expect(handleTransaction).toHaveBeenCalledTimes(1);
+
+    const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
+    expect(HederaBuilder.transferHbarWithAllowance).toHaveBeenCalledTimes(1);
+
+    const { default: HederaParameterNormaliser } = await import(
+      '@/shared/hedera-utils/hedera-parameter-normaliser'
+    );
+    expect(HederaParameterNormaliser.normaliseTransferHbarWithAllowance).toHaveBeenCalledWith(
+      params,
+      context,
+      client,
+    );
+  });
+
+  it('returns aligned error response when an Error is thrown', async () => {
+    const tool = toolFactory(context);
+    const client = makeClient();
+
+    const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
+    (HederaBuilder.transferHbarWithAllowance as any).mockImplementation(() => {
+      throw new Error('boom');
     });
 
-    it('should throw if transfer amount is zero or negative', () => {
-      const params = makeParams([{ accountId: '0.0.1002', amount: 0 }]);
-      expect(() =>
-        HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
-          params,
-          mockContext,
-          mockClient,
-        ),
-      ).toThrow(/Invalid transfer amount/);
+    const res = await tool.execute(client, context, {
+      transfers: [{ accountId: '0.0.9', amount: 1 }],
+      sourceAccountId: '0.0.1001',
+    } as any);
+
+    expect(res.humanMessage).toContain('Failed to transfer HBAR');
+    expect(res.humanMessage).toContain('boom');
+  });
+
+  it('returns aligned generic failure response when a non-Error is thrown', async () => {
+    const tool = toolFactory(context);
+    const client = makeClient();
+
+    const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
+    (HederaBuilder.transferHbarWithAllowance as any).mockImplementation(() => {
+      throw 'string error';
     });
 
-    it('should throw if no transfers are provided', () => {
-      const params = makeParams([]);
-      expect(() =>
-        HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
-          params,
-          mockContext,
-          mockClient,
-        ),
-      ).toThrow();
-    });
+    const res = await tool.execute(client, context, {
+      transfers: [{ accountId: '0.0.9', amount: 1 }],
+      sourceAccountId: '0.0.1001',
+    } as any);
+
+    expect(res.humanMessage).toBe('Failed to transfer HBAR with allowance');
   });
 });
