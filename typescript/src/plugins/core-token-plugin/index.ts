@@ -3,6 +3,9 @@ import { Plugin } from '@/shared/plugin';
 import airdropFungibleToken, {
   AIRDROP_FUNGIBLE_TOKEN_TOOL,
 } from '@/plugins/core-token-plugin/tools/fungible-token/airdrop-fungible-token';
+import transferFungibleTokenWithAllowance, {
+  TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+} from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token-with-allowance';
 import createFungibleTokenTool, {
   CREATE_FUNGIBLE_TOKEN_TOOL,
 } from '@/plugins/core-token-plugin/tools/fungible-token/create-fungible-token';
@@ -41,6 +44,7 @@ export const coreTokenPlugin: Plugin = {
       updateTokenTool(context),
       dissociateTokenTool(context),
       associateTokenTool(context),
+      transferFungibleTokenWithAllowance(context),
     ];
   },
 };
@@ -56,6 +60,7 @@ export const coreTokenPluginToolNames = {
   DISSOCIATE_TOKEN_TOOL,
   ASSOCIATE_TOKEN_TOOL,
   UPDATE_TOKEN_TOOL,
+  TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 } as const;
 
 export default { coreTokenPlugin, coreTokenPluginToolNames };

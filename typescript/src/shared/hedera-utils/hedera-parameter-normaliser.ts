@@ -14,6 +14,8 @@ import {
   dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
+  transferFungibleTokenWithAllowanceParameters,
+  transferFungibleTokenWithAllowanceParametersNormalised,
   updateTokenParameters,
   updateTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
@@ -371,6 +373,40 @@ export default class HederaParameterNormaliser {
     };
     // Delegate to the approval normalizer
     return this.normaliseApproveTokenAllowance(approveParams, context, client, mirrorNode);
+  }
+
+  static normaliseTransferFungibleTokenWithAllowance(
+    params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
+    context: Context,
+    _client: Client,
+  ): z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>> {
+    const parsed = this.parseParamsWithSchema(
+      params,
+      transferFungibleTokenWithAllowanceParameters,
+      context,
+    );
+
+    const tokenTransfers = [];
+    let totalAmount = 0;
+
+    for (const transfer of parsed.transfers) {
+      totalAmount += transfer.amount;
+      tokenTransfers.push({
+        accountId: transfer.accountId,
+        amount: transfer.amount,
+        tokenId: parsed.tokenId,
+      });
+    }
+
+    return {
+      tokenId: parsed.tokenId,
+      tokenTransfers,
+      approvedTransfer: {
+        ownerAccountId: parsed.sourceAccountId,
+        amount: -totalAmount,
+      },
+      transactionMemo: parsed.transactionMemo,
+    };
   }
 
   static async normaliseAirdropFungibleTokenParams(

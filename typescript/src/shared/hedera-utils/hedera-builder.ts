@@ -33,6 +33,7 @@ import {
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
   approveNftAllowanceParametersNormalised,
+  transferFungibleTokenWithAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -83,6 +84,25 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>,
   ) {
     return new TokenAirdropTransaction(params as any);
+  }
+
+  static transferFungibleTokenWithAllowance(
+    params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>>,
+  ) {
+    const tx = new TransferTransaction(params);
+
+    // Add approved (allowance-based) owner transfer - constructor does not support setting approved transfers
+    tx.addApprovedTokenTransfer(
+      params.tokenId,
+      params.approvedTransfer.ownerAccountId,
+      params.approvedTransfer.amount,
+    );
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static updateToken(params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>) {
