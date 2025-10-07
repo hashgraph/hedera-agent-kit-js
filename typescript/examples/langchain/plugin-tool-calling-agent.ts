@@ -43,7 +43,10 @@ async function bootstrap(): Promise<void> {
     SIGN_SCHEDULE_TRANSACTION_TOOL,
     SCHEDULE_DELETE_TOOL,
     APPROVE_HBAR_ALLOWANCE_TOOL,
+    APPROVE_TOKEN_ALLOWANCE_TOOL,
     TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+    DELETE_TOKEN_ALLOWANCE_TOOL,
+    DELETE_HBAR_ALLOWANCE_TOOL,
   } = coreAccountPluginToolNames;
   const {
     CREATE_FUNGIBLE_TOKEN_TOOL,
@@ -54,6 +57,7 @@ async function bootstrap(): Promise<void> {
     UPDATE_TOKEN_TOOL,
     DISSOCIATE_TOKEN_TOOL,
     ASSOCIATE_TOKEN_TOOL,
+    APPROVE_NFT_ALLOWANCE_TOOL,
   } = coreTokenPluginToolNames;
   const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL, DELETE_TOPIC_TOOL, UPDATE_TOPIC_TOOL } =
     coreConsensusPluginToolNames;
@@ -119,6 +123,10 @@ async function bootstrap(): Promise<void> {
         UPDATE_TOPIC_TOOL,
         APPROVE_HBAR_ALLOWANCE_TOOL,
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+        DELETE_TOKEN_ALLOWANCE_TOOL,
+        DELETE_HBAR_ALLOWANCE_TOOL,
+        APPROVE_NFT_ALLOWANCE_TOOL,
+        APPROVE_TOKEN_ALLOWANCE_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
@@ -165,6 +173,8 @@ async function bootstrap(): Promise<void> {
     tools,
     memory,
     returnIntermediateSteps: false,
+    maxIterations: 3,
+    verbose: true,
   });
 
   console.log('Hedera Agent CLI Chatbot with Plugin Support — type "exit" to quit');
