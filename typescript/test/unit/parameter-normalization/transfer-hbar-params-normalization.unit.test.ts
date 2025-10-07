@@ -153,21 +153,6 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle empty transfers array', () => {
-      const params = makeParams([]);
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
-        mockContext,
-        mockClient,
-      );
-
-      expect(result.hbarTransfers).toHaveLength(1);
-      expect(result.hbarTransfers[0]).toEqual({
-        accountId: mockSourceAccountId,
-        amount: Hbar.fromTinybars(Long.ZERO),
-      });
-    });
-
     it('should preserve exact decimal precision', () => {
       const smallAmount = 0.12345678;
       const params = makeParams([{ accountId: '0.0.1002', amount: smallAmount }]);

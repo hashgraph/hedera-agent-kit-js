@@ -32,6 +32,8 @@ import {
   deleteHbarAllowanceParameters,
   approveTokenAllowanceParameters,
   approveTokenAllowanceParametersNormalised,
+  transferHbarWithAllowanceParameters,
+  transferHbarWithAllowanceParametersNormalised,
   deleteTokenAllowanceParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
@@ -215,6 +217,40 @@ export default class HederaParameterNormaliser {
     return {
       hbarTransfers,
       transactionMemo: parsedParams.transactionMemo,
+    };
+  }
+
+  static normaliseTransferHbarWithAllowance(
+    params: z.infer<ReturnType<typeof transferHbarWithAllowanceParameters>>,
+    context: Context,
+    _client: Client,
+  ): z.infer<ReturnType<typeof transferHbarWithAllowanceParametersNormalised>> {
+    const parsed = this.parseParamsWithSchema(params, transferHbarWithAllowanceParameters, context);
+
+    const hbarTransfers: TransferHbarInput[] = [];
+    let totalTinybars = Long.ZERO;
+
+    for (const transfer of parsed.transfers) {
+      const amount = new Hbar(transfer.amount);
+      if (amount.isNegative() || amount.toTinybars().equals(Long.ZERO)) {
+        throw new Error(`Invalid transfer amount: ${transfer.amount}`);
+      }
+
+      totalTinybars = totalTinybars.add(amount.toTinybars());
+
+      hbarTransfers.push({
+        accountId: transfer.accountId,
+        amount,
+      });
+    }
+
+    return {
+      hbarTransfers,
+      hbarApprovedTransfer: {
+        ownerAccountId: parsed.sourceAccountId,
+        amount: Hbar.fromTinybars(totalTinybars).negated(),
+      },
+      transactionMemo: parsed.transactionMemo,
     };
   }
 

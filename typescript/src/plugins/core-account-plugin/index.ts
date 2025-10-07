@@ -3,6 +3,9 @@ import { Plugin } from '@/shared/plugin';
 import transferHbarTool, {
   TRANSFER_HBAR_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
+import transferHbarWithAllowanceTool, {
+  TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 import approveHbarAllowanceTool, {
   APPROVE_HBAR_ALLOWANCE_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/approve-hbar-allowance';
@@ -46,6 +49,7 @@ export const coreAccountPlugin: Plugin = {
       signScheduleTransactionTool(context),
       scheduleDeleteTool(context),
       approveTokenAllowanceTool(context),
+      transferHbarWithAllowanceTool(context),
       deleteTokenAllowanceTool(context),
     ];
   },
@@ -62,6 +66,7 @@ export const coreAccountPluginToolNames = {
   SCHEDULE_DELETE_TOOL,
   APPROVE_TOKEN_ALLOWANCE_TOOL,
   DELETE_TOKEN_ALLOWANCE_TOOL,
+  TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
 } as const;
 
 export default { coreAccountPlugin, coreAccountPluginToolNames };

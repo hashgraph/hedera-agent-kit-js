@@ -13,8 +13,12 @@ export const transferHbarParameters = (_context: Context = {}) =>
           amount: z.number().describe('Amount of HBAR to transfer'),
         }),
       )
-      .describe('Array of HBAR transfers'),
-    sourceAccountId: z.string().optional().describe('Sender account ID'),
+      .describe('Array of HBAR transfers')
+      .min(1),
+    sourceAccountId: z
+      .string()
+      .optional()
+      .describe('Account ID of the HBAR owner — the balance will be deducted from this account'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
 
@@ -190,6 +194,29 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
 export const approveTokenAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
     tokenApprovals: z.array(z.instanceof(TokenAllowance)).optional(),
+    transactionMemo: z.string().optional(),
+  });
+
+export const transferHbarWithAllowanceParameters = transferHbarParameters;
+
+export const transferHbarWithAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    hbarTransfers: z.array(
+      z.object({
+        accountId: z.union([z.string(), z.instanceof(AccountId)]),
+        amount: z.union([
+          z.number(),
+          z.string(),
+          z.instanceof(Hbar),
+          z.instanceof(Long),
+          z.instanceof(BigNumber),
+        ]),
+      }),
+    ),
+    hbarApprovedTransfer: z.object({
+      ownerAccountId: z.instanceof(AccountId),
+      amount: z.instanceof(Hbar),
+    }),
     transactionMemo: z.string().optional(),
   });
 
