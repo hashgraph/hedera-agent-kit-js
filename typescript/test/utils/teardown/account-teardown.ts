@@ -55,10 +55,9 @@ export const returnHbarsAndDeleteAccount = async (
       accountId: accountToDelete,
       transferAccountId: accountToReturn,
     });
-  } catch (error) {
+  } catch (_e) {
     console.error(
-      'Error deleting account. The HBARs will be transferred to the operator account but this account wont be deleted. Error:',
-      error,
+      'Error deleting account. The HBARs will be transferred to the operator account but this account wont be deleted.',
     );
     // if we can't delete the account, at least return the hbars to the operator account
     const accountToDeleteBalance = await accountToDeleteWrapper.getAccountHbarBalance(
