@@ -366,7 +366,6 @@ class HederaOperationsWrapper {
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
-    console.log(JSON.stringify(result, null, 2));
     const erc721Address = await this.getERCAddress(result.raw.transactionId);
     return {
       ...(result as ExecuteStrategyResult),

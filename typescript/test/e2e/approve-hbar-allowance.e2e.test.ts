@@ -1,5 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { AccountId, Client, Hbar, Key, PrivateKey, TransferTransaction } from '@hashgraph/sdk';
+import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import {
+  AccountId,
+  Client,
+  Hbar,
+  HbarUnit,
+  Key,
+  PrivateKey,
+  TransferTransaction,
+} from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import {
   createLangchainTestSetup,
@@ -25,7 +33,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let operatorClient: Client;
-  let executorClient: Client; // acts as owner for approval
+  let executorClient: Client; // acts as an owner for approval
   let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
 
@@ -65,7 +73,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   });
 
   beforeEach(async () => {
-    // Create spender account with its own key so it can sign the allowance spend
+    // Create a spender account with its own key so it can sign the allowance spent
     spenderKey = PrivateKey.generateED25519();
     spenderAccount = await executorWrapper
       .createAccount({
@@ -87,10 +95,10 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   });
 
   const spendViaAllowance = async (ownerId: string, spenderId: string, amountHbar: number) => {
-    // Spend from allowance: spender initiates an approved HBAR transfer from owner to themselves
-    const tinybars = Hbar.from(amountHbar).toTinybars();
+    // Spend from allowance: spender initiates an approved HBAR transfer from the owner to themselves
+    const tinybars = Hbar.from(amountHbar, HbarUnit.Hbar).toTinybars();
     const tx = new TransferTransaction()
-      // Negative amount from owner (approved)
+      // Negative amount from an owner (approved)
       .addApprovedHbarTransfer(AccountId.fromString(ownerId), Hbar.fromTinybars(tinybars.negate()))
       // Positive amount to spender
       .addHbarTransfer(AccountId.fromString(spenderId), Hbar.fromTinybars(tinybars));
@@ -106,11 +114,11 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
     const balanceBefore = await spenderWrapper.getAccountHbarBalance(spenderAccount.toString());
 
-    // Ask the agent (running with executor client) to approve allowance to the spender
+    // Ask the agent (running with an executor client) to approve allowance to the spender
     const input = `Approve ${allowanceAmount} HBAR allowance to ${spenderAccount.toString()} with memo "${memo}"`;
     await agentExecutor.invoke({ input });
 
-    // Now, using spender client, spend part of the approved allowance
+    // Now, using a spender client, spend part of the approved allowance
     await spendViaAllowance(
       executorClient.operatorAccountId!.toString(),
       spenderAccount.toString(),

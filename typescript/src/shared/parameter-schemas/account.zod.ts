@@ -220,6 +220,16 @@ export const transferHbarWithAllowanceParametersNormalised = (_context: Context 
     transactionMemo: z.string().optional(),
   });
 
+export const deleteHbarAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    spenderAccountId: z.string().describe('Spender account ID'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
 export const deleteTokenAllowanceParameters = (_context: Context = {}) =>
   z.object({
     ownerAccountId: z.string().optional(),
