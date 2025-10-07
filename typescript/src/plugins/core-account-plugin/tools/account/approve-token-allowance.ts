@@ -21,6 +21,7 @@ const approveTokenAllowancePrompt = (context: Context = {}) => {
 ${contextSnippet}
 
 This tool approves allowances for one or more fungible tokens from the owner to the spender.
+This action is called for already approved allowances.
 
 Parameters:
 - ${ownerAccountDesc}

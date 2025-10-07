@@ -58,6 +58,7 @@ async function bootstrap(): Promise<void> {
     DISSOCIATE_TOKEN_TOOL,
     ASSOCIATE_TOKEN_TOOL,
     APPROVE_NFT_ALLOWANCE_TOOL,
+    TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
   } = coreTokenPluginToolNames;
   const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL, DELETE_TOPIC_TOOL, UPDATE_TOPIC_TOOL } =
     coreConsensusPluginToolNames;
@@ -127,6 +128,7 @@ async function bootstrap(): Promise<void> {
         DELETE_HBAR_ALLOWANCE_TOOL,
         APPROVE_NFT_ALLOWANCE_TOOL,
         APPROVE_TOKEN_ALLOWANCE_TOOL,
+        TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
