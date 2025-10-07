@@ -21,6 +21,9 @@ import signScheduleTransactionTool, {
 import scheduleDeleteTool, {
   SCHEDULE_DELETE_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/schedule-delete';
+import deleteHbarAllowanceTool, {
+  DELETE_HBAR_ALLOWANCE_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/delete-hbar-allowance';
 import approveTokenAllowanceTool, {
   APPROVE_TOKEN_ALLOWANCE_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/approve-token-allowance';
@@ -36,6 +39,7 @@ export const coreAccountPlugin: Plugin = {
     return [
       transferHbarTool(context),
       approveHbarAllowanceTool(context),
+      deleteHbarAllowanceTool(context),
       deleteAccountTool(context),
       updateAccountTool(context),
       createAccountTool(context),
@@ -50,6 +54,7 @@ export const coreAccountPlugin: Plugin = {
 export const coreAccountPluginToolNames = {
   TRANSFER_HBAR_TOOL,
   APPROVE_HBAR_ALLOWANCE_TOOL,
+  DELETE_HBAR_ALLOWANCE_TOOL,
   CREATE_ACCOUNT_TOOL,
   DELETE_ACCOUNT_TOOL,
   UPDATE_ACCOUNT_TOOL,
