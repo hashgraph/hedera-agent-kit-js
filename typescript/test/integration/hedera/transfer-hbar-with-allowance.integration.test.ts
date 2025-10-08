@@ -154,7 +154,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
   describe('Invalid Allowance Transfer Scenarios', () => {
     it('should fail if no allowance approved', async () => {
       const params = {
-        sourceAccountId: ownerAccountId.toString(),
+        sourceAccountId: operatorClient.operatorAccountId!.toString(),
         transfers: [{ accountId: recipientAccountId.toString(), amount: 1 }],
       };
       const tool = transferHbarWithAllowanceTool(context);
