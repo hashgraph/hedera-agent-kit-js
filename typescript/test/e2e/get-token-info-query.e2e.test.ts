@@ -101,93 +101,105 @@ describe('Get Token Info Query E2E Tests', () => {
     }
   });
 
-  it('should return token info for a newly created fungible token', itWithRetry(async () => {
-    const queryResult = await agentExecutor.invoke({
-      input: `Get token information for ${tokenIdFT.toString()}`,
-    });
+  it(
+    'should return token info for a newly created fungible token',
+    itWithRetry(async () => {
+      const queryResult = await agentExecutor.invoke({
+        input: `Get token information for ${tokenIdFT.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    // Human-readable response checks
-    expect(observation.humanMessage).toContain(`details for token **${tokenIdFT.toString()}**`);
-    expect(observation.humanMessage).toContain(`Token Name**: ${FT_PARAMS.tokenName}`);
-    expect(observation.humanMessage).toContain(`Token Symbol**: ${FT_PARAMS.tokenSymbol}`);
-    expect(observation.humanMessage).toContain(`Decimals**: ${FT_PARAMS.decimals}`);
-    expect(observation.humanMessage).toContain(
-      `Treasury Account ID**: ${executorAccountId.toString()}`,
-    );
-    expect(observation.humanMessage).toContain('Status (Deleted/Active)**: Active');
+      // Human-readable response checks
+      expect(observation.humanMessage).toContain(`details for token **${tokenIdFT.toString()}**`);
+      expect(observation.humanMessage).toContain(`Token Name**: ${FT_PARAMS.tokenName}`);
+      expect(observation.humanMessage).toContain(`Token Symbol**: ${FT_PARAMS.tokenSymbol}`);
+      expect(observation.humanMessage).toContain(`Decimals**: ${FT_PARAMS.decimals}`);
+      expect(observation.humanMessage).toContain(
+        `Treasury Account ID**: ${executorAccountId.toString()}`,
+      );
+      expect(observation.humanMessage).toContain('Status (Deleted/Active)**: Active');
 
-    // Raw response checks
-    expect(observation.raw.tokenInfo.name).toBe(FT_PARAMS.tokenName);
-    expect(observation.raw.tokenInfo.symbol).toBe(FT_PARAMS.tokenSymbol);
-    expect(observation.raw.tokenInfo.decimals).toBe(String(FT_PARAMS.decimals));
-    expect(observation.raw.tokenInfo.memo).toBe(FT_PARAMS.tokenMemo);
-    expect(observation.raw.tokenInfo.deleted).toBe(false);
-    expect(observation.raw.tokenInfo.treasury_account_id).toBe(executorAccountId.toString());
-  }));
+      // Raw response checks
+      expect(observation.raw.tokenInfo.name).toBe(FT_PARAMS.tokenName);
+      expect(observation.raw.tokenInfo.symbol).toBe(FT_PARAMS.tokenSymbol);
+      expect(observation.raw.tokenInfo.decimals).toBe(String(FT_PARAMS.decimals));
+      expect(observation.raw.tokenInfo.memo).toBe(FT_PARAMS.tokenMemo);
+      expect(observation.raw.tokenInfo.deleted).toBe(false);
+      expect(observation.raw.tokenInfo.treasury_account_id).toBe(executorAccountId.toString());
+    }),
+  );
 
-  it('should return token info with formatted supply amounts', itWithRetry(async () => {
-    const queryResult = await agentExecutor.invoke({
-      input: `Show me details for token ${tokenIdFT.toString()}`,
-    });
+  it(
+    'should return token info with formatted supply amounts',
+    itWithRetry(async () => {
+      const queryResult = await agentExecutor.invoke({
+        input: `Show me details for token ${tokenIdFT.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    // Human-readable response checks
-    expect(observation.humanMessage).toContain(
-      `**Current Supply**: ${toDisplayUnit(FT_PARAMS.initialSupply, FT_PARAMS.decimals)}`,
-    );
-    expect(observation.humanMessage).toContain(
-      `**Max Supply**: ${toDisplayUnit(FT_PARAMS.maxSupply, FT_PARAMS.decimals)}`,
-    );
+      // Human-readable response checks
+      expect(observation.humanMessage).toContain(
+        `**Current Supply**: ${toDisplayUnit(FT_PARAMS.initialSupply, FT_PARAMS.decimals)}`,
+      );
+      expect(observation.humanMessage).toContain(
+        `**Max Supply**: ${toDisplayUnit(FT_PARAMS.maxSupply, FT_PARAMS.decimals)}`,
+      );
 
-    // Raw response checks
-    expect(observation.raw.tokenInfo.total_supply).toBe(String(FT_PARAMS.initialSupply));
-    expect(observation.raw.tokenInfo.max_supply).toBe(String(FT_PARAMS.maxSupply));
-    expect(observation.raw.tokenInfo.supply_type?.toUpperCase()).toBe(
-      FT_PARAMS.supplyType.toString().toUpperCase(),
-    );
-  }));
+      // Raw response checks
+      expect(observation.raw.tokenInfo.total_supply).toBe(String(FT_PARAMS.initialSupply));
+      expect(observation.raw.tokenInfo.max_supply).toBe(String(FT_PARAMS.maxSupply));
+      expect(observation.raw.tokenInfo.supply_type?.toUpperCase()).toBe(
+        FT_PARAMS.supplyType.toString().toUpperCase(),
+      );
+    }),
+  );
 
-  it('should fail gracefully for non-existent token', itWithRetry(async () => {
-    const fakeTokenId = '0.0.999999999';
+  it(
+    'should fail gracefully for non-existent token',
+    itWithRetry(async () => {
+      const fakeTokenId = '0.0.999999999';
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Get token info for ${fakeTokenId}`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Get token info for ${fakeTokenId}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('Failed to get token info');
-    expect(observation.raw.error).toBeDefined();
-  }));
+      expect(observation.humanMessage).toContain('Failed to get token info');
+      expect(observation.raw.error).toBeDefined();
+    }),
+  );
 
-  it('should handle tokens with different key configurations', itWithRetry(async () => {
-    const queryResult = await agentExecutor.invoke({
-      input: `Query information for token ${tokenIdNFT.toString()}`,
-    });
+  it(
+    'should handle tokens with different key configurations',
+    itWithRetry(async () => {
+      const queryResult = await agentExecutor.invoke({
+        input: `Query information for token ${tokenIdNFT.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    // Human-readable response checks
-    expect(observation.humanMessage).toContain(`details for token **${tokenIdNFT.toString()}**`);
-    expect(observation.humanMessage).toContain('Admin Key:');
-    expect(observation.humanMessage).toContain('Supply Key:');
-    expect(observation.humanMessage).toContain('Wipe Key: Not Set');
-    expect(observation.humanMessage).toContain('KYC Key: Not Set');
-    expect(observation.humanMessage).toContain('Freeze Key: Not Set');
+      // Human-readable response checks
+      expect(observation.humanMessage).toContain(`details for token **${tokenIdNFT.toString()}**`);
+      expect(observation.humanMessage).toContain('Admin Key:');
+      expect(observation.humanMessage).toContain('Supply Key:');
+      expect(observation.humanMessage).toContain('Wipe Key: Not Set');
+      expect(observation.humanMessage).toContain('KYC Key: Not Set');
+      expect(observation.humanMessage).toContain('Freeze Key: Not Set');
 
-    // Raw response checks
-    expect(observation.raw.tokenInfo.name).toBe(NFT_PARAMS.tokenName);
-    expect(observation.raw.tokenInfo.symbol).toBe(NFT_PARAMS.tokenSymbol);
-    expect(observation.raw.tokenInfo.memo).toBe(NFT_PARAMS.tokenMemo);
-    expect(observation.raw.tokenInfo.type).toBe('NON_FUNGIBLE_UNIQUE');
-    expect(observation.raw.tokenInfo.admin_key).toBeDefined();
-    expect(observation.raw.tokenInfo.supply_key).toBeDefined();
-    expect(observation.raw.tokenInfo.wipe_key).toBeNull();
-    expect(observation.raw.tokenInfo.kyc_key).toBeNull();
-    expect(observation.raw.tokenInfo.freeze_key).toBeNull();
-    expect(observation.raw.tokenInfo.max_supply).toBe(String(NFT_PARAMS.maxSupply));
-  }));
+      // Raw response checks
+      expect(observation.raw.tokenInfo.name).toBe(NFT_PARAMS.tokenName);
+      expect(observation.raw.tokenInfo.symbol).toBe(NFT_PARAMS.tokenSymbol);
+      expect(observation.raw.tokenInfo.memo).toBe(NFT_PARAMS.tokenMemo);
+      expect(observation.raw.tokenInfo.type).toBe('NON_FUNGIBLE_UNIQUE');
+      expect(observation.raw.tokenInfo.admin_key).toBeDefined();
+      expect(observation.raw.tokenInfo.supply_key).toBeDefined();
+      expect(observation.raw.tokenInfo.wipe_key).toBeNull();
+      expect(observation.raw.tokenInfo.kyc_key).toBeNull();
+      expect(observation.raw.tokenInfo.freeze_key).toBeNull();
+      expect(observation.raw.tokenInfo.max_supply).toBe(String(NFT_PARAMS.maxSupply));
+    }),
+  );
 });

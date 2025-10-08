@@ -58,6 +58,7 @@ export type TokenBalance = {
   kyc_status: string;
   balance: number;
   decimals: number;
+  symbol: string;
 };
 
 export type TokenBalancesResponse = {

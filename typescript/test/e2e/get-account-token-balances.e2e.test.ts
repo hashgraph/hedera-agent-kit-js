@@ -57,54 +57,66 @@ describe('Get Account Token Balances E2E Tests', () => {
     await wait(MIRROR_NODE_WAITING_TIME);
   });
 
-  it('should fetch token balances for a valid account', itWithRetry(async () => {
-    const input = `Get the token balances for account ${testAccountId}`;
+  it(
+    'should fetch token balances for a valid account',
+    itWithRetry(async () => {
+      const input = `Get the token balances for account ${testAccountId}`;
 
-    const result = await agentExecutor.invoke({ input });
+      const result = await agentExecutor.invoke({ input });
 
-    const observation = extractObservationFromLangchainResponse(result);
+      const observation = extractObservationFromLangchainResponse(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token Balances');
-    expect(observation.humanMessage).toContain(`Token: ${tokenId}`);
-    expect(observation.humanMessage).toContain(`Balance: 25`);
-  }));
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token Balances');
+      expect(observation.humanMessage).toContain(`Token: ${tokenId}`);
+      expect(observation.humanMessage).toContain(`Balance: 25`);
+    }),
+  );
 
-  it('should default to operator account when no account is passed', itWithRetry(async () => {
-    const input = `Show me my token balances`;
+  it(
+    'should default to operator account when no account is passed',
+    itWithRetry(async () => {
+      const input = `Show me my token balances`;
 
-    const result = await agentExecutor.invoke({ input });
+      const result = await agentExecutor.invoke({ input });
 
-    const observation = extractObservationFromLangchainResponse(result);
+      const observation = extractObservationFromLangchainResponse(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token Balances');
-    expect(observation.humanMessage).toContain(operatorClient.operatorAccountId!.toString());
-  }));
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token Balances');
+      expect(observation.humanMessage).toContain(operatorClient.operatorAccountId!.toString());
+    }),
+  );
 
-  it('should handle non-existent account gracefully', itWithRetry(async () => {
-    const nonExistentAccountId = '0.0.999999999';
-    const input = `Get the token balances for account ${nonExistentAccountId}`;
+  it(
+    'should handle non-existent account gracefully',
+    itWithRetry(async () => {
+      const nonExistentAccountId = '0.0.999999999';
+      const input = `Get the token balances for account ${nonExistentAccountId}`;
 
-    const result = await agentExecutor.invoke({ input });
+      const result = await agentExecutor.invoke({ input });
 
-    const observation = extractObservationFromLangchainResponse(result);
+      const observation = extractObservationFromLangchainResponse(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.raw.error).toContain('Failed to fetch');
-  }));
+      expect(observation).toBeDefined();
+      expect(observation.raw.error).toContain('Failed to fetch');
+    }),
+  );
 
-  it('should handle invalid account ID format', itWithRetry(async () => {
-    const invalidAccountId = 'invalid-account-id';
-    const input = `Get the token balances for account ${invalidAccountId}`;
+  it(
+    'should handle invalid account ID format',
+    itWithRetry(async () => {
+      const invalidAccountId = 'invalid-account-id';
+      const input = `Get the token balances for account ${invalidAccountId}`;
 
-    const result = await agentExecutor.invoke({ input });
+      const result = await agentExecutor.invoke({ input });
 
-    const observation = extractObservationFromLangchainResponse(result);
+      const observation = extractObservationFromLangchainResponse(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.raw.error).toContain('Failed to fetch balance for an account');
-  }));
+      expect(observation).toBeDefined();
+      expect(observation.raw.error).toContain('Failed to fetch balance for an account');
+    }),
+  );
 
   afterAll(async () => {
     if (testSetup) {
