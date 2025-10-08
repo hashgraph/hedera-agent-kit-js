@@ -31,8 +31,11 @@ import {
   transferHbarParameters,
   updateAccountParameters,
   updateAccountParametersNormalised,
+  deleteHbarAllowanceParameters,
   approveTokenAllowanceParameters,
   approveTokenAllowanceParametersNormalised,
+  transferHbarWithAllowanceParameters,
+  transferHbarWithAllowanceParametersNormalised,
   deleteTokenAllowanceParameters,
 } from '@/shared/parameter-schemas/account.zod';
 import {
@@ -219,6 +222,40 @@ export default class HederaParameterNormaliser {
     };
   }
 
+  static normaliseTransferHbarWithAllowance(
+    params: z.infer<ReturnType<typeof transferHbarWithAllowanceParameters>>,
+    context: Context,
+    _client: Client,
+  ): z.infer<ReturnType<typeof transferHbarWithAllowanceParametersNormalised>> {
+    const parsed = this.parseParamsWithSchema(params, transferHbarWithAllowanceParameters, context);
+
+    const hbarTransfers: TransferHbarInput[] = [];
+    let totalTinybars = Long.ZERO;
+
+    for (const transfer of parsed.transfers) {
+      const amount = new Hbar(transfer.amount);
+      if (amount.isNegative() || amount.toTinybars().equals(Long.ZERO)) {
+        throw new Error(`Invalid transfer amount: ${transfer.amount}`);
+      }
+
+      totalTinybars = totalTinybars.add(amount.toTinybars());
+
+      hbarTransfers.push({
+        accountId: transfer.accountId,
+        amount,
+      });
+    }
+
+    return {
+      hbarTransfers,
+      hbarApprovedTransfer: {
+        ownerAccountId: parsed.sourceAccountId,
+        amount: Hbar.fromTinybars(totalTinybars).negated(),
+      },
+      transactionMemo: parsed.transactionMemo,
+    };
+  }
+
   static normaliseApproveHbarAllowance(
     params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
     context: Context,
@@ -250,6 +287,36 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>;
+  }
+
+  /**
+   * Normalizes parameters for deleting an HBAR allowance.
+   *
+   * This function sets the allowance `amount` to **0**, which is the Hedera
+   * convention for revoking an existing allowance. It validates and resolves
+   * the provided parameters, then returns an object compatible with
+   * `approveHbarAllowanceParametersNormalised`.
+   * @param params
+   * @param context
+   * @param client
+   */
+  static normaliseDeleteHbarAllowance(
+    params: z.infer<ReturnType<typeof deleteHbarAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>> {
+    const parsedParams = this.parseParamsWithSchema(params, deleteHbarAllowanceParameters, context);
+
+    // Build approve params with amount = 0 (Hedera convention for revoke)
+    const approveParams: z.infer<ReturnType<typeof approveHbarAllowanceParameters>> = {
+      ownerAccountId: parsedParams.ownerAccountId,
+      spenderAccountId: parsedParams.spenderAccountId,
+      amount: 0,
+      transactionMemo: parsedParams.transactionMemo,
+    };
+
+    // Delegate to the approval normalizer
+    return this.normaliseApproveHbarAllowance(approveParams, context, client);
   }
 
   static normaliseApproveNftAllowance(

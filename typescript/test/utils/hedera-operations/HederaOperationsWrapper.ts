@@ -22,6 +22,7 @@ import BigNumber from 'bignumber.js';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { z } from 'zod';
 import {
+  approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParametersNormalised,
   createAccountParametersNormalised,
   createScheduleTransactionParametersNormalised,
@@ -378,7 +379,6 @@ class HederaOperationsWrapper {
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
-    console.log(JSON.stringify(result, null, 2));
     const erc721Address = await this.getERCAddress(result.raw.transactionId);
     return {
       ...(result as ExecuteStrategyResult),
@@ -411,6 +411,13 @@ class HederaOperationsWrapper {
     spenderAccountId: string,
   ): Promise<TokenAllowanceResponse> {
     return await this.mirrornode.getTokenAllowances(ownerAccountId, spenderAccountId);
+  }
+
+  async approveHbarAllowance(
+    params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
+  ) {
+    const tx = HederaBuilder.approveHbarAllowance(params);
+    return await this.executeStrategy.handle(tx, this.client, {});
   }
 
   async approveTokenAllowance(

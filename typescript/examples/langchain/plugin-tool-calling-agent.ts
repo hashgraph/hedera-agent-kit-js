@@ -43,6 +43,7 @@ async function bootstrap(): Promise<void> {
     SIGN_SCHEDULE_TRANSACTION_TOOL,
     SCHEDULE_DELETE_TOOL,
     APPROVE_HBAR_ALLOWANCE_TOOL,
+    TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
   } = coreAccountPluginToolNames;
   const {
     CREATE_FUNGIBLE_TOKEN_TOOL,
@@ -117,6 +118,7 @@ async function bootstrap(): Promise<void> {
         GET_TOPIC_INFO_QUERY_TOOL,
         UPDATE_TOPIC_TOOL,
         APPROVE_HBAR_ALLOWANCE_TOOL,
+        TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
         // Plugin tools
         'example_greeting_tool',
         'example_hbar_transfer_tool',
