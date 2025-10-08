@@ -7,7 +7,7 @@ import BigNumber from 'bignumber.js';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
-import { toHBar } from '@/shared/hedera-utils/hbar-conversion-utils';
+import { toHbar } from '@/shared/hedera-utils/hbar-conversion-utils';
 
 export const getHbarBalanceQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -45,8 +45,8 @@ export const getHbarBalanceQuery = async (
       normalisedParams.accountId,
     );
     return {
-      raw: { accountId: normalisedParams.accountId, hbarBalance: toHBar(balance).toString() },
-      humanMessage: postProcess(toHBar(balance).toString() as string, normalisedParams.accountId),
+      raw: { accountId: normalisedParams.accountId, hbarBalance: toHbar(balance).toString() },
+      humanMessage: postProcess(toHbar(balance).toString() as string, normalisedParams.accountId),
     };
   } catch (error) {
     const desc = 'Failed to get HBAR balance';
