@@ -25,6 +25,9 @@ import dissociateTokenTool, {
 import associateTokenTool, {
   ASSOCIATE_TOKEN_TOOL,
 } from '@/plugins/core-token-plugin/tools/associate-token';
+import transferNonFungibleTokenWithAllowanceTool, {
+  TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+} from '@/plugins/core-token-plugin/tools/non-fungible-token/transfer-non-fungible-token-with-allowance';
 
 export const coreTokenPlugin: Plugin = {
   name: 'core-token-plugin',
@@ -41,6 +44,7 @@ export const coreTokenPlugin: Plugin = {
       updateTokenTool(context),
       dissociateTokenTool(context),
       associateTokenTool(context),
+      transferNonFungibleTokenWithAllowanceTool(context),
     ];
   },
 };
@@ -56,6 +60,7 @@ export const coreTokenPluginToolNames = {
   DISSOCIATE_TOKEN_TOOL,
   ASSOCIATE_TOKEN_TOOL,
   UPDATE_TOKEN_TOOL,
+  TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 } as const;
 
 export default { coreTokenPlugin, coreTokenPluginToolNames };
