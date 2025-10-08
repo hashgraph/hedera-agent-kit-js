@@ -41,7 +41,7 @@ export const getHbarBalanceQuery = async (
       client,
     );
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const balance: BigNumber = await mirrornodeService.getAccountHBarBalance(
+    const balance: BigNumber = await mirrornodeService.getAccountHbarBalance(
       normalisedParams.accountId,
     );
     return {

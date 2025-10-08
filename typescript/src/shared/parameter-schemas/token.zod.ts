@@ -136,7 +136,12 @@ export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
   });
 
 export const mintNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
-  mintNonFungibleTokenParameters(_context).extend({});
+  z.object({
+    tokenId: z.string().describe('The id of the NFT class.'),
+    metadata: z
+      .array(z.instanceof(Uint8Array<ArrayBuffer>))
+      .describe('An array of URIs hosting NFT metadata.'),
+  });
 
 export const deleteTokenParameters = (_context: Context = {}) =>
   z.object({

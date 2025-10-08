@@ -16,6 +16,7 @@ import {
   TokenAirdropsResponse,
   ExchangeRateResponse,
   TokenAllowanceResponse,
+  NftBalanceResponse,
 } from './types';
 import BigNumber from 'bignumber.js';
 
@@ -54,7 +55,7 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     };
   }
 
-  async getAccountHBarBalance(accountId: string): Promise<BigNumber> {
+  async getAccountHbarBalance(accountId: string): Promise<BigNumber> {
     let account;
     try {
       account = await this.getAccount(accountId);
@@ -227,6 +228,15 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     spenderAccountId: string,
   ): Promise<TokenAllowanceResponse> {
     const url = `${this.baseUrl}/accounts/${ownerAccountId}/allowances/tokens?spender.id=${spenderAccountId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
+    }
+    return await response.json();
+  }
+
+  async getAccountNfts(ownerAccountId: string): Promise<NftBalanceResponse> {
+    const url = `${this.baseUrl}/accounts/${ownerAccountId}/nfts`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);

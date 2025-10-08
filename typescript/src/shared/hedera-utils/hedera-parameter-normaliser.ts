@@ -14,6 +14,7 @@ import {
   dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
+  mintNonFungibleTokenParametersNormalised,
   transferNonFungibleTokenWithAllowanceParameters,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
   updateTokenParameters,
@@ -799,7 +800,7 @@ export default class HederaParameterNormaliser {
   static normaliseMintNonFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>>,
     context: Context,
-  ) {
+  ): z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>> =
       this.parseParamsWithSchema(params, mintNonFungibleTokenParameters, context);
 
