@@ -16,9 +16,10 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { AgentExecutor } from 'langchain/agents';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -92,7 +93,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
 
   beforeEach(async () => {
     // Spender account
-    spenderKey = PrivateKey.generateED25519();
+    spenderKey = PrivateKey.generateECDSA();
     spenderAccountId = await executorWrapper
       .createAccount({ key: spenderKey.publicKey, initialBalance: 10 })
       .then(r => r.accountId!);
@@ -101,7 +102,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     spenderWrapper = new HederaOperationsWrapper(spenderClient);
 
     // Receiver account
-    receiverKey = PrivateKey.generateED25519();
+    receiverKey = PrivateKey.generateECDSA();
     receiverAccountId = await executorWrapper
       .createAccount({ key: receiverKey.publicKey, initialBalance: 10 })
       .then(r => r.accountId!);
@@ -145,7 +146,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     }
   });
 
-  it.skip('should allow spender to transfer tokens to themselves using allowance', async () => {
+  it('should allow spender to transfer tokens to themselves using allowance', async () => {
     const input = `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
@@ -155,20 +156,16 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(observation.raw.status).toBe('SUCCESS');
 
-    //FIXME: this breaks somehow
-    // const ownerBalance = await operatorWrapper.getAccountTokenBalance(
-    //   tokenId.toString(),
-    //   executorAccountId.toString(),
-    // );
-    //
-    // const spenderBalance = await executorWrapper.getAccountTokenBalance(
-    //   tokenId.toString(),
-    //   spenderAccountId.toString(),
-    // );
-    // console.log(`spenderBalance: ${JSON.stringify(spenderBalance)}`);
-    //
-    // expect(ownerBalance.balance).toBe(FT_PARAMS.initialSupply - 50);
-    // expect(spenderBalance.balance).toBe(50);
+    await wait(MIRROR_NODE_WAITING_TIME);
+
+    // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
+    // using mirrornode instead is a workaround
+    const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
+      spenderAccountId.toString(),
+      tokenId.toString(),
+    );
+
+    expect(spenderBalance.balance).toBe(50);
   });
 
   it('should allow spender to transfer tokens to both themselves and receiver in one allowance call', async () => {
@@ -181,23 +178,21 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(observation.raw.status).toBe('SUCCESS');
 
-    //FIXME: this breaks somehow
-    // const ownerBalance = await executorWrapper.getAccountTokenBalance(
-    //   tokenId.toString(),
-    //   executorAccountId.toString(),
-    // );
-    // const spenderBalance = await spenderWrapper.getAccountTokenBalance(
-    //   tokenId.toString(),
-    //   spenderAccountId.toString(),
-    // );
-    // const receiverBalance = await receiverWrapper.getAccountTokenBalance(
-    //   tokenId.toString(),
-    //   receiverAccountId.toString(),
-    // );
-    //
-    // expect(ownerBalance.balance).toBe(FT_PARAMS.initialSupply - 100);
-    // expect(spenderBalance.balance).toBe(30);
-    // expect(receiverBalance.balance).toBe(70);
+    await wait(MIRROR_NODE_WAITING_TIME);
+
+    // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
+    // using mirrornode instead is a workaround
+    const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
+      spenderAccountId.toString(),
+      tokenId.toString(),
+    );
+    const receiverBalance = await receiverWrapper.getAccountTokenBalanceFromMirrornode(
+      receiverAccountId.toString(),
+      tokenId.toString(),
+    );
+
+    expect(spenderBalance.balance).toBe(30);
+    expect(receiverBalance.balance).toBe(70);
   });
 
   it('should fail gracefully when trying to transfer more than allowance', async () => {
