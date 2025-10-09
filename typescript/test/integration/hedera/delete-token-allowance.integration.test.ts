@@ -42,7 +42,7 @@ describe('Delete Token Allowance Integration Tests', () => {
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    // create spender account
+    // create a spender account
     spenderAccountId = await executorWrapper
       .createAccount({ key: executorClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
@@ -91,6 +91,8 @@ describe('Delete Token Allowance Integration Tests', () => {
       tokenIds: [tokenId],
     };
 
+    await wait(MIRROR_NODE_WAITING_TIME);
+
     const tool = deleteTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);
 
@@ -104,6 +106,8 @@ describe('Delete Token Allowance Integration Tests', () => {
       spenderAccountId: spenderAccountId.toString(),
       tokenIds: [tokenId],
     };
+
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = deleteTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);

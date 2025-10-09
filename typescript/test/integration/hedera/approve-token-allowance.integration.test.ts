@@ -103,6 +103,8 @@ describe('Approve Token Allowance Integration Tests', () => {
       transactionMemo: 'Integration token approve',
     };
 
+    await wait(MIRROR_NODE_WAITING_TIME);
+
     const tool = approveTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);
 
@@ -120,6 +122,8 @@ describe('Approve Token Allowance Integration Tests', () => {
         { tokenId: tokenIdFT.toString(), amount: 2 },
       ],
     };
+
+    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = approveTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);
