@@ -352,3 +352,33 @@ export const approveNftAllowanceParametersNormalised = (_context: Context = {}) 
     nftApprovals: z.array(z.instanceof(TokenNftAllowance)).optional(),
     transactionMemo: z.string().optional(),
   });
+
+export const transferFungibleTokenWithAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().describe('Token ID to transfer'),
+    sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
+    transfers: z
+      .array(
+        z.object({
+          accountId: z.string().describe('Recipient account ID'),
+          amount: z
+            .number()
+            .nonnegative()
+            .describe('Amount of tokens to transfer in display unit.'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient transfers'),
+    transactionMemo: z.string().optional().describe('Memo for the transaction'),
+  });
+
+export const transferFungibleTokenWithAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string(),
+    tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
+    approvedTransfer: z.object({
+      ownerAccountId: z.string(),
+      amount: z.number(),
+    }),
+    transactionMemo: z.string().optional(),
+  });
