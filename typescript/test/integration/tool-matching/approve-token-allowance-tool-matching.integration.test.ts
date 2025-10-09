@@ -72,7 +72,7 @@ describe('Approve Token Allowance Tool Matching Integration Tests', () => {
 
     it('matches multiple token allowances', async () => {
       const input =
-        'Approve 1 token of 0.0.1, 2 tokens of 0.0.2, and 3 tokens of 0.0.3 for spender 0.0.4444';
+        'Approve 1 token of token ID 0.0.1, 2 tokens of token ID 0.0.2, and 3 tokens of token ID 0.0.3 for spender with account id 0.0.4444';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
