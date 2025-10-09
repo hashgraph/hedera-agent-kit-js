@@ -58,6 +58,7 @@ import {
   TopicId,
   HbarAllowance,
   TokenAllowance,
+  Timestamp,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -77,6 +78,10 @@ import {
   normalisedTransactionRecordQueryParameters,
   transactionRecordQueryParameters,
 } from '@/shared/parameter-schemas/transaction.zod';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from '@/shared/parameter-schemas/common.zod';
 
 export default class HederaParameterNormaliser {
   static parseParamsWithSchema(
@@ -1040,6 +1045,45 @@ export default class HederaParameterNormaliser {
     }
 
     return normalised;
+  }
+
+  static async normaliseScheduledTransactionParams(
+    params: z.infer<ReturnType<typeof optionalScheduledTransactionParams>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<typeof optionalScheduledTransactionParamsNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof optionalScheduledTransactionParams>> =
+      HederaParameterNormaliser.parseParamsWithSchema(
+        params,
+        optionalScheduledTransactionParams,
+        context,
+      );
+
+    const scheduling = parsedParams.schedulingParams;
+
+    const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
+
+    // Resolve adminKey
+    const adminKey = HederaParameterNormaliser.resolveKey(scheduling.adminKey, userPublicKey);
+
+    // Resolve payerAccountID
+    const payerAccountID = scheduling.payerAccountId
+      ? AccountId.fromString(scheduling.payerAccountId)
+      : undefined;
+
+    // Resolve expirationTime
+    const expirationTime = scheduling.expirationTime
+      ? Timestamp.fromDate(scheduling.expirationTime)
+      : undefined;
+
+    return {
+      isScheduled: scheduling.isScheduled ?? false,
+      scheduleMemo: scheduling.scheduleTransactionMemo,
+      adminKey,
+      payerAccountID,
+      expirationTime,
+      waitForExpiry: scheduling.waitForExpiry ?? false,
+    };
   }
 
   private static resolveKey(

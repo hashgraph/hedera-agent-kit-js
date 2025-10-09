@@ -10,7 +10,7 @@ export class AccountResolver {
    */
   static getDefaultAccount(context: Context, client: Client): string {
     // Prefer context.accountId (user's account) if it is set
-    if(context.accountId) {
+    if (context.accountId) {
       return context.accountId;
     }
 

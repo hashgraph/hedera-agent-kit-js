@@ -72,4 +72,22 @@ Important:
 - Do not generate placeholder values for optional fields
 - Leave optional parameters undefined if not specified by the user`;
   }
+
+  static getScheduledTransactionParamsDescription(context: Context): string {
+    return `schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately.
+
+- isScheduled (boolean, optional, default false): If true, the transaction will be created as a scheduled transaction. If false or omitted, all other scheduling parameters will be ignored.
+- scheduleTransactionMemo (string, optional, max 100 chars): Optional short memo attached to the scheduled transaction.
+- adminKey (boolean|string, optional, default false): Admin key that can delete or modify the scheduled transaction before execution. 
+  - If true, the operator key will be used. 
+  - If false or omitted, no admin key is set. 
+  - If a string is passed, it will be used as the admin key.
+- payerAccountId (string, optional): Account that will pay the transaction fee when the scheduled transaction executes. Defaults to the ${AccountResolver.getDefaultAccountDescription(context)}.
+- expirationTime (string, optional, ISO 8601): Time when the scheduled transaction will expire if not fully signed.
+- waitForExpiry (boolean, optional, default false): If true, keeps the schedule entity on the ledger until expiry even after execution.
+
+Notes:
+- Once scheduled, the transaction will not execute immediately.
+- The network executes the scheduled transaction automatically once all required signatures are collected.`;
+  }
 }

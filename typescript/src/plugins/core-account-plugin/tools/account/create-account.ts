@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client, Status, Transaction } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createAccountParameters } from '@/shared/parameter-schemas/account.zod';
@@ -23,6 +23,7 @@ Parameters:
 - accountMemo (string, optional): Optional memo for the account
 - initialBalance (number, optional, default 0): Initial HBAR to fund the account
 - maxAutomaticTokenAssociations (number, optional, default -1): -1 means unlimited
+- ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
 };
@@ -49,10 +50,19 @@ const createAccount = async (
     );
 
     // Build transaction
-    const tx = HederaBuilder.createAccount(normalisedParams);
+    let tx: Transaction = HederaBuilder.createAccount(normalisedParams);
 
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    // Wrap in ScheduledTransaction if needed
+    if (params.schedulingParams.isScheduled) {
+      const scheduleParams = await HederaParameterNormaliser.normaliseScheduledTransactionParams(
+        params,
+        context,
+        client,
+      );
+      tx = HederaBuilder.wrapInScheduleCreateTransaction(tx, scheduleParams);
+    }
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to create account';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

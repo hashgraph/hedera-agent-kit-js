@@ -1,29 +1,31 @@
 import {
+  AccountAllowanceApproveTransaction,
+  AccountCreateTransaction,
+  AccountDeleteTransaction,
+  AccountId,
+  AccountUpdateTransaction,
+  ContractExecuteTransaction,
+  ScheduleCreateTransaction,
+  ScheduleDeleteTransaction,
+  ScheduleSignTransaction,
   TokenAirdropTransaction,
+  TokenAssociateTransaction,
   TokenCreateTransaction,
   TokenDeleteTransaction,
+  TokenDissociateTransaction,
+  TokenId,
+  TokenMintTransaction,
+  TokenUpdateTransaction,
   TopicCreateTransaction,
   TopicDeleteTransaction,
   TopicMessageSubmitTransaction,
-  TransferTransaction,
-  ContractExecuteTransaction,
-  TokenMintTransaction,
-  TokenAssociateTransaction,
-  AccountCreateTransaction,
-  AccountDeleteTransaction,
-  AccountUpdateTransaction,
-  ScheduleSignTransaction,
-  ScheduleCreateTransaction,
-  TokenUpdateTransaction,
-  ScheduleDeleteTransaction,
-  TokenDissociateTransaction,
   TopicUpdateTransaction,
-  AccountId,
-  TokenId,
-  AccountAllowanceApproveTransaction,
+  Transaction,
+  TransferTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
+  approveNftAllowanceParametersNormalised,
   associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
@@ -32,20 +34,19 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
-  approveNftAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
-  createAccountParametersNormalised,
-  deleteAccountParametersNormalised,
-  transferHbarParametersNormalised,
-  updateAccountParametersNormalised,
-  createScheduleTransactionParametersNormalised,
-  signScheduleTransactionParameters,
-  scheduleDeleteTransactionParameters,
   approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParametersNormalised,
+  createAccountParametersNormalised,
+  createScheduleTransactionParametersNormalised,
+  deleteAccountParametersNormalised,
+  scheduleDeleteTransactionParameters,
+  signScheduleTransactionParameters,
+  transferHbarParametersNormalised,
   transferHbarWithAllowanceParametersNormalised,
+  updateAccountParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -54,6 +55,7 @@ import {
   updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
+import { optionalScheduledTransactionParamsNormalised } from '@/shared/parameter-schemas/common.zod';
 
 export default class HederaBuilder {
   static createScheduleTransaction(
@@ -225,5 +227,12 @@ export default class HederaBuilder {
       tx.setTransactionMemo(params.transactionMemo);
     }
     return tx;
+  }
+
+  static wrapInScheduleCreateTransaction(
+    scheduledTransaction: Transaction,
+    params: z.infer<typeof optionalScheduledTransactionParamsNormalised>,
+  ): ScheduleCreateTransaction {
+    return new ScheduleCreateTransaction(params).setScheduledTransaction(scheduledTransaction);
   }
 }

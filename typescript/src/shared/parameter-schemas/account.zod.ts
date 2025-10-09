@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AccountId, Hbar, Key, Transaction, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
+import { optionalScheduledTransactionParams } from '@/shared/parameter-schemas/common.zod';
 
 export const transferHbarParameters = (_context: Context = {}) =>
   z.object({
@@ -40,22 +41,22 @@ export const transferHbarParametersNormalised = (_context: Context = {}) =>
   });
 
 export const createAccountParameters = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParams(_context).extend({
     publicKey: z
       .string()
       .optional()
-      .describe('Account public key. If not provided, a public key of the operator will be used'),
-    accountMemo: z.string().optional().describe('Optional memo for the account'),
+      .describe('Account public key. If not provided, the operator’s public key will be used.'),
+    accountMemo: z.string().optional().describe('Optional memo for the account.'),
     initialBalance: z
       .number()
       .optional()
       .default(0)
-      .describe('Initial HBAR balance to fund the account (defaults to 0)'),
+      .describe('Initial HBAR balance to fund the account (defaults to 0).'),
     maxAutomaticTokenAssociations: z
       .number()
       .optional()
       .default(-1)
-      .describe('Max automatic token associations (-1 for unlimited)'),
+      .describe('Max automatic token associations (-1 for unlimited).'),
   });
 
 export const createAccountParametersNormalised = (_context: Context = {}) =>
