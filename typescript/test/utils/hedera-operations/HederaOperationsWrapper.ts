@@ -48,6 +48,7 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import {
   TokenAirdropsResponse,
   TokenAllowanceResponse,
+  TokenBalance,
   TopicMessagesResponse,
 } from '@/shared/hedera-utils/mirrornode/types';
 import {
@@ -293,6 +294,18 @@ class HederaOperationsWrapper {
     const balance = accountTokenBalances.tokens?.get(tokenIdObj) ?? 0;
     const decimals = accountTokenBalances.tokenDecimals?.get(tokenIdObj) ?? 0;
     return { tokenId: tokenIdObj.toString(), balance, decimals };
+  }
+
+  async getAccountTokenBalanceFromMirrornode(
+    accountId: string,
+    tokenId: string,
+  ): Promise<TokenBalance> {
+    const tokenBalances = await this.mirrornode.getAccountTokenBalances(accountId, tokenId);
+    const found = tokenBalances.tokens.find(t => t.token_id === tokenId);
+    if (!found) {
+      throw new Error(`Token balance for tokenId ${tokenId} not found`);
+    }
+    return found;
   }
 
   /**
