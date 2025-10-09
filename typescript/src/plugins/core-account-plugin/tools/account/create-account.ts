@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client, Status, Transaction } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createAccountParameters } from '@/shared/parameter-schemas/account.zod';
@@ -49,18 +49,8 @@ const createAccount = async (
       mirrornodeService,
     );
 
-    // Build transaction
-    let tx: Transaction = HederaBuilder.createAccount(normalisedParams);
-
-    // Wrap in ScheduledTransaction if needed
-    if (params.schedulingParams.isScheduled) {
-      const scheduleParams = await HederaParameterNormaliser.normaliseScheduledTransactionParams(
-        params,
-        context,
-        client,
-      );
-      tx = HederaBuilder.wrapInScheduleCreateTransaction(tx, scheduleParams);
-    }
+    // Build transaction and wrap in SchedulingTransaction if needed
+    const tx = HederaBuilder.createAccount(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {

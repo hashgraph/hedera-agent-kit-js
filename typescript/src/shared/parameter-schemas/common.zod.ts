@@ -50,37 +50,41 @@ export const optionalScheduledTransactionParams = (_context: Context = {}) =>
       ),
   });
 
-export const optionalScheduledTransactionParamsNormalised = z.object({
-  isScheduled: z
-    .boolean()
-    .describe(
-      'If true, the transaction will be created as a scheduled transaction. If false or omitted, all other scheduling parameters will be ignored.',
-    ),
-  scheduleMemo: z
-    .string()
-    .optional()
-    .describe('Optional memo attached to the scheduled transaction (max 100 characters).'),
-  adminKey: z
-    .instanceof(Key)
-    .optional()
-    .describe(
-      'Admin key that can delete or modify the scheduled transaction before execution. Can be undefined if not set.',
-    ),
-  payerAccountID: z
-    .instanceof(AccountId)
-    .optional()
-    .describe(
-      'Account that will pay the transaction fee when the scheduled transaction executes. Defaults to operator if undefined.',
-    ),
-  expirationTime: z
-    .instanceof(Timestamp)
-    .optional()
-    .describe(
-      'Time when the scheduled transaction will expire if not fully signed (ISO 8601 converted to Timestamp).',
-    ),
-  waitForExpiry: z
-    .boolean()
-    .describe(
-      'If true, keeps the schedule entity on the ledger until expiry even after execution.',
-    ),
-});
+export const optionalScheduledTransactionParamsNormalised = (_context: Context) =>
+  z.object({
+    schedulingParams: z.object({
+      isScheduled: z
+        .boolean()
+        .describe(
+          'If true, the transaction will be created as a scheduled transaction. If false or omitted, all other scheduling parameters will be ignored.',
+        ),
+      scheduleMemo: z
+        .string()
+        .optional()
+        .describe('Optional memo attached to the scheduled transaction (max 100 characters).'),
+      adminKey: z
+        .instanceof(Key)
+        .optional()
+        .describe(
+          'Admin key that can delete or modify the scheduled transaction before execution. Can be undefined if not set.',
+        ),
+      payerAccountID: z
+        .instanceof(AccountId)
+        .optional()
+        .describe(
+          'Account that will pay the transaction fee when the scheduled transaction executes. Defaults to operator if undefined.',
+        ),
+      expirationTime: z
+        .instanceof(Timestamp)
+        .optional()
+        .describe(
+          'Time when the scheduled transaction will expire if not fully signed (ISO 8601 converted to Timestamp).',
+        ),
+      waitForExpiry: z
+        .boolean()
+        .optional()
+        .describe(
+          'If true, keeps the schedule entity on the ledger until expiry even after execution.',
+        ),
+    }),
+  });

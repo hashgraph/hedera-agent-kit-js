@@ -3,7 +3,10 @@ import { z } from 'zod';
 import { AccountId, Hbar, Key, Transaction, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
-import { optionalScheduledTransactionParams } from '@/shared/parameter-schemas/common.zod';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from '@/shared/parameter-schemas/common.zod';
 
 export const transferHbarParameters = (_context: Context = {}) =>
   z.object({
@@ -60,7 +63,7 @@ export const createAccountParameters = (_context: Context = {}) =>
   });
 
 export const createAccountParametersNormalised = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParamsNormalised(_context).extend({
     accountMemo: z.string().optional(),
     initialBalance: z.union([z.string(), z.number()]).optional(),
     key: z.instanceof(Key).optional(),

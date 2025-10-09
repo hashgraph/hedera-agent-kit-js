@@ -180,7 +180,8 @@ export default class HederaBuilder {
   }
 
   static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
-    return new AccountCreateTransaction(params);
+    const tx = new AccountCreateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static deleteAccount(params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>) {
@@ -255,10 +256,15 @@ export default class HederaBuilder {
     return tx;
   }
 
-  static wrapInScheduleCreateTransaction(
-    scheduledTransaction: Transaction,
-    params: z.infer<typeof optionalScheduledTransactionParamsNormalised>,
-  ): ScheduleCreateTransaction {
-    return new ScheduleCreateTransaction(params).setScheduledTransaction(scheduledTransaction);
+  static maybeWrapInSchedule(
+    tx: Transaction,
+    schedulingParams?: z.infer<
+      ReturnType<typeof optionalScheduledTransactionParamsNormalised>
+    >['schedulingParams'],
+  ): Transaction {
+    if (schedulingParams?.isScheduled) {
+      return new ScheduleCreateTransaction(schedulingParams).setScheduledTransaction(tx);
+    }
+    return tx;
   }
 }

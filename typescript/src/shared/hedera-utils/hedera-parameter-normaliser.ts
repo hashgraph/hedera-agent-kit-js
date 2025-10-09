@@ -689,9 +689,15 @@ export default class HederaParameterNormaliser {
         'Unable to resolve public key: no param, mirror node, or client operator key available.',
       );
     }
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
 
     return {
       ...parsedParams,
+      schedulingParams,
       key: PublicKey.fromString(publicKey),
     };
   }
@@ -1090,7 +1096,7 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof optionalScheduledTransactionParams>>,
     context: Context,
     client: Client,
-  ): Promise<z.infer<typeof optionalScheduledTransactionParamsNormalised>> {
+  ): Promise<z.infer<ReturnType<typeof optionalScheduledTransactionParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof optionalScheduledTransactionParams>> =
       HederaParameterNormaliser.parseParamsWithSchema(
         params,
@@ -1116,12 +1122,14 @@ export default class HederaParameterNormaliser {
       : undefined;
 
     return {
-      isScheduled: scheduling.isScheduled ?? false,
-      scheduleMemo: scheduling.scheduleTransactionMemo,
-      adminKey,
-      payerAccountID,
-      expirationTime,
-      waitForExpiry: scheduling.waitForExpiry ?? false,
+      schedulingParams: {
+        isScheduled: scheduling.isScheduled ?? false,
+        scheduleMemo: scheduling.scheduleTransactionMemo,
+        adminKey,
+        payerAccountID,
+        expirationTime,
+        waitForExpiry: scheduling.waitForExpiry ?? false,
+      },
     };
   }
 
