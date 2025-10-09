@@ -27,6 +27,8 @@ Parameters:
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
 
+Important: If the user mentions multiple recipients or amounts, combine all recipients into a single "transfers" array and make exactly one call to this tool. Do not split the action into multiple tool calls.
+
 Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
 Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
 `;
