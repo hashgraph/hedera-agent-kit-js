@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AccountId, Client, Key, PrivateKey, TokenSupplyType } from '@hashgraph/sdk';
-import deleteTokenAllowanceTool from '@/plugins/core-account-plugin/tools/account/delete-token-allowance';
-import approveTokenAllowanceTool from '@/plugins/core-account-plugin/tools/account/approve-token-allowance';
+import deleteTokenAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/delete-token-allowance';
+import approveTokenAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/approve-token-allowance';
 import { Context, AgentMode } from '@/shared/configuration';
 import { z } from 'zod';
 import { deleteTokenAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
