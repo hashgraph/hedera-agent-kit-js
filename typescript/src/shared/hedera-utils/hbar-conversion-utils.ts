@@ -3,6 +3,6 @@
  * @param tinyBars - The tinybar amount.
  * @returns The hbar amount.
  */
-export function toHBar(tinyBars: BigNumber): BigNumber {
+export function toHbar(tinyBars: BigNumber): BigNumber {
   return tinyBars.div(100000000);
 }

@@ -53,7 +53,7 @@ describe('Get Token Info Query Integration Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);

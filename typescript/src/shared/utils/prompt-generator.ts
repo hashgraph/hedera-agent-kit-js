@@ -70,6 +70,8 @@ export class PromptGenerator {
 Important:
 - Only include optional parameters if explicitly provided by the user
 - Do not generate placeholder values for optional fields
-- Leave optional parameters undefined if not specified by the user`;
+- Leave optional parameters undefined if not specified by the user
+- Important: If the user mentions multiple recipients or amounts and tool accepts an array, combine all recipients, tokens or similar assets into a single array and make exactly one call to that tool. Do not split the action into multiple tool calls if it's possible to do so.
+`;
   }
 }

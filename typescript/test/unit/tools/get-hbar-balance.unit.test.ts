@@ -12,7 +12,7 @@ vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
 }));
 vi.mock('@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils', () => ({
   getMirrornodeService: vi.fn(() => ({
-    getAccountHBarBalance: vi.fn(async (_: string) => new BigNumber(123.456789)),
+    getAccountHbarBalance: vi.fn(async (_: string) => new BigNumber(123.456789)),
   })),
 }));
 vi.mock('@/shared/utils/prompt-generator', () => ({
@@ -23,7 +23,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
   },
 }));
 vi.mock('@/shared/hedera-utils/hbar-conversion-utils', () => ({
-  toHBar: (bn: BigNumber) => ({ toString: () => bn.toFixed() }),
+  toHbar: (bn: BigNumber) => ({ toString: () => bn.toFixed() }),
 }));
 
 const makeClient = () => Client.forNetwork({});
@@ -67,7 +67,7 @@ describe('get-hbar-balance tool (unit)', () => {
       '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils'
     );
     (getMirrornodeService as any).mockReturnValue({
-      getAccountHBarBalance: vi.fn(async () => {
+      getAccountHbarBalance: vi.fn(async () => {
         throw new Error('boom');
       }),
     });
@@ -85,7 +85,7 @@ describe('get-hbar-balance tool (unit)', () => {
       '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils'
     );
     (getMirrornodeService as any).mockReturnValue({
-      getAccountHBarBalance: vi.fn(async () => {
+      getAccountHbarBalance: vi.fn(async () => {
         throw 'nope';
       }),
     });

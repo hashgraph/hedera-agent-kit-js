@@ -2,6 +2,7 @@ import { Context } from '@/shared/configuration';
 import { z } from 'zod';
 import {
   AccountId,
+  NftId,
   PublicKey,
   TokenId,
   TokenNftAllowance,
@@ -135,7 +136,12 @@ export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
   });
 
 export const mintNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
-  mintNonFungibleTokenParameters(_context).extend({});
+  z.object({
+    tokenId: z.string().describe('The id of the NFT class.'),
+    metadata: z
+      .array(z.instanceof(Uint8Array<ArrayBuffer>))
+      .describe('An array of URIs hosting NFT metadata.'),
+  });
 
 export const deleteTokenParameters = (_context: Context = {}) =>
   z.object({
@@ -351,6 +357,52 @@ export const approveNftAllowanceParametersNormalised = (_context: Context = {}) 
   z.object({
     nftApprovals: z.array(z.instanceof(TokenNftAllowance)).optional(),
     transactionMemo: z.string().optional(),
+  });
+
+export const transferNonFungibleTokenWithAllowanceParameters = (_context: Context) =>
+  z
+    .object({
+      sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
+      tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
+      recipients: z
+        .array(
+          z.object({
+            recipientId: z.string().describe('Account ID of the recipient'),
+            serialNumber: z.number().positive().describe('Serial number of the NFT to transfer'),
+          }),
+        )
+        .min(1)
+        .describe('Array of recipient and NFT serial number pairs to transfer'),
+      transactionMemo: z
+        .string()
+        .optional()
+        .describe('Optional memo to include with the transaction'),
+    })
+    .superRefine((val, ctx) => {
+      // Optional custom validation logic
+      const seenSerials = new Set<number>();
+      for (const { serialNumber } of val.recipients) {
+        if (seenSerials.has(serialNumber)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Duplicate serial number: ${serialNumber}`,
+            path: ['recipients'],
+          });
+        }
+        seenSerials.add(serialNumber);
+      }
+    });
+
+export const transferNonFungibleTokenWithAllowanceParametersNormalised = (_context: Context) =>
+  z.object({
+    sourceAccountId: z.instanceof(AccountId),
+    transactionMemo: z.string().optional(),
+    transfers: z.array(
+      z.object({
+        nftId: z.instanceof(NftId),
+        receiver: z.instanceof(AccountId),
+      }),
+    ),
   });
 
 export const transferFungibleTokenWithAllowanceParameters = (_context: Context = {}) =>
