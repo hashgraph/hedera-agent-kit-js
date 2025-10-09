@@ -31,7 +31,8 @@ const postProcess = (tokenBalances: TokenBalancesResponse, accountId: string) =>
   }
   const balancesText = tokenBalances.tokens
     .map(
-      token => `  Token: ${token.token_id}, Balance: ${token.balance}, Decimals: ${token.decimals}`,
+      token =>
+        ` Token: ${token.token_id}, Symbol: ${token.symbol}  Balance: ${token.balance}, Decimals: ${token.decimals}`,
     )
     .join('\n');
 

@@ -42,7 +42,7 @@ describe('Transfer Fungible Token With Allowance Tool Matching Tests', () => {
 
   it('should handle multiple recipients in one allowance transfer', async () => {
     const input =
-      "Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003";
+      "Use allowance from 0.0.1002 to send 50 TKN (Fungible token id: '0.0.33333') to account 0.0.2002 and 75 fungible tokens TKN to account 0.0.3003";
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
