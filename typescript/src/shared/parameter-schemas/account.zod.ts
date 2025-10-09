@@ -88,8 +88,8 @@ export const deleteAccountParametersNormalised = (_context: Context = {}) =>
   });
 
 export const updateAccountParameters = (_context: Context = {}) =>
-  z.object({
-    // If not passed, will be injected from context in normalisation
+  optionalScheduledTransactionParams(_context).extend({
+    // If not passed, will be injected from context in normalization
     accountId: z
       .string()
       .optional()
@@ -108,7 +108,7 @@ export const updateAccountParameters = (_context: Context = {}) =>
   });
 
 export const updateAccountParametersNormalised = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParamsNormalised(_context).extend({
     accountId: z.instanceof(AccountId),
     maxAutomaticTokenAssociations: z.union([z.number(), z.instanceof(Long)]).optional(),
     stakedAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),

@@ -24,11 +24,15 @@ Parameters:
 - initialBalance (number, optional, default 0): Initial HBAR to fund the account
 - maxAutomaticTokenAssociations (number, optional, default -1): -1 means unlimited
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
+  if (response.scheduleId) {
+    return `Scheduled transaction created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}\n}`;
+  }
   const accountIdStr = response.accountId ? response.accountId.toString() : 'unknown';
   return `Account created successfully.\nTransaction ID: ${response.transactionId}\nNew Account ID: ${accountIdStr}\n}`;
 };

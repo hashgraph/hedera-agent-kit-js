@@ -70,17 +70,20 @@ export default class HederaBuilder {
   static createFungibleToken(
     params: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenCreateTransaction(params);
+    const tx = new TokenCreateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static createNonFungibleToken(
     params: z.infer<ReturnType<typeof createNonFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenCreateTransaction(params);
+    const tx = new TokenCreateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
-    return new TransferTransaction(params);
+    const tx = new TransferTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static transferHbarWithAllowance(
@@ -150,7 +153,7 @@ export default class HederaBuilder {
     const { transactionMemo, ...rest } = params as any;
     const tx = new TopicMessageSubmitTransaction(rest);
     if (transactionMemo) tx.setTransactionMemo(transactionMemo);
-    return tx;
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static updateTopic(params: z.infer<ReturnType<typeof updateTopicParametersNormalised>>) {
@@ -166,13 +169,15 @@ export default class HederaBuilder {
   static mintFungibleToken(
     params: z.infer<ReturnType<typeof mintFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenMintTransaction(params);
+    const tx = new TokenMintTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static mintNonFungibleToken(
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenMintTransaction(params);
+    const tx = new TokenMintTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static dissociateToken(params: z.infer<ReturnType<typeof dissociateTokenParametersNormalised>>) {
@@ -189,7 +194,8 @@ export default class HederaBuilder {
   }
 
   static updateAccount(params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>) {
-    return new AccountUpdateTransaction(params);
+    const tx = new AccountUpdateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static deleteToken(params: z.infer<ReturnType<typeof deleteTokenParametersNormalised>>) {

@@ -689,6 +689,7 @@ export default class HederaParameterNormaliser {
         'Unable to resolve public key: no param, mirror node, or client operator key available.',
       );
     }
+
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
@@ -958,11 +959,11 @@ export default class HederaParameterNormaliser {
     };
   }
 
-  static normaliseUpdateAccount(
+  static async normaliseUpdateAccount(
     params: z.infer<ReturnType<typeof updateAccountParameters>>,
     context: Context,
     client: Client,
-  ): z.infer<ReturnType<typeof updateAccountParametersNormalised>> {
+  ): Promise<z.infer<ReturnType<typeof updateAccountParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof updateAccountParameters>> =
       this.parseParamsWithSchema(params, updateAccountParameters, context);
 
@@ -987,7 +988,16 @@ export default class HederaParameterNormaliser {
       normalised.declineStakingReward = parsedParams.declineStakingReward;
     }
 
-    return normalised;
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      ...normalised,
+      schedulingParams,
+    };
   }
 
   static normaliseGetTransactionRecordParams(
