@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client } from '@hashgraph/sdk';
 import toolFactory, {
   APPROVE_TOKEN_ALLOWANCE_TOOL,
-} from '@/plugins/core-account-plugin/tools/account/approve-token-allowance';
+} from '@/plugins/core-token-plugin/tools/fungible-token/approve-token-allowance';
 
 // ---- Mocks ----
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
