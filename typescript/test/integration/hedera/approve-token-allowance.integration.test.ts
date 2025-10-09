@@ -8,7 +8,7 @@ import {
   TokenId,
   TokenSupplyType,
 } from '@hashgraph/sdk';
-import approveTokenAllowanceTool from '@/plugins/core-account-plugin/tools/account/approve-token-allowance';
+import approveTokenAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/approve-token-allowance';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
