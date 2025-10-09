@@ -114,7 +114,7 @@ describe('Get Account Token Balances E2E Tests', () => {
       const observation = extractObservationFromLangchainResponse(result);
 
       expect(observation).toBeDefined();
-      expect(observation.raw.error).toContain('Failed to fetch balance for an account');
+      expect(observation.raw.error).toContain('Failed to fetch balance for account');
     }),
   );
 
