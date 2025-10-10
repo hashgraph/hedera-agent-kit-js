@@ -32,7 +32,13 @@ ${usageInstructions}
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Account successfully updated. Transaction ID: ${response.transactionId}`;
+  if (response.scheduleId) {
+    return `Scheduled account update created successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `Account successfully updated.
+Transaction ID: ${response.transactionId}`;
 };
 
 const updateAccount = async (
@@ -48,7 +54,7 @@ const updateAccount = async (
     );
 
     // Build transaction and wrap in SchedulingTransaction if needed
-    let tx = HederaBuilder.updateAccount(normalisedParams);
+    const tx = HederaBuilder.updateAccount(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {

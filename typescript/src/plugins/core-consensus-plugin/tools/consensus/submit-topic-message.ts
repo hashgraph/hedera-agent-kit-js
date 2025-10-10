@@ -7,7 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 
-const submitTopicMessagePrompt = (_context: Context = {}) => {
+const submitTopicMessagePrompt = (context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
   return `
@@ -17,6 +17,7 @@ Parameters:
 - topicId (str, required): The ID of the topic to submit the message to
 - message (str, required): The message to submit to the topic
 - transactionMemo (str, optional): An optional memo to include on the transaction
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
 };
@@ -32,8 +33,8 @@ const submitTopicMessage = async (
 ) => {
   try {
     const tx = HederaBuilder.submitTopicMessage(params);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return { ...result, topicId: params.topicId };
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to submit message to topic';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

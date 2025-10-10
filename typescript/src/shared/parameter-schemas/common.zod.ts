@@ -1,6 +1,6 @@
 import { Context } from '@/shared';
 import { z } from 'zod';
-import { AccountId, Key, Timestamp } from '@hashgraph/sdk';
+import { AccountId, PublicKey, Timestamp } from '@hashgraph/sdk';
 
 export const optionalScheduledTransactionParams = (_context: Context = {}) =>
   z.object({
@@ -13,7 +13,7 @@ export const optionalScheduledTransactionParams = (_context: Context = {}) =>
           .describe(
             'If true, the transaction will be created as a scheduled transaction instead of executing immediately. Other params will be ignored if this is false or omitted.',
           ),
-        scheduleTransactionMemo: z
+        scheduleMemo: z
           .string()
           .max(100)
           .optional()
@@ -65,7 +65,7 @@ export const optionalScheduledTransactionParamsNormalised = (_context: Context) 
           .optional()
           .describe('Optional memo attached to the scheduled transaction (max 100 characters).'),
         adminKey: z
-          .instanceof(Key)
+          .instanceof(PublicKey)
           .optional()
           .describe(
             'Admin key that can delete or modify the scheduled transaction before execution. Can be undefined if not set.',

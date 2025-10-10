@@ -25,7 +25,15 @@ Example: "Mint 0.0.6465503 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5g
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Token ${response.tokenId?.toString()} successfully minted with transaction id ${response.transactionId.toString()}`;
+  if (response.scheduleId) {
+    return `Scheduled mint transaction created successfully.
+Transaction ID: ${response.transactionId.toString()}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  const tokenIdStr = response.tokenId ? response.tokenId.toString() : 'unknown';
+  return `Token successfully minted.
+Transaction ID: ${response.transactionId.toString()}
+Token ID: ${tokenIdStr}`;
 };
 
 const mintNonFungibleToken = async (
@@ -34,13 +42,14 @@ const mintNonFungibleToken = async (
   params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseMintNonFungibleTokenParams(
+    const normalisedParams = await HederaParameterNormaliser.normaliseMintNonFungibleTokenParams(
       params,
       context,
+      client,
     );
     const tx = HederaBuilder.mintNonFungibleToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to mint non-fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

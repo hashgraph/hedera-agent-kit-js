@@ -77,7 +77,7 @@ Important:
     return `schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately.
 
 - isScheduled (boolean, optional, default false): If true, the transaction will be created as a scheduled transaction. If false or omitted, all other scheduling parameters will be ignored.
-- scheduleTransactionMemo (string, optional, max 100 chars): Optional short memo attached to the scheduled transaction.
+- scheduleMemo (string, optional, max 100 chars): Optional short memo attached to the scheduled transaction.
 - adminKey (boolean|string, optional, default false): Admin key that can delete or modify the scheduled transaction before execution. 
   - If true, the operator key will be used. 
   - If false or omitted, no admin key is set. 

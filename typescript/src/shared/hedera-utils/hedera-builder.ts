@@ -133,7 +133,7 @@ export default class HederaBuilder {
       tx.setTransactionMemo(params.transactionMemo);
     }
 
-    return tx;
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static updateToken(params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>) {

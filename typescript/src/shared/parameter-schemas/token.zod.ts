@@ -9,9 +9,13 @@ import {
   TokenType,
 } from '@hashgraph/sdk';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from '@/shared/parameter-schemas/common.zod';
 
 export const createFungibleTokenParameters = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParams(_context).extend({
     tokenName: z.string().describe('The name of the token.'),
     tokenSymbol: z.string().describe('The symbol of the token.'),
     initialSupply: z
@@ -35,31 +39,35 @@ export const createFungibleTokenParameters = (_context: Context = {}) =>
   });
 
 export const createFungibleTokenParametersNormalised = (_context: Context = {}) =>
-  createFungibleTokenParameters(_context).extend({
-    treasuryAccountId: z.string().describe('The treasury account of the token.'),
-    autoRenewAccountId: z
-      .string()
-      .optional()
-      .describe(
-        'The auto renew account for the token. If not provided, defaults to the operator account.',
-      ),
-    supplyKey: z
-      .custom<PublicKey>()
-      .optional()
-      .describe('The supply key. If not provided, defaults to the operator’s public key.'),
-    supplyType: z.custom<TokenSupplyType>().describe('Supply type of the token.'),
-    adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
-    kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
-    freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
-    wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
-    pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
-    metadataKey: z.custom<PublicKey>().optional().describe('The metadata key for the token.'),
-    tokenMemo: z.string().optional().describe('The memo for the token.'),
-    tokenType: z.custom<TokenType>().optional().describe('The type of the token.'),
-  });
+  optionalScheduledTransactionParamsNormalised(_context).merge(
+    createFungibleTokenParameters(_context)
+      .omit({ schedulingParams: true })
+      .extend({
+        treasuryAccountId: z.string().describe('The treasury account of the token.'),
+        autoRenewAccountId: z
+          .string()
+          .optional()
+          .describe(
+            'The auto renew account for the token. If not provided, defaults to the operator account.',
+          ),
+        supplyKey: z
+          .custom<PublicKey>()
+          .optional()
+          .describe('The supply key. If not provided, defaults to the operator’s public key.'),
+        supplyType: z.custom<TokenSupplyType>().describe('Supply type of the token.'),
+        adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
+        kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
+        freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
+        wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
+        pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
+        metadataKey: z.custom<PublicKey>().optional().describe('The metadata key for the token.'),
+        tokenMemo: z.string().optional().describe('The memo for the token.'),
+        tokenType: z.custom<TokenType>().optional().describe('The type of the token.'),
+      }),
+  );
 
 export const createNonFungibleTokenParameters = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParams(_context).extend({
     tokenName: z.string().describe('The name of the token.'),
     tokenSymbol: z.string().describe('The symbol of the token.'),
     maxSupply: z
@@ -72,30 +80,33 @@ export const createNonFungibleTokenParameters = (_context: Context = {}) =>
   });
 
 export const createNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
-  createNonFungibleTokenParameters(_context).extend({
-    autoRenewAccountId: z
-      .string()
-      .describe(
-        'The auto renew account for the token. If not provided, defaults to the operator account.',
-      ),
-    supplyKey: z
-      .custom<PublicKey>()
-      .describe('The supply key. If not provided, defaults to the operator’s public key.'),
-    supplyType: z
-      .custom<TokenSupplyType>()
-      .default(TokenSupplyType.Finite)
-      .describe('Supply type of the token - must be finite for NFT.'),
-    tokenType: z
-      .custom<TokenType>()
-      .default(TokenType.NonFungibleUnique)
-      .describe('Token type of the token - must be non-fungible unique for NFT.'),
-    adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
-    kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
-    freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
-    wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
-    pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
-    tokenMemo: z.string().optional().describe('The memo for the token.'),
-  });
+  createNonFungibleTokenParameters(_context)
+    .omit({ schedulingParams: true }) // remove unnormalized scheduling params
+    .merge(optionalScheduledTransactionParamsNormalised(_context)) // add normalized ones
+    .extend({
+      autoRenewAccountId: z
+        .string()
+        .describe(
+          'The auto renew account for the token. If not provided, defaults to the operator account.',
+        ),
+      supplyKey: z
+        .custom<PublicKey>()
+        .describe('The supply key. If not provided, defaults to the operator’s public key.'),
+      supplyType: z
+        .custom<TokenSupplyType>()
+        .default(TokenSupplyType.Finite)
+        .describe('Supply type of the token - must be finite for NFT.'),
+      tokenType: z
+        .custom<TokenType>()
+        .default(TokenType.NonFungibleUnique)
+        .describe('Token type of the token - must be non-fungible unique for NFT.'),
+      adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
+      kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
+      freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
+      wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
+      pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
+      tokenMemo: z.string().optional().describe('The memo for the token.'),
+    });
 
 const AirdropRecipientSchema = z.object({
   accountId: z.string().describe('Recipient account ID (e.g., "0.0.xxxx").'),
@@ -120,22 +131,30 @@ export const airdropFungibleTokenParametersNormalised = () =>
   });
 
 export const mintFungibleTokenParameters = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParams(_context).extend({
     tokenId: z.string().describe('The id of the token.'),
     amount: z.number().describe('The amount of tokens to mint.'),
   });
 
 export const mintFungibleTokenParametersNormalised = (_context: Context = {}) =>
-  mintFungibleTokenParameters(_context).extend({});
+  mintFungibleTokenParameters(_context)
+    .omit({ schedulingParams: true })
+    .merge(optionalScheduledTransactionParamsNormalised(_context));
 
 export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParams(_context).extend({
     tokenId: z.string().describe('The id of the NFT class.'),
     uris: z.array(z.string().max(100)).max(10).describe('An array of URIs hosting NFT metadata.'),
   });
 
 export const mintNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
-  mintNonFungibleTokenParameters(_context).extend({});
+  optionalScheduledTransactionParamsNormalised(_context).extend({
+    tokenId: z.string().describe('The id of the NFT class.'),
+    metadata: z
+      .instanceof(Uint8Array<ArrayBufferLike>)
+      .array()
+      .optional(),
+  });
 
 export const deleteTokenParameters = (_context: Context = {}) =>
   z.object({
@@ -353,8 +372,8 @@ export const approveNftAllowanceParametersNormalised = (_context: Context = {}) 
     transactionMemo: z.string().optional(),
   });
 
-export const transferFungibleTokenWithAllowanceParameters = (_context: Context = {}) =>
-  z.object({
+export const transferFungibleTokenWithAllowanceParameters = (context: Context = {}) =>
+  optionalScheduledTransactionParams(context).extend({
     tokenId: z.string().describe('Token ID to transfer'),
     sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
     transfers: z
@@ -372,8 +391,8 @@ export const transferFungibleTokenWithAllowanceParameters = (_context: Context =
     transactionMemo: z.string().optional().describe('Memo for the transaction'),
   });
 
-export const transferFungibleTokenWithAllowanceParametersNormalised = (_context: Context = {}) =>
-  z.object({
+export const transferFungibleTokenWithAllowanceParametersNormalised = (context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(context).extend({
     tokenId: z.string(),
     tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
     approvedTransfer: z.object({
