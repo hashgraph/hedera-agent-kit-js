@@ -23,11 +23,16 @@ Parameters:
 - accountMemo (string, optional): Optional memo for the account
 - initialBalance (number, optional, default 0): Initial HBAR to fund the account
 - maxAutomaticTokenAssociations (number, optional, default -1): -1 means unlimited
+- ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
+  if (response.scheduleId) {
+    return `Scheduled transaction created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}\n}`;
+  }
   const accountIdStr = response.accountId ? response.accountId.toString() : 'unknown';
   return `Account created successfully.\nTransaction ID: ${response.transactionId}\nNew Account ID: ${accountIdStr}\n}`;
 };
@@ -48,11 +53,10 @@ const createAccount = async (
       mirrornodeService,
     );
 
-    // Build transaction
+    // Build transaction and wrap in SchedulingTransaction if needed
     const tx = HederaBuilder.createAccount(normalisedParams);
 
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to create account';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

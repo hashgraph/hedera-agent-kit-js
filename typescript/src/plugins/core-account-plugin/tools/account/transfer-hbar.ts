@@ -27,12 +27,20 @@ Parameters:
   - amount (number): Amount of HBAR to transfer
 - ${sourceAccountDesc}
 - transactionMemo (string, optional): Optional memo for the transaction
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `HBAR successfully transferred. Transaction ID: ${response.transactionId}`;
+  if (response.scheduleId) {
+    return `Scheduled HBAR transfer created successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `HBAR successfully transferred.
+Transaction ID: ${response.transactionId}`;
 };
 
 const transferHbar = async (
@@ -41,14 +49,14 @@ const transferHbar = async (
   params: z.infer<ReturnType<typeof transferHbarParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseTransferHbar(
+    const normalisedParams = await HederaParameterNormaliser.normaliseTransferHbar(
       params,
       context,
       client,
     );
     const tx = HederaBuilder.transferHbar(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to transfer HBAR';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

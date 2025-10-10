@@ -1,5 +1,3 @@
-import { expect } from 'vitest';
-
 /**
  * Retry configuration options
  */
@@ -34,7 +32,7 @@ const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(r
  */
 export function withRetry<T extends any[]>(
   testFn: (...args: T) => Promise<void> | void,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ): (...args: T) => Promise<void> {
   const config = { ...DEFAULT_RETRY_OPTIONS, ...options };
 
@@ -53,7 +51,9 @@ export function withRetry<T extends any[]>(
         lastError = error as Error;
 
         if (config.logRetries) {
-          console.log(`❌ Test failed on attempt ${attempt}/${config.maxRetries}: ${lastError.message}`);
+          console.log(
+            `❌ Test failed on attempt ${attempt}/${config.maxRetries}: ${lastError.message}`,
+          );
         }
 
         // If this was the last attempt, don't wait
@@ -81,7 +81,7 @@ export function withRetry<T extends any[]>(
  */
 export function withE2ERetry<T extends any[]>(
   testFn: (...args: T) => Promise<void> | void,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ): (...args: T) => Promise<void> {
   // E2E tests typically need longer delays and fewer retries
   const e2eOptions: RetryOptions = {
@@ -103,7 +103,7 @@ export function withE2ERetry<T extends any[]>(
  */
 export function itWithRetry(
   testFn: () => Promise<void> | void,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ): () => Promise<void> {
   return withE2ERetry(testFn, options);
 }

@@ -25,12 +25,20 @@ Parameters:
 - stakedAccountId (string, optional)
 - accountMemo (string, optional)
 - declineStakingReward (boolean, optional)
+- ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Account successfully updated. Transaction ID: ${response.transactionId}`;
+  if (response.scheduleId) {
+    return `Scheduled account update created successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `Account successfully updated.
+Transaction ID: ${response.transactionId}`;
 };
 
 const updateAccount = async (
@@ -39,16 +47,16 @@ const updateAccount = async (
   params: z.infer<ReturnType<typeof updateAccountParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseUpdateAccount(
+    const normalisedParams = await HederaParameterNormaliser.normaliseUpdateAccount(
       params,
       context,
       client,
     );
 
-    let tx = HederaBuilder.updateAccount(normalisedParams);
+    // Build transaction and wrap in SchedulingTransaction if needed
+    const tx = HederaBuilder.updateAccount(normalisedParams);
 
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to update account';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

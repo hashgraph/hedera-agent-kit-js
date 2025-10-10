@@ -45,10 +45,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       parsedParams.initialSupply,
     ]);
 
-    expect(result.tokenName).toBe('MyToken');
-    expect(result.tokenSymbol).toBe('MTK');
-    expect(result.decimals).toBe(8);
-    expect(result.initialSupply).toBe(1000);
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();
@@ -77,10 +73,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       0,
     ]);
 
-    expect(result.tokenName).toBe('DefaultToken');
-    expect(result.tokenSymbol).toBe('DEF');
-    expect(result.decimals).toBe(18);
-    expect(result.initialSupply).toBe(0);
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();
@@ -111,10 +103,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       500,
     ]);
 
-    expect(result.tokenName).toBe('ZeroDecimals');
-    expect(result.tokenSymbol).toBe('ZDC');
-    expect(result.decimals).toBe(0);
-    expect(result.initialSupply).toBe(500);
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();
@@ -145,10 +133,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       1_000_000_000,
     ]);
 
-    expect(result.tokenName).toBe('WhaleToken');
-    expect(result.tokenSymbol).toBe('WHL');
-    expect(result.decimals).toBe(18);
-    expect(result.initialSupply).toBe(1_000_000_000);
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();

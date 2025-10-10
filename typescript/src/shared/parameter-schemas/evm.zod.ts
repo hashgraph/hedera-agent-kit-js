@@ -61,6 +61,13 @@ export const mintERC721Parameters = (_context: Context = {}) =>
     toAddress: z.string().optional().describe('Address to which the token will be minted.'),
   });
 
+export const evmContractCallParamsNormalised = (_context: Context) =>
+  z.object({
+    contractId: z.string(),
+    functionParameters: z.instanceof(Uint8Array<ArrayBufferLike>),
+    gas: z.number().int(),
+  });
+
 export const contractInfoQueryParameters = (_context: Context = {}) =>
   z.object({
     contractId: z.string().describe('The token ID to query.'),

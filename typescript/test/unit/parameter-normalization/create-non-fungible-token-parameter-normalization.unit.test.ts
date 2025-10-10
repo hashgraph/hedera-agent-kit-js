@@ -6,6 +6,7 @@ import { AccountResolver } from '@/shared/utils/account-resolver';
 vi.mock('@/shared/utils/account-resolver', () => ({
   AccountResolver: {
     getDefaultAccount: vi.fn(),
+    getDefaultPublicKey: vi.fn(),
   },
 }));
 
@@ -49,8 +50,9 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
       mirrorNode as any,
     );
 
-    expect(result.treasuryAccountId).toBe('0.0.3003'); // uses param over default
-    expect(result.autoRenewAccountId).toBe('0.0.2002'); // still comes from AccountResolver
+    expect(result.treasuryAccountId).toBe('0.0.3003');
+    expect(result.autoRenewAccountId).toBe('0.0.2002');
+    expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('falls back to AccountResolver for treasuryAccountId', async () => {
@@ -69,6 +71,7 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
 
     expect(result.treasuryAccountId).toBe('0.0.4444');
     expect(result.autoRenewAccountId).toBe('0.0.4444');
+    expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('throws if no treasury account ID can be resolved', async () => {
@@ -102,6 +105,7 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
     );
 
     expect(result.maxSupply).toBe(100);
+    expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('uses provided maxSupply when specified', async () => {
@@ -120,6 +124,7 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
     );
 
     expect(result.maxSupply).toBe(500);
+    expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('sets token type to NonFungibleUnique', async () => {
@@ -162,6 +167,7 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
 
     expect(result.supplyKey).toBeInstanceOf(PublicKey);
     expect(result.supplyKey!.toStringDer()).toBe(keypair.publicKey.toStringDer());
+    expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('falls back to client.operatorPublicKey for supplyKey', async () => {
@@ -178,5 +184,42 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
     );
 
     expect(result.supplyKey?.toStringDer()).toBe(OPERATOR_PUBLIC_KEY.toStringDer());
+    expect(result.schedulingParams?.isScheduled).toBe(false);
+  });
+
+  it('handles scheduling parameters with adminKey and payerAccountID', async () => {
+    const adminKeyPair = PrivateKey.generateED25519();
+    (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.6666');
+    (AccountResolver.getDefaultPublicKey as any).mockResolvedValue(
+      adminKeyPair.publicKey.toStringDer(),
+    );
+
+    mirrorNode.getAccount.mockResolvedValueOnce({
+      accountPublicKey: adminKeyPair.publicKey.toStringDer(),
+    });
+
+    const params = {
+      tokenName: 'NFTWithAdmin',
+      tokenSymbol: 'NWA',
+      isSupplyKey: true,
+      schedulingParams: {
+        isScheduled: true,
+        adminKey: true,
+        payerAccountId: '0.0.7777',
+        waitForExpiry: true,
+      },
+    } as any;
+
+    const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+      params,
+      context,
+      client,
+      mirrorNode as any,
+    );
+
+    expect(result.schedulingParams?.isScheduled).toBe(true);
+    expect(result.schedulingParams?.payerAccountID?.toString()).toBe('0.0.7777');
+    expect(result.schedulingParams?.waitForExpiry).toBe(true);
+    expect(result.supplyKey?.toStringDer()).toBe(adminKeyPair.publicKey.toStringDer());
   });
 });

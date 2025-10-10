@@ -27,12 +27,22 @@ Parameters:
 - tokenSymbol (str, required): Symbol of the token
 - maxSupply (int, optional): Maximum NFT supply. Defaults to 100 if not provided
 - ${treasuryAccountDesc}
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Token created successfully at address ${response.tokenId?.toString()} with transaction id ${response.transactionId.toString()}`;
+  if (response.scheduleId) {
+    return `Scheduled transaction created successfully.
+Transaction ID: ${response.transactionId.toString()}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  const tokenIdStr = response.tokenId ? response.tokenId.toString() : 'unknown';
+  return `Token created successfully.
+Transaction ID: ${response.transactionId.toString()}
+Token ID: ${tokenIdStr}`;
 };
 
 const createNonFungibleToken = async (
@@ -49,8 +59,8 @@ const createNonFungibleToken = async (
       mirrornodeService,
     );
     const tx = HederaBuilder.createNonFungibleToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to create non-fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

@@ -29,6 +29,10 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
     getContextSnippet: vi.fn(() => 'CTX'),
     getAccountParameterDescription: vi.fn(() => 'publicKey (string): Account public key'),
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
+    getScheduledTransactionParamsDescription: vi.fn(
+      () =>
+        '- schedulingParams (object, optional): Set isScheduled = true to make the transaction scheduled.',
+    ),
   },
 }));
 vi.mock('@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils', () => ({
