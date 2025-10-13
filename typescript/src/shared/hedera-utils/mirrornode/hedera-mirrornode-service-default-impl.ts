@@ -75,11 +75,26 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch balance for an account ${accountId}: ${response.status} ${response.statusText}`,
+        `Failed to fetch balance for account ${accountId}: ${response.status} ${response.statusText}`,
       );
     }
 
-    return await response.json();
+    const res = await response.json();
+
+    // Fetch and attach symbols in parallel
+    await Promise.all(
+      res.tokens.map(async (balance: any) => {
+        try {
+          const tokenInfo = await this.getTokenInfo(balance.token_id);
+          balance.symbol = tokenInfo.symbol;
+        } catch (err) {
+          console.warn(`Failed to fetch token info for ${balance.token_id}:`, err);
+          balance.symbol = 'UNKNOWN';
+        }
+      }),
+    );
+
+    return res;
   }
 
   async getTopicMessages(queryParams: TopicMessagesQueryParams): Promise<TopicMessagesResponse> {
