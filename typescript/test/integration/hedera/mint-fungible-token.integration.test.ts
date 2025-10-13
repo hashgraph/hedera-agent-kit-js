@@ -98,7 +98,7 @@ describe('Mint Fungible Token Integration Tests', () => {
       amount: 5, // 500 in base unit
       schedulingParams: {
         isScheduled: true,
-        waitForExpiry: true,
+        waitForExpiry: false,
         adminKey: true,
       },
     };
