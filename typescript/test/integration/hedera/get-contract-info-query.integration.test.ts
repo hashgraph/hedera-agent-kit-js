@@ -48,7 +48,7 @@ describe('Integration - Hedera Get Contract Info', () => {
       contractId: deployedContractId,
     });
 
-    expect(result.raw.contractId.toString()).toBe(deployedContractId);
+    expect(result.raw.contractId).toBe(deployedContractId);
     expect(result.raw.contractInfo.contract_id).toBe(deployedContractId);
   });
 
