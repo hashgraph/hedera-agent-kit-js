@@ -215,15 +215,13 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       ],
       schedulingParams: {
         isScheduled: true,
-        waitForExpiry: true,
+        waitForExpiry: false,
         adminKey: false,
       },
     };
 
     await wait(MIRROR_NODE_WAITING_TIME);
     const result: any = await tool.execute(spenderClient, context, params);
-
-    console.log(result.humanMessage);
 
     expect(result.humanMessage).toContain('Scheduled allowance transfer created successfully.');
     expect(result.raw.status).toBe('SUCCESS');

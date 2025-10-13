@@ -127,7 +127,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       uris,
       schedulingParams: {
         isScheduled: true,
-        waitForExpiry: true,
+        waitForExpiry: false,
         adminKey: true,
       },
     };

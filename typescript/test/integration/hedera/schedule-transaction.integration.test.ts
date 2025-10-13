@@ -95,7 +95,7 @@ describe('Schedule Transaction Integration tests', () => {
       maxAutomaticTokenAssociations: 4,
       schedulingParams: {
         isScheduled: true,
-        waitForExpiry: true,
+        waitForExpiry: false,
         adminKey: executorClient.operatorPublicKey!.toStringRaw(),
       },
     };

@@ -115,7 +115,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
         schedulingParams: {
           isScheduled: true,
           adminKey: false,
-          waitForExpiry: true,
+          waitForExpiry: false,
         },
       };
 

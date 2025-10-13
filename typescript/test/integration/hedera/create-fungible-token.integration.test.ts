@@ -4,14 +4,10 @@ import createFungibleTokenTool from '@/plugins/core-token-plugin/tools/fungible-
 import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
-import {
-  createFungibleTokenParameters,
-  createNonFungibleTokenParameters,
-} from '@/shared/parameter-schemas/token.zod';
+import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
-import createNonFungibleTokenTool from '@/plugins/core-token-plugin/tools/non-fungible-token/create-non-fungible-token';
 
 describe('Create Fungible Token Integration Tests', () => {
   let client: Client;
@@ -109,7 +105,7 @@ describe('Create Fungible Token Integration Tests', () => {
         schedulingParams: {
           isScheduled: true,
           adminKey: false,
-          waitForExpiry: true,
+          waitForExpiry: false,
         },
       } as any;
 

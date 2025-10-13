@@ -228,7 +228,7 @@ describe('Transfer HBAR Integration Tests', () => {
         ],
         schedulingParams: {
           isScheduled: true,
-          waitForExpiry: true,
+          waitForExpiry: false,
           adminKey: false,
         },
       };

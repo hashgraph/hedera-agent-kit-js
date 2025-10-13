@@ -111,7 +111,7 @@ describe('Update Account Integration Tests', () => {
       maxAutomaticTokenAssociations: 4,
       schedulingParams: {
         isScheduled: true,
-        waitForExpiry: true,
+        waitForExpiry: false,
         adminKey: executorClient.operatorPublicKey!.toStringRaw(),
       },
     };
