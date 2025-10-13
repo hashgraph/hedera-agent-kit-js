@@ -17,6 +17,8 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParameters,
   mintNonFungibleTokenParametersNormalised,
+  transferNonFungibleTokenWithAllowanceParameters,
+  transferNonFungibleTokenWithAllowanceParametersNormalised,
   transferFungibleTokenWithAllowanceParameters,
   transferFungibleTokenWithAllowanceParametersNormalised,
   updateTokenParameters,
@@ -69,6 +71,7 @@ import {
   HbarAllowance,
   TokenAllowance,
   Timestamp,
+  NftId,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -403,6 +406,35 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
+  }
+
+  static normaliseTransferNonFungibleTokenWithAllowance(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>>,
+    context: Context,
+  ): z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParametersNormalised>> {
+    // Validate input using schema
+    const parsedParams: z.infer<
+      ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>
+    > = this.parseParamsWithSchema(
+      params,
+      transferNonFungibleTokenWithAllowanceParameters,
+      context,
+    );
+
+    // Convert tokenId to SDK TokenId
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    // Map recipients to normalized NFT transfers
+    const transfers = parsedParams.recipients.map(recipient => ({
+      nftId: new NftId(tokenId, Number(recipient.serialNumber)),
+      receiver: AccountId.fromString(recipient.recipientId),
+    }));
+
+    return {
+      sourceAccountId: AccountId.fromString(parsedParams.sourceAccountId),
+      transactionMemo: parsedParams.transactionMemo,
+      transfers,
+    };
   }
 
   static async normaliseApproveTokenAllowance(

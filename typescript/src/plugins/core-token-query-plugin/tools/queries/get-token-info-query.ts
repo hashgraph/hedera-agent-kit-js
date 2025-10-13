@@ -14,7 +14,7 @@ export const getTokenInfoQueryPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will return the information for a given Hedera token.
+This tool will return the information for a given Hedera token. Make sure to return token symbol.
 
 Parameters:
 - tokenId (str): The token ID to query for.

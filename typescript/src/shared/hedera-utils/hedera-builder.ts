@@ -35,6 +35,7 @@ import {
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParametersNormalised,
+  transferNonFungibleTokenWithAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -75,6 +76,22 @@ export default class HederaBuilder {
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
     const tx = new TransferTransaction(params);
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
+  }
+
+  static transferNonFungibleTokenWithAllowance(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParametersNormalised>>,
+  ) {
+    const tx = new TransferTransaction();
+
+    for (const transfer of params.transfers) {
+      tx.addApprovedNftTransfer(transfer.nftId, params.sourceAccountId, transfer.receiver);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static transferHbarWithAllowance(

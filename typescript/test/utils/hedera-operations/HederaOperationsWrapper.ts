@@ -33,6 +33,8 @@ import {
   createNonFungibleTokenParametersNormalised,
   deleteTokenParametersNormalised,
   airdropFungibleTokenParametersNormalised,
+  approveNftAllowanceParametersNormalised,
+  mintNonFungibleTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import {
   createTopicParametersNormalised,
@@ -417,6 +419,26 @@ class HederaOperationsWrapper {
     const tx = HederaBuilder.approveTokenAllowance(params);
     const result = await this.executeStrategy.handle(tx, this.client, {});
     return result.raw;
+  }
+
+  async approveNftAllowance(
+    params: z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>,
+  ): Promise<RawTransactionResponse> {
+    const tx = HederaBuilder.approveNftAllowance(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw;
+  }
+
+  async mintNft(
+    params: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>>,
+  ): Promise<RawTransactionResponse> {
+    const tx = HederaBuilder.mintNonFungibleToken(params);
+    const result = await this.executeStrategy.handle(tx, this.client, {});
+    return result.raw;
+  }
+
+  async getAccountNfts(accountId: string) {
+    return await this.mirrornode.getAccountNfts(accountId);
   }
 }
 

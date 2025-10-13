@@ -58,10 +58,30 @@ export type TokenBalance = {
   kyc_status: string;
   balance: number;
   decimals: number;
+  symbol: string;
 };
 
 export type TokenBalancesResponse = {
   tokens: TokenBalance[];
+};
+
+export type NftBalance = {
+  account_id: string;
+  created_timestamp: string;
+  delegating_spender: string | null;
+  deleted: boolean;
+  metadata: string;
+  modified_timestamp: string;
+  serial_number: number;
+  spender: string | null;
+  token_id: string;
+};
+
+export type NftBalanceResponse = {
+  nfts: NftBalance[];
+  links: {
+    next: string | null;
+  };
 };
 
 export type AccountResponse = {
