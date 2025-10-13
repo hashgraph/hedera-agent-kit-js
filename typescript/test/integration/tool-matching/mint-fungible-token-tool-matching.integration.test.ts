@@ -47,7 +47,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
 
     it('should extract scheduling parameters when provided', async () => {
       const input =
-        'Mint 10 of token 0.0.12345. Make it expire tomorrow and wait for its expiration time with executing it.';
+        'Schedule mint 10 of token 0.0.12345. Make it expire tomorrow and wait for its expiration time with executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
