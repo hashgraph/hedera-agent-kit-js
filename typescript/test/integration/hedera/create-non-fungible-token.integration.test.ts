@@ -6,6 +6,8 @@ import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } f
 import { z } from 'zod';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { wait } from '../../utils/general-util';
 
 describe('Create Non-Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -29,7 +31,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     context = {
-      mode: AgentMode.AUTONOMOUS
+      mode: AgentMode.AUTONOMOUS,
     };
   });
 
@@ -102,6 +104,28 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       expect(tokenInfo.treasuryAccountId?.toString()).toBe(params.treasuryAccountId);
       expect(tokenInfo.tokenType).toBe(TokenType.NonFungibleUnique);
       expect(tokenInfo.maxSupply?.toInt()).toBe(params.maxSupply);
+    });
+
+    it('Should schedule creation of an NFT', async () => {
+      const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
+        tokenName: 'TreasuryNFT',
+        tokenSymbol: 'TRFNFT',
+        treasuryAccountId: executorClient.operatorAccountId!.toString(),
+        maxSupply: 200,
+        schedulingParams: {
+          isScheduled: true,
+          adminKey: false,
+          waitForExpiry: true,
+        },
+      };
+
+      await wait(MIRROR_NODE_WAITING_TIME);
+      const tool = createNonFungibleTokenTool(context);
+      const result: any = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled transaction created successfully.');
+      expect(result.raw.scheduleId).toBeDefined();
+      expect(result.raw.transactionId).toBeDefined();
     });
   });
 

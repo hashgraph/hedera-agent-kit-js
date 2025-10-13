@@ -1,6 +1,7 @@
 import { Client, PublicKey } from '@hashgraph/sdk';
 import { Context, AgentMode } from '@/shared/configuration';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
+import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 
 export class AccountResolver {
   /**
@@ -29,7 +30,9 @@ export class AccountResolver {
     }
 
     const defaultAccount = this.getDefaultAccount(context, client);
-    const defaultAccountDetails = await context.mirrornodeService?.getAccount(defaultAccount);
+    const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
+
+    const defaultAccountDetails = await mirrornodeService.getAccount(defaultAccount);
 
     if (!defaultAccountDetails?.accountPublicKey) {
       throw new Error('No public key available for the default account');

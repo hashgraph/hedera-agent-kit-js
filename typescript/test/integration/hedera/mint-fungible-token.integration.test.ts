@@ -91,6 +91,27 @@ describe('Mint Fungible Token Integration Tests', () => {
     expect(supplyAfter).toBe(supplyBefore + 500);
   });
 
+  it('should schedule minting of additional supply for an existing fungible token', async () => {
+    const tool = mintFungibleTokenTool(context);
+    const params: z.infer<ReturnType<typeof mintFungibleTokenParameters>> = {
+      tokenId: tokenIdFT.toString(),
+      amount: 5, // 500 in base unit
+      schedulingParams: {
+        isScheduled: true,
+        waitForExpiry: true,
+        adminKey: true,
+      },
+    };
+
+    const result: any = await tool.execute(executorClient, context, params);
+
+    expect(result).toBeDefined();
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(result.humanMessage).toContain('Scheduled mint transaction created successfully.');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.raw.scheduleId).toBeDefined();
+  });
+
   it('should fail gracefully when minting more than max supply', async () => {
     const tool = mintFungibleTokenTool(context);
     const params: z.infer<ReturnType<typeof mintFungibleTokenParameters>> = {

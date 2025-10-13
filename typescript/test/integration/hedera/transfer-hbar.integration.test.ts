@@ -50,7 +50,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
   afterAll(async () => {
     if (executorClient) {
-      // Transfer remaining balance back to operator and delete executor account
+      // Transfer remaining balance back to operator and delete an executor account
       try {
         await executorWrapper.deleteAccount({
           accountId: recipientAccountId,
