@@ -29,10 +29,10 @@ import deleteHbarAllowanceTool, {
 } from '@/plugins/core-account-plugin/tools/account/delete-hbar-allowance';
 import approveTokenAllowanceTool, {
   APPROVE_TOKEN_ALLOWANCE_TOOL,
-} from '@/plugins/core-account-plugin/tools/account/approve-token-allowance';
+} from '@/plugins/core-token-plugin/tools/fungible-token/approve-token-allowance';
 import deleteTokenAllowanceTool, {
   DELETE_TOKEN_ALLOWANCE_TOOL,
-} from '@/plugins/core-account-plugin/tools/account/delete-token-allowance';
+} from '@/plugins/core-token-plugin/tools/fungible-token/delete-token-allowance';
 
 export const coreAccountPlugin: Plugin = {
   name: 'core-account-plugin',
