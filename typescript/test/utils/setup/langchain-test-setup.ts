@@ -110,7 +110,6 @@ export async function createLangchainTestSetup(
     tools,
     returnIntermediateSteps: true,
     maxIterations: resolvedLlmOptions.maxIterations ?? 1,
-    verbose: true,
   });
 
   // Cleanup function

@@ -20,6 +20,7 @@ import { extractObservationFromLangchainResponse, wait } from '../utils/general-
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { AgentExecutor } from 'langchain/agents';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
 
 describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -194,6 +195,21 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     expect(spenderBalance.balance).toBe(30);
     expect(receiverBalance.balance).toBe(70);
   });
+
+  it(
+    'should schedule allowing spender to transfer tokens to themselves using allowance',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}. Schedule the transaction instead of executing it immediately.`,
+      });
+
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain(
+        'Scheduled allowance transfer created successfully.',
+      );
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
 
   it('should fail gracefully when trying to transfer more than allowance', async () => {
     const input = `Use allowance from account ${executorAccountId.toString()} to send 300 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;

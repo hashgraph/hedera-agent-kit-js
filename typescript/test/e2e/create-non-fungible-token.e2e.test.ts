@@ -58,68 +58,90 @@ describe('Create Non-Fungible Token E2E Tests', () => {
   });
 
   beforeEach(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
   });
 
-  it('creates an NFT with minimal params via natural language', itWithRetry(async () => {
-    const input = `Create a non-fungible token named MyNFT with symbol MNFT`;
+  it(
+    'creates an NFT with minimal params via natural language',
+    itWithRetry(async () => {
+      const input = `Create a non-fungible token named MyNFT with symbol MNFT`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const tokenId = extractTokenIdFromObservation(observation);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token created successfully');
+      expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    // Verify on-chain
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('MyNFT');
-    expect(tokenInfo.symbol).toBe('MNFT');
-    expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
-    expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
-  }));
+      // Verify on-chain
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      expect(tokenInfo.name).toBe('MyNFT');
+      expect(tokenInfo.symbol).toBe('MNFT');
+      expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
+    }),
+  );
 
-  it('creates an NFT with custom max supply', itWithRetry(async () => {
-    const input = 'Create a non-fungible token ArtCollection with symbol ART and max supply 500';
+  it(
+    'creates an NFT with custom max supply',
+    itWithRetry(async () => {
+      const input = 'Create a non-fungible token ArtCollection with symbol ART and max supply 500';
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const tokenId = extractTokenIdFromObservation(observation);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token created successfully');
+      expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('ArtCollection');
-    expect(tokenInfo.symbol).toBe('ART');
-    expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
-    expect(tokenInfo.maxSupply?.toInt()).toBe(500);
-  }));
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      expect(tokenInfo.name).toBe('ArtCollection');
+      expect(tokenInfo.symbol).toBe('ART');
+      expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(500);
+    }),
+  );
 
-  it('creates an NFT with treasury account specification', itWithRetry(async () => {
-    const treasuryAccountId = executorClient.operatorAccountId!.toString();
-    const input = `Create a non-fungible token GameItems with symbol GAME, treasury account ${treasuryAccountId}, and max supply 1000`;
+  it(
+    'creates an NFT with treasury account specification',
+    itWithRetry(async () => {
+      const treasuryAccountId = executorClient.operatorAccountId!.toString();
+      const input = `Create a non-fungible token GameItems with symbol GAME, treasury account ${treasuryAccountId}, and max supply 1000`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const tokenId = extractTokenIdFromObservation(observation);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token created successfully');
+      expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('GameItems');
-    expect(tokenInfo.symbol).toBe('GAME');
-    expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
-    expect(tokenInfo.maxSupply?.toInt()).toBe(1000);
-  }));
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      expect(tokenInfo.name).toBe('GameItems');
+      expect(tokenInfo.symbol).toBe('GAME');
+      expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
+      expect(tokenInfo.maxSupply?.toInt()).toBe(1000);
+    }),
+  );
+
+  it(
+    'should schedule creation of a NFT successfully',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Create a non-fungible token named MyNFT with symbol MNFT. Schedule the transaction instead of executing it immediately.`,
+      });
+
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('Scheduled transaction created successfully.');
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
 });

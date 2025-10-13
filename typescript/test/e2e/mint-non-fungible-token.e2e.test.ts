@@ -80,61 +80,83 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
   });
 
   beforeEach(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
   });
 
-  it('should mint a single NFT successfully', itWithRetry(async () => {
-    const supplyBefore = await executorWrapper
-      .getTokenInfo(nftTokenId.toString())
-      .then(info => info.totalSupply.toInt());
+  it(
+    'should mint a single NFT successfully',
+    itWithRetry(async () => {
+      const supplyBefore = await executorWrapper
+        .getTokenInfo(nftTokenId.toString())
+        .then(info => info.totalSupply.toInt());
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata ipfs://meta1.json`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata ipfs://meta1.json`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const supplyAfter = await executorWrapper
-      .getTokenInfo(nftTokenId.toString())
-      .then(info => info.totalSupply.toInt());
+      const supplyAfter = await executorWrapper
+        .getTokenInfo(nftTokenId.toString())
+        .then(info => info.totalSupply.toInt());
 
-    expect(observation.humanMessage).toContain('successfully minted with transaction id');
-    expect(supplyAfter).toBe(supplyBefore + 1);
-  }));
+      expect(observation.humanMessage).toContain('successfully minted with transaction id');
+      expect(supplyAfter).toBe(supplyBefore + 1);
+    }),
+  );
 
-  it('should mint multiple NFTs successfully', itWithRetry(async () => {
-    const uris = ['ipfs://meta2.json', 'ipfs://meta3.json', 'ipfs://meta4.json'];
-    const supplyBefore = await executorWrapper
-      .getTokenInfo(nftTokenId.toString())
-      .then(info => info.totalSupply.toInt());
+  it(
+    'should mint multiple NFTs successfully',
+    itWithRetry(async () => {
+      const uris = ['ipfs://meta2.json', 'ipfs://meta3.json', 'ipfs://meta4.json'];
+      const supplyBefore = await executorWrapper
+        .getTokenInfo(nftTokenId.toString())
+        .then(info => info.totalSupply.toInt());
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Mint ${uris.length} NFTs of token ${nftTokenId.toString()} with metadata ${uris.join(
-        ', ',
-      )}`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Mint ${uris.length} NFTs of token ${nftTokenId.toString()} with metadata ${uris.join(
+          ', ',
+        )}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const supplyAfter = await executorWrapper
-      .getTokenInfo(nftTokenId.toString())
-      .then(info => info.totalSupply.toInt());
+      const supplyAfter = await executorWrapper
+        .getTokenInfo(nftTokenId.toString())
+        .then(info => info.totalSupply.toInt());
 
-    expect(observation.humanMessage).toContain('successfully minted with transaction id');
-    expect(supplyAfter).toBe(supplyBefore + uris.length);
-  }));
+      expect(observation.humanMessage).toContain('successfully minted with transaction id');
+      expect(supplyAfter).toBe(supplyBefore + uris.length);
+    }),
+  );
 
-  it('should fail gracefully for a non-existent NFT token', itWithRetry(async () => {
-    const fakeTokenId = '0.0.999999999';
+  it(
+    'should schedule minting a single NFT successfully',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata 'ipfs://meta1.json'. Schedule the transaction instead of executing it immediately.`,
+      });
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Mint 1 NFT of token ${fakeTokenId} with metadata ipfs://meta.json`,
-    });
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('Scheduled mint transaction created successfully');
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+  it(
+    'should fail gracefully for a non-existent NFT token',
+    itWithRetry(async () => {
+      const fakeTokenId = '0.0.999999999';
 
-    expect(observation.humanMessage).toMatch(/INVALID_TOKEN_ID|Failed to mint/i);
-  }));
+      const queryResult = await agentExecutor.invoke({
+        input: `Mint 1 NFT of token ${fakeTokenId} with metadata ipfs://meta.json`,
+      });
+
+      const observation = extractObservationFromLangchainResponse(queryResult);
+
+      expect(observation.humanMessage).toMatch(/INVALID_TOKEN_ID|Failed to mint/i);
+    }),
+  );
 });

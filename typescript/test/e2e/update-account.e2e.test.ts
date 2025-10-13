@@ -71,51 +71,76 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     });
   });
 
-  it('should update memo of a pre-created account via agent', itWithRetry(async () => {
-    const updateResult = await agentExecutor.invoke({
-      input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
-    });
+  it(
+    'should update memo of a pre-created account via agent',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(updateResult);
-    expect(observation.humanMessage).toContain('updated');
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('updated');
 
-    const info = await executionWrapper.getAccountInfo(targetAccount.toString());
-    expect(info.accountMemo).toBe('updated via agent');
-  }));
+      const info = await executionWrapper.getAccountInfo(targetAccount.toString());
+      expect(info.accountMemo).toBe('updated via agent');
+    }),
+  );
 
-  it('should update maxAutomaticTokenAssociations via agent', itWithRetry(async () => {
-    const updateResult = await agentExecutor.invoke({
-      input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
-    });
+  it(
+    'should update maxAutomaticTokenAssociations via agent',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(updateResult);
-    expect(observation.humanMessage).toContain('updated');
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('updated');
 
-    const info = await executionWrapper.getAccountInfo(targetAccount.toString());
-    expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
-  }));
+      const info = await executionWrapper.getAccountInfo(targetAccount.toString());
+      expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
+    }),
+  );
 
-  it('should update declineStakingReward flag via agent', itWithRetry(async () => {
-    const updateResult = await agentExecutor.invoke({
-      input: `Update account ${targetAccount.toString()} to decline staking rewards`,
-    });
+  it(
+    'should update declineStakingReward flag via agent',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Update account ${targetAccount.toString()} to decline staking rewards`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(updateResult);
-    expect(observation.humanMessage).toContain('updated');
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('updated');
 
-    const info = await executionWrapper.getAccountInfo(targetAccount.toString());
-    expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
-  }));
+      const info = await executionWrapper.getAccountInfo(targetAccount.toString());
+      expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
+    }),
+  );
 
-  it('should fail to update a non-existent account', itWithRetry(async () => {
-    const fakeAccountId = '0.0.999999999';
-    const updateResult = await agentExecutor.invoke({
-      input: `Update account ${fakeAccountId} memo to "x"`,
-    });
+  it(
+    'should schedule account update',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Update account ${targetAccount.toString()} memo to "updated via agent". Schedule the transaction instead of executing it immediately. Set expiration time to next monday and wait for the expiration.`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(updateResult);
-    expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
-      /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
-    );
-  }));
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('Scheduled account update created successfully.');
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
+
+  it(
+    'should fail to update a non-existent account',
+    itWithRetry(async () => {
+      const fakeAccountId = '0.0.999999999';
+      const updateResult = await agentExecutor.invoke({
+        input: `Update account ${fakeAccountId} memo to "x"`,
+      });
+
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
+        /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
+      );
+    }),
+  );
 });

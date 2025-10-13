@@ -73,55 +73,81 @@ describe('Mint Fungible Token E2E Tests', () => {
   });
 
   beforeEach(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
   });
 
-  it('should mint additional supply successfully', itWithRetry(async () => {
-    const supplyBefore = await executorWrapper
-      .getTokenInfo(tokenIdFT.toString())
-      .then(info => info.totalSupply.toInt());
+  it(
+    'should mint additional supply successfully',
+    itWithRetry(async () => {
+      const supplyBefore = await executorWrapper
+        .getTokenInfo(tokenIdFT.toString())
+        .then(info => info.totalSupply.toInt());
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Mint 5 of token ${tokenIdFT.toString()}`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Mint 5 of token ${tokenIdFT.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const supplyAfter = await executorWrapper
-      .getTokenInfo(tokenIdFT.toString())
-      .then(info => info.totalSupply.toInt());
+      const supplyAfter = await executorWrapper
+        .getTokenInfo(tokenIdFT.toString())
+        .then(info => info.totalSupply.toInt());
 
-    expect(observation.humanMessage).toContain('Tokens successfully minted');
-    expect(observation.raw.status).toBe('SUCCESS');
-    expect(supplyAfter).toBe(supplyBefore + 500); // 5 * 10^decimals
-  }));
+      expect(observation.humanMessage).toContain('Tokens successfully minted');
+      expect(observation.raw.status).toBe('SUCCESS');
+      expect(supplyAfter).toBe(supplyBefore + 500); // 5 * 10^decimals
+    }),
+  );
 
-  it('should fail gracefully when minting more than max supply', itWithRetry(async () => {
-    const queryResult = await agentExecutor.invoke({
-      input: `Mint 5000 of token ${tokenIdFT.toString()}`,
-    });
+  it(
+    'should schedule minting additional supply successfully',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Mint 5 of token ${tokenIdFT.toString()}. Schedule the transaction instead of executing it immediately.`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain(
+        'Scheduled mint transaction created successfully.',
+      );
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
 
-    expect(observation.raw).toBeDefined();
-    expect(observation.raw.error).toContain('TOKEN_MAX_SUPPLY_REACHED');
-  }));
+  it(
+    'should fail gracefully when minting more than max supply',
+    itWithRetry(async () => {
+      const queryResult = await agentExecutor.invoke({
+        input: `Mint 5000 of token ${tokenIdFT.toString()}`,
+      });
 
-  it('should fail gracefully for a non-existent token', itWithRetry(async () => {
-    const fakeTokenId = '0.0.999999999';
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Mint 10 of token ${fakeTokenId}`,
-    });
+      expect(observation.raw).toBeDefined();
+      expect(observation.raw.error).toContain('TOKEN_MAX_SUPPLY_REACHED');
+    }),
+  );
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+  it(
+    'should fail gracefully for a non-existent token',
+    itWithRetry(async () => {
+      const fakeTokenId = '0.0.999999999';
 
-    expect(observation.humanMessage).toContain('Not Found');
-    expect(observation.raw.error).toContain('Not Found');
-    expect(observation.humanMessage).toContain(
-      `Failed to get token info for a token ${fakeTokenId}`,
-    );
-    expect(observation.raw.error).toContain(`Failed to get token info for a token ${fakeTokenId}`);
-  }));
+      const queryResult = await agentExecutor.invoke({
+        input: `Mint 10 of token ${fakeTokenId}`,
+      });
+
+      const observation = extractObservationFromLangchainResponse(queryResult);
+
+      expect(observation.humanMessage).toContain('Not Found');
+      expect(observation.raw.error).toContain('Not Found');
+      expect(observation.humanMessage).toContain(
+        `Failed to get token info for a token ${fakeTokenId}`,
+      );
+      expect(observation.raw.error).toContain(
+        `Failed to get token info for a token ${fakeTokenId}`,
+      );
+    }),
+  );
 });
