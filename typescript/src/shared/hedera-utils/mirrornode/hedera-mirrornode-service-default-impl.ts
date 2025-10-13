@@ -17,6 +17,7 @@ import {
   ExchangeRateResponse,
   TokenAllowanceResponse,
   NftBalanceResponse,
+  ScheduledTransactionDetailsResponse,
 } from './types';
 import BigNumber from 'bignumber.js';
 
@@ -252,6 +253,17 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
 
   async getAccountNfts(ownerAccountId: string): Promise<NftBalanceResponse> {
     const url = `${this.baseUrl}/accounts/${ownerAccountId}/nfts`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
+    }
+    return await response.json();
+  }
+
+  async getScheduledTransactionDetails(
+    scheduleId: string,
+  ): Promise<ScheduledTransactionDetailsResponse> {
+    const url = `${this.baseUrl}/schedules/${scheduleId}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);

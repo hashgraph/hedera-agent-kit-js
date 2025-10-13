@@ -440,6 +440,10 @@ class HederaOperationsWrapper {
   async getAccountNfts(accountId: string) {
     return await this.mirrornode.getAccountNfts(accountId);
   }
+
+  async getScheduledTransactionDetails(scheduledTxId: string) {
+    return await this.mirrornode.getScheduledTransactionDetails(scheduledTxId);
+  }
 }
 
 export default HederaOperationsWrapper;

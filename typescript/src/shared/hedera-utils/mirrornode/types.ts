@@ -310,3 +310,26 @@ export interface TokenAllowance {
   };
   token_id: string; // e.g. "0.0.6941871"
 }
+
+export interface ScheduledTransactionDetailsResponse {
+  admin_key?: {
+    _type?: string;
+    key?: string;
+  } | null;
+  deleted: boolean;
+  consensus_timestamp: string;
+  creator_account_id: string;
+  executed_timestamp: string | null;
+  expiration_time: string | null;
+  memo: string;
+  payer_account_id: string;
+  schedule_id: string;
+  signatures: Array<{
+    consensus_timestamp: string;
+    public_key_prefix: string;
+    signature: string;
+    type: string;
+  }>;
+  transaction_body: string;
+  wait_for_expiry: boolean;
+}

@@ -62,3 +62,11 @@ export function extractTokenIdFromObservation(observation: any): string {
   if (tokenId.toString) return tokenId.toString();
   throw new Error('Unable to parse tokenId');
 }
+
+export function parseHederaTimestamp(ts: string): Date {
+  // Hedera timestamp is in the format "seconds.nanoseconds", e.g., "1633024800.123456789"
+  const [secondsStr, nanosStr = '0'] = ts.split('.');
+  const seconds = Number(secondsStr);
+  const nanos = Number(nanosStr.padEnd(9, '0').slice(0, 9)); // ensure 9 digits
+  return new Date(seconds * 1000 + nanos / 1_000_000);
+}

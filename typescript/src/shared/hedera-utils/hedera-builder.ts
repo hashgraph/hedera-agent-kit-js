@@ -277,7 +277,10 @@ export default class HederaBuilder {
     >['schedulingParams'],
   ): Transaction {
     if (schedulingParams?.isScheduled) {
-      return new ScheduleCreateTransaction(schedulingParams).setScheduledTransaction(tx);
+      return new ScheduleCreateTransaction(schedulingParams)
+        .setScheduledTransaction(tx)
+        .setWaitForExpiry(schedulingParams.waitForExpiry || false) // passing through constructor is failing
+        .setExpirationTime(schedulingParams.expirationTime || null); // passing through constructor is failing
     }
     return tx;
   }
