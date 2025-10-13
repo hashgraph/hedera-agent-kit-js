@@ -10,11 +10,12 @@ import {
   ExchangeRateResponse,
   TokenAirdropsResponse,
   TokenAllowanceResponse,
+  NftBalanceResponse,
 } from './types';
 
 export interface IHederaMirrornodeService {
   getAccount(accountId: string): Promise<AccountResponse>;
-  getAccountHBarBalance(accountId: string): Promise<BigNumber>;
+  getAccountHbarBalance(accountId: string): Promise<BigNumber>;
   getAccountTokenBalances(accountId: string): Promise<TokenBalancesResponse>;
   getTopicMessages(queryParams: TopicMessagesQueryParams): Promise<TopicMessagesResponse>;
   getTopicInfo(topicId: string): Promise<TopicInfo>;
@@ -28,4 +29,5 @@ export interface IHederaMirrornodeService {
     ownerAccountId: string,
     spenderAccountId: string,
   ): Promise<TokenAllowanceResponse>;
+  getAccountNfts(accountId: string): Promise<NftBalanceResponse>;
 }

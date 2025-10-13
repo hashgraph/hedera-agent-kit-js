@@ -14,6 +14,9 @@ import {
   dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
   mintNonFungibleTokenParameters,
+  mintNonFungibleTokenParametersNormalised,
+  transferNonFungibleTokenWithAllowanceParameters,
+  transferNonFungibleTokenWithAllowanceParametersNormalised,
   transferFungibleTokenWithAllowanceParameters,
   transferFungibleTokenWithAllowanceParametersNormalised,
   updateTokenParameters,
@@ -60,6 +63,7 @@ import {
   TopicId,
   HbarAllowance,
   TokenAllowance,
+  NftId,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
@@ -368,6 +372,35 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
+  }
+
+  static normaliseTransferNonFungibleTokenWithAllowance(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>>,
+    context: Context,
+  ): z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParametersNormalised>> {
+    // Validate input using schema
+    const parsedParams: z.infer<
+      ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>
+    > = this.parseParamsWithSchema(
+      params,
+      transferNonFungibleTokenWithAllowanceParameters,
+      context,
+    );
+
+    // Convert tokenId to SDK TokenId
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    // Map recipients to normalized NFT transfers
+    const transfers = parsedParams.recipients.map(recipient => ({
+      nftId: new NftId(tokenId, Number(recipient.serialNumber)),
+      receiver: AccountId.fromString(recipient.recipientId),
+    }));
+
+    return {
+      sourceAccountId: AccountId.fromString(parsedParams.sourceAccountId),
+      transactionMemo: parsedParams.transactionMemo,
+      transfers,
+    };
   }
 
   static async normaliseApproveTokenAllowance(
@@ -806,7 +839,7 @@ export default class HederaParameterNormaliser {
   static normaliseMintNonFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>>,
     context: Context,
-  ) {
+  ): z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>> =
       this.parseParamsWithSchema(params, mintNonFungibleTokenParameters, context);
 

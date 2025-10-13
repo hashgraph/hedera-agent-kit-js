@@ -34,6 +34,7 @@ import {
   updateTokenParametersNormalised,
   approveNftAllowanceParametersNormalised,
   transferFungibleTokenWithAllowanceParametersNormalised,
+  transferNonFungibleTokenWithAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -79,6 +80,22 @@ export default class HederaBuilder {
 
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
     return new TransferTransaction(params);
+  }
+
+  static transferNonFungibleTokenWithAllowance(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParametersNormalised>>,
+  ) {
+    const tx = new TransferTransaction();
+
+    for (const transfer of params.transfers) {
+      tx.addApprovedNftTransfer(transfer.nftId, params.sourceAccountId, transfer.receiver);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static transferHbarWithAllowance(
