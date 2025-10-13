@@ -58,7 +58,7 @@ describe('getAccountTokenBalancesQuery Tool', () => {
           kyc_status: 'GRANTED',
           balance: 2500,
           decimals: 2,
-        },
+        } as any,
       ],
     };
     mockService.getAccountTokenBalances.mockResolvedValue(response);
