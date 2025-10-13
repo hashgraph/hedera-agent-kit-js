@@ -6,6 +6,7 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 const submitTopicMessagePrompt = (context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -32,7 +33,12 @@ const submitTopicMessage = async (
   params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
 ) => {
   try {
-    const tx = HederaBuilder.submitTopicMessage(params);
+    const normalisedParams = await HederaParameterNormaliser.normaliseSubmitTopicMessage(
+      params,
+      context,
+      client,
+    );
+    const tx = HederaBuilder.submitTopicMessage(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {

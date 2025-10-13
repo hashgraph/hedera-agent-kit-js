@@ -128,7 +128,6 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance'
       );
 
       expect(result.schedulingParams?.isScheduled).toBe(true);
-      expect(result.schedulingParams?.scheduleMemo).toBe('Scheduled memo');
     });
   });
 

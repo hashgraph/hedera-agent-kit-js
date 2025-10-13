@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
-describe.skip('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
+describe('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe.skip('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match mint NFT tool with single URI', async () => {
       const input =
         'Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json';
@@ -63,6 +63,33 @@ describe.skip('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
         expect.objectContaining({
           tokenId: '0.0.6006',
           uris: ['ipfs://uri1', 'ipfs://uri2', 'ipfs://uri3'],
+        }),
+      );
+    });
+
+    it('should extract scheduling parameters when provided', async () => {
+      const input =
+        'Schedule Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        MINT_NON_FUNGIBLE_TOKEN_TOOL,
+        expect.objectContaining({
+          tokenId: '0.0.5005',
+          uris: [
+            'ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json',
+          ],
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
         }),
       );
     });

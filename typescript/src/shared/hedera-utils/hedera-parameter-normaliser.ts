@@ -49,6 +49,8 @@ import {
   createTopicParametersNormalised,
   deleteTopicParameters,
   deleteTopicParametersNormalised,
+  submitTopicMessageParameters,
+  submitTopicMessageParametersNormalised,
   updateTopicParameters,
   updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
@@ -699,6 +701,26 @@ export default class HederaParameterNormaliser {
     return normalised;
   };
 
+  static normaliseSubmitTopicMessage = async (
+    params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>> => {
+    const parsedParams: z.infer<ReturnType<typeof submitTopicMessageParameters>> =
+      this.parseParamsWithSchema(params, submitTopicMessageParameters, context);
+
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      ...parsedParams,
+      schedulingParams,
+    };
+  };
+
   static async normaliseCreateAccount(
     params: z.infer<ReturnType<typeof createAccountParameters>>,
     context: Context,
@@ -1186,7 +1208,6 @@ export default class HederaParameterNormaliser {
     return {
       schedulingParams: {
         isScheduled: scheduling?.isScheduled ?? false,
-        scheduleMemo: scheduling?.scheduleMemo,
         adminKey,
         payerAccountID,
         expirationTime,

@@ -78,7 +78,7 @@ describe('mint-non-fungible-token tool (unit)', () => {
   });
 
   it('executes happy path and returns formatted human message', async () => {
-    mockedNormaliser.normaliseMintNonFungibleTokenParams.mockReturnValue(normalisedParams);
+    mockedNormaliser.normaliseMintNonFungibleTokenParams.mockResolvedValue(normalisedParams);
     mockedBuilder.mintNonFungibleToken.mockReturnValue({ tx: 'mintNftTx' } as any);
 
     const tool = toolFactory(context);

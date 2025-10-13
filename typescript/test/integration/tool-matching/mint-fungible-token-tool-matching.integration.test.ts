@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
-describe.skip('Mint Fungible Token Tool Matching Integration Tests', () => {
+describe('Mint Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe.skip('Mint Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match mint fungible token tool with minimal params', async () => {
       const input = 'Mint 10 of token 0.0.12345';
 
@@ -41,6 +41,31 @@ describe.skip('Mint Fungible Token Tool Matching Integration Tests', () => {
         expect.objectContaining({
           tokenId: '0.0.12345',
           amount: 10,
+        }),
+      );
+    });
+
+    it('should extract scheduling parameters when provided', async () => {
+      const input =
+        'Mint 10 of token 0.0.12345. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        MINT_FUNGIBLE_TOKEN_TOOL,
+        expect.objectContaining({
+          tokenId: '0.0.12345',
+          amount: 10,
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
         }),
       );
     });

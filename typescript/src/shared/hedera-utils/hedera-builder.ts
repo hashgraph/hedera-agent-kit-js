@@ -41,7 +41,6 @@ import {
   approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParametersNormalised,
   createAccountParametersNormalised,
-  createScheduleTransactionParametersNormalised,
   deleteAccountParametersNormalised,
   scheduleDeleteTransactionParameters,
   signScheduleTransactionParameters,
@@ -59,14 +58,6 @@ import { contractExecuteTransactionParametersNormalised } from '@/shared/paramet
 import { optionalScheduledTransactionParamsNormalised } from '@/shared/parameter-schemas/common.zod';
 
 export default class HederaBuilder {
-  static createScheduleTransaction(
-    params: z.infer<ReturnType<typeof createScheduleTransactionParametersNormalised>>,
-  ) {
-    return new ScheduleCreateTransaction(params.params).setScheduledTransaction(
-      params.scheduledTransaction,
-    );
-  }
-
   static createFungibleToken(
     params: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>,
   ) {

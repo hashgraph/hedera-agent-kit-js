@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, TransferTransaction } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import scheduleDeleteTool from '@/plugins/core-account-plugin/tools/account/schedule-delete';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../utils';
 import { z } from 'zod';
-import { scheduleDeleteTransactionParameters } from '@/shared/parameter-schemas/account.zod';
+import {
+  scheduleDeleteTransactionParameters,
+  transferHbarParametersNormalised,
+} from '@/shared/parameter-schemas/account.zod';
 import { itWithRetry } from '../utils/retry-util';
 
 describe('Schedule Delete E2E Tests', () => {
@@ -61,31 +64,39 @@ describe('Schedule Delete E2E Tests', () => {
     }
   });
 
-  it('deletes a scheduled transaction by admin', itWithRetry(async () => {
-    const transferAmount = 0.05;
-    const transferTx = new TransferTransaction()
-      .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
-      .addHbarTransfer(recipientAccountId, transferAmount);
+  it(
+    'deletes a scheduled transaction by admin',
+    itWithRetry(async () => {
+      const transferAmount = 0.05;
+      const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
+        hbarTransfers: [
+          {
+            accountId: recipientAccountId,
+            amount: transferAmount,
+          },
+          {
+            accountId: executorClient.operatorAccountId!,
+            amount: -transferAmount,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
+          adminKey: operatorClient.operatorPublicKey as PublicKey,
+        },
+      };
 
-    const scheduleTx = await operatorWrapper.createScheduleTransaction({
-      scheduledTransaction: transferTx,
-      params: {
-        scheduleMemo: 'E2E scheduled transfer',
-        adminKey: operatorClient.operatorPublicKey as Key,
-      },
-    });
-    const scheduleId = scheduleTx.scheduleId!.toString();
+      const scheduleTx = await operatorWrapper.transferHbar(transferParams);
+      const scheduleId = scheduleTx.scheduleId!.toString();
 
-    const params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>> = {
-      scheduleId,
-    };
+      const params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>> = {
+        scheduleId,
+      };
 
-    const tool = scheduleDeleteTool(context);
-    const result = await tool.execute(operatorClient, context, params);
+      const tool = scheduleDeleteTool(context);
+      const result = await tool.execute(operatorClient, context, params);
 
-    expect(result.humanMessage).toContain('successfully deleted');
-    expect(result.raw.status).toBe('SUCCESS');
-  }));
+      expect(result.humanMessage).toContain('successfully deleted');
+      expect(result.raw.status).toBe('SUCCESS');
+    }),
+  );
 });
-
-

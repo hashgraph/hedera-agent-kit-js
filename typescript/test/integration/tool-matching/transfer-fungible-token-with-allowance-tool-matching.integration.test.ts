@@ -82,4 +82,32 @@ describe('Transfer Fungible Token With Allowance Tool Matching Tests', () => {
       }),
     );
   });
+
+  it('should extract scheduling parameters when provided', async () => {
+    const input =
+      "Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allowance. Schedule this transaction and make it expire tomorrow and wait for its expiration time with executing it.";
+
+    const hederaAPI = toolkit.getHederaAgentKitAPI();
+    const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+    await agentExecutor.invoke({ input });
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledWith(
+      TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+      expect.objectContaining({
+        sourceAccountId: '0.0.1002',
+        transfers: expect.arrayContaining([
+          expect.objectContaining({ accountId: '0.0.2002', amount: 100 }),
+        ]),
+        tokenId: '0.0.33333',
+        schedulingParams: expect.objectContaining({
+          adminKey: false,
+          isScheduled: true,
+          expirationTime: expect.any(String),
+          waitForExpiry: true,
+        }),
+      }),
+    );
+  });
 });

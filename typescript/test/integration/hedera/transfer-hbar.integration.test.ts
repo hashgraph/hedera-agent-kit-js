@@ -217,6 +217,32 @@ describe('Transfer HBAR Integration Tests', () => {
         executorWrapper,
       );
     });
+
+    it('should successfully create a scheduled transaction of transfer HBAR', async () => {
+      const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
+        transfers: [
+          {
+            accountId: recipientAccountId.toString(),
+            amount: 0.05,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
+          waitForExpiry: true,
+          adminKey: operatorClient.operatorPublicKey?.toStringRaw()!,
+        },
+      };
+
+      const tool = transferHbarTool(context);
+      const result = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled HBAR transfer created successfully.');
+      expect(result.humanMessage).toContain('Transaction ID:');
+      expect(result.humanMessage).toContain('Schedule ID:');
+      expect(result.raw.status).toBe('SUCCESS');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.raw.scheduleId).toBeDefined();
+    });
   });
 
   describe('Invalid Transfer Scenarios', () => {

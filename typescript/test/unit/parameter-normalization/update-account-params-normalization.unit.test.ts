@@ -79,13 +79,12 @@ describe('HederaParameterNormaliser.normaliseUpdateAccount', () => {
     const params = {
       accountId: '0.0.1234',
       accountMemo: 'scheduled memo',
-      schedulingParams: { isScheduled: true, scheduleMemo: 'Scheduled Update' },
+      schedulingParams: { isScheduled: true },
     } as any;
 
     const res = await HederaParameterNormaliser.normaliseUpdateAccount(params, context, client);
 
     expect(res.schedulingParams?.isScheduled).toBe(true);
-    expect(res.schedulingParams?.scheduleMemo).toBe('Scheduled Update');
     expect(res.accountMemo).toBe('scheduled memo');
   });
 });

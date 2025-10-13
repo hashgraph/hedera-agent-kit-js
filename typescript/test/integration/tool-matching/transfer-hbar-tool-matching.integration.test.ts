@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
-describe.skip('Transfer HBAR Tool Matching Integration Tests', () => {
+describe('Transfer HBAR Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +26,7 @@ describe.skip('Transfer HBAR Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match transfer HBAR tool for simple transfer request', async () => {
       const input = 'Transfer 1 HBAR to 0.0.1';
 
@@ -140,6 +140,35 @@ describe.skip('Transfer HBAR Tool Matching Integration Tests', () => {
             }),
           ]),
           sourceAccountId: '0.0.5555',
+        }),
+      );
+    });
+
+    it('should extract scheduling parameters when provided', async () => {
+      const input =
+        'Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        TRANSFER_HBAR_TOOL,
+        expect.objectContaining({
+          transfers: expect.arrayContaining([
+            expect.objectContaining({
+              accountId: '0.0.2222',
+              amount: 0.5,
+            }),
+          ]),
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
         }),
       );
     });

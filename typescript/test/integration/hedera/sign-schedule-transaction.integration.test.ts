@@ -1,14 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, ScheduleCreateTransaction, TransferTransaction } from '@hashgraph/sdk';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import signScheduleTransactionTool from '@/plugins/core-account-plugin/tools/account/sign-schedule-transaction';
 import { Context, AgentMode } from '@/shared/configuration';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-  HederaOperationsWrapper,
-} from '../../utils';
+import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
-import { signScheduleTransactionParameters } from '@/shared/parameter-schemas/account.zod';
+import {
+  signScheduleTransactionParameters,
+  transferHbarParametersNormalised,
+} from '@/shared/parameter-schemas/account.zod';
 
 describe('Sign Schedule Transaction Integration Tests', () => {
   let operatorClient: Client;
@@ -44,7 +43,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
 
   afterAll(async () => {
     if (executorClient) {
-      // Transfer remaining balance back to operator and delete executor account
+      // Transfer remaining balance back to operator and delete an executor account
       try {
         await executorWrapper.deleteAccount({
           accountId: recipientAccountId,
@@ -68,15 +67,23 @@ describe('Sign Schedule Transaction Integration Tests', () => {
     it('should successfully sign a scheduled transaction', async () => {
       // First, create a scheduled transaction
       const transferAmount = 0.1;
-      const transferTx = new TransferTransaction()
-        .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
-        .addHbarTransfer(recipientAccountId, transferAmount);
-      const scheduleTx = await operatorWrapper.createScheduleTransaction({
-        scheduledTransaction: transferTx,
-        params: {
-          scheduleMemo: 'Test scheduled transfer',
+      const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
+        hbarTransfers: [
+          {
+            accountId: recipientAccountId,
+            amount: transferAmount,
+          },
+          {
+            accountId: executorClient.operatorAccountId!,
+            amount: -transferAmount,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
         },
-      });
+      };
+
+      const scheduleTx = await operatorWrapper.transferHbar(transferParams);
       const scheduleId = scheduleTx.scheduleId!.toString();
 
       // Now sign the scheduled transaction using the tool
@@ -97,22 +104,29 @@ describe('Sign Schedule Transaction Integration Tests', () => {
     it('should handle schedule ID with different formats', async () => {
       // Create a scheduled transaction
       const transferAmount = 0.05;
-      const transferTx = new TransferTransaction()
-        .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
-        .addHbarTransfer(recipientAccountId, transferAmount);
-
-    const scheduleTx = await operatorWrapper.createScheduleTransaction({
-        scheduledTransaction: transferTx,
-        params: {
-          scheduleMemo: 'Test scheduled transfer',
+      const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
+        hbarTransfers: [
+          {
+            accountId: recipientAccountId,
+            amount: transferAmount,
+          },
+          {
+            accountId: executorClient.operatorAccountId!,
+            amount: -transferAmount,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
         },
-        });
-        const scheduleId = scheduleTx.scheduleId!.toString();
+      };
 
-        // Now sign the scheduled transaction using the tool
-        const params: z.infer<ReturnType<typeof signScheduleTransactionParameters>> = {
+      const scheduleTx = await operatorWrapper.transferHbar(transferParams);
+      const scheduleId = scheduleTx.scheduleId!.toString();
+
+      // Now sign the scheduled transaction using the tool
+      const params: z.infer<ReturnType<typeof signScheduleTransactionParameters>> = {
         scheduleId: scheduleId,
-        };
+      };
 
       const tool = signScheduleTransactionTool(context);
       const result = await tool.execute(executorClient, context, params);
@@ -167,18 +181,24 @@ describe('Sign Schedule Transaction Integration Tests', () => {
     it('should fail when trying to sign already executed schedule', async () => {
       // Create a scheduled transaction
       const transferAmount = 0.01;
-      const transferTx = new TransferTransaction()
-        .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
-        .addHbarTransfer(recipientAccountId, transferAmount);
 
-
-
-      const scheduleTx = await operatorWrapper.createScheduleTransaction({
-        scheduledTransaction: transferTx,
-        params: {
-          scheduleMemo: 'Auto-execute test',
+      const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
+        hbarTransfers: [
+          {
+            accountId: recipientAccountId,
+            amount: transferAmount,
+          },
+          {
+            accountId: executorClient.operatorAccountId!,
+            amount: -transferAmount,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
         },
-        });
+      };
+
+      const scheduleTx = await operatorWrapper.transferHbar(transferParams);
       const scheduleId = scheduleTx.scheduleId!.toString();
 
       // Now sign the scheduled transaction using the tool

@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, TransferTransaction } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import scheduleDeleteTool from '@/plugins/core-account-plugin/tools/account/schedule-delete';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
-import { scheduleDeleteTransactionParameters, signScheduleTransactionParameters } from '@/shared/parameter-schemas/account.zod';
+import {
+  scheduleDeleteTransactionParameters,
+  transferHbarParametersNormalised,
+} from '@/shared/parameter-schemas/account.zod';
 
 describe('Schedule Delete Integration Tests', () => {
   let operatorClient: Client;
@@ -63,17 +66,24 @@ describe('Schedule Delete Integration Tests', () => {
   describe('Valid Schedule Delete Scenarios', () => {
     it('should successfully delete a scheduled transaction before execution', async () => {
       const transferAmount = 0.1;
-      const transferTx = new TransferTransaction()
-        .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
-        .addHbarTransfer(recipientAccountId, transferAmount);
-
-      const scheduleTx = await operatorWrapper.createScheduleTransaction({
-        scheduledTransaction: transferTx,
-        params: {
-          scheduleMemo: 'Test scheduled transfer',
-          adminKey: operatorClient.operatorPublicKey as Key,
+      const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
+        hbarTransfers: [
+          {
+            accountId: recipientAccountId,
+            amount: transferAmount,
+          },
+          {
+            accountId: executorClient.operatorAccountId!,
+            amount: -transferAmount,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
+          adminKey: operatorClient.operatorPublicKey as PublicKey,
         },
-      });
+      };
+
+      const scheduleTx = await operatorWrapper.transferHbar(transferParams);
       const scheduleId = scheduleTx.scheduleId!.toString();
 
       const params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>> = {
@@ -116,5 +126,3 @@ describe('Schedule Delete Integration Tests', () => {
     });
   });
 });
-
-
