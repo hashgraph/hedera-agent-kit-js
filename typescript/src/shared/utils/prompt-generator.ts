@@ -104,6 +104,6 @@ Important:
 **Notes**
 - Setting any scheduling parameter implies delayed execution through the Hedera schedule service.
 - The network executes the scheduled transaction automatically once all required signatures are collected.
-- The inner transaction (e.g., account update, transfer) may still have its own memo field such as \`accountMemo\`; do not confuse it with \`scheduleMemo\`.`;
+`;
   }
 }

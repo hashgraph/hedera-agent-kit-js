@@ -23,7 +23,7 @@ Parameters:
 - accountId (string, optional) Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used
 - maxAutomaticTokenAssociations (number, optional)
 - stakedAccountId (string, optional)
-- accountMemo (string, optional)
+- accountMemo (string, optional) - memo to be set for the upgraded account
 - declineStakingReward (boolean, optional)
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 

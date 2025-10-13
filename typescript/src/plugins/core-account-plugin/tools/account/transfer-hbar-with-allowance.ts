@@ -22,7 +22,7 @@ Parameters:
 - transfers (array of objects, required): List of HBAR transfers. Each object should contain:
   - accountId (string): Recipient account ID
   - amount (number): Amount of HBAR to transfer
-- transactionMemo (string, optional): Optional memo for the transaction
+- transactionMemo (string, optional): Optional memo for the transfer HBAR with allowance transaction
 ${usageInstructions}
 `;
 };

@@ -79,7 +79,7 @@ describe('Update Account Tool Matching Integration Tests', () => {
 
     it('should extract scheduling parameters when provided', async () => {
       const input =
-        'Schedule an account update for account 0.0.1234 with transaction memo of update transaction "Scheduled update". Make it expire tomorrow and wait for its expiration time with executing it.';
+        'Schedule an account update for account 0.0.1234. Set the account memo to "updated with scheduled transaction". Make it expire tomorrow and wait for its expiration time with executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
@@ -91,7 +91,7 @@ describe('Update Account Tool Matching Integration Tests', () => {
         UPDATE_ACCOUNT_TOOL,
         expect.objectContaining({
           accountId: '0.0.1234',
-          accountMemo: 'Scheduled update',
+          accountMemo: 'updated with scheduled transaction',
           schedulingParams: expect.objectContaining({
             adminKey: false,
             isScheduled: true,

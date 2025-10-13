@@ -26,7 +26,7 @@ Parameters:
   - accountId (string): Recipient account ID
   - amount (number): Amount of HBAR to transfer
 - ${sourceAccountDesc}
-- transactionMemo (string, optional): Optional memo for the transaction
+- transactionMemo (string, optional): Optional memo for the transfer HBAR transaction
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
