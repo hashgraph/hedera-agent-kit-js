@@ -93,7 +93,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .then(info => info.totalSupply.toInt());
 
     expect(result).toBeDefined();
-    expect(result.humanMessage).toContain('successfully minted with transaction id');
+    expect(result.humanMessage).toContain('Token successfully minted');
     expect(supplyAfter).toBe(supplyBefore + 1);
   });
 
@@ -115,7 +115,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .then(info => info.totalSupply.toInt());
 
     expect(result).toBeDefined();
-    expect(result.humanMessage).toContain('successfully minted with transaction id');
+    expect(result.humanMessage).toContain('Token successfully minted');
     expect(supplyAfter).toBe(supplyBefore + uris.length);
   });
 

@@ -229,7 +229,7 @@ describe('Transfer HBAR Integration Tests', () => {
         schedulingParams: {
           isScheduled: true,
           waitForExpiry: true,
-          adminKey: operatorClient.operatorPublicKey?.toStringRaw()!,
+          adminKey: false,
         },
       };
 

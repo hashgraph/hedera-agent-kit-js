@@ -87,7 +87,7 @@ describe('Mint Fungible Token Integration Tests', () => {
 
     expect(result).toBeDefined();
     expect(result.raw.status).toBe('SUCCESS');
-    expect(result.humanMessage).toContain('Tokens successfully minted with transaction id');
+    expect(result.humanMessage).toContain('Tokens successfully minted.');
     expect(supplyAfter).toBe(supplyBefore + 500);
   });
 
