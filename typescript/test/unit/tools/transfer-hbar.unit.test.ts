@@ -29,6 +29,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
     getContextSnippet: vi.fn(() => 'CTX'),
     getAccountParameterDescription: vi.fn(() => 'sourceAccountId (string): Sender account ID'),
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
+    getScheduledTransactionParamsDescription: vi.fn(() => 'mocked scheduled params desc'),
   },
 }));
 

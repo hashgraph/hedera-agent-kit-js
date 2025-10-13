@@ -39,6 +39,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide parameters as JSON.'),
     getContextSnippet: vi.fn(() => 'context'),
+    getScheduledTransactionParamsDescription: vi.fn(() => 'mocked scheduled params desc'),
   },
 }));
 
@@ -88,14 +89,15 @@ describe('mint-non-fungible-token tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw.status).toBe('SUCCESS');
-    expect(res.humanMessage).toContain('Token 0.0.5005 successfully minted');
-    expect(res.humanMessage).toContain('transaction id 0.0.1234@');
+    expect(res.humanMessage).toContain('Token successfully minted');
+    expect(res.humanMessage).toContain('0.0.1234@');
 
     expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledTimes(1);
     expect(mockedBuilder.mintNonFungibleToken).toHaveBeenCalledWith(normalisedParams);
     expect(mockedNormaliser.normaliseMintNonFungibleTokenParams).toHaveBeenCalledWith(
       params,
       context,
+      client,
     );
   });
 

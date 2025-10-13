@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client } from '@hashgraph/sdk';
-import toolFactory, { UPDATE_ACCOUNT_TOOL } from '@/plugins/core-account-plugin/tools/account/update-account';
+import toolFactory, {
+  UPDATE_ACCOUNT_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/update-account';
 
 // Mocks for dependencies
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
@@ -27,6 +29,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
     getContextSnippet: vi.fn(() => 'CTX'),
     getAccountParameterDescription: vi.fn(() => 'accountId (string): Account to update'),
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
+    getScheduledTransactionParamsDescription: vi.fn(() => 'mocked scheduled params desc'),
   },
 }));
 
