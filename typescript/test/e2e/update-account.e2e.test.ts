@@ -119,12 +119,8 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   it(
     'should schedule account update',
     itWithRetry(async () => {
-      const currentDate = new Date();
-      const nextMonday = new Date(
-        currentDate.setDate(currentDate.getDate() + ((1 + 7 - currentDate.getDay()) % 7)),
-      );
       const updateResult = await agentExecutor.invoke({
-        input: `Update account ${targetAccount.toString()} memo to "updated via agent". Schedule the transaction instead of executing it immediately. Set expiration time to ${nextMonday} and wait for the expiration.`,
+        input: `Update account ${targetAccount.toString()} memo to "updated via agent". Schedule the transaction instead of executing it immediately.`,
       });
 
       const observation = extractObservationFromLangchainResponse(updateResult);
