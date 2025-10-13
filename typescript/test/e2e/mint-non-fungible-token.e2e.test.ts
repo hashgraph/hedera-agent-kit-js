@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   Client,
   PrivateKey,
@@ -79,10 +79,6 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
     }
   });
 
-  beforeEach(async () => {
-    await new Promise(resolve => setTimeout(resolve, 30000));
-  });
-
   it(
     'should mint a single NFT successfully',
     itWithRetry(async () => {
@@ -101,7 +97,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
 
-      expect(observation.humanMessage).toContain('successfully minted with transaction id');
+      expect(observation.humanMessage).toContain('Token successfully minted.');
       expect(supplyAfter).toBe(supplyBefore + 1);
     }),
   );
@@ -127,7 +123,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
 
-      expect(observation.humanMessage).toContain('successfully minted with transaction id');
+      expect(observation.humanMessage).toContain('Token successfully minted.');
       expect(supplyAfter).toBe(supplyBefore + uris.length);
     }),
   );

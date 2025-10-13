@@ -85,43 +85,51 @@ describe('Mint ERC721 Token E2E Tests', () => {
     }
   });
 
-  it('mints ERC721 token to another account via natural language', itWithRetry(async () => {
-    const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}`;
+  it(
+    'mints ERC721 token to another account via natural language',
+    itWithRetry(async () => {
+      const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-
-    expect(observation).toBeDefined();
-    expect(observation.raw.status.toString()).toBe('SUCCESS');
-    expect(observation.raw.transactionId).toBeDefined();
-  }));
-
-  it('mints token to default (context) account when toAddress missing', itWithRetry(async () => {
-    const input = `Mint ERC721 token ${testTokenAddress}`;
-
-    const result = await agentExecutor.invoke({ input });
-    console.log(JSON.stringify(result, null, 2));
-    const observation = extractObservationFromLangchainResponse(result);
-
-    expect(observation).toBeDefined();
-    expect(observation.raw.status.toString()).toBe('SUCCESS');
-    expect(observation.raw.transactionId).toBeDefined();
-  }));
-
-  it('handles various natural language variations for minting', itWithRetry(async () => {
-    const variations = [
-      `Mint NFT (ERC) from ${testTokenAddress} to ${recipientAccountId}`,
-      `Create EVM compatible NFT from contract ${testTokenAddress} to ${recipientAccountId}`,
-      `Mint a token from ${testTokenAddress} (ERC721 contract) for ${recipientAccountId}`,
-    ];
-
-    for (const input of variations) {
       const result = await agentExecutor.invoke({ input });
       const observation = extractObservationFromLangchainResponse(result);
 
       expect(observation).toBeDefined();
-      expect(observation.raw.status.toString()).toBe('SUCCESS');
+      expect(observation.raw.status).toBe('SUCCESS');
       expect(observation.raw.transactionId).toBeDefined();
-    }
-  }));
+    }),
+  );
+
+  it(
+    'mints token to default (context) account when toAddress missing',
+    itWithRetry(async () => {
+      const input = `Mint ERC721 token ${testTokenAddress}`;
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      expect(observation).toBeDefined();
+      expect(observation.raw.status).toBe('SUCCESS');
+      expect(observation.raw.transactionId).toBeDefined();
+    }),
+  );
+
+  it(
+    'handles various natural language variations for minting',
+    itWithRetry(async () => {
+      const variations = [
+        `Mint NFT (ERC) from ${testTokenAddress} to ${recipientAccountId}`,
+        `Create EVM compatible NFT from contract ${testTokenAddress} to ${recipientAccountId}`,
+        `Mint a token from ${testTokenAddress} (ERC721 contract) for ${recipientAccountId}`,
+      ];
+
+      for (const input of variations) {
+        const result = await agentExecutor.invoke({ input });
+        const observation = extractObservationFromLangchainResponse(result);
+
+        expect(observation).toBeDefined();
+        expect(observation.raw.status).toBe('SUCCESS');
+        expect(observation.raw.transactionId).toBeDefined();
+      }
+    }),
+  );
 });
