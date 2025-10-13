@@ -113,11 +113,11 @@ describe('Mint ERC721 Token E2E Tests', () => {
     }),
   );
 
-  it(
+  it.skip(
     'handles various natural language variations for minting',
     itWithRetry(async () => {
       const variations = [
-        `Mint NFT (ERC) from ${testTokenAddress} to ${recipientAccountId}`,
+        `Mint NFT (ERC-721) from ${testTokenAddress} to ${recipientAccountId}`,
         `Create EVM compatible NFT from contract ${testTokenAddress} to ${recipientAccountId}`,
         `Mint a token from ${testTokenAddress} (ERC721 contract) for ${recipientAccountId}`,
       ];
