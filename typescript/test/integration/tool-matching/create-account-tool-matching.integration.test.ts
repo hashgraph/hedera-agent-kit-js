@@ -92,6 +92,30 @@ describe('Create Account Tool Matching Integration Tests', () => {
       );
     });
 
+    it('should match and extract params for scheduled create account transaction request', async () => {
+      const input =
+        'Schedule creation of an account with max automatic token associations 10. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_ACCOUNT_TOOL,
+        expect.objectContaining({
+          maxAutomaticTokenAssociations: 10,
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
+        }),
+      );
+    });
+
     it('should handle various natural language variations', async () => {
       const variations = [
         { input: 'Create a new Hedera account', expected: {} },

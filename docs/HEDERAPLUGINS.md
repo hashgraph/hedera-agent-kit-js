@@ -41,7 +41,7 @@ This plugin provides tools for Hedera **Account Service operations**:
 | `TRANSFER_HBAR_TOOL`             | Transfer HBAR between accounts                                                                                 | Provide the amount of HBAR to transfer, the account to transfer to, and optionally, a transaction memo. Supports scheduled transactions.                                                                                                    |
 | `APPROVE_HBAR_ALLOWANCE_TOOL`    | Approve an HBAR spending allowance for a spender account                                                       | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), the HBAR amount to approve (decimal supported, cannot be negative), and an optional transaction memo.                               |
 | `DELETE_HBAR_ALLOWANCE_TOOL`     | Deletes an HBAR allowance from an owner to a spender                                                           | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), an optional transaction memo                                                                                                        |
-| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                                                        |
+| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association. Supports scheduled transactions.                                                                      |
 | `UPDATE_ACCOUNT_TOOL`            | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional). Supports scheduled transactions. |
 | `DELETE_ACCOUNT_TOOL`            | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                                                    |
 | `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                                                                |
@@ -190,6 +190,7 @@ The following tools support scheduling:
 - `TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL`
 - `TRANSFER_HBAR_TOOL`
 - `UPDATE_ACCOUNT_TOOL`
+- `CREATE_ACCOUNT_TOOL`
 
 ---
 
@@ -221,6 +222,7 @@ Those parameters define how the **schedule entity** behaves — not the inner tr
 ---
 
 **Example usage in plain english**
+
 ```
 Schedule a mint for token 0.0.5005 with metadata https://example.com/nft/1.json
 ```
