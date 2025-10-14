@@ -3,7 +3,7 @@ import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
-import { handleTransaction } from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -26,12 +26,21 @@ Parameters:
 - contractId (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
 - recipientAddress (str, required): The EVM or Hedera address to which the tokens will be transferred. This can be the EVM address or the Hedera account id.
 - amount (number, required): The amount to be transferred
+- ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 
 Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means transferring the amount of 1 of the ERC20 token with contract id 0.0.6473135 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
 Example: "Transfer 1 ERC20 token 0xd94dc7f82f103757f715514e4a37186be6e4580b to 0.0.6473135" means transferring the amount of 1 of the ERC20 token with contract id 0xd94dc7f82f103757f715514e4a37186be6e4580b to the 0.0.6473135 Hedera account id.
 `;
 };
+
+const postProcess = (response: RawTransactionResponse) =>
+  response?.scheduleId
+    ? `Scheduled transfer of ERC20 successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`
+    : `ERC20 token transferred successfully.`;
 
 const transferERC20 = async (
   client: Client,
@@ -46,11 +55,12 @@ const transferERC20 = async (
       ERC20_TRANSFER_FUNCTION_NAME,
       context,
       mirrorNode,
+      client,
     );
 
     const tx = HederaBuilder.executeTransaction(normalisedParams);
-    const result = await handleTransaction(tx, client, context);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to transfer ERC20';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

@@ -9,12 +9,8 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { getERC721FactoryAddress, ERC721_FACTORY_ABI } from '@/shared/constants/contracts';
 
-const createERC721Prompt = (context: Context = {}) => {
-  const contextSnippet = PromptGenerator.getContextSnippet(context);
-  const usageInstructions = PromptGenerator.getParameterUsageInstructions();
-
-  return `
-${contextSnippet}
+const createERC721Prompt = (context: Context = {}) => `
+${PromptGenerator.getContextSnippet(context)}
 
 This tool creates an ERC721 token on Hedera by calling the BaseERC721Factory contract.
 
@@ -22,18 +18,21 @@ Parameters:
 - tokenName (str, required): The name of the token
 - tokenSymbol (str, required): The symbol of the token
 - baseURI (str, required): The base URI for token metadata.
-${usageInstructions}
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
+${PromptGenerator.getParameterUsageInstructions()}
 The contractId returned by the tool is the address of the ERC721 Factory contract, the address of the ERC721 token is the erc721Address returned by the tool.
 `;
-};
 
-const getERC721Address = async (client: Client, executeStrategyResult: ExecuteStrategyResult) => {
+const getERC721Address = async (client: Client, tx: ExecuteStrategyResult) => {
   const record = await new TransactionRecordQuery()
-    .setTransactionId(executeStrategyResult.raw.transactionId)
+    .setTransactionId(tx.raw.transactionId)
     .execute(client);
   return '0x' + record.contractFunctionResult?.getAddress(0);
 };
+
+const postProcess = (erc721Address?: string) =>
+  `ERC721 token created successfully at address ${erc721Address ?? 'unknown'}`;
 
 const createERC721 = async (
   client: Client,
@@ -41,31 +40,32 @@ const createERC721 = async (
   params: z.infer<ReturnType<typeof createERC721Parameters>>,
 ) => {
   try {
-    const factoryContractAddress = getERC721FactoryAddress(client.ledgerId!);
-    const normalisedParams = HederaParameterNormaliser.normaliseCreateERC721Params(
+    const factoryAddress = getERC721FactoryAddress(client.ledgerId!);
+    const txParams = await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,
-      factoryContractAddress,
+      factoryAddress,
       ERC721_FACTORY_ABI,
       'deployToken',
       context,
+      client,
     );
-    const tx = HederaBuilder.executeTransaction(normalisedParams);
-    const result = await handleTransaction(tx, client, context);
 
-    if (context.mode == AgentMode.AUTONOMOUS) {
-      const erc721Address = await getERC721Address(client, result as ExecuteStrategyResult);
-      return {
-        ...result,
-        erc721Address: erc721Address?.toString(),
-        message: `ERC721 token created successfully at address ${erc721Address?.toString()}`,
-      };
-    }
-    return result;
+    const tx = HederaBuilder.executeTransaction(txParams);
+    const result = await handleTransaction(tx, client, context);
+    if (context.mode === AgentMode.RETURN_BYTES) return result;
+
+    const erc721Address = await getERC721Address(client, result as ExecuteStrategyResult);
+    const humanMessage = postProcess(erc721Address);
+
+    return { ...result, erc721Address, humanMessage };
   } catch (error) {
-    const desc = 'Failed to create ERC721 token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    const message =
+      'Failed to create ERC721 token' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_erc721_tool]', message);
-    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+    return {
+      raw: { status: Status.InvalidTransaction, error: message },
+      humanMessage: message,
+    };
   }
 };
 

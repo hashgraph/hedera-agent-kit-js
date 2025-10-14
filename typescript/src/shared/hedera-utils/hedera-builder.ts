@@ -171,7 +171,8 @@ export default class HederaBuilder {
   static executeTransaction(
     params: z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>>,
   ) {
-    return new ContractExecuteTransaction(params);
+    const tx = new ContractExecuteTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static mintFungibleToken(

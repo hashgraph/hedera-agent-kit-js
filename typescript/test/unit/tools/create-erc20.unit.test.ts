@@ -11,7 +11,15 @@ import { AgentMode } from '@/shared';
 // ---- MOCKS ----
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
   default: {
-    normaliseCreateERC20Params: vi.fn(),
+    normaliseCreateERC20Params: vi.fn(async (...args: any[]) => ({
+      tokenName: args[0].tokenName,
+      tokenSymbol: args[0].tokenSymbol,
+      decimals: args[0].decimals,
+      initialSupply: args[0].initialSupply,
+      contractId: '0.0.9999',
+      functionParameters: new Uint8Array([0x01, 0x02, 0x03]),
+      gas: 3_000_000,
+    })),
   },
 }));
 
@@ -37,7 +45,16 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide parameters as JSON.'),
     getContextSnippet: vi.fn(() => 'some context'),
+    getScheduledTransactionParamsDescription: vi.fn(
+      () =>
+        '- schedulingParams (object, optional): Set isScheduled = true to make the transaction scheduled.',
+    ),
   },
+}));
+
+vi.mock('@/shared/constants/contracts', () => ({
+  getERC20FactoryAddress: vi.fn(() => '0.0.5555'),
+  ERC20_FACTORY_ABI: [{ name: 'deployToken' }],
 }));
 
 vi.mock('@hashgraph/sdk', async () => {
@@ -71,16 +88,6 @@ describe('createERC20 tool (unit)', () => {
     initialSupply: 1000,
   } as unknown as z.infer<ReturnType<typeof createERC20Parameters>>;
 
-  const normalisedParams = {
-    tokenName: params.tokenName,
-    tokenSymbol: params.tokenSymbol,
-    decimals: params.decimals,
-    initialSupply: params.initialSupply,
-    contractId: '0.0.9999',
-    functionParameters: new Uint8Array([0x01, 0x02, 0x03]), // must be Uint8Array
-    gas: 3_000_000,
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -95,7 +102,6 @@ describe('createERC20 tool (unit)', () => {
   });
 
   it('executes happy path and returns ERC20 address and message', async () => {
-    mockedNormaliser.normaliseCreateERC20Params.mockReturnValue(normalisedParams);
     mockedBuilder.executeTransaction.mockReturnValue({} as any);
 
     const tool = toolFactory(context);
@@ -111,10 +117,11 @@ describe('createERC20 tool (unit)', () => {
     expect(mockedBuilder.executeTransaction).toHaveBeenCalledOnce();
     expect(mockedNormaliser.normaliseCreateERC20Params).toHaveBeenCalledWith(
       params,
-      expect.any(String),
-      expect.any(Array),
+      '0.0.5555',
+      [{ name: 'deployToken' }],
       'deployToken',
       context,
+      expect.any(Object),
     );
   });
 
@@ -128,8 +135,8 @@ describe('createERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('boom');
+    expect(res.humanMessage).toContain('Failed to create ERC20 token: boom');
+    expect(res.raw.error).toContain('Failed to create ERC20 token: boom');
     expect(res.raw.status).toBe(Status.InvalidTransaction);
   });
 

@@ -3,7 +3,7 @@ import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
-import { handleTransaction } from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -27,22 +27,35 @@ Parameters:
 - contractId (str, required): The id of the ERC721 contract
 - ${fromAddressDesc}
 - toAddress (str, required): The address to which the token will be transferred. This can be the EVM address or the Hedera account id.
-- tokenId (number, required): The ID of the transfered token
+- tokenId (number, required): The ID of the transferred token
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
+
+${PromptGenerator.getParameterUsageInstructions()}
+
 ${usageInstructions}
 
-Example: "Transfer ERC721 token 0.0.6486793 with id 0 from 0xd94dc7f82f103757f715514e4a37186be6e4580b to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means transfering the ERC721 token (identified by 0) with contract id 0.0.6486793 from the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
-Example: "Transfer ERC721 token 0.0.6486793 with id 0 from 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means transfering the ERC721 token (identified by 0) with contract id 0.0.6486793 from the 0.0.6486793 Hedera account id to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
+Example:
+"Transfer ERC721 token 0.0.6486793 with id 0 from 0xd94...580b to 0.0.6486793" transfers token ID 0 from the given EVM address to the given Hedera account.
 `;
 };
+
+const postProcess = (response: RawTransactionResponse) =>
+  response?.scheduleId
+    ? `Scheduled transfer of ERC721 successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`
+    : `ERC721 token transferred successfully.
+    Transaction ID: ${response.transactionId}`;
 
 const transferERC721 = async (
   client: Client,
   context: Context,
   params: z.infer<ReturnType<typeof transferERC721Parameters>>,
 ) => {
-  try {
-    const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
+  const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
 
+  try {
     const normalisedParams = await HederaParameterNormaliser.normaliseTransferERC721Params(
       params,
       ERC721_TRANSFER_FUNCTION_ABI,
@@ -51,12 +64,12 @@ const transferERC721 = async (
       mirrorNode,
       client,
     );
+
     const tx = HederaBuilder.executeTransaction(normalisedParams);
-    const result = await handleTransaction(tx, client, context);
-    return result;
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
-    const desc = 'Failed to transfer ERC721';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    const message =
+      'Failed to transfer ERC721' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_erc721_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }

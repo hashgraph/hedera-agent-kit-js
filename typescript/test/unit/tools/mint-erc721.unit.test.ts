@@ -41,6 +41,10 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
     getAnyAddressParameterDescription: vi.fn(
       () => 'toAddress (str, optional): The address to which the token will be minted.',
     ),
+    getScheduledTransactionParamsDescription: vi.fn(
+      () =>
+        '- schedulingParams (object, optional): Set isScheduled = true to make the transaction scheduled.',
+    ),
   },
 }));
 
@@ -69,14 +73,12 @@ describe('mintERC721 tool (unit)', () => {
 
   const normalisedParams = {
     contractId: '0.0.5678',
-    functionParameters: new Uint8Array([0x01, 0x02, 0x03]), // must be Uint8Array
+    functionParameters: new Uint8Array([0x01, 0x02, 0x03]),
     gas: 100_000,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Setup default mocks
     mockedMirrornodeUtils.getMirrornodeService.mockReturnValue({
       getAccount: vi.fn(),
     } as any);
@@ -94,14 +96,6 @@ describe('mintERC721 tool (unit)', () => {
   it('executes happy path and returns success message', async () => {
     mockedNormaliser.normaliseMintERC721Params.mockResolvedValue(normalisedParams);
     mockedBuilder.executeTransaction.mockReturnValue({} as any);
-    mockedMirrornodeUtils.getMirrornodeService.mockReturnValue({
-      getAccount: vi.fn((accountId: string) => {
-        if (accountId === '0.0.9999') {
-          return { accountId: '0.0.9999' };
-        }
-        return undefined;
-      }),
-    } as any);
 
     const tool = toolFactory(context);
     const client = makeClient();

@@ -3,7 +3,7 @@ import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
-import { handleTransaction } from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -23,12 +23,22 @@ This tool will mint a new ERC721 token on Hedera.
 Parameters:
 - contractId (str, required): The id of the ERC721 contract
 - ${toAddressDesc}
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 
 Example: "Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means minting the ERC721 token with contract id 0.0.6486793 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
 Example: "Mint ERC721 token 0.0.6486793 to 0.0.6486793" means minting the ERC721 token with contract id 0.0.6486793 to the 0.0.6486793 Hedera account id.
 `;
 };
+
+const postProcess = (response: RawTransactionResponse) =>
+  response?.scheduleId
+    ? `Scheduled minting of ERC721 successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`
+    : `ERC721 token minted successfully.
+    Transaction ID: ${response.transactionId}`;
 
 const mintERC721 = async (
   client: Client,
@@ -47,8 +57,8 @@ const mintERC721 = async (
       client,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
-    const result = await handleTransaction(tx, client, context);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to mint ERC721';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
