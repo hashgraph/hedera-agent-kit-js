@@ -111,6 +111,24 @@ describe('Mint ERC721 Integration Tests', () => {
       expect(result.raw.status.toString()).toBe('SUCCESS');
       expect(result.raw.transactionId).toBeDefined();
     });
+
+    it('should schedule minting a token to a Hedera address', async () => {
+      const params: z.infer<ReturnType<typeof mintERC721Parameters>> = {
+        contractId: testTokenAddress,
+        toAddress: executorClient.operatorAccountId!.toString(),
+        schedulingParams: {
+          isScheduled: true,
+          adminKey: false,
+          waitForExpiry: false,
+        },
+      };
+
+      const tool = mintERC721Tool(context);
+      const result: any = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled minting of ERC721 successfully.');
+      expect(result.raw.scheduleId).toBeDefined();
+    });
   });
 
   describe('Invalid Mint ERC721 Scenarios', () => {

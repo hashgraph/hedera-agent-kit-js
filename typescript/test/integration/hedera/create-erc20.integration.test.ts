@@ -79,6 +79,22 @@ describe('Create ERC20 Integration Tests', () => {
 
       expect(contractInfo.contractId).toBeDefined();
     });
+
+    it('should schedule deployment of ERC20', async () => {
+      const params = {
+        tokenName: `ScheduledERC20-${new Date().getTime().toString()}`, // unique name to work around IDENTICAL_SCHEDULE_ALREADY_CREATED error
+        tokenSymbol: 'TERC',
+        schedulingParams: {
+          isScheduled: true,
+        },
+      };
+
+      const tool = createERC20Tool(context);
+      const result: any = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled creation of ERC20 successfully.');
+      expect(result.raw.scheduleId).toBeDefined();
+    });
   });
 
   describe('Invalid Create ERC20 Scenarios', () => {

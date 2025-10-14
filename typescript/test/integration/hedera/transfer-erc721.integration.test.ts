@@ -146,6 +146,27 @@ describe('Transfer ERC721 Integration Tests', () => {
       expect(result.raw.status.toString()).toBe('SUCCESS');
       expect(result.raw.transactionId).toBeDefined();
     });
+
+    it('should schedule a transfer of ERC721 token to another account using Hedera addresses', async () => {
+      const tokenId = await mintTokenForTransfer();
+      nextTokenId = tokenId + 1;
+
+      const params = {
+        contractId: testTokenAddress,
+        fromAddress: context.accountId,
+        toAddress: recipientAccountId,
+        tokenId,
+        schedulingParams: {
+          isScheduled: true,
+        },
+      };
+
+      const tool = transferERC721Tool(context);
+      const result: any = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled transfer of ERC721 successfully');
+      expect(result.raw.scheduleId).toBeDefined();
+    });
   });
 
   describe('Invalid Transfer ERC721 Scenarios', () => {

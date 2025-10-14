@@ -128,6 +128,33 @@ describe('Transfer ERC20 Integration Tests', () => {
       expect(result.raw.status.toString()).toBe('SUCCESS');
       expect(result.raw.transactionId).toBeDefined();
     });
+
+    it('should schedule transfer of ERC20 tokens to another account using Hedera address', async () => {
+      // Create a recipient account
+      recipientAccountId = await operatorWrapper
+        .createAccount({
+          initialBalance: 5,
+          key: executorClient.operatorPublicKey as PublicKey,
+        })
+        .then(resp => resp.accountId!.toString());
+
+      await wait(MIRROR_NODE_WAITING_TIME);
+
+      const params = {
+        contractId: testTokenAddress,
+        recipientAddress: recipientAccountId,
+        amount: 10,
+        schedulingParams: {
+          isScheduled: true,
+        },
+      };
+
+      const tool = transferERC20Tool(context);
+      const result: any = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled transfer of ERC20 successfully.');
+      expect(result.raw.scheduleId).toBeDefined();
+    });
   });
 
   describe('Invalid Transfer ERC20 Scenarios', () => {

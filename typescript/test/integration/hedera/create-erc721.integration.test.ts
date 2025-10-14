@@ -96,6 +96,20 @@ describe('Create ERC721 Integration Tests', () => {
 
       expect(contractInfo.contractId).toBeDefined();
     });
+
+    it('should schedule deployment of an ERC721 contract with minimal params', async () => {
+      const params = {
+        tokenName: `ScheduledERC721-${new Date().getTime().toString()}`, // unique name to work around IDENTICAL_SCHEDULE_ALREADY_CREATED error
+        tokenSymbol: 'STNFT',
+        schedulingParams: { isScheduled: true },
+      };
+
+      const tool = createERC721Tool(context);
+      const result: any = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled creation of ERC721 successfully.');
+      expect(result.raw.scheduleId).toBeDefined();
+    });
   });
 
   describe('Invalid Create ERC721 Scenarios', () => {
