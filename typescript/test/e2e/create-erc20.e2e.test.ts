@@ -98,8 +98,8 @@ describe('Create ERC20 Token E2E Tests', () => {
   it(
     'should schedule creation of erc20 token',
     itWithRetry(async () => {
-      const input =
-        'Schedule creation of erc20 token GoldToken with symbol GLD, decimals 2, initial supply 1000';
+      const name = `MyERC20-${new Date().getTime().toString()}`;
+      const input = `Create an ERC20 token named "${name}" with symbol M20. Schedule this transaction instead of executing it immediately.`;
 
       const result = await agentExecutor.invoke({ input });
       const observation = extractObservationFromLangchainResponse(result);

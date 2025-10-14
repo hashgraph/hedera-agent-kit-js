@@ -116,10 +116,11 @@ describe('Create ERC721 Token E2E Tests', () => {
   );
 
   it(
-    'should schedule creation of erc20 token',
+    'should schedule creation of erc721 token',
     itWithRetry(async () => {
-      const input =
-        'Create an ERC721 token named MyERC721 with symbol M721. Schedule this transaction instead of executing it immediately.';
+      const name = `MyERC721-${new Date().getTime().toString()}`;
+
+      const input = `Create an ERC721 token named "${name}" with symbol M721. Schedule this transaction instead of executing it immediately.`;
 
       const result = await agentExecutor.invoke({ input });
       const observation = extractObservationFromLangchainResponse(result);
