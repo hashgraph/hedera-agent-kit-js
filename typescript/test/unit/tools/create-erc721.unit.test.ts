@@ -7,7 +7,6 @@ import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import * as TxModeStrategy from '@/shared/strategies/tx-mode-strategy';
-import * as Contracts from '@/shared/constants/contracts';
 import { z } from 'zod';
 import { AgentMode } from '@/shared';
 

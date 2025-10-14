@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { CREATE_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 
-describe.skip('Create ERC20 Tool Matching Integration Tests', () => {
+describe('Create ERC20 Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -112,6 +112,33 @@ describe.skip('Create ERC20 Tool Matching Integration Tests', () => {
         );
         spy.mockRestore();
       }
+    });
+
+    it('should match scheduled transaction', async () => {
+      const input =
+        'Schedule deploy ERC20 token called MyCoin with symbol MC, 500 initial supply, and 8 decimals. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_ERC20_TOOL,
+        expect.objectContaining({
+          tokenName: 'MyCoin',
+          tokenSymbol: 'MC',
+          initialSupply: 500,
+          decimals: 8,
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
+        }),
+      );
     });
   });
 
