@@ -187,7 +187,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
+    // FIXME: the <xyz>Wrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround
     const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
       spenderAccountId.toString(),
@@ -200,6 +200,31 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     expect(spenderBalance.balance).toBe(30);
     expect(receiverBalance.balance).toBe(70);
+  });
+
+  it('should schedule transfer with allowance', async () => {
+    const context = {};
+    const tool = transferFungibleTokenWithAllowanceTool(context);
+
+    const params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>> = {
+      tokenId: tokenId.toString(),
+      sourceAccountId: executorAccountId.toString(),
+      transfers: [
+        { accountId: spenderAccountId.toString(), amount: 30 },
+        { accountId: receiverAccountId.toString(), amount: 70 },
+      ],
+      schedulingParams: {
+        isScheduled: true,
+        waitForExpiry: false,
+        adminKey: false,
+      },
+    };
+
+    await wait(MIRROR_NODE_WAITING_TIME);
+    const result: any = await tool.execute(spenderClient, context, params);
+
+    expect(result.humanMessage).toContain('Scheduled allowance transfer created successfully.');
+    expect(result.raw.status).toBe('SUCCESS');
   });
 
   it('should fail gracefully when trying to transfer more than allowance', async () => {

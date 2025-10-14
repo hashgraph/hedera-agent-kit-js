@@ -58,60 +58,82 @@ describe('Create Fungible Token E2E Tests', () => {
   });
 
   beforeEach(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
   });
 
-  it('creates a fungible token with minimal params via natural language', itWithRetry(async () => {
-    const input = `Create a fungible token named MyToken with symbol MTK`;
+  it(
+    'creates a fungible token with minimal params via natural language',
+    itWithRetry(async () => {
+      const input = `Create a fungible token named MyToken with symbol MTK`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const tokenId = extractTokenIdFromObservation(observation);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token created successfully');
+      expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    // Verify on-chain
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('MyToken');
-    expect(tokenInfo.symbol).toBe('MTK');
-    expect(tokenInfo.decimals).toBe(0);
-  }));
+      // Verify on-chain
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      expect(tokenInfo.name).toBe('MyToken');
+      expect(tokenInfo.symbol).toBe('MTK');
+      expect(tokenInfo.decimals).toBe(0);
+    }),
+  );
 
-  it('creates a fungible token with supply, decimals, and finite supply type', itWithRetry(async () => {
-    const input =
-      'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
+  it(
+    'creates a fungible token with supply, decimals, and finite supply type',
+    itWithRetry(async () => {
+      const input =
+        'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const tokenId = extractTokenIdFromObservation(observation);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token created successfully');
-    expect(observation.raw.tokenId).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('Token created successfully');
+      expect(observation.raw.tokenId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
-    expect(tokenInfo.name).toBe('GoldCoin');
-    expect(tokenInfo.symbol).toBe('GLD');
-    expect(tokenInfo.decimals).toBe(2);
-    expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
-    expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
-  }));
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      expect(tokenInfo.name).toBe('GoldCoin');
+      expect(tokenInfo.symbol).toBe('GLD');
+      expect(tokenInfo.decimals).toBe(2);
+      expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
+      expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
+    }),
+  );
 
-  it('handles invalid requests gracefully', itWithRetry(async () => {
-    const input =
-      'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
+  it(
+    'should schedule creation of a FT successfully',
+    itWithRetry(async () => {
+      const updateResult = await agentExecutor.invoke({
+        input: `Create a fungible token named MyToken with symbol MTK. Schedule the transaction instead of executing it immediately.`,
+      });
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('Scheduled transaction created successfully.');
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('cannot exceed max supply');
-    expect(observation.raw.error).toBeDefined();
-  }));
+  it(
+    'handles invalid requests gracefully',
+    itWithRetry(async () => {
+      const input =
+        'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('cannot exceed max supply');
+      expect(observation.raw.error).toBeDefined();
+    }),
+  );
 });

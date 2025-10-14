@@ -6,8 +6,9 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
-const submitTopicMessagePrompt = (_context: Context = {}) => {
+const submitTopicMessagePrompt = (context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
   return `
@@ -17,6 +18,7 @@ Parameters:
 - topicId (str, required): The ID of the topic to submit the message to
 - message (str, required): The message to submit to the topic
 - transactionMemo (str, optional): An optional memo to include on the transaction
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
 };
@@ -31,9 +33,14 @@ const submitTopicMessage = async (
   params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
 ) => {
   try {
-    const tx = HederaBuilder.submitTopicMessage(params);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return { ...result, topicId: params.topicId };
+    const normalisedParams = await HederaParameterNormaliser.normaliseSubmitTopicMessage(
+      params,
+      context,
+      client,
+    );
+    const tx = HederaBuilder.submitTopicMessage(normalisedParams);
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to submit message to topic';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

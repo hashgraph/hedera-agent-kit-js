@@ -93,7 +93,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .then(info => info.totalSupply.toInt());
 
     expect(result).toBeDefined();
-    expect(result.humanMessage).toContain('successfully minted with transaction id');
+    expect(result.humanMessage).toContain('Token successfully minted');
     expect(supplyAfter).toBe(supplyBefore + 1);
   });
 
@@ -115,8 +115,30 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .then(info => info.totalSupply.toInt());
 
     expect(result).toBeDefined();
-    expect(result.humanMessage).toContain('successfully minted with transaction id');
+    expect(result.humanMessage).toContain('Token successfully minted');
     expect(supplyAfter).toBe(supplyBefore + uris.length);
+  });
+
+  it('should schedule minting of additional supply for an existing non fungible token', async () => {
+    const tool = mintNonFungibleTokenTool(context);
+    const uris = ['ipfs://meta1.json', 'ipfs://meta2.json', 'ipfs://meta3.json'];
+    const params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>> = {
+      tokenId: nftTokenId.toString(),
+      uris,
+      schedulingParams: {
+        isScheduled: true,
+        waitForExpiry: false,
+        adminKey: true,
+      },
+    };
+
+    const result: any = await tool.execute(executorClient, context, params);
+
+    expect(result).toBeDefined();
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(result.humanMessage).toContain('Scheduled mint transaction created successfully.');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.raw.scheduleId).toBeDefined();
   });
 
   it('should fail gracefully for a non-existent NFT token', async () => {

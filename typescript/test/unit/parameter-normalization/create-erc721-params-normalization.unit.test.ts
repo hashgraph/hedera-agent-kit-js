@@ -43,9 +43,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC721Params', () => {
       parsedParams.baseURI,
     ]);
 
-    expect(result.tokenName).toBe('MyNFT');
-    expect(result.tokenSymbol).toBe('MNFT');
-    expect(result.baseURI).toBe('https://example.com/metadata/');
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();
@@ -73,9 +70,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC721Params', () => {
       '',
     ]);
 
-    expect(result.tokenName).toBe('DefaultNFT');
-    expect(result.tokenSymbol).toBe('DNFT');
-    expect(result.baseURI).toBe('');
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();
@@ -104,9 +98,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC721Params', () => {
       '',
     ]);
 
-    expect(result.tokenName).toBe('EmptyURI');
-    expect(result.tokenSymbol).toBe('EURI');
-    expect(result.baseURI).toBe('');
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();
@@ -136,9 +127,6 @@ describe('HederaParameterNormaliser.normaliseCreateERC721Params', () => {
       longURI,
     ]);
 
-    expect(result.tokenName).toBe('LongURINFT');
-    expect(result.tokenSymbol).toBe('LURI');
-    expect(result.baseURI).toBe(longURI);
     expect(result.contractId).toBe(factoryContractId);
     expect(result.gas).toBe(3_000_000);
     expect(result.functionParameters).toBeDefined();

@@ -21,10 +21,12 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
     transfers: { accountId: string; amount: number }[],
     memo?: string,
     sourceId = '0.0.1001',
+    isScheduled: boolean = false,
   ) => ({
     sourceAccountId: sourceId,
     transfers,
     transactionMemo: memo,
+    schedulingParams: isScheduled ? { isScheduled: false } : undefined,
   });
 
   const sumTinybars = (amounts: number[]) =>
@@ -38,11 +40,11 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
   });
 
   describe('Valid transfers', () => {
-    it('should normalize a single HBAR transfer correctly', () => {
+    it('should normalize a single HBAR transfer correctly', async () => {
       const params = makeParams([{ accountId: '0.0.1002', amount: 10 }], 'Test transfer');
 
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );
@@ -61,7 +63,7 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
       );
     });
 
-    it('should normalize multiple HBAR transfers correctly', () => {
+    it('should normalize multiple HBAR transfers correctly', async () => {
       const params = makeParams(
         [
           { accountId: '0.0.1002', amount: 5 },
@@ -71,8 +73,8 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
         'Multiple transfers',
       );
 
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );
@@ -90,12 +92,12 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
       });
     });
 
-    it('should handle very small and fractional HBAR amounts correctly', () => {
+    it('should handle very small and fractional HBAR amounts correctly', async () => {
       const smallAmount = 0.00000001;
       const params = makeParams([{ accountId: '0.0.1002', amount: smallAmount }]);
 
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );
@@ -105,12 +107,12 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
       expect((result.hbarTransfers[1].amount as Hbar).toTinybars()).toEqual(Long.fromNumber(-1));
     });
 
-    it('should handle large HBAR amounts correctly', () => {
+    it('should handle large HBAR amounts correctly', async () => {
       const largeAmount = 50_000_000_000;
       const params = makeParams([{ accountId: '0.0.1002', amount: largeAmount }]);
 
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );
@@ -120,10 +122,10 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
       expect(result.hbarTransfers[1].amount.toString()).toBe(`-${largeAmount} ℏ`);
     });
 
-    it('should handle transfers without memo', () => {
+    it('should handle transfers without memo', async () => {
       const params = makeParams([{ accountId: '0.0.1002', amount: 1 }]);
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );
@@ -132,32 +134,32 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
   });
 
   describe('Error conditions', () => {
-    it.each([-5, 0])('should throw error for invalid transfer amount: %p', invalidAmount => {
+    it.each([-5, 0])('should throw error for invalid transfer amount: %p', async invalidAmount => {
       const params = makeParams([{ accountId: '0.0.1002', amount: invalidAmount }]);
-      expect(() =>
-        HederaParameterNormaliser.normaliseTransferHbar(params, mockContext, mockClient),
-      ).toThrow(`Invalid transfer amount: ${invalidAmount}`);
+      await expect(
+        HederaParameterNormaliser.normaliseTransferHbar(params as any, mockContext, mockClient),
+      ).rejects.toThrow(`Invalid transfer amount: ${invalidAmount}`);
     });
 
-    it('should throw error when one of multiple transfers is invalid', () => {
+    it('should throw error when one of multiple transfers is invalid', async () => {
       const params = makeParams([
         { accountId: '0.0.1002', amount: 5 },
         { accountId: '0.0.1003', amount: -2 },
         { accountId: '0.0.1004', amount: 3 },
       ]);
 
-      expect(() =>
-        HederaParameterNormaliser.normaliseTransferHbar(params, mockContext, mockClient),
-      ).toThrow('Invalid transfer amount: -2');
+      await expect(
+        HederaParameterNormaliser.normaliseTransferHbar(params as any, mockContext, mockClient),
+      ).rejects.toThrow('Invalid transfer amount: -2');
     });
   });
 
   describe('Edge cases', () => {
-    it('should preserve exact decimal precision', () => {
+    it('should preserve exact decimal precision', async () => {
       const smallAmount = 0.12345678;
       const params = makeParams([{ accountId: '0.0.1002', amount: smallAmount }]);
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );
@@ -169,9 +171,9 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
       );
     });
 
-    it('should call AccountResolver with correct parameters', () => {
+    it('should call AccountResolver with correct parameters', async () => {
       const params = makeParams([{ accountId: '0.0.1002', amount: 1 }], undefined, '0.0.9999');
-      HederaParameterNormaliser.normaliseTransferHbar(params, mockContext, mockClient);
+      await HederaParameterNormaliser.normaliseTransferHbar(params as any, mockContext, mockClient);
 
       expect(AccountResolver.resolveAccount).toHaveBeenCalledTimes(1);
       expect(AccountResolver.resolveAccount).toHaveBeenCalledWith(
@@ -183,15 +185,15 @@ describe('HbarTransferNormalizer.normaliseTransferHbar', () => {
   });
 
   describe('Balance verification', () => {
-    it('should ensure total transfers sum to zero', () => {
+    it('should ensure total transfers sum to zero', async () => {
       const params = makeParams([
         { accountId: '0.0.1002', amount: 10 },
         { accountId: '0.0.1003', amount: 5 },
         { accountId: '0.0.1004', amount: 15 },
       ]);
 
-      const result = HederaParameterNormaliser.normaliseTransferHbar(
-        params,
+      const result = await HederaParameterNormaliser.normaliseTransferHbar(
+        params as any,
         mockContext,
         mockClient,
       );

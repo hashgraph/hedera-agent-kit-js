@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach, afterAll } from 'vitest';
-import { Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import updateAccountTool from '@/plugins/core-account-plugin/tools/account/update-account';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
@@ -7,10 +7,11 @@ import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
 
 describe('Update Account Integration Tests', () => {
-  let customClient: Client;
   let operatorClient: Client;
+  let executorClient: Client;
   let context: Context;
   let operatorWrapper: HederaOperationsWrapper;
+  let executorAccountId: AccountId;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
@@ -24,33 +25,33 @@ describe('Update Account Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    const privateKey = PrivateKey.generateED25519();
-    const accountId = await operatorWrapper
+    const executorKeyPair = PrivateKey.generateED25519();
+    executorAccountId = await operatorWrapper
       .createAccount({
-        key: privateKey.publicKey as Key,
+        key: executorKeyPair.publicKey as Key,
         initialBalance: 5,
       })
       .then(resp => resp.accountId!);
 
-    customClient = getCustomClient(accountId, privateKey);
+    executorClient = getCustomClient(executorAccountId, executorKeyPair);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: customClient.operatorAccountId!.toString(),
+      accountId: executorAccountId.toString(),
     };
   });
 
   afterEach(async () => {
-    const customHederaOperationsWrapper = new HederaOperationsWrapper(customClient);
+    const customHederaOperationsWrapper = new HederaOperationsWrapper(executorClient);
     await customHederaOperationsWrapper.deleteAccount({
-      accountId: customClient.operatorAccountId!,
+      accountId: executorClient.operatorAccountId!,
       transferAccountId: operatorClient.operatorAccountId!,
     });
-    customClient.close();
+    executorClient.close();
   });
 
   it('should update account memo and maxAutomaticTokenAssociations', async () => {
-    const accountId = customClient.operatorAccountId!.toString();
+    const accountId = executorClient.operatorAccountId!.toString();
 
     const tool = updateAccountTool(context);
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
@@ -59,7 +60,7 @@ describe('Update Account Integration Tests', () => {
       maxAutomaticTokenAssociations: 4,
     } as any;
 
-    const result: any = await tool.execute(customClient, context, params);
+    const result: any = await tool.execute(executorClient, context, params);
 
     expect(result.humanMessage).toContain('Account successfully updated.');
     expect(result.raw.transactionId).toBeDefined();
@@ -71,7 +72,7 @@ describe('Update Account Integration Tests', () => {
   });
 
   it('should update declineStakingReward flag', async () => {
-    const accountId = customClient.operatorAccountId!.toString();
+    const accountId = executorClient.operatorAccountId!.toString();
 
     const tool = updateAccountTool(context);
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
@@ -79,7 +80,7 @@ describe('Update Account Integration Tests', () => {
       declineStakingReward: true,
     } as any;
 
-    const result: any = await tool.execute(customClient, context, params);
+    const result: any = await tool.execute(executorClient, context, params);
     expect(result.raw.status).toBeDefined();
 
     const info = await operatorWrapper.getAccountInfo(accountId);
@@ -94,12 +95,35 @@ describe('Update Account Integration Tests', () => {
       accountMemo: 'x',
     } as any;
 
-    const result: any = await tool.execute(customClient, context, params);
+    const result: any = await tool.execute(executorClient, context, params);
 
     if (typeof result === 'string') {
       expect(result).toMatch(/INVALID_ACCOUNT_ID|NOT_FOUND|ACCOUNT_DELETED/i);
     } else {
       expect(result.raw.status).not.toBe('SUCCESS');
     }
+  });
+
+  it('should successfully schedule an account update', async () => {
+    const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
+      accountId: executorAccountId!.toString(),
+      accountMemo: 'updated via integration test',
+      maxAutomaticTokenAssociations: 4,
+      schedulingParams: {
+        isScheduled: true,
+        waitForExpiry: false,
+        adminKey: executorClient.operatorPublicKey!.toStringRaw(),
+      },
+    };
+
+    const tool = updateAccountTool(context);
+    const result = await tool.execute(executorClient, context, params);
+
+    expect(result.humanMessage).toContain('Scheduled account update created successfully.');
+    expect(result.humanMessage).toContain('Transaction ID:');
+    expect(result.humanMessage).toContain('Schedule ID:');
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.raw.scheduleId).toBeDefined();
   });
 });

@@ -1,11 +1,15 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, Hbar, Key, Transaction, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
+import { AccountId, Hbar, Key, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from '@/shared/parameter-schemas/common.zod';
 
-export const transferHbarParameters = (_context: Context = {}) =>
-  z.object({
+export const transferHbarParameters = (context: Context = {}) =>
+  optionalScheduledTransactionParams(context).extend({
     transfers: z
       .array(
         z.object({
@@ -22,8 +26,8 @@ export const transferHbarParameters = (_context: Context = {}) =>
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
 
-export const transferHbarParametersNormalised = (_context: Context = {}) =>
-  z.object({
+export const transferHbarParametersNormalised = (context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(context).extend({
     hbarTransfers: z.array(
       z.object({
         accountId: z.union([z.string(), z.instanceof(AccountId)]),
@@ -40,26 +44,26 @@ export const transferHbarParametersNormalised = (_context: Context = {}) =>
   });
 
 export const createAccountParameters = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParams(_context).extend({
     publicKey: z
       .string()
       .optional()
-      .describe('Account public key. If not provided, a public key of the operator will be used'),
-    accountMemo: z.string().optional().describe('Optional memo for the account'),
+      .describe('Account public key. If not provided, the operator’s public key will be used.'),
+    accountMemo: z.string().optional().describe('Optional memo for the account.'),
     initialBalance: z
       .number()
       .optional()
       .default(0)
-      .describe('Initial HBAR balance to fund the account (defaults to 0)'),
+      .describe('Initial HBAR balance to fund the account (defaults to 0).'),
     maxAutomaticTokenAssociations: z
       .number()
       .optional()
       .default(-1)
-      .describe('Max automatic token associations (-1 for unlimited)'),
+      .describe('Max automatic token associations (-1 for unlimited).'),
   });
 
 export const createAccountParametersNormalised = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParamsNormalised(_context).extend({
     accountMemo: z.string().optional(),
     initialBalance: z.union([z.string(), z.number()]).optional(),
     key: z.instanceof(Key).optional(),
@@ -84,8 +88,8 @@ export const deleteAccountParametersNormalised = (_context: Context = {}) =>
   });
 
 export const updateAccountParameters = (_context: Context = {}) =>
-  z.object({
-    // If not passed, will be injected from context in normalisation
+  optionalScheduledTransactionParams(_context).extend({
+    // If not passed, will be injected from context in normalization
     accountId: z
       .string()
       .optional()
@@ -104,7 +108,7 @@ export const updateAccountParameters = (_context: Context = {}) =>
   });
 
 export const updateAccountParametersNormalised = (_context: Context = {}) =>
-  z.object({
+  optionalScheduledTransactionParamsNormalised(_context).extend({
     accountId: z.instanceof(AccountId),
     maxAutomaticTokenAssociations: z.union([z.number(), z.instanceof(Long)]).optional(),
     stakedAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
@@ -122,6 +126,11 @@ export const accountBalanceQueryParameters = (_context: Context = {}) =>
     accountId: z.string().optional().describe('The account ID to query.'),
   });
 
+export const accountBalanceQueryParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().describe('The account ID to query.'),
+  });
+
 export const accountTokenBalancesQueryParameters = (_context: Context = {}) =>
   z.object({
     accountId: z
@@ -131,18 +140,15 @@ export const accountTokenBalancesQueryParameters = (_context: Context = {}) =>
     tokenId: z.string().optional().describe('The token ID to query.'),
   });
 
+export const accountTokenBalancesQueryParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string(),
+    tokenId: z.string().optional(),
+  });
+
 export const signScheduleTransactionParameters = (_context: Context = {}) =>
   z.object({
     scheduleId: z.string().describe('The ID of the scheduled transaction to sign'),
-  });
-
-export const createScheduleTransactionParametersNormalised = (_context: Context = {}) =>
-  z.object({
-    scheduledTransaction: z.instanceof(Transaction),
-    params: z.object({
-      scheduleMemo: z.string().optional(),
-      adminKey: z.instanceof(Key).optional(),
-    }),
   });
 
 export const scheduleDeleteTransactionParameters = (_context: Context = {}) =>

@@ -24,7 +24,7 @@ describe('Integration - Hedera Get Contract Info', () => {
     // create an executor account
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 7 })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
@@ -48,7 +48,7 @@ describe('Integration - Hedera Get Contract Info', () => {
       contractId: deployedContractId,
     });
 
-    expect(result.raw.contractId.toString()).toBe(deployedContractId);
+    expect(result.raw.contractId).toBe(deployedContractId);
     expect(result.raw.contractInfo.contract_id).toBe(deployedContractId);
   });
 

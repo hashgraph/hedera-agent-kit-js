@@ -1,29 +1,31 @@
 import {
+  AccountAllowanceApproveTransaction,
+  AccountCreateTransaction,
+  AccountDeleteTransaction,
+  AccountId,
+  AccountUpdateTransaction,
+  ContractExecuteTransaction,
+  ScheduleCreateTransaction,
+  ScheduleDeleteTransaction,
+  ScheduleSignTransaction,
   TokenAirdropTransaction,
+  TokenAssociateTransaction,
   TokenCreateTransaction,
   TokenDeleteTransaction,
+  TokenDissociateTransaction,
+  TokenId,
+  TokenMintTransaction,
+  TokenUpdateTransaction,
   TopicCreateTransaction,
   TopicDeleteTransaction,
   TopicMessageSubmitTransaction,
-  TransferTransaction,
-  ContractExecuteTransaction,
-  TokenMintTransaction,
-  TokenAssociateTransaction,
-  AccountCreateTransaction,
-  AccountDeleteTransaction,
-  AccountUpdateTransaction,
-  ScheduleSignTransaction,
-  ScheduleCreateTransaction,
-  TokenUpdateTransaction,
-  ScheduleDeleteTransaction,
-  TokenDissociateTransaction,
   TopicUpdateTransaction,
-  AccountId,
-  TokenId,
-  AccountAllowanceApproveTransaction,
+  Transaction,
+  TransferTransaction,
 } from '@hashgraph/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
+  approveNftAllowanceParametersNormalised,
   associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
@@ -32,22 +34,20 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
-  approveNftAllowanceParametersNormalised,
   transferFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
-  createAccountParametersNormalised,
-  deleteAccountParametersNormalised,
-  transferHbarParametersNormalised,
-  updateAccountParametersNormalised,
-  createScheduleTransactionParametersNormalised,
-  signScheduleTransactionParameters,
-  scheduleDeleteTransactionParameters,
   approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParametersNormalised,
+  createAccountParametersNormalised,
+  deleteAccountParametersNormalised,
+  scheduleDeleteTransactionParameters,
+  signScheduleTransactionParameters,
+  transferHbarParametersNormalised,
   transferHbarWithAllowanceParametersNormalised,
+  updateAccountParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParametersNormalised,
@@ -56,30 +56,26 @@ import {
   updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { contractExecuteTransactionParametersNormalised } from '@/shared/parameter-schemas/evm.zod';
+import { optionalScheduledTransactionParamsNormalised } from '@/shared/parameter-schemas/common.zod';
 
 export default class HederaBuilder {
-  static createScheduleTransaction(
-    params: z.infer<ReturnType<typeof createScheduleTransactionParametersNormalised>>,
-  ) {
-    return new ScheduleCreateTransaction(params.params).setScheduledTransaction(
-      params.scheduledTransaction,
-    );
-  }
-
   static createFungibleToken(
     params: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenCreateTransaction(params);
+    const tx = new TokenCreateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static createNonFungibleToken(
     params: z.infer<ReturnType<typeof createNonFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenCreateTransaction(params);
+    const tx = new TokenCreateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
-    return new TransferTransaction(params);
+    const tx = new TransferTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static transferNonFungibleTokenWithAllowance(
@@ -145,7 +141,7 @@ export default class HederaBuilder {
       tx.setTransactionMemo(params.transactionMemo);
     }
 
-    return tx;
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static updateToken(params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>) {
@@ -165,7 +161,7 @@ export default class HederaBuilder {
     const { transactionMemo, ...rest } = params as any;
     const tx = new TopicMessageSubmitTransaction(rest);
     if (transactionMemo) tx.setTransactionMemo(transactionMemo);
-    return tx;
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static updateTopic(params: z.infer<ReturnType<typeof updateTopicParametersNormalised>>) {
@@ -181,13 +177,15 @@ export default class HederaBuilder {
   static mintFungibleToken(
     params: z.infer<ReturnType<typeof mintFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenMintTransaction(params);
+    const tx = new TokenMintTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static mintNonFungibleToken(
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>>,
   ) {
-    return new TokenMintTransaction(params);
+    const tx = new TokenMintTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static dissociateToken(params: z.infer<ReturnType<typeof dissociateTokenParametersNormalised>>) {
@@ -195,7 +193,8 @@ export default class HederaBuilder {
   }
 
   static createAccount(params: z.infer<ReturnType<typeof createAccountParametersNormalised>>) {
-    return new AccountCreateTransaction(params);
+    const tx = new AccountCreateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static deleteAccount(params: z.infer<ReturnType<typeof deleteAccountParametersNormalised>>) {
@@ -203,7 +202,8 @@ export default class HederaBuilder {
   }
 
   static updateAccount(params: z.infer<ReturnType<typeof updateAccountParametersNormalised>>) {
-    return new AccountUpdateTransaction(params);
+    const tx = new AccountUpdateTransaction(params);
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static deleteToken(params: z.infer<ReturnType<typeof deleteTokenParametersNormalised>>) {
@@ -266,6 +266,21 @@ export default class HederaBuilder {
     const tx = new AccountAllowanceApproveTransaction(params);
     if (params.transactionMemo) {
       tx.setTransactionMemo(params.transactionMemo);
+    }
+    return tx;
+  }
+
+  static maybeWrapInSchedule(
+    tx: Transaction,
+    schedulingParams?: z.infer<
+      ReturnType<typeof optionalScheduledTransactionParamsNormalised>
+    >['schedulingParams'],
+  ): Transaction {
+    if (schedulingParams?.isScheduled) {
+      return new ScheduleCreateTransaction(schedulingParams)
+        .setScheduledTransaction(tx)
+        .setWaitForExpiry(schedulingParams.waitForExpiry || false) // passing through constructor is failing
+        .setExpirationTime(schedulingParams.expirationTime || null); // passing through constructor is failing
     }
     return tx;
   }

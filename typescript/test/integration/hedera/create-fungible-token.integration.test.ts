@@ -6,6 +6,8 @@ import { getOperatorClientForTests, HederaOperationsWrapper } from '../../utils'
 import { z } from 'zod';
 import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { wait } from '../../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Create Fungible Token Integration Tests', () => {
   let client: Client;
@@ -92,6 +94,28 @@ describe('Create Fungible Token Integration Tests', () => {
       expect(result.humanMessage).toContain('Token created successfully');
       expect(tokenInfo.treasuryAccountId?.toString()).toBe(params.treasuryAccountId);
       expect(tokenInfo.supplyKey!.toString()).toBe(client.operatorPublicKey?.toStringDer());
+    });
+
+    it('Should schedule creation of an NFT', async () => {
+      const params: z.infer<ReturnType<typeof createFungibleTokenParameters>> = {
+        tokenName: 'SupplyToken',
+        tokenSymbol: 'SUP',
+        treasuryAccountId: context.accountId!,
+        isSupplyKey: true,
+        schedulingParams: {
+          isScheduled: true,
+          adminKey: false,
+          waitForExpiry: false,
+        },
+      } as any;
+
+      await wait(MIRROR_NODE_WAITING_TIME);
+      const tool = createFungibleTokenTool(context);
+      const result: any = await tool.execute(client, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled transaction created successfully.');
+      expect(result.raw.scheduleId).toBeDefined();
+      expect(result.raw.transactionId).toBeDefined();
     });
   });
 

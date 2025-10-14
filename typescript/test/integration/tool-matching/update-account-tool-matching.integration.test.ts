@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
-describe.skip('Update Account Tool Matching Integration Tests', () => {
+describe('Update Account Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -27,12 +27,12 @@ describe.skip('Update Account Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match update account tool with memo update', async () => {
       const input = 'Update account 0.0.1234 memo to "Updated Memo"';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
       await agentExecutor.invoke({ input });
 
@@ -48,7 +48,7 @@ describe.skip('Update Account Tool Matching Integration Tests', () => {
         'Set max automatic token associations to 5 and decline staking rewards for my account';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
       await agentExecutor.invoke({ input });
 
@@ -66,7 +66,7 @@ describe.skip('Update Account Tool Matching Integration Tests', () => {
       const input = 'Update the account 0.0.9 to stake to 0.0.10';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
       await agentExecutor.invoke({ input });
 
@@ -74,6 +74,31 @@ describe.skip('Update Account Tool Matching Integration Tests', () => {
       expect(spy).toHaveBeenCalledWith(
         UPDATE_ACCOUNT_TOOL,
         expect.objectContaining({ accountId: '0.0.9', stakedAccountId: '0.0.10' }),
+      );
+    });
+
+    it('should extract scheduling parameters when provided', async () => {
+      const input =
+        'Schedule an account update for account 0.0.1234. Set the account memo to "updated with scheduled transaction". Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        UPDATE_ACCOUNT_TOOL,
+        expect.objectContaining({
+          accountId: '0.0.1234',
+          accountMemo: 'updated with scheduled transaction',
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
+        }),
       );
     });
 
@@ -92,7 +117,7 @@ describe.skip('Update Account Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
         await agentExecutor.invoke({ input: variation.input });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
@@ -104,7 +129,7 @@ describe.skip('Update Account Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have update account tool available', () => {
       const tools = toolkit.getTools();
       const updateAccount = tools.find(tool => tool.name === 'update_account_tool');

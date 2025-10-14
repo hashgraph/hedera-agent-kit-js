@@ -72,7 +72,7 @@ export const getContractInfoQuery = async (
     const contractInfo: ContractInfo = await mirrornodeService.getContractInfo(params.contractId);
 
     return {
-      raw: { contractId: params.contractId, contractInfo },
+      raw: { contractId: contractInfo.contract_id, contractInfo },
       humanMessage: postProcess(contractInfo),
     };
   } catch (error) {

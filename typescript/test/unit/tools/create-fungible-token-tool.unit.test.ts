@@ -48,6 +48,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
       () => 'accountId (string): The account to create the token',
     ),
     getContextSnippet: vi.fn(() => 'some context'),
+    getScheduledTransactionParamsDescription: vi.fn(() => 'mocked scheduled params desc'),
   },
 }));
 
@@ -120,8 +121,8 @@ describe('create-token tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw).toBeDefined();
-    expect(res.humanMessage).toContain('Token created successfully at address 0.0.5005');
-    expect(res.humanMessage).toContain('transaction id 0.0.1234@');
+    expect(res.humanMessage).toContain('Token created successfully.');
+    expect(res.humanMessage).toContain('0.0.1234@');
 
     expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledTimes(1);
     expect(mockedBuilder.createFungibleToken).toHaveBeenCalledTimes(1);

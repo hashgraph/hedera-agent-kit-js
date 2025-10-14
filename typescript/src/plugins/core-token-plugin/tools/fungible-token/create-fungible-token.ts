@@ -31,12 +31,21 @@ Parameters:
 - decimals (int, optional): The number of decimals the token supports. Defaults to 0
 - ${treasuryAccountDesc}
 - isSupplyKey (boolean, optional): If user wants to set supply key set to true, otherwise false
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Token created successfully at address ${response.tokenId?.toString()} with transaction id ${response.transactionId}`;
+  if (response.scheduleId) {
+    return `Scheduled transaction created successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  const tokenIdStr = response.tokenId ? response.tokenId.toString() : 'unknown';
+  return `Token created successfully.
+Transaction ID: ${response.transactionId}
+Token ID: ${tokenIdStr}`;
 };
 
 const createFungibleToken = async (
@@ -53,8 +62,8 @@ const createFungibleToken = async (
       mirrornodeService,
     );
     const tx = HederaBuilder.createFungibleToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to create fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

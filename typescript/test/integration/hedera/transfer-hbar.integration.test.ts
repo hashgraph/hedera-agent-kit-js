@@ -50,7 +50,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
   afterAll(async () => {
     if (executorClient) {
-      // Transfer remaining balance back to operator and delete executor account
+      // Transfer remaining balance back to operator and delete an executor account
       try {
         await executorWrapper.deleteAccount({
           accountId: recipientAccountId,
@@ -216,6 +216,32 @@ describe('Transfer HBAR Integration Tests', () => {
         0.05,
         executorWrapper,
       );
+    });
+
+    it('should successfully create a scheduled transaction of transfer HBAR', async () => {
+      const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
+        transfers: [
+          {
+            accountId: recipientAccountId.toString(),
+            amount: 0.05,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
+          waitForExpiry: false,
+          adminKey: false,
+        },
+      };
+
+      const tool = transferHbarTool(context);
+      const result = await tool.execute(executorClient, context, params);
+
+      expect(result.humanMessage).toContain('Scheduled HBAR transfer created successfully.');
+      expect(result.humanMessage).toContain('Transaction ID:');
+      expect(result.humanMessage).toContain('Schedule ID:');
+      expect(result.raw.status).toBe('SUCCESS');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.raw.scheduleId).toBeDefined();
     });
   });
 

@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { AccountId, PublicKey, TopicId } from '@hashgraph/sdk';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from '@/shared/parameter-schemas/common.zod';
 
 export const getTopicInfoParameters = (_context: Context = {}) => {
   return z.object({
@@ -34,8 +38,8 @@ export const createTopicParametersNormalised = (_context: Context = {}) =>
     adminKey: z.custom<PublicKey>().optional().describe('The admin key of topic'),
   });
 
-export const submitTopicMessageParameters = (_context: Context = {}) => {
-  return z.object({
+export const submitTopicMessageParameters = (_context: Context = {}) =>
+  optionalScheduledTransactionParams(_context).extend({
     topicId: z.string().describe('The ID of the topic to submit the message to'),
     message: z.string().describe('The message to submit to the topic'),
     transactionMemo: z
@@ -43,10 +47,11 @@ export const submitTopicMessageParameters = (_context: Context = {}) => {
       .optional()
       .describe('An optional memo to include on the submitted transaction (optional).'),
   });
-};
 
 export const submitTopicMessageParametersNormalised = (_context: Context = {}) =>
-  submitTopicMessageParameters(_context).extend({});
+  submitTopicMessageParameters(_context)
+    .omit({ schedulingParams: true })
+    .merge(optionalScheduledTransactionParamsNormalised(_context));
 
 export const deleteTopicParameters = (_context: Context = {}) =>
   z.object({

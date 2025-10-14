@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { Client, Key, PrivateKey, Status } from '@hashgraph/sdk';
 import createAccountTool from '@/plugins/core-account-plugin/tools/account/create-account';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
@@ -33,7 +33,6 @@ describe('Create Account Integration Tests', () => {
 
   afterAll(async () => {
     if (executorClient) {
-      // Transfer remaining balance back to operator and delete an executor account
       try {
         await executorWrapper.deleteAccount({
           accountId: executorClient.operatorAccountId!,
@@ -59,11 +58,10 @@ describe('Create Account Integration Tests', () => {
       expect(result.humanMessage).toContain('Account created successfully.');
       expect(result.humanMessage).toContain('Transaction ID:');
       expect(result.humanMessage).toContain('New Account ID:');
-      expect(result.raw.status).toBe('SUCCESS');
+      expect(result.raw.status).toBe(Status.Success.toString());
       expect(result.raw.transactionId).toBeDefined();
       expect(result.raw.accountId).toBeDefined();
 
-      // verify the account exists by fetching info
       const info = await executorWrapper.getAccountInfo(result.raw.accountId!.toString());
       expect(info.accountId.toString()).toBe(result.raw.accountId!.toString());
     });
@@ -78,11 +76,10 @@ describe('Create Account Integration Tests', () => {
       const result = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain('Account created successfully.');
-      expect(result.raw.status).toBe('SUCCESS');
+      expect(result.raw.status).toBe(Status.Success.toString());
       const newAccountId = result.raw.accountId!.toString();
 
       const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
-      // At least 0.05 HBAR in tinybars
       expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8);
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
@@ -98,7 +95,21 @@ describe('Create Account Integration Tests', () => {
       const tool = createAccountTool(context);
       const result = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.status).toBe('SUCCESS');
+      expect(result.raw.status).toBe(Status.Success.toString());
+      expect(result.raw.accountId).toBeDefined();
+    });
+
+    it('should schedule a create account transaction with explicit public key', async () => {
+      const publicKey = executorClient.operatorPublicKey as Key;
+      const params = {
+        publicKey: publicKey.toString(),
+        schedulingParams: { isScheduled: true },
+      };
+
+      const tool = createAccountTool(context);
+      const result = await tool.execute(executorClient, context, params);
+
+      expect(result.raw.status).toBe(Status.Success.toString());
       expect(result.raw.accountId).toBeDefined();
     });
   });
@@ -112,13 +123,8 @@ describe('Create Account Integration Tests', () => {
       const tool = createAccountTool(context);
       const result = await tool.execute(executorClient, context, params);
 
-      if (typeof result === 'string') {
-        expect(result).toContain(
-          'public key cannot be decoded from bytes: cannot decode ECDSA public key from this DER format',
-        );
-      } else {
-        expect(result.raw.status).not.toBe('SUCCESS');
-      }
+      expect(result.raw.status).not.toBe(Status.Success.toString());
+      expect(result.humanMessage).toContain('public key cannot be decoded');
     });
 
     it('should fail with negative initial balance', async () => {
@@ -129,11 +135,8 @@ describe('Create Account Integration Tests', () => {
       const tool = createAccountTool(context);
       const result = await tool.execute(executorClient, context, params);
 
-      if (typeof result === 'string') {
-        expect(result).toContain('failed precheck with status INVALID_INITIAL_BALANCE');
-      } else {
-        expect(result.raw.status).not.toBe('SUCCESS');
-      }
+      expect(result.raw.status).not.toBe(Status.Success.toString());
+      expect(result.humanMessage).toContain('INVALID_INITIAL_BALANCE');
     });
   });
 });

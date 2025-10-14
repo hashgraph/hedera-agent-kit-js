@@ -24,6 +24,7 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
+    getScheduledTransactionParamsDescription: vi.fn(() => 'mocked scheduled params desc'),
   },
 }));
 

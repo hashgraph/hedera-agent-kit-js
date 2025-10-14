@@ -11,6 +11,7 @@ import {
   TokenAirdropsResponse,
   TokenAllowanceResponse,
   NftBalanceResponse,
+  ScheduledTransactionDetailsResponse,
 } from './types';
 
 export interface IHederaMirrornodeService {
@@ -30,4 +31,5 @@ export interface IHederaMirrornodeService {
     spenderAccountId: string,
   ): Promise<TokenAllowanceResponse>;
   getAccountNfts(accountId: string): Promise<NftBalanceResponse>;
+  getScheduledTransactionDetails(scheduleId: string): Promise<ScheduledTransactionDetailsResponse>;
 }

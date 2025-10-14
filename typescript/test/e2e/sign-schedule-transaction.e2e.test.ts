@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, ScheduleCreateTransaction, TransferTransaction } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import {
   createLangchainTestSetup,
@@ -10,6 +10,8 @@ import {
 } from '../utils';
 import { extractObservationFromLangchainResponse } from 'test/utils/general-util';
 import { itWithRetry } from '../utils/retry-util';
+import { transferHbarParametersNormalised } from '@/shared/parameter-schemas/account.zod';
+import { z } from 'zod';
 
 describe('Sign Schedule Transaction E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -18,7 +20,7 @@ describe('Sign Schedule Transaction E2E Tests', () => {
   let executorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
-  let recipientAccount: AccountId;
+  let recipientAccountId: AccountId;
 
   beforeAll(async () => {
     // operator client creation
@@ -52,7 +54,7 @@ describe('Sign Schedule Transaction E2E Tests', () => {
 
   beforeEach(async () => {
     // Create recipient account
-    recipientAccount = await executorWrapper
+    recipientAccountId = await executorWrapper
       .createAccount({
         key: executorClient.operatorPublicKey as Key,
         initialBalance: 0,
@@ -62,45 +64,60 @@ describe('Sign Schedule Transaction E2E Tests', () => {
 
   afterEach(async () => {
     await executorWrapper.deleteAccount({
-      accountId: recipientAccount,
+      accountId: recipientAccountId,
       transferAccountId: executorClient.operatorAccountId!,
     });
   });
 
-  it('should sign a scheduled transaction', itWithRetry(async () => {
-    // First, create a scheduled transaction
-    const transferAmount = 0.1;
-    const transferTx = new TransferTransaction()
-      .addHbarTransfer(executorClient.operatorAccountId!, -transferAmount)
-      .addHbarTransfer(recipientAccount, transferAmount);
+  it(
+    'should sign a scheduled transaction',
+    itWithRetry(async () => {
+      // First, create a scheduled transaction
+      const transferAmount = 0.1;
+      const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
+        hbarTransfers: [
+          {
+            accountId: recipientAccountId,
+            amount: transferAmount,
+          },
+          {
+            accountId: executorClient.operatorAccountId!,
+            amount: -transferAmount,
+          },
+        ],
+        schedulingParams: {
+          isScheduled: true,
+          adminKey: operatorClient.operatorPublicKey as PublicKey,
+        },
+      };
 
-    // Create the scheduled transaction
-    const scheduleTx = await operatorWrapper.createScheduleTransaction({
-      scheduledTransaction: transferTx,
-      params: {
-        scheduleMemo: 'Test scheduled transfer',
-      },
-    });
-    
-    const scheduleId = scheduleTx.scheduleId!.toString();
-    // Now sign the scheduled transaction using the agent
-    const input = `Sign the scheduled transaction with ID ${scheduleId}`;
+      const scheduleTx = await operatorWrapper.transferHbar(transferParams);
+      const scheduleId = scheduleTx.scheduleId!.toString();
+      // Now sign the scheduled transaction using the agent
+      const input = `Sign the scheduled transaction with ID ${scheduleId}`;
 
-    const result = await agentExecutor.invoke({ input });
+      const result = await agentExecutor.invoke({ input });
 
+      const observation = extractObservationFromLangchainResponse(result);
+      expect(observation.humanMessage || JSON.stringify(observation)).toContain(
+        'Transaction successfully signed',
+      );
+      expect(observation.humanMessage || JSON.stringify(observation)).toContain('Transaction ID');
+    }),
+  );
 
-    const observation = extractObservationFromLangchainResponse(result);
-    expect(observation.humanMessage || JSON.stringify(observation)).toContain('Transaction successfully signed');
-    expect(observation.humanMessage || JSON.stringify(observation)).toContain('Transaction ID');
-  }));
+  it(
+    'should handle invalid schedule ID',
+    itWithRetry(async () => {
+      const invalidScheduleId = '0.0.999999';
+      const input = `Sign the scheduled transaction with ID ${invalidScheduleId}`;
 
-  it('should handle invalid schedule ID', itWithRetry(async () => {
-    const invalidScheduleId = '0.0.999999';
-    const input = `Sign the scheduled transaction with ID ${invalidScheduleId}`;
-
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    // Should handle the error gracefully
-    expect(observation.humanMessage || JSON.stringify(observation)).toContain('Failed to sign scheduled transaction');
-  }));
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      // Should handle the error gracefully
+      expect(observation.humanMessage || JSON.stringify(observation)).toContain(
+        'Failed to sign scheduled transaction',
+      );
+    }),
+  );
 });

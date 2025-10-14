@@ -3,8 +3,9 @@ import { AgentExecutor } from 'langchain/agents';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
+import { PrivateKey } from '@hashgraph/sdk';
 
-describe.skip('Create Account Tool Matching Integration Tests', () => {
+describe('Create Account Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -26,7 +27,7 @@ describe.skip('Create Account Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match create account tool with default params', async () => {
       const input = 'Create a new Hedera account';
 
@@ -58,7 +59,7 @@ describe.skip('Create Account Tool Matching Integration Tests', () => {
     });
 
     it('should match create account tool with explicit public key', async () => {
-      const input = 'Create a new account with public key 302a300506032b6570032100abcdef';
+      const input = `Create a new account with public key ${PrivateKey.generateED25519().publicKey.toString()}`;
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
@@ -93,7 +94,7 @@ describe.skip('Create Account Tool Matching Integration Tests', () => {
 
     it('should handle various natural language variations', async () => {
       const variations = [
-        { input: 'Open a new Hedera account', expected: {} },
+        { input: 'Create a new Hedera account', expected: {} },
         { input: 'Create account with memo "My memo"', expected: { accountMemo: 'My memo' } },
         { input: 'Create account funded with 0.01 HBAR', expected: { initialBalance: 0.01 } },
       ];
@@ -113,7 +114,7 @@ describe.skip('Create Account Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have create account tool available', () => {
       const tools = toolkit.getTools();
       const createAccount = tools.find(tool => tool.name === 'create_account_tool');

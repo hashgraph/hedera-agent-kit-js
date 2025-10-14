@@ -28,7 +28,13 @@ Example: "Mint 1 of 0.0.6458037" means minting the amount of 1 of the token with
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Tokens successfully minted with transaction id ${response.transactionId.toString()}`;
+  if (response.scheduleId) {
+    return `Scheduled mint transaction created successfully.
+Transaction ID: ${response.transactionId.toString()}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `Tokens successfully minted.
+Transaction ID: ${response.transactionId.toString()}`;
 };
 
 const mintFungibleToken = async (
@@ -41,11 +47,12 @@ const mintFungibleToken = async (
     const normalisedParams = await HederaParameterNormaliser.normaliseMintFungibleTokenParams(
       params,
       context,
+      client,
       mirrornodeService,
     );
     const tx = HederaBuilder.mintFungibleToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
     const desc = 'Failed to mint fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

@@ -2,6 +2,7 @@
 
 import {
   airdropFungibleTokenParameters,
+  airdropFungibleTokenParametersNormalised,
   approveNftAllowanceParameters,
   approveNftAllowanceParametersNormalised,
   associateTokenParameters,
@@ -13,6 +14,7 @@ import {
   dissociateTokenParameters,
   dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
+  mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParameters,
   mintNonFungibleTokenParametersNormalised,
   transferNonFungibleTokenWithAllowanceParameters,
@@ -40,12 +42,17 @@ import {
   transferHbarWithAllowanceParameters,
   transferHbarWithAllowanceParametersNormalised,
   deleteTokenAllowanceParameters,
+  transferHbarParametersNormalised,
+  accountBalanceQueryParametersNormalised,
+  accountTokenBalancesQueryParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
   createTopicParametersNormalised,
   deleteTopicParameters,
   deleteTopicParametersNormalised,
+  submitTopicMessageParameters,
+  submitTopicMessageParametersNormalised,
   updateTopicParameters,
   updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
@@ -63,6 +70,7 @@ import {
   TopicId,
   HbarAllowance,
   TokenAllowance,
+  Timestamp,
   NftId,
 } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
@@ -75,6 +83,7 @@ import { ethers } from 'ethers';
 import {
   createERC20Parameters,
   createERC721Parameters,
+  evmContractCallParamsNormalised,
   mintERC721Parameters,
   transferERC20Parameters,
   transferERC721Parameters,
@@ -83,6 +92,10 @@ import {
   normalisedTransactionRecordQueryParameters,
   transactionRecordQueryParameters,
 } from '@/shared/parameter-schemas/transaction.zod';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from '@/shared/parameter-schemas/common.zod';
 
 export default class HederaParameterNormaliser {
   static parseParamsWithSchema(
@@ -140,8 +153,15 @@ export default class HederaParameterNormaliser {
       (await mirrorNode.getAccount(defaultAccountId).then(r => r.accountPublicKey)) ??
       client.operatorPublicKey?.toStringDer();
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       ...parsedParams,
+      schedulingParams,
       supplyType,
       treasuryAccountId,
       maxSupply,
@@ -172,8 +192,15 @@ export default class HederaParameterNormaliser {
 
     const maxSupply = parsedParams.maxSupply ?? 100;
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       ...parsedParams,
+      schedulingParams,
       treasuryAccountId,
       maxSupply,
       supplyKey: PublicKey.fromString(publicKey), // the supply key is mandatory in the case of NFT
@@ -183,11 +210,11 @@ export default class HederaParameterNormaliser {
     };
   }
 
-  static normaliseTransferHbar(
+  static async normaliseTransferHbar(
     params: z.infer<ReturnType<typeof transferHbarParameters>>,
     context: Context,
     client: Client,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof transferHbarParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof transferHbarParameters>> =
       this.parseParamsWithSchema(params, transferHbarParameters, context);
 
@@ -220,8 +247,15 @@ export default class HederaParameterNormaliser {
       amount: Hbar.fromTinybars(totalTinybars.negate()),
     });
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       hbarTransfers,
+      schedulingParams,
       transactionMemo: parsedParams.transactionMemo,
     };
   }
@@ -264,7 +298,7 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
     context: Context,
     client: Client,
-  ) {
+  ): z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof approveHbarAllowanceParameters>> =
       this.parseParamsWithSchema(params, approveHbarAllowanceParameters, context);
 
@@ -327,7 +361,7 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof approveNftAllowanceParameters>>,
     context: Context,
     client: Client,
-  ) {
+  ): z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> =
       this.parseParamsWithSchema(params, approveNftAllowanceParameters, context);
 
@@ -408,7 +442,7 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> =
       this.parseParamsWithSchema(params, approveTokenAllowanceParameters, context);
 
@@ -460,7 +494,7 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof deleteTokenAllowanceParameters>> =
       this.parseParamsWithSchema(params, deleteTokenAllowanceParameters, context);
 
@@ -478,37 +512,44 @@ export default class HederaParameterNormaliser {
   static async normaliseTransferFungibleTokenWithAllowance(
     params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
     context: Context,
-    _client: Client,
+    client: Client,
     mirrodnode: IHederaMirrornodeService,
   ): Promise<z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>>> {
-    const parsed = this.parseParamsWithSchema(
+    const parsedParams = this.parseParamsWithSchema(
       params,
       transferFungibleTokenWithAllowanceParameters,
       context,
     );
-    const tokenInfo = await mirrodnode.getTokenInfo(parsed.tokenId);
+    const tokenInfo = await mirrodnode.getTokenInfo(parsedParams.tokenId);
     const tokenDecimals = tokenInfo.decimals;
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
     let totalAmount = 0;
 
-    for (const transfer of parsed.transfers) {
+    for (const transfer of parsedParams.transfers) {
       totalAmount += transfer.amount;
       tokenTransfers.push({
         accountId: transfer.accountId,
         amount: toBaseUnit(transfer.amount, Number(tokenDecimals)).toNumber(),
-        tokenId: parsed.tokenId,
+        tokenId: parsedParams.tokenId,
       });
     }
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
-      tokenId: parsed.tokenId,
+      schedulingParams,
+      tokenId: parsedParams.tokenId,
       tokenTransfers,
       approvedTransfer: {
-        ownerAccountId: parsed.sourceAccountId,
+        ownerAccountId: parsedParams.sourceAccountId,
         amount: toBaseUnit(-totalAmount, Number(tokenDecimals)).toNumber(),
       },
-      transactionMemo: parsed.transactionMemo,
+      transactionMemo: parsedParams.transactionMemo,
     };
   }
 
@@ -517,7 +558,7 @@ export default class HederaParameterNormaliser {
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> =
       this.parseParamsWithSchema(params, airdropFungibleTokenParameters, context);
 
@@ -692,6 +733,26 @@ export default class HederaParameterNormaliser {
     return normalised;
   };
 
+  static normaliseSubmitTopicMessage = async (
+    params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>> => {
+    const parsedParams: z.infer<ReturnType<typeof submitTopicMessageParameters>> =
+      this.parseParamsWithSchema(params, submitTopicMessageParameters, context);
+
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      ...parsedParams,
+      schedulingParams,
+    };
+  };
+
   static async normaliseCreateAccount(
     params: z.infer<ReturnType<typeof createAccountParameters>>,
     context: Context,
@@ -718,8 +779,15 @@ export default class HederaParameterNormaliser {
       );
     }
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       ...parsedParams,
+      schedulingParams,
       key: PublicKey.fromString(publicKey),
     };
   }
@@ -728,13 +796,12 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof accountBalanceQueryParameters>>,
     context: Context,
     client: Client,
-  ) {
+  ): z.infer<ReturnType<typeof accountBalanceQueryParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof accountBalanceQueryParameters>> =
       this.parseParamsWithSchema(params, accountBalanceQueryParameters, context);
 
     const accountId = AccountResolver.resolveAccount(parsedParams.accountId, context, client);
     return {
-      ...parsedParams,
       accountId,
     };
   }
@@ -743,7 +810,7 @@ export default class HederaParameterNormaliser {
     params: z.infer<ReturnType<typeof accountTokenBalancesQueryParameters>>,
     context: Context,
     client: Client,
-  ) {
+  ): z.infer<ReturnType<typeof accountTokenBalancesQueryParametersNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof accountTokenBalancesQueryParameters>> =
       this.parseParamsWithSchema(params, accountTokenBalancesQueryParameters, context);
 
@@ -760,7 +827,7 @@ export default class HederaParameterNormaliser {
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
     context: Context,
-  ) {
+  ): z.infer<ReturnType<typeof evmContractCallParamsNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof createERC20Parameters>> =
       this.parseParamsWithSchema(params, createERC20Parameters, context);
 
@@ -791,7 +858,7 @@ export default class HederaParameterNormaliser {
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
     context: Context,
-  ) {
+  ): z.infer<ReturnType<typeof evmContractCallParamsNormalised>> {
     const parsedParams: z.infer<ReturnType<typeof createERC721Parameters>> =
       this.parseParamsWithSchema(params, createERC721Parameters, context);
 
@@ -818,8 +885,9 @@ export default class HederaParameterNormaliser {
   static async normaliseMintFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
     context: Context,
+    client: Client,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof mintFungibleTokenParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof mintFungibleTokenParameters>> =
       this.parseParamsWithSchema(params, mintFungibleTokenParameters, context);
 
@@ -830,23 +898,40 @@ export default class HederaParameterNormaliser {
     const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
 
     const baseAmount = toBaseUnit(parsedParams.amount, safeDecimals).toNumber();
+
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
+      schedulingParams,
       tokenId: parsedParams.tokenId,
       amount: baseAmount,
     };
   }
 
-  static normaliseMintNonFungibleTokenParams(
+  static async normaliseMintNonFungibleTokenParams(
     params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>>,
     context: Context,
-  ): z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>> {
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>> =
       this.parseParamsWithSchema(params, mintNonFungibleTokenParameters, context);
 
     const encoder = new TextEncoder();
     const metadata = parsedParams.uris.map(uri => encoder.encode(uri));
+
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       ...parsedParams,
+      schedulingParams,
       metadata: metadata,
     };
   }
@@ -857,7 +942,7 @@ export default class HederaParameterNormaliser {
     factoryContractFunctionName: string,
     context: Context,
     mirrorNode: IHederaMirrornodeService,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof transferERC20Parameters>> =
       this.parseParamsWithSchema(params, transferERC20Parameters, context);
 
@@ -891,7 +976,7 @@ export default class HederaParameterNormaliser {
     context: Context,
     mirrorNode: IHederaMirrornodeService,
     client: Client,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof transferERC721Parameters>> =
       this.parseParamsWithSchema(params, transferERC721Parameters, context);
 
@@ -930,7 +1015,7 @@ export default class HederaParameterNormaliser {
     context: Context,
     mirrorNode: IHederaMirrornodeService,
     client: Client,
-  ) {
+  ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof mintERC721Parameters>> =
       this.parseParamsWithSchema(params, mintERC721Parameters, context);
 
@@ -980,11 +1065,11 @@ export default class HederaParameterNormaliser {
     };
   }
 
-  static normaliseUpdateAccount(
+  static async normaliseUpdateAccount(
     params: z.infer<ReturnType<typeof updateAccountParameters>>,
     context: Context,
     client: Client,
-  ): z.infer<ReturnType<typeof updateAccountParametersNormalised>> {
+  ): Promise<z.infer<ReturnType<typeof updateAccountParametersNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof updateAccountParameters>> =
       this.parseParamsWithSchema(params, updateAccountParameters, context);
 
@@ -1009,7 +1094,16 @@ export default class HederaParameterNormaliser {
       normalised.declineStakingReward = parsedParams.declineStakingReward;
     }
 
-    return normalised;
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      ...normalised,
+      schedulingParams,
+    };
   }
 
   static normaliseGetTransactionRecordParams(
@@ -1112,6 +1206,46 @@ export default class HederaParameterNormaliser {
     }
 
     return normalised;
+  }
+
+  static async normaliseScheduledTransactionParams(
+    params: z.infer<ReturnType<typeof optionalScheduledTransactionParams>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof optionalScheduledTransactionParamsNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof optionalScheduledTransactionParams>> =
+      HederaParameterNormaliser.parseParamsWithSchema(
+        params,
+        optionalScheduledTransactionParams,
+        context,
+      );
+
+    const scheduling = parsedParams.schedulingParams;
+
+    const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
+
+    // Resolve adminKey
+    const adminKey = HederaParameterNormaliser.resolveKey(scheduling?.adminKey, userPublicKey);
+
+    // Resolve payerAccountID
+    const payerAccountID = scheduling?.payerAccountId
+      ? AccountId.fromString(scheduling?.payerAccountId)
+      : undefined;
+
+    // Resolve expirationTime
+    const expirationTime = scheduling?.expirationTime
+      ? Timestamp.fromDate(scheduling?.expirationTime)
+      : undefined;
+
+    return {
+      schedulingParams: {
+        isScheduled: scheduling?.isScheduled ?? false,
+        adminKey,
+        payerAccountID,
+        expirationTime,
+        waitForExpiry: scheduling?.waitForExpiry ?? false,
+      },
+    };
   }
 
   private static resolveKey(

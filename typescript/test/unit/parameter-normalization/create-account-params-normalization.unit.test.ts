@@ -5,8 +5,10 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 vi.mock('@/shared/utils/account-resolver', () => ({
   AccountResolver: {
     getDefaultAccount: vi.fn(),
+    getDefaultPublicKey: vi.fn(),
   },
 }));
+
 import { AccountResolver } from '@/shared/utils/account-resolver';
 
 describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
@@ -50,6 +52,7 @@ describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
     expect(result.maxAutomaticTokenAssociations).toBe(10);
     expect(result.key).toBeInstanceOf(PublicKey);
     expect(result.key!.toString()).toBe(params.publicKey);
+    expect(result?.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('uses client.operatorPublicKey if no param.publicKey', async () => {
@@ -67,6 +70,7 @@ describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
 
     expect(result.key).toBeDefined();
     expect(result.key!.toString()).toBe(client.operatorPublicKey.toStringDer());
+    expect(result?.schedulingParams?.isScheduled).toBe(false);
   });
 
   it('falls back to mirrorNode.getAccount when no param and no operator key', async () => {
@@ -103,7 +107,10 @@ describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
     (AccountResolver.getDefaultAccount as any).mockReturnValue(null);
     mirrorNode.getAccount.mockResolvedValueOnce(null);
 
-    const params = { initialBalance: 0, maxAutomaticTokenAssociations: -1 };
+    const params = {
+      initialBalance: 0,
+      maxAutomaticTokenAssociations: -1,
+    };
 
     await expect(
       HederaParameterNormaliser.normaliseCreateAccount(
@@ -116,7 +123,7 @@ describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
   });
 
   it('applies defaults when values are not provided', async () => {
-    const params = {} as any; // cast to satisfy TS
+    const params = { schedulingParams: { isScheduled: false } } as any;
 
     const result = await HederaParameterNormaliser.normaliseCreateAccount(
       params,
@@ -129,5 +136,34 @@ describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
     expect(result.maxAutomaticTokenAssociations).toBe(-1);
     expect(result.key).toBeDefined();
     expect(result.key!.toString()).toBe(client.operatorPublicKey.toStringDer());
+    expect(result?.schedulingParams?.isScheduled).toBe(false);
+  });
+
+  it('calls normaliseScheduledTransactionParams when schedulingParams.isScheduled = true', async () => {
+    const mockScheduleParams = {
+      schedulingParams: {
+        isScheduled: true,
+        scheduleMemo: 'schedule test',
+      },
+    };
+    const spy = vi
+      .spyOn(HederaParameterNormaliser, 'normaliseScheduledTransactionParams')
+      .mockResolvedValueOnce(mockScheduleParams as any);
+
+    const params = {
+      publicKey: generatedSecondaryPrivateKey.publicKey.toStringDer(),
+      schedulingParams: { isScheduled: true, adminKey: false, waitForExpiry: false },
+    } as any;
+
+    const result = await HederaParameterNormaliser.normaliseCreateAccount(
+      params,
+      context,
+      client,
+      mirrorNode as any,
+    );
+
+    expect(spy).toHaveBeenCalled();
+    expect(result.schedulingParams).toEqual(mockScheduleParams.schedulingParams);
+    expect(result.key!.toString()).toBe(params.publicKey);
   });
 });

@@ -10,6 +10,7 @@ import {
   verifyHbarBalanceChange,
 } from '../utils';
 import { itWithRetry } from '../utils/retry-util';
+import { extractObservationFromLangchainResponse } from '../utils/general-util';
 
 describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -72,70 +73,104 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
     });
   });
 
-  it('should transfer HBAR to a recipient', itWithRetry(async () => {
-    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
-    const amountToTransfer = 0.1;
-    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
+  it(
+    'should transfer HBAR to a recipient',
+    itWithRetry(async () => {
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccount.toString(),
+      );
+      const amountToTransfer = 0.1;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
 
-    await agentExecutor.invoke({ input });
+      await agentExecutor.invoke({ input });
 
-    await verifyHbarBalanceChange(
-      recipientAccount.toString(),
-      balanceBefore,
-      amountToTransfer,
-      executorWrapper,
-    );
-    const balanceAfter = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
-    expect(balanceAfter.toNumber()).toBeGreaterThan(balanceBefore.toNumber());
-  }));
+      await verifyHbarBalanceChange(
+        recipientAccount.toString(),
+        balanceBefore,
+        amountToTransfer,
+        executorWrapper,
+      );
+      const balanceAfter = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
+      expect(balanceAfter.toNumber()).toBeGreaterThan(balanceBefore.toNumber());
+    }),
+  );
 
-  it('should transfer HBAR with memo', itWithRetry(async () => {
-    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
-    const amountToTransfer = 0.05;
-    const memo = 'Test memo for transfer';
+  it(
+    'should transfer HBAR with memo',
+    itWithRetry(async () => {
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccount.toString(),
+      );
+      const amountToTransfer = 0.05;
+      const memo = 'Test memo for transfer';
 
-    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${memo}"`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${memo}"`;
 
-    await agentExecutor.invoke({ input });
+      await agentExecutor.invoke({ input });
 
-    await verifyHbarBalanceChange(
-      recipientAccount.toString(),
-      balanceBefore,
-      amountToTransfer,
-      executorWrapper,
-    );
-  }));
+      await verifyHbarBalanceChange(
+        recipientAccount.toString(),
+        balanceBefore,
+        amountToTransfer,
+        executorWrapper,
+      );
+    }),
+  );
 
-  it('should handle very small amount (1 tinybar)', itWithRetry(async () => {
-    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
-    const amountToTransfer = 0.00000001;
+  it(
+    'should handle very small amount (1 tinybar)',
+    itWithRetry(async () => {
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccount.toString(),
+      );
+      const amountToTransfer = 0.00000001;
 
-    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
 
-    await agentExecutor.invoke({ input });
+      await agentExecutor.invoke({ input });
 
-    await verifyHbarBalanceChange(
-      recipientAccount.toString(),
-      balanceBefore,
-      amountToTransfer,
-      executorWrapper,
-    );
-  }));
+      await verifyHbarBalanceChange(
+        recipientAccount.toString(),
+        balanceBefore,
+        amountToTransfer,
+        executorWrapper,
+      );
+    }),
+  );
 
-  it('should handle long memo strings', itWithRetry(async () => {
-    const balanceBefore = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
-    const longMemo = 'A'.repeat(90);
-    const amountToTransfer = 0.01;
+  it(
+    'should handle long memo strings',
+    itWithRetry(async () => {
+      const balanceBefore = await executorWrapper.getAccountHbarBalance(
+        recipientAccount.toString(),
+      );
+      const longMemo = 'A'.repeat(90);
+      const amountToTransfer = 0.01;
 
-    const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${longMemo}"`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${longMemo}"`;
 
-    await agentExecutor.invoke({ input });
+      await agentExecutor.invoke({ input });
 
-    await verifyHbarBalanceChange(
-      recipientAccount.toString(),
-      balanceBefore,
-      amountToTransfer,
-      executorWrapper,
-    );
-  }));
+      await verifyHbarBalanceChange(
+        recipientAccount.toString(),
+        balanceBefore,
+        amountToTransfer,
+        executorWrapper,
+      );
+    }),
+  );
+
+  it(
+    'should schedule an HBAR transfer',
+    itWithRetry(async () => {
+      const amountToTransfer = 0.2;
+      const updateResult = await agentExecutor.invoke({
+        input: `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}. Schedule the transaction instead of executing it immediately.`,
+      });
+
+      const observation = extractObservationFromLangchainResponse(updateResult);
+      expect(observation.humanMessage).toContain('Scheduled HBAR transfer created successfully.');
+      expect(observation.raw.scheduleId).toBeDefined();
+    }),
+  );
 });

@@ -25,7 +25,6 @@ import {
   approveHbarAllowanceParametersNormalised,
   approveTokenAllowanceParametersNormalised,
   createAccountParametersNormalised,
-  createScheduleTransactionParametersNormalised,
   deleteAccountParametersNormalised,
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
@@ -71,14 +70,6 @@ class HederaOperationsWrapper {
   private mirrornode;
   constructor(private client: Client) {
     this.mirrornode = getMirrornodeService(undefined, LedgerId.TESTNET);
-  }
-
-  async createScheduleTransaction(
-    params: z.infer<ReturnType<typeof createScheduleTransactionParametersNormalised>>,
-  ): Promise<RawTransactionResponse> {
-    const tx = HederaBuilder.createScheduleTransaction(params);
-    const result = await this.executeStrategy.handle(tx, this.client, {});
-    return result.raw;
   }
 
   // ACCOUNT OPERATIONS
@@ -448,6 +439,10 @@ class HederaOperationsWrapper {
 
   async getAccountNfts(accountId: string) {
     return await this.mirrornode.getAccountNfts(accountId);
+  }
+
+  async getScheduledTransactionDetails(scheduledTxId: string) {
+    return await this.mirrornode.getScheduledTransactionDetails(scheduledTxId);
   }
 }
 
