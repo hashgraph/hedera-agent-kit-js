@@ -16,7 +16,7 @@ import { getERC20FactoryAddress, ERC20_FACTORY_ABI } from '@/shared/constants/co
 const createERC20Prompt = (context: Context = {}) => `
 ${PromptGenerator.getContextSnippet(context)}
 
-This tool creates an ERC20 token on Hedera by calling the BaseERC20Factory contract.
+This tool creates an ERC20 token on Hedera by calling the BaseERC20Factory contract. ERC20 is an EVM compatible fungible token.
 
 Parameters:
 - tokenName (str, required): The name of the token

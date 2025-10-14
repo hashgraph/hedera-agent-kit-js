@@ -18,7 +18,7 @@ const mintERC721Prompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will mint a new ERC721 token on Hedera.
+This tool will mint a new ERC721 token on Hedera. ERC721 is an EVM compatible non fungible token (NFT).
 
 Parameters:
 - contractId (str, required): The id of the ERC721 contract

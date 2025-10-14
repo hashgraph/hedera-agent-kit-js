@@ -52,7 +52,7 @@ describe('Create ERC721 Integration Tests', () => {
       const tool = createERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.message).toContain('ERC721 token created successfully');
+      expect(result.humanMessage).toContain('ERC721 token created successfully');
       expect(result.erc721Address).toMatch(/^0x[a-fA-F0-9]{40}$/);
 
       const contractInfo = await executorWrapper.getContractInfo(result.erc721Address);
@@ -71,7 +71,7 @@ describe('Create ERC721 Integration Tests', () => {
       const tool = createERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.message).toContain('ERC721 token created successfully');
+      expect(result.humanMessage).toContain('ERC721 token created successfully');
       expect(result.erc721Address).toMatch(/^0x[a-fA-F0-9]{40}$/);
 
       const contractInfo = await executorWrapper.getContractInfo(result.erc721Address);
@@ -89,7 +89,7 @@ describe('Create ERC721 Integration Tests', () => {
       const tool = createERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.message).toContain('ERC721 token created successfully');
+      expect(result.humanMessage).toContain('ERC721 token created successfully');
       expect(result.erc721Address).toMatch(/^0x[a-fA-F0-9]{40}$/);
 
       const contractInfo = await executorWrapper.getContractInfo(result.erc721Address);

@@ -16,7 +16,7 @@ import { getERC721FactoryAddress, ERC721_FACTORY_ABI } from '@/shared/constants/
 const createERC721Prompt = (context: Context = {}) => `
 ${PromptGenerator.getContextSnippet(context)}
 
-This tool creates an ERC721 token on Hedera by calling the BaseERC721Factory contract.
+This tool creates an ERC721 token on Hedera by calling the BaseERC721Factory contract. ERC721 is an EVM compatible non fungible token (NFT).
 
 Parameters:
 - tokenName (str, required): The name of the token

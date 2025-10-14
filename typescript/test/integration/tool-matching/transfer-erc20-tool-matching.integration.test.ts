@@ -113,7 +113,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
     it('should handle various natural language variations', async () => {
       const variations = [
         {
-          input: 'Send 25 tokens from contract 0.0.1234 to 0.0.5678',
+          input: 'Send 25 erc20 tokens from contract 0.0.1234 to 0.0.5678',
           expected: { contractId: '0.0.1234', recipientAddress: '0.0.5678', amount: 25 },
         },
         {
@@ -121,7 +121,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
           expected: { contractId: '0.0.1111', recipientAddress: '0.0.2222', amount: 75 },
         },
         {
-          input: 'Move 200 tokens of contract 0.0.3333 to address 0.0.4444',
+          input: 'Move 200 erc20 tokens of contract 0.0.3333 to address 0.0.4444',
           expected: { contractId: '0.0.3333', recipientAddress: '0.0.4444', amount: 200 },
         },
         {

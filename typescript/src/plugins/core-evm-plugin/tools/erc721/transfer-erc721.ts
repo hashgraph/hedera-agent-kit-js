@@ -21,7 +21,7 @@ const transferERC721Prompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer an existing ERC721 token on Hedera.
+This tool will transfer an existing ERC721 token on Hedera. ERC721 is an EVM compatible non fungible token (NFT).
 
 Parameters:
 - contractId (str, required): The id of the ERC721 contract

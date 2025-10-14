@@ -20,7 +20,7 @@ const transferERC20Prompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a given amount of an existing ERC20 token on Hedera.
+This tool will transfer a given amount of an existing ERC20 token on Hedera. ERC20 is an EVM compatible fungible token.
 
 Parameters:
 - contractId (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
