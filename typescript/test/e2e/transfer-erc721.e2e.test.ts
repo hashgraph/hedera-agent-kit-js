@@ -135,6 +135,23 @@ describe('Transfer ERC721 Token E2E Tests', () => {
   );
 
   it(
+    'schedules transfer of ERC721 token to another account via natural language',
+    itWithRetry(async () => {
+      const tokenId = await mintTokenForTransfer();
+      nextTokenId = tokenId + 1;
+      const input = `Transfer ERC721 token ${testTokenAddress} with id ${tokenId} from ${executorClient.operatorAccountId!.toString()} to ${recipientAccountId}. Schedule this transaction.`;
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      expect(observation.raw).toBeDefined();
+      expect(observation.raw.transactionId).toBeDefined();
+      expect(observation.raw.scheduleId).not.toBeNull();
+      expect(observation.humanMessage).toContain('Scheduled transfer of ERC721 successfully.');
+    }),
+  );
+
+  it(
     'fails gracefully with non-existent token ID',
     itWithRetry(async () => {
       const input = `Transfer ERC721 token 999999 from ${testTokenAddress} to ${recipientAccountId}`;

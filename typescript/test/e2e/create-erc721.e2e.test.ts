@@ -114,4 +114,21 @@ describe('Create ERC721 Token E2E Tests', () => {
       expect(contractInfo).toBeDefined();
     }),
   );
+
+  it(
+    'should schedule creation of erc20 token',
+    itWithRetry(async () => {
+      const input =
+        'Create an ERC721 token named MyERC721 with symbol M721. Schedule this transaction instead of executing it immediately.';
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      // Validate response structure
+      expect(observation.raw).toBeDefined();
+      expect(observation.raw.transactionId).toBeDefined();
+      expect(observation.raw.scheduleId).not.toBeNull();
+      expect(observation.humanMessage).toContain('Scheduled creation of ERC721 successfully.');
+    }),
+  );
 });
