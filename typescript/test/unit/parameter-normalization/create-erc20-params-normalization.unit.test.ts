@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ethers } from 'ethers';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { ERC20_FACTORY_ABI } from '@/shared/constants/contracts';
@@ -18,12 +18,13 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
 
   beforeEach(() => {
     encodeSpy = vi.spyOn(ethers.Interface.prototype, 'encodeFunctionData');
+
+    // Spy on AccountResolver.resolveAccount
+    vi.spyOn(AccountResolver, 'resolveAccount').mockReturnValue(operatorId);
+
     vi.clearAllMocks();
     mockClient = {} as Client;
-    vi.mocked(AccountResolver.resolveAccount).mockReturnValue(operatorId);
   });
-
-  beforeEach(() => {});
 
   afterEach(() => {
     vi.restoreAllMocks();
@@ -186,7 +187,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       const params = {
         tokenName: 'BadDecimals',
         tokenSymbol: 'BDC',
-        decimals: 'eighteen', // invalid type
+        decimals: 'eighteen',
       } as any;
 
       await expect(

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ethers } from 'ethers';
 import { Client } from '@hashgraph/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -18,16 +18,15 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
   const contractAbi = ERC721_MINT_FUNCTION_ABI;
   const functionName = ERC721_MINT_FUNCTION_NAME;
   const context = { accountId: '0.0.1234' };
-  const mockMirrorNode = {
-    getAccount: vi.fn(),
-  } as any;
-  const mockClient = {} as Client;
-
+  let mockClient: Client;
   let encodeSpy: any;
   let mockedAccountResolver: any;
+  const mockMirrorNode = { getAccount: vi.fn() } as any;
 
   beforeEach(() => {
     encodeSpy = vi.spyOn(ethers.Interface.prototype, 'encodeFunctionData');
+    vi.clearAllMocks();
+    mockClient = {} as Client;
     mockedAccountResolver = vi.mocked(AccountResolver);
     vi.spyOn(HederaParameterNormaliser, 'getHederaAccountId').mockResolvedValue('0.0.5678');
 
@@ -98,7 +97,6 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
   });
 
   it('defaults toAddress to context operator when missing', async () => {
-    // resolveAccount should be called with undefined to pick from context/client
     mockedAccountResolver.resolveAccount.mockReset();
     mockedAccountResolver.resolveAccount.mockReturnValue('0.0.1234');
     mockedAccountResolver.getHederaEVMAddress.mockReset();
@@ -106,9 +104,7 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
       '0xcccccccccccccccccccccccccccccccccccccccc',
     );
 
-    const params = {
-      contractId: '0.0.5678',
-    } as any;
+    const params = { contractId: '0.0.5678' } as any;
 
     const parsedParams = mintERC721Parameters().parse(params);
 
@@ -134,9 +130,7 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
 
   describe('error handling', () => {
     it('throws when contractId is missing', async () => {
-      const params = {
-        toAddress: '0x2222',
-      } as any;
+      const params = { toAddress: '0x2222' } as any;
 
       await expect(
         HederaParameterNormaliser.normaliseMintERC721Params(
@@ -151,10 +145,7 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
     });
 
     it('throws when toAddress is invalid type', async () => {
-      const params = {
-        contractId: '0.0.5678',
-        toAddress: 12345,
-      } as any;
+      const params = { contractId: '0.0.5678', toAddress: 12345 } as any;
 
       await expect(
         HederaParameterNormaliser.normaliseMintERC721Params(
@@ -169,10 +160,7 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
     });
 
     it('throws when AccountResolver.getHederaEVMAddress fails', async () => {
-      const params = {
-        contractId: '0.0.5678',
-        toAddress: '0.0.9999',
-      };
+      const params = { contractId: '0.0.5678', toAddress: '0.0.9999' };
 
       mockedAccountResolver.getHederaEVMAddress.mockRejectedValue(new Error('Account not found'));
 
