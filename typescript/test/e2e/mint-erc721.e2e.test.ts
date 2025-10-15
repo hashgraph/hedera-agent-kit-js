@@ -132,4 +132,20 @@ describe('Mint ERC721 Token E2E Tests', () => {
       }
     }),
   );
+
+  it(
+    'schedules minting ERC721 token to another account via natural language',
+    itWithRetry(async () => {
+      const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      // Validate response structure
+      expect(observation.raw).toBeDefined();
+      expect(observation.raw.transactionId).toBeDefined();
+      expect(observation.raw.scheduleId).not.toBeNull();
+      expect(observation.humanMessage).toContain('Scheduled minting of ERC721 successfully.');
+    }),
+  );
 });

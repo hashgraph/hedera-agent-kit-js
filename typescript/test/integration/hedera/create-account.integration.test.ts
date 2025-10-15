@@ -110,7 +110,7 @@ describe('Create Account Integration Tests', () => {
       const result = await tool.execute(executorClient, context, params);
 
       expect(result.raw.status).toBe(Status.Success.toString());
-      expect(result.raw.accountId).toBeDefined();
+      expect(result.raw.scheduleId).toBeDefined();
     });
   });
 

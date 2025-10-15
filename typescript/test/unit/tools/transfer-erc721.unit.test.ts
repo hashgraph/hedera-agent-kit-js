@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, Status } from '@hashgraph/sdk';
-import toolFactory, { TRANSFER_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/transfer-erc721';
+import toolFactory, {
+  TRANSFER_ERC721_TOOL,
+} from '@/plugins/core-evm-plugin/tools/erc721/transfer-erc721';
 import { transferERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -38,7 +40,13 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide parameters as JSON.'),
     getContextSnippet: vi.fn(() => 'some context'),
-    getAnyAddressParameterDescription: vi.fn(() => 'fromAddress (str, optional): The address from which the token will be transferred.'),
+    getAnyAddressParameterDescription: vi.fn(
+      () => 'fromAddress (str, optional): The address from which the token will be transferred.',
+    ),
+    getScheduledTransactionParamsDescription: vi.fn(
+      () =>
+        '- schedulingParams (object, optional): Set isScheduled = true to make the transaction scheduled.',
+    ),
   },
 }));
 
@@ -69,14 +77,12 @@ describe('transferERC721 tool (unit)', () => {
 
   const normalisedParams = {
     contractId: '0.0.5678',
-    functionParameters: new Uint8Array([0x01, 0x02, 0x03]), // must be Uint8Array
+    functionParameters: new Uint8Array([0x01, 0x02, 0x03]),
     gas: 100_000,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Setup default mocks
     mockedMirrornodeUtils.getMirrornodeService.mockReturnValue({
       getAccount: vi.fn(),
     } as any);
@@ -155,8 +161,12 @@ describe('transferERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toContain('Invalid parameters: Field "tokenId" - Number must be greater than or equal to 0');
-    expect(res.raw.error).toContain('Invalid parameters: Field "tokenId" - Number must be greater than or equal to 0');
+    expect(res.humanMessage).toContain(
+      'Invalid parameters: Field "tokenId" - Number must be greater than or equal to 0',
+    );
+    expect(res.raw.error).toContain(
+      'Invalid parameters: Field "tokenId" - Number must be greater than or equal to 0',
+    );
     expect(res.raw.status).toBe(Status.InvalidTransaction);
   });
 

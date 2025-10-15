@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, Status } from '@hashgraph/sdk';
-import toolFactory, { CREATE_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
+import toolFactory, {
+  CREATE_ERC721_TOOL,
+} from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -22,22 +24,27 @@ vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
 }));
 
 vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
-  handleTransaction: vi.fn(async (_tx: any, _client: any, _context: any, post?: any) => {
-    const raw = {
-      status: 'SUCCESS',
-      transactionId: '0.0.1234@1700000000.000000001',
-      contractId: { toString: () => '0.0.5005' },
-    };
-    return { raw, humanMessage: post ? post(raw) : JSON.stringify(raw) } as any;
+  handleTransaction: vi.fn(async (_tx: any, _client: any, _context: any) => {
+    return {
+      raw: {
+        status: 'SUCCESS',
+        transactionId: '0.0.1234@1700000000.000000001',
+      },
+    } as any;
   }),
-  RawTransactionResponse: {} as any,
 }));
 
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide parameters as JSON.'),
     getContextSnippet: vi.fn(() => 'some context'),
+    getScheduledTransactionParamsDescription: vi.fn(() => 'Schedule description.'),
   },
+}));
+
+vi.mock('@/shared/constants/contracts', () => ({
+  getERC721FactoryAddress: vi.fn(() => '0.0.9999'),
+  ERC721_FACTORY_ABI: [{ name: 'deployToken', type: 'function' }],
 }));
 
 vi.mock('@hashgraph/sdk', async () => {
@@ -75,7 +82,7 @@ describe('createERC721 tool (unit)', () => {
     tokenSymbol: params.tokenSymbol,
     baseURI: params.baseURI,
     contractId: '0.0.9999',
-    functionParameters: new Uint8Array([0x01, 0x02, 0x03]), // must be Uint8Array
+    functionParameters: new Uint8Array([0x01, 0x02, 0x03]),
     gas: 3_000_000,
   };
 
@@ -93,7 +100,7 @@ describe('createERC721 tool (unit)', () => {
   });
 
   it('executes happy path and returns ERC721 address and message', async () => {
-    mockedNormaliser.normaliseCreateERC721Params.mockReturnValue(normalisedParams);
+    mockedNormaliser.normaliseCreateERC721Params.mockResolvedValue(normalisedParams);
     mockedBuilder.executeTransaction.mockReturnValue({} as any);
 
     const tool = toolFactory(context);
@@ -103,17 +110,34 @@ describe('createERC721 tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw).toBeDefined();
-    expect(res.erc721Address).toBe('0xabcdef'); // mocked TransactionRecordQuery result
-    expect(res.message).toContain('ERC721 token created successfully');
+    expect(res.erc721Address).toBe('0xabcdef');
+    expect(res.humanMessage).toContain('ERC721 token created successfully');
     expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
     expect(mockedBuilder.executeTransaction).toHaveBeenCalledOnce();
     expect(mockedNormaliser.normaliseCreateERC721Params).toHaveBeenCalledWith(
       params,
-      expect.any(String),
+      '0.0.9999',
       expect.any(Array),
       'deployToken',
       context,
+      client,
     );
+  });
+
+  it('returns early when in RETURN_BYTES mode', async () => {
+    mockedNormaliser.normaliseCreateERC721Params.mockResolvedValue(normalisedParams);
+    mockedBuilder.executeTransaction.mockReturnValue({} as any);
+
+    const customContext: any = { accountId: '0.0.1001', mode: AgentMode.RETURN_BYTES };
+    const tool = toolFactory(customContext);
+    const client = makeClient();
+
+    const res = await tool.execute(client, customContext, params);
+
+    expect(res).toBeDefined();
+    expect(res.raw).toBeDefined();
+    expect(res.erc721Address).toBeUndefined();
+    expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
   });
 
   it('returns error message when an Error is thrown', async () => {
@@ -141,8 +165,8 @@ describe('createERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to create ERC721 token');
-    expect(res.raw.error).toBe('Failed to create ERC721 token');
+    expect(res.humanMessage).toContain('Failed to create ERC721 token');
+    expect(res.raw.error).toContain('Failed to create ERC721 token');
     expect(res.raw.status).toBe(Status.InvalidTransaction);
   });
 });

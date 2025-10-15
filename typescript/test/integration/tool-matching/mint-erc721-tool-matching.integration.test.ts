@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { MINT_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/mint-erc721';
 
-describe.skip('Mint ERC721 Tool Matching Integration Tests', () => {
+describe('Mint ERC721 Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe.skip('Mint ERC721 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match simple mint ERC721 command with EVM address', async () => {
       const input = 'Mint ERC721 token 0.0.5678 to 0x1234567890123456789012345678901234567890';
 
@@ -105,6 +105,31 @@ describe.skip('Mint ERC721 Tool Matching Integration Tests', () => {
         );
         spy.mockRestore();
       }
+    });
+
+    it('should match scheduled transaction', async () => {
+      const input =
+        'Schedule mint ERC721 token 0.0.5678 to 0x1234567890123456789012345678901234567890. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        MINT_ERC721_TOOL,
+        expect.objectContaining({
+          contractId: '0.0.5678',
+          toAddress: '0x1234567890123456789012345678901234567890',
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
+        }),
+      );
     });
   });
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ethers } from 'ethers';
 import { Client } from '@hashgraph/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -18,19 +18,17 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
   const contractAbi = ERC721_TRANSFER_FUNCTION_ABI;
   const functionName = 'transferFrom';
   const context = { accountId: '0.0.1234' };
-  const mockMirrorNode = {
-    getAccount: vi.fn(),
-  } as any;
-  const mockClient = {} as Client;
-
+  let mockClient: Client;
   let encodeSpy: any;
   let mockedAccountResolver: any;
+  const mockMirrorNode = { getAccount: vi.fn() } as any;
 
   beforeEach(() => {
     encodeSpy = vi.spyOn(ethers.Interface.prototype, 'encodeFunctionData');
+    vi.clearAllMocks();
+    mockClient = {} as Client;
     mockedAccountResolver = vi.mocked(AccountResolver);
 
-    // Setup default mocks
     vi.spyOn(HederaParameterNormaliser, 'getHederaAccountId').mockResolvedValue('0.0.5678');
     mockedAccountResolver.resolveAccount.mockReturnValue('0.0.1234');
     mockedAccountResolver.getHederaEVMAddress
@@ -62,11 +60,10 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
-      '0x1111111111111111111111111111111111111111', // resolved fromAddress
-      '0x2222222222222222222222222222222222222222', // resolved toAddress
-      1, // tokenId
+      '0x1111111111111111111111111111111111111111',
+      '0x2222222222222222222222222222222222222222',
+      1,
     ]);
-
     expect(result.contractId).toBe('0.0.5678');
     expect(result.gas).toBe(100_000);
     expect(result.functionParameters).toBeDefined();
@@ -83,8 +80,8 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
     mockedAccountResolver.resolveAccount.mockReturnValue('0.0.9999');
     mockedAccountResolver.getHederaEVMAddress.mockReset();
     mockedAccountResolver.getHederaEVMAddress
-      .mockResolvedValueOnce('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') // fromAddress
-      .mockResolvedValueOnce('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'); // toAddress
+      .mockResolvedValueOnce('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      .mockResolvedValueOnce('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
 
     const parsedParams = transferERC721Parameters().parse(params);
 
@@ -129,8 +126,8 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
     mockedAccountResolver.resolveAccount.mockReturnValue('0.0.1234');
     mockedAccountResolver.getHederaEVMAddress.mockReset();
     mockedAccountResolver.getHederaEVMAddress
-      .mockResolvedValueOnce('0x3333333333333333333333333333333333333333') // fromAddress
-      .mockResolvedValueOnce('0x4444444444444444444444444444444444444444'); // toAddress
+      .mockResolvedValueOnce('0x3333333333333333333333333333333333333333')
+      .mockResolvedValueOnce('0x4444444444444444444444444444444444444444');
 
     const parsedParams = transferERC721Parameters().parse(params);
 
@@ -157,11 +154,11 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
       tokenId: 3,
     };
 
-    mockedAccountResolver.resolveAccount.mockReturnValue('0.0.1234'); // resolved from context
+    mockedAccountResolver.resolveAccount.mockReturnValue('0.0.1234');
     mockedAccountResolver.getHederaEVMAddress.mockReset();
     mockedAccountResolver.getHederaEVMAddress
-      .mockResolvedValueOnce('0x5555555555555555555555555555555555555555') // fromAddress
-      .mockResolvedValueOnce('0x6666666666666666666666666666666666666666'); // toAddress
+      .mockResolvedValueOnce('0x5555555555555555555555555555555555555555')
+      .mockResolvedValueOnce('0x6666666666666666666666666666666666666666');
 
     const parsedParams = transferERC721Parameters().parse(params);
 
@@ -191,7 +188,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
       contractId: '0.0.5678',
       fromAddress: '0.0.1234',
       toAddress: '0x2222222222222222222222222222222222222222',
-      tokenId: 999999999,
+      tokenId: 999_999_999,
     };
 
     const parsedParams = transferERC721Parameters().parse(params);
@@ -208,7 +205,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0x1111111111111111111111111111111111111111',
       '0x2222222222222222222222222222222222222222',
-      999999999,
+      999_999_999,
     ]);
   });
 
@@ -275,7 +272,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
         contractId: '0.0.5678',
         fromAddress: '0.0.1234',
         toAddress: '0x2222222222222222222222222222222222222222',
-        tokenId: 'one', // invalid type
+        tokenId: 'one',
       } as any;
 
       await expect(
@@ -292,7 +289,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
 
     it('throws when contractId is not a string', async () => {
       const params = {
-        contractId: 12345, // invalid type
+        contractId: 12345,
         fromAddress: '0.0.1234',
         toAddress: '0x2222222222222222222222222222222222222222',
         tokenId: 1,
@@ -314,7 +311,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
       const params = {
         contractId: '0.0.5678',
         fromAddress: '0.0.1234',
-        toAddress: 67890, // invalid type
+        toAddress: 67890,
         tokenId: 1,
       } as any;
 
@@ -330,10 +327,10 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
       ).rejects.toThrow(/Field "toAddress"/);
     });
 
-    it('throws with multiple errors when several fields are invalid', async () => {
+    it('throws when multiple fields are invalid', async () => {
       const params = {
-        contractId: 123, // invalid type
-        tokenId: 'invalid', // invalid type
+        contractId: 123,
+        tokenId: 'invalid',
       } as any;
 
       await expect(
@@ -348,7 +345,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
       ).rejects.toThrow(/toAddress/);
     });
 
-    it('throws when AccountResolver.getHederaEVMAddress fails for fromAddress', async () => {
+    it('throws when getHederaEVMAddress fails for fromAddress', async () => {
       const params = {
         contractId: '0.0.5678',
         fromAddress: '0.0.9999',
@@ -376,7 +373,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
       ).rejects.toThrow('From account not found');
     });
 
-    it('throws when AccountResolver.getHederaEVMAddress fails for toAddress', async () => {
+    it('throws when getHederaEVMAddress fails for toAddress', async () => {
       const params = {
         contractId: '0.0.5678',
         fromAddress: '0.0.1234',

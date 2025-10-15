@@ -41,7 +41,7 @@ This plugin provides tools for Hedera **Account Service operations**:
 | `TRANSFER_HBAR_TOOL`             | Transfer HBAR between accounts                                                                                 | Provide the amount of HBAR to transfer, the account to transfer to, and optionally, a transaction memo. Supports scheduled transactions.                                                                                                    |
 | `APPROVE_HBAR_ALLOWANCE_TOOL`    | Approve an HBAR spending allowance for a spender account                                                       | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), the HBAR amount to approve (decimal supported, cannot be negative), and an optional transaction memo.                               |
 | `DELETE_HBAR_ALLOWANCE_TOOL`     | Deletes an HBAR allowance from an owner to a spender                                                           | Provide optional owner account ID (defaults to operator if omitted), the spender account ID (required), an optional transaction memo                                                                                                        |
-| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association                                                                                                        |
+| `CREATE_ACCOUNT_TOOL`            | Creates a new Hedera account, either for a provided public key or for the operator account’s generated keypair | Provide agreement text, type of key that should be generated, and optionally account memo, initial balance, and max auto-association. Supports scheduled transactions.                                                                      |
 | `UPDATE_ACCOUNT_TOOL`            | Update an account's metadata                                                                                   | Provide the account ID (required), the max automatic token associations (optional), the staking account ID (optional), account memo (optional), and whether staking rewards should be declined (optional). Supports scheduled transactions. |
 | `DELETE_ACCOUNT_TOOL`            | Delete an account and transfer its assets to a specified account                                               | Provide the account ID to delete (required) and a transfer account ID (optional). If not specified, the operator’s account will be used.                                                                                                    |
 | `SIGN_SCHEDULE_TRANSACTION_TOOL` | Signs a scheduled transaction on the Hedera network                                                            | Provide the schedule ID (required) of the scheduled transaction to sign. Returns the transaction ID upon successful signing.                                                                                                                |
@@ -126,13 +126,13 @@ This plugin provides tools for fetching **Token Service (HTS)** related informat
 This plugin provides tools for interacting with EVM smart contracts on Hedera, including creating and managing ERC-20
 and ERC-721 tokens via on-chain factory contracts and standard function calls.
 
-| Tool Name              | Description                                           | Usage                                                                                                          |
-|------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| `CREATE_ERC20_TOOL`    | Deploys a new ERC-20 token via the BaseERC20Factory   | Provide token name and symbol (required). Optionally set decimals (default 18) and initial supply (default 0). |
-| `TRANSFER_ERC20_TOOL`  | Transfers an ERC-20 token                             | Provide contract ID, recipient address, and amount. Supports both EVM and Hedera IDs.                          |
-| `CREATE_ERC721_TOOL`   | Deploys a new ERC-721 token via the BaseERC721Factory | Provide token name, symbol, and base URI (all required).                                                       |
-| `MINT_ERC721_TOOL`     | Mints a new ERC-721 token                             | Provide contract ID and recipient address. Supports both EVM and Hedera IDs.                                   |
-| `TRANSFER_ERC721_TOOL` | Transfers an ERC-721 token                            | Provide contract ID, from address, to address, and token ID. Supports both EVM and Hedera IDs.                 |
+| Tool Name              | Description                                           | Usage                                                                                                                                           |
+|------------------------|-------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CREATE_ERC20_TOOL`    | Deploys a new ERC-20 token via the BaseERC20Factory   | Provide token name and symbol (required). Optionally set decimals (default 18) and initial supply (default 0). Supports scheduled transactions. |
+| `TRANSFER_ERC20_TOOL`  | Transfers an ERC-20 token                             | Provide contract ID, recipient address, and amount. Supports both EVM and Hedera IDs. Supports scheduled transactions.                          |
+| `CREATE_ERC721_TOOL`   | Deploys a new ERC-721 token via the BaseERC721Factory | Provide token name, symbol, and base URI (all required). Supports scheduled transactions.                                                       |
+| `MINT_ERC721_TOOL`     | Mints a new ERC-721 token                             | Provide contract ID and recipient address. Supports both EVM and Hedera IDs. Supports scheduled transactions.                                   |
+| `TRANSFER_ERC721_TOOL` | Transfers an ERC-721 token                            | Provide contract ID, from address, to address, and token ID. Supports both EVM and Hedera IDs. Supports scheduled transactions.                 |
 
 ---
 
@@ -190,6 +190,12 @@ The following tools support scheduling:
 - `TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL`
 - `TRANSFER_HBAR_TOOL`
 - `UPDATE_ACCOUNT_TOOL`
+- `CREATE_ACCOUNT_TOOL`
+- `CREATE_ERC20_TOOL`
+- `TRANSFER_ERC20_TOOL`
+- `CREATE_ERC721_TOOL`
+- `MINT_ERC721_TOOL`
+- `TRANSFER_ERC721_TOOL`
 
 ---
 
@@ -203,7 +209,7 @@ Those parameters define how the **schedule entity** behaves — not the inner tr
 | **`schedulingParams.isScheduled`**    | `boolean`           | `false`              | If `true`, the transaction will be created as a scheduled transaction. If `false` or omitted, all other scheduling parameters are ignored.                                                                                                                                                                        |
 | **`schedulingParams.adminKey`**       | `boolean \| string` | `false`              | The admin key that can delete or modify the scheduled transaction before execution. <br> • If `true`, the operator’s public key will be used. <br> • If `false` or omitted, the operator’s key will be used automatically as the default. <br> • If a string is passed, it will be interpreted as a specific key. |
 | **`schedulingParams.payerAccountId`** | `string`            | *(operator account)* | The account that will pay the transaction fee when the scheduled transaction executes. <br> If not set, the payer of the original `ScheduleCreate` transaction (the operator) will be charged the service fee when the scheduled transaction executes.                                                            |
-| **`schedulingParams.expirationTime`** | `string` (ISO 8601) | —                    | The time when the scheduled transaction will expire if it has not been fully signed.                                                                                                                                                                                                                              |
+| **`schedulingParams.expirationTime`** | `string` (ISO 8601) | —                    | The time when the scheduled transaction will expire if it has not been fully signed. User can pass it in human-friendly form and the llm will parse it to correct ISO representation                                                                                                                              |
 | **`schedulingParams.waitForExpiry`**  | `boolean`           | `false`              | If `true`, the scheduled transaction will be executed at its expiration time, even if not all signatures have been collected. Requires `expirationTime` to be set. If `false`, the transaction executes as soon as all required signatures are present.                                                           |
 
 ---
@@ -221,6 +227,7 @@ Those parameters define how the **schedule entity** behaves — not the inner tr
 ---
 
 **Example usage in plain english**
+
 ```
 Schedule a mint for token 0.0.5005 with metadata https://example.com/nft/1.json
 ```

@@ -82,33 +82,54 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     }
   });
 
-  it('transfers ERC20 tokens to another account via natural language', itWithRetry(async () => {
-    const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}`;
+  it(
+    'transfers ERC20 tokens to another account via natural language',
+    itWithRetry(async () => {
+      const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-
-    expect(observation).toBeDefined();
-    expect(observation.raw.status).toBe('SUCCESS');
-    expect(observation.raw.transactionId).toBeDefined();
-
-    await wait(MIRROR_NODE_WAITING_TIME);
-  }));
-
-  it('handles various natural language variations for transfers', itWithRetry(async () => {
-    const variations = [
-      `Transfer 1 ERC20 token ${testTokenAddress} to ${recipientAccountId}`,
-      `Send 5 ERC20 tokens ${testTokenAddress} to recipient ${recipientAccountId}`,
-      `Transfer 2 tokens of contract ${testTokenAddress} to address ${recipientAccountId}`,
-    ];
-
-    for (const input of variations) {
       const result = await agentExecutor.invoke({ input });
       const observation = extractObservationFromLangchainResponse(result);
 
       expect(observation).toBeDefined();
-      expect(observation.raw.status.toString()).toBe('SUCCESS');
+      expect(observation.raw.status).toBe('SUCCESS');
       expect(observation.raw.transactionId).toBeDefined();
-    }
-  }));
+
+      await wait(MIRROR_NODE_WAITING_TIME);
+    }),
+  );
+
+  it(
+    'handles various natural language variations for transfers',
+    itWithRetry(async () => {
+      const variations = [
+        `Transfer 1 ERC20 token ${testTokenAddress} to ${recipientAccountId}`,
+        `Send 5 ERC20 tokens ${testTokenAddress} to recipient ${recipientAccountId}`,
+        `Transfer 2 tokens of contract ${testTokenAddress} to address ${recipientAccountId}`,
+      ];
+
+      for (const input of variations) {
+        const result = await agentExecutor.invoke({ input });
+        const observation = extractObservationFromLangchainResponse(result);
+
+        expect(observation).toBeDefined();
+        expect(observation.raw.status.toString()).toBe('SUCCESS');
+        expect(observation.raw.transactionId).toBeDefined();
+      }
+    }),
+  );
+
+  it(
+    'schedules transfer of ERC20 tokens to another account via natural language',
+    itWithRetry(async () => {
+      const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      expect(observation.raw).toBeDefined();
+      expect(observation.raw.transactionId).toBeDefined();
+      expect(observation.raw.scheduleId).not.toBeNull();
+      expect(observation.humanMessage).toContain('Scheduled transfer of ERC20 successfully.');
+    }),
+  );
 });

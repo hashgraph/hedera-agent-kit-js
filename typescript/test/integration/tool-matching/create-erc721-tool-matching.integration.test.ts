@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { CREATE_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
 
-describe.skip('Create ERC721 Tool Matching Integration Tests', () => {
+describe('Create ERC721 Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -27,7 +27,8 @@ describe.skip('Create ERC721 Tool Matching Integration Tests', () => {
 
   describe.skip('Tool Matching and Parameter Extraction', () => {
     it('should match simple create ERC721 command', async () => {
-      const input = 'Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/';
+      const input =
+        'Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
@@ -118,7 +119,8 @@ describe.skip('Create ERC721 Tool Matching Integration Tests', () => {
     it('should extract baseURI from various formats', async () => {
       const variations = [
         {
-          input: 'Create ERC721 ArtNFT symbol ART with metadata URI https://api.example.com/metadata/',
+          input:
+            'Create ERC721 ArtNFT symbol ART with metadata URI https://api.example.com/metadata/',
           expected: {
             tokenName: 'ArtNFT',
             tokenSymbol: 'ART',
@@ -147,6 +149,31 @@ describe.skip('Create ERC721 Tool Matching Integration Tests', () => {
         );
         spy.mockRestore();
       }
+    });
+
+    it('should match scheduled transaction', async () => {
+      const input =
+        'Schedule deploy ERC721 token called MyNFT with symbol MNFT. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_ERC721_TOOL,
+        expect.objectContaining({
+          tokenName: 'MyNFT',
+          tokenSymbol: 'MNFT',
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
+        }),
+      );
     });
   });
 

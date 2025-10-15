@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ethers } from 'ethers';
+import { Client } from '@hashgraph/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { ERC20_TRANSFER_FUNCTION_ABI } from '@/shared/constants/contracts';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
@@ -16,18 +17,17 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
   const contractAbi = ERC20_TRANSFER_FUNCTION_ABI;
   const functionName = 'transfer';
   const context = { accountId: '0.0.1234' };
-  const mockMirrorNode = {
-    getAccount: vi.fn(),
-  } as any;
-
+  let mockClient: Client;
   let encodeSpy: any;
   let mockedAccountResolver: any;
+  const mockMirrorNode = { getAccount: vi.fn() } as any;
 
   beforeEach(() => {
     encodeSpy = vi.spyOn(ethers.Interface.prototype, 'encodeFunctionData');
+    vi.clearAllMocks();
+    mockClient = {} as Client;
     mockedAccountResolver = vi.mocked(AccountResolver);
 
-    // Setup default mocks
     vi.spyOn(HederaParameterNormaliser, 'getHederaAccountId').mockResolvedValue('0.0.5678');
     mockedAccountResolver.getHederaEVMAddress.mockResolvedValue(
       '0x1234567890123456789012345678901234567890',
@@ -53,13 +53,13 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       functionName,
       context,
       mockMirrorNode,
+      mockClient,
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0x1234567890123456789012345678901234567890',
       100,
     ]);
-
     expect(result.contractId).toBe('0.0.5678');
     expect(result.gas).toBe(100_000);
     expect(result.functionParameters).toBeDefined();
@@ -84,6 +84,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       functionName,
       context,
       mockMirrorNode,
+      mockClient,
     );
 
     expect(mockedAccountResolver.getHederaEVMAddress).toHaveBeenCalledWith(
@@ -119,6 +120,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       functionName,
       context,
       mockMirrorNode,
+      mockClient,
     );
 
     expect(HederaParameterNormaliser.getHederaAccountId).toHaveBeenCalledWith(
@@ -132,7 +134,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
     const params = {
       contractId: '0.0.5678',
       recipientAddress: '0x1234567890123456789012345678901234567890',
-      amount: 1000000000,
+      amount: 1_000_000_000,
     };
 
     const parsedParams = transferERC20Parameters().parse(params);
@@ -143,13 +145,13 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       functionName,
       context,
       mockMirrorNode,
+      mockClient,
     );
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0x1234567890123456789012345678901234567890',
-      1000000000,
+      1_000_000_000,
     ]);
-
     expect(result.contractId).toBe('0.0.5678');
     expect(result.gas).toBe(100_000);
     expect(result.functionParameters).toBeDefined();
@@ -169,6 +171,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/Invalid parameters: Field "contractId" - Required/);
     });
@@ -186,6 +189,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/Invalid parameters: Field "recipientAddress" - Required/);
     });
@@ -203,6 +207,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/Invalid parameters: Field "amount" - Required/);
     });
@@ -211,7 +216,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       const params = {
         contractId: '0.0.5678',
         recipientAddress: '0x1234567890123456789012345678901234567890',
-        amount: 'one hundred', // invalid type
+        amount: 'one hundred',
       } as any;
 
       await expect(
@@ -221,13 +226,14 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/Field "amount"/);
     });
 
     it('throws when contractId is not a string', async () => {
       const params = {
-        contractId: 12345, // invalid type
+        contractId: 12345,
         recipientAddress: '0x1234567890123456789012345678901234567890',
         amount: 100,
       } as any;
@@ -239,6 +245,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/Field "contractId"/);
     });
@@ -246,7 +253,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
     it('throws when recipientAddress is not a string', async () => {
       const params = {
         contractId: '0.0.5678',
-        recipientAddress: 67890, // invalid type
+        recipientAddress: 67890,
         amount: 100,
       } as any;
 
@@ -257,14 +264,15 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/Field "recipientAddress"/);
     });
 
-    it('throws with multiple errors when several fields are invalid', async () => {
+    it('throws when multiple fields are invalid', async () => {
       const params = {
-        contractId: 123, // invalid type
-        amount: 'invalid', // invalid type
+        contractId: 123,
+        amount: 'invalid',
       } as any;
 
       await expect(
@@ -274,6 +282,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow(/recipientAddress/);
     });
@@ -296,6 +305,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow('Account not found');
     });
@@ -320,6 +330,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           functionName,
           context,
           mockMirrorNode,
+          mockClient,
         ),
       ).rejects.toThrow('Contract not found');
     });

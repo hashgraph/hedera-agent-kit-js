@@ -821,13 +821,14 @@ export default class HederaParameterNormaliser {
     };
   }
 
-  static normaliseCreateERC20Params(
+  static async normaliseCreateERC20Params(
     params: z.infer<ReturnType<typeof createERC20Parameters>>,
     factoryContractId: string,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
     context: Context,
-  ): z.infer<ReturnType<typeof evmContractCallParamsNormalised>> {
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof createERC20Parameters>> =
       this.parseParamsWithSchema(params, createERC20Parameters, context);
 
@@ -844,21 +845,29 @@ export default class HederaParameterNormaliser {
 
     const functionParameters = ethers.getBytes(encodedData);
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       ...parsedParams,
       contractId: factoryContractId,
       functionParameters,
       gas: 3000000, //TODO: make this configurable
+      schedulingParams,
     };
   }
 
-  static normaliseCreateERC721Params(
+  static async normaliseCreateERC721Params(
     params: z.infer<ReturnType<typeof createERC721Parameters>>,
     factoryContractId: string,
     factoryContractAbi: string[],
     factoryContractFunctionName: string,
     context: Context,
-  ): z.infer<ReturnType<typeof evmContractCallParamsNormalised>> {
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof createERC721Parameters>> =
       this.parseParamsWithSchema(params, createERC721Parameters, context);
 
@@ -874,11 +883,18 @@ export default class HederaParameterNormaliser {
 
     const functionParameters = ethers.getBytes(encodedData);
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       ...parsedParams,
       contractId: factoryContractId,
       functionParameters,
       gas: 3000000, //TODO: make this configurable
+      schedulingParams,
     };
   }
 
@@ -942,6 +958,7 @@ export default class HederaParameterNormaliser {
     factoryContractFunctionName: string,
     context: Context,
     mirrorNode: IHederaMirrornodeService,
+    client: Client,
   ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
     const parsedParams: z.infer<ReturnType<typeof transferERC20Parameters>> =
       this.parseParamsWithSchema(params, transferERC20Parameters, context);
@@ -962,10 +979,17 @@ export default class HederaParameterNormaliser {
 
     const functionParameters = ethers.getBytes(encodedData);
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       contractId,
       functionParameters,
       gas: 100_000,
+      schedulingParams,
     };
   }
 
@@ -1001,10 +1025,17 @@ export default class HederaParameterNormaliser {
 
     const functionParameters = ethers.getBytes(encodedData);
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       contractId,
       functionParameters,
       gas: 100_000,
+      schedulingParams,
     };
   }
 
@@ -1033,10 +1064,17 @@ export default class HederaParameterNormaliser {
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [toAddress]);
     const functionParameters = ethers.getBytes(encodedData);
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
     return {
       contractId,
       functionParameters,
       gas: 100_000,
+      schedulingParams,
     };
   }
 

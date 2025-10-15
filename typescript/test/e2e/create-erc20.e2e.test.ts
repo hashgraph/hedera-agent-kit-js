@@ -53,39 +53,62 @@ describe('Create ERC20 Token E2E Tests', () => {
     }
   });
 
-  it('creates an ERC20 token with minimal params via natural language', itWithRetry(async () => {
-    const input = 'Create an ERC20 token named MyERC20 with symbol M20';
+  it(
+    'creates an ERC20 token with minimal params via natural language',
+    itWithRetry(async () => {
+      const input = 'Create an ERC20 token named MyERC20 with symbol M20';
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const erc20Address = observation.erc20Address;
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const erc20Address = observation.erc20Address;
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('ERC20 token created successfully');
-    expect(erc20Address).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('ERC20 token created successfully');
+      expect(erc20Address).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    // Verify on-chain contract info
-    const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
-    expect(contractInfo).toBeDefined();
-  }));
+      // Verify on-chain contract info
+      const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
+      expect(contractInfo).toBeDefined();
+    }),
+  );
 
-  it('creates an ERC20 token with decimals and initial supply', itWithRetry(async () => {
-    const input =
-      'Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000';
+  it(
+    'creates an ERC20 token with decimals and initial supply',
+    itWithRetry(async () => {
+      const input =
+        'Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000';
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
-    const erc20Address = observation.erc20Address;
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+      const erc20Address = observation.erc20Address;
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('ERC20 token created successfully');
-    expect(erc20Address).toBeDefined();
+      expect(observation).toBeDefined();
+      expect(observation.humanMessage).toContain('ERC20 token created successfully');
+      expect(erc20Address).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
-    expect(contractInfo).toBeDefined();
-  }));
+      const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
+      expect(contractInfo).toBeDefined();
+    }),
+  );
+
+  it(
+    'should schedule creation of erc20 token',
+    itWithRetry(async () => {
+      const name = `MyERC20-${new Date().getTime().toString()}`;
+      const input = `Create an ERC20 token named "${name}" with symbol M20. Schedule this transaction instead of executing it immediately.`;
+
+      const result = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(result);
+
+      // Validate response structure
+      expect(observation.raw).toBeDefined();
+      expect(observation.raw.transactionId).toBeDefined();
+      expect(observation.raw.scheduleId).toBeDefined();
+      expect(observation.humanMessage).toContain('Scheduled creation of ERC20 successfully.');
+    }),
+  );
 });

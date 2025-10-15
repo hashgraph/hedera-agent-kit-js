@@ -344,12 +344,13 @@ class HederaOperationsWrapper {
 
   async createERC20(params: z.infer<ReturnType<typeof createERC20Parameters>>) {
     const factoryContractAddress = getERC20FactoryAddress(this.client.ledgerId!);
-    const normalisedParams = HederaParameterNormaliser.normaliseCreateERC20Params(
+    const normalisedParams = await HederaParameterNormaliser.normaliseCreateERC20Params(
       params,
       factoryContractAddress,
       ERC20_FACTORY_ABI,
       'deployToken',
       {},
+      this.client,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});
@@ -363,12 +364,13 @@ class HederaOperationsWrapper {
 
   async createERC721(params: z.infer<ReturnType<typeof createERC721Parameters>>) {
     const factoryContractAddress = getERC721FactoryAddress(this.client.ledgerId!);
-    const normalisedParams = HederaParameterNormaliser.normaliseCreateERC721Params(
+    const normalisedParams = await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,
       factoryContractAddress,
       ERC721_FACTORY_ABI,
       'deployToken',
       {},
+      this.client,
     );
     const tx = HederaBuilder.executeTransaction(normalisedParams);
     const result: ExecuteStrategyResult = await this.executeStrategy.handle(tx, this.client, {});

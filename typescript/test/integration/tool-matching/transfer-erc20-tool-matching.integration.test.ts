@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { TRANSFER_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/transfer-erc20';
 
-describe.skip('Transfer ERC20 Tool Matching Integration Tests', () => {
+describe('Transfer ERC20 Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agentExecutor: AgentExecutor;
   let toolkit: HederaLangchainToolkit;
@@ -25,7 +25,7 @@ describe.skip('Transfer ERC20 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match simple transfer ERC20 command', async () => {
       const input =
         'Transfer 100 0.0.5678 ERC20 tokens from contract to 0x1234567890123456789012345678901234567890';
@@ -84,10 +84,36 @@ describe.skip('Transfer ERC20 Tool Matching Integration Tests', () => {
       );
     });
 
+    it('should match scheduled transaction', async () => {
+      const input =
+        'Schedule transfer 100 0.0.5678 ERC20 tokens from contract to 0x1234567890123456789012345678901234567890. Make it expire tomorrow and wait for its expiration time with executing it.';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+
+      await agentExecutor.invoke({ input });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        TRANSFER_ERC20_TOOL,
+        expect.objectContaining({
+          contractId: '0.0.5678',
+          recipientAddress: '0x1234567890123456789012345678901234567890',
+          amount: 100,
+          schedulingParams: expect.objectContaining({
+            adminKey: false,
+            isScheduled: true,
+            expirationTime: expect.any(String),
+            waitForExpiry: true,
+          }),
+        }),
+      );
+    });
+
     it('should handle various natural language variations', async () => {
       const variations = [
         {
-          input: 'Send 25 tokens from contract 0.0.1234 to 0.0.5678',
+          input: 'Send 25 erc20 tokens from contract 0.0.1234 to 0.0.5678',
           expected: { contractId: '0.0.1234', recipientAddress: '0.0.5678', amount: 25 },
         },
         {
@@ -95,7 +121,7 @@ describe.skip('Transfer ERC20 Tool Matching Integration Tests', () => {
           expected: { contractId: '0.0.1111', recipientAddress: '0.0.2222', amount: 75 },
         },
         {
-          input: 'Move 200 tokens of contract 0.0.3333 to address 0.0.4444',
+          input: 'Move 200 erc20 tokens of contract 0.0.3333 to address 0.0.4444',
           expected: { contractId: '0.0.3333', recipientAddress: '0.0.4444', amount: 200 },
         },
         {
