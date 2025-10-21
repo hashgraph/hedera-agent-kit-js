@@ -117,7 +117,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
           expected: { contractId: '0.0.1234', recipientAddress: '0.0.5678', amount: 25 },
         },
         {
-          input: 'Transfer 75 ERC20 from 0.0.1111 to 0.0.2222',
+          input: 'Transfer 75 ERC20 tokens from contract 0.0.1111 to 0.0.2222',
           expected: { contractId: '0.0.1111', recipientAddress: '0.0.2222', amount: 75 },
         },
         {
@@ -125,7 +125,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
           expected: { contractId: '0.0.3333', recipientAddress: '0.0.4444', amount: 200 },
         },
         {
-          input: 'Send 1000 ERC20 tokens at 0.0.5555 to recipient 0.0.6666',
+          input: 'Send 1000 ERC20 tokens (contract address: 0.0.5555) to recipient 0.0.6666',
           expected: { contractId: '0.0.5555', recipientAddress: '0.0.6666', amount: 1000 },
         },
       ];
