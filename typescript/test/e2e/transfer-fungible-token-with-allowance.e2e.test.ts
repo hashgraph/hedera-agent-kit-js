@@ -96,7 +96,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     // Spender account
     spenderKey = PrivateKey.generateECDSA();
     spenderAccountId = await executorWrapper
-      .createAccount({ key: spenderKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: spenderKey.publicKey, initialBalance: 50 })
       .then(r => r.accountId!);
 
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
@@ -105,7 +105,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     // Receiver account
     receiverKey = PrivateKey.generateECDSA();
     receiverAccountId = await executorWrapper
-      .createAccount({ key: receiverKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: receiverKey.publicKey, initialBalance: 50 })
       .then(r => r.accountId!);
 
     receiverClient = getCustomClient(receiverAccountId, receiverKey);
