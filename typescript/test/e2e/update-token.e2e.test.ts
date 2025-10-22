@@ -39,7 +39,7 @@ describe('Get Token Info Query E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 100 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -147,7 +147,7 @@ describe('Get Token Info Query E2E Tests', () => {
     'should update autoRenewAccountId',
     itWithRetry(async () => {
       const secondaryAccountId = await executorWrapper
-        .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 10 })
+        .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 20 })
         .then(resp => resp.accountId!);
       await agentExecutor.invoke({
         input: `For token ${tokenIdFT.toString()} set auto renew account id to ${secondaryAccountId.toString()}.`,
@@ -164,8 +164,9 @@ describe('Get Token Info Query E2E Tests', () => {
     itWithRetry(async () => {
       const secondaryAccount = PrivateKey.generateED25519();
       const secondaryAccountId = await executorWrapper
-        .createAccount({ key: secondaryAccount.publicKey, initialBalance: 10 })
+        .createAccount({ key: secondaryAccount.publicKey, initialBalance: 20 })
         .then(resp => resp.accountId!);
+
       const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccount);
       const secondaryWrapper = new HederaOperationsWrapper(secondaryClient);
       const tokenId = await secondaryWrapper
