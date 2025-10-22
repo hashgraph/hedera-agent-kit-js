@@ -61,7 +61,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     // Create an executor account (token owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 100 })
       .then(r => r.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -95,8 +95,8 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   beforeEach(async () => {
     // Spender account
     spenderKey = PrivateKey.generateECDSA();
-    spenderAccountId = await executorWrapper
-      .createAccount({ key: spenderKey.publicKey, initialBalance: 50 })
+    spenderAccountId = await operatorWrapper
+      .createAccount({ key: spenderKey.publicKey, initialBalance: 20 })
       .then(r => r.accountId!);
 
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
@@ -104,8 +104,8 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
 
     // Receiver account
     receiverKey = PrivateKey.generateECDSA();
-    receiverAccountId = await executorWrapper
-      .createAccount({ key: receiverKey.publicKey, initialBalance: 50 })
+    receiverAccountId = await operatorWrapper
+      .createAccount({ key: receiverKey.publicKey, initialBalance: 20 })
       .then(r => r.accountId!);
 
     receiverClient = getCustomClient(receiverAccountId, receiverKey);
@@ -148,6 +148,9 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   });
 
   it('should allow spender to transfer tokens to themselves using allowance', async () => {
+    console.log(
+      `Account ids: ${executorAccountId.toString()}, ${spenderAccountId.toString()}, ${receiverAccountId.toString()}`,
+    );
     const input = `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;
     const result = await agentExecutor.invoke({ input });
     const observation = extractObservationFromLangchainResponse(result);
