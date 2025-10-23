@@ -31,7 +31,7 @@ describe('Create Fungible Token E2E Tests', () => {
     // 1. Create an executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client

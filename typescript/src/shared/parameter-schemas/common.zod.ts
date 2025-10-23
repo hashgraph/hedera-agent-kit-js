@@ -37,7 +37,11 @@ export const optionalScheduledTransactionParams = (_context: Context = {}) =>
           .optional()
           .default(false)
           .describe(
-            'If true, the scheduled transaction will be executed at its expiration time, regardless of when all required signatures are collected. If false, the transaction will execute as soon as all required signatures are present. Requires expirationTime being set, otherwise throws an error. Defaults to false.',
+            'Determines when the scheduled transaction executes:\n' +
+              '- `false` (default): execute as soon as all required signatures are collected.\n' +
+              '- `true`: execute at the scheduled expiration time, regardless of signatures.\n' +
+              'Requires `expirationTime` to be set if true; otherwise an error is thrown.\n' +
+              'Set to true only if the user explicitly requests execution at expiration.',
           ),
       })
       .optional()

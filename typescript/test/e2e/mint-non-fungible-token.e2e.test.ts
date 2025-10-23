@@ -45,7 +45,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

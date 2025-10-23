@@ -39,7 +39,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     // Executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 25 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -87,53 +87,62 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       .then(resp => resp.accountId!);
   };
 
-  it('should airdrop tokens to a single recipient successfully', itWithRetry(async () => {
-    const recipientId = await createRecipientAccount(0); // no auto-association
+  it(
+    'should airdrop tokens to a single recipient successfully',
+    itWithRetry(async () => {
+      const recipientId = await createRecipientAccount(0); // no auto-association
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Airdrop 50 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Airdrop 50 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    expect(observation.humanMessage).toContain('Token successfully airdropped');
-    expect(observation.raw.status).toBe('SUCCESS');
+      expect(observation.humanMessage).toContain('Token successfully airdropped');
+      expect(observation.raw.status).toBe('SUCCESS');
 
-    const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
-    expect(pending.airdrops.length).toBeGreaterThan(0);
-  }));
+      const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
+      expect(pending.airdrops.length).toBeGreaterThan(0);
+    }),
+  );
 
-  it('should airdrop tokens to multiple recipients in one transaction', itWithRetry(async () => {
-    const recipient1 = await createRecipientAccount(0);
-    const recipient2 = await createRecipientAccount(0);
+  it(
+    'should airdrop tokens to multiple recipients in one transaction',
+    itWithRetry(async () => {
+      const recipient1 = await createRecipientAccount(0);
+      const recipient2 = await createRecipientAccount(0);
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Airdrop 10 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipient1.toString()} and 20 to ${recipient2.toString()}`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Airdrop 10 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipient1.toString()} and 20 to ${recipient2.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    expect(observation.raw.status).toBe('SUCCESS');
+      expect(observation.raw.status).toBe('SUCCESS');
 
-    const pending1 = await executorWrapper.getPendingAirdrops(recipient1.toString());
-    const pending2 = await executorWrapper.getPendingAirdrops(recipient2.toString());
+      const pending1 = await executorWrapper.getPendingAirdrops(recipient1.toString());
+      const pending2 = await executorWrapper.getPendingAirdrops(recipient2.toString());
 
-    expect(pending1.airdrops.length).toBeGreaterThan(0);
-    expect(pending2.airdrops.length).toBeGreaterThan(0);
-  }));
+      expect(pending1.airdrops.length).toBeGreaterThan(0);
+      expect(pending2.airdrops.length).toBeGreaterThan(0);
+    }),
+  );
 
-  it('should fail gracefully for non-existent token', itWithRetry(async () => {
-    const recipientId = await createRecipientAccount(0);
-    const fakeTokenId = '0.0.999999999';
+  it(
+    'should fail gracefully for non-existent token',
+    itWithRetry(async () => {
+      const recipientId = await createRecipientAccount(0);
+      const fakeTokenId = '0.0.999999999';
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Airdrop 5 of token ${fakeTokenId} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Airdrop 5 of token ${fakeTokenId} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('Failed to get token info for a token');
-  }));
+      expect(observation.humanMessage).toContain('Failed to get token info for a token');
+    }),
+  );
 });

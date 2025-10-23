@@ -96,10 +96,12 @@ Important:
 
 - **expirationTime** (string, optional, ISO 8601):  
   Time when the scheduled transaction will expire if not fully signed.
-
-- **waitForExpiry** (boolean, optional, default false):  
-  If true, the scheduled transaction will be executed at its expiration time, regardless of when all required signatures are collected.  
-  If false, the transaction will execute as soon as all required signatures are present.
+  
+- **waitForExpiry** (boolean, optional, default \`false\`):  
+  Determines when the scheduled transaction executes:  
+  - \`false\` (default): execute as soon as all required signatures are collected.  
+  - \`true\`: execute at the scheduled expiration time, even if all signatures are already collected.  
+  Requires \`expirationTime\` to be set if \`true\`. Set to \`true\` only when the user explicitly requests execution at expiration.
 
 **Notes**
 - Setting any scheduling parameter implies delayed execution through the Hedera schedule service.

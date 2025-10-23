@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
+import { Client, PrivateKey, AccountId, PublicKey, TokenSupplyType } from '@hashgraph/sdk';
 import associateTokenTool from '@/plugins/core-token-plugin/tools/associate-token';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
@@ -36,7 +36,7 @@ describe('Associate Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -44,7 +44,7 @@ describe('Associate Token Integration Tests', () => {
 
     const tokenExecutorKey = PrivateKey.generateED25519();
     tokenExecutorAccountId = await operatorWrapper
-      .createAccount({ key: tokenExecutorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: tokenExecutorKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     tokenExecutorClient = getCustomClient(tokenExecutorAccountId, tokenExecutorKey);
@@ -59,7 +59,7 @@ describe('Associate Token Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient ) {
+    if (executorClient && operatorClient) {
       await returnHbarsAndDeleteAccount(
         executorWrapper,
         executorAccountId,
@@ -76,19 +76,18 @@ describe('Associate Token Integration Tests', () => {
       tokenExecutorClient.close();
     }
     operatorClient.close();
-
   });
 
   it('should associate token to the executor account', async () => {
     let tokenIdFT = await tokenExecutorWrapper
-        .createFungibleToken({
+      .createFungibleToken({
         ...FT_PARAMS,
         supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
         adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
         treasuryAccountId: tokenExecutorAccountId.toString(),
         autoRenewAccountId: tokenExecutorAccountId.toString(),
-        })
-    .then(resp => resp.tokenId!);
+      })
+      .then(resp => resp.tokenId!);
     const tool = associateTokenTool(context);
     const params: z.infer<ReturnType<typeof associateTokenParameters>> = {
       tokenIds: [tokenIdFT.toString()],
@@ -97,7 +96,9 @@ describe('Associate Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    const balances = await executorWrapper.getAccountBalances(executorClient.operatorAccountId!.toString());
+    const balances = await executorWrapper.getAccountBalances(
+      executorClient.operatorAccountId!.toString(),
+    );
     const associated = (balances.tokens?.get(tokenIdFT) ?? 0) >= 0;
 
     expect(result).toBeDefined();
@@ -107,9 +108,9 @@ describe('Associate Token Integration Tests', () => {
   });
 
   it('should associate two tokens to the executor account', async () => {
-    // Create second token
+    // Create first token
     const tokenIdFT1 = await tokenExecutorWrapper
-    .createFungibleToken({
+      .createFungibleToken({
         tokenName: 'AssocToken',
         tokenSymbol: 'ASSOC',
         tokenMemo: 'FT',
@@ -121,9 +122,9 @@ describe('Associate Token Integration Tests', () => {
         adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
         treasuryAccountId: tokenExecutorAccountId.toString(),
         autoRenewAccountId: tokenExecutorAccountId.toString(),
-    })
-    .then(resp => resp.tokenId!);
-    // Create second token
+      })
+      .then(resp => resp.tokenId!);
+    // Create a second token
     const tokenIdFT2 = await tokenExecutorWrapper
       .createFungibleToken({
         tokenName: 'AssocToken2',
@@ -150,7 +151,9 @@ describe('Associate Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
     await wait(MIRROR_NODE_WAITING_TIME);
 
-    const balances = await executorWrapper.getAccountBalances(executorClient.operatorAccountId!.toString());
+    const balances = await executorWrapper.getAccountBalances(
+      executorClient.operatorAccountId!.toString(),
+    );
     const associatedFirst = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0;
     const associatedSecond = (balances.tokens?.get(tokenIdFT2) ?? 0) >= 0;
 
@@ -160,5 +163,3 @@ describe('Associate Token Integration Tests', () => {
     expect(associatedSecond).toBe(true);
   });
 });
-
-

@@ -31,7 +31,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     // 1. Create executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client

@@ -39,7 +39,7 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -60,14 +60,17 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
     // Recipient with no auto-assoc to create pending airdrop
     const recipientKey = PrivateKey.generateED25519();
     recipientId = await operatorWrapper
-      .createAccount({ key: recipientKey.publicKey, initialBalance: 0, maxAutomaticTokenAssociations: 0 })
+      .createAccount({
+        key: recipientKey.publicKey,
+        initialBalance: 0,
+        maxAutomaticTokenAssociations: 0,
+      })
       .then(resp => resp.accountId!);
 
     await executorWrapper.airdropToken({
       tokenTransfers: [
         { tokenId: tokenIdFT.toString(), accountId: recipientId.toString(), amount: 10 },
         { tokenId: tokenIdFT.toString(), accountId: executorAccountId.toString(), amount: -10 },
-
       ],
     });
 
@@ -86,17 +89,20 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
     }
   });
 
-  it('should return pending airdrops for recipient via natural language', itWithRetry(async () => {
-    const queryResult = await agentExecutor.invoke({
-      input: `Show pending airdrops for account ${recipientId.toString()}`,
-    });
+  it(
+    'should return pending airdrops for recipient via natural language',
+    itWithRetry(async () => {
+      const queryResult = await agentExecutor.invoke({
+        input: `Show pending airdrops for account ${recipientId.toString()}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain(`pending airdrops for account **${recipientId.toString()}**`);
-    expect(Array.isArray(observation.raw.pendingAirdrops.airdrops)).toBe(true);
-    expect(observation.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
-  }));
+      expect(observation.humanMessage).toContain(
+        `pending airdrops for account **${recipientId.toString()}**`,
+      );
+      expect(Array.isArray(observation.raw.pendingAirdrops.airdrops)).toBe(true);
+      expect(observation.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
+    }),
+  );
 });
-
-

@@ -44,7 +44,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     executorAccountId = await operatorWrapper
       .createAccount({
         key: executorKey.publicKey,
-        initialBalance: 20,
+        initialBalance: 50,
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!);
@@ -55,7 +55,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     // Token creator account
     const tokenCreatorKey = PrivateKey.generateED25519();
     tokenCreatorAccountId = await operatorWrapper
-      .createAccount({ key: tokenCreatorKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: tokenCreatorKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     tokenCreatorClient = getCustomClient(tokenCreatorAccountId, tokenCreatorKey);
@@ -104,88 +104,100 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     }
   });
 
-  it('should dissociate the executor account from the given token', itWithRetry(async () => {
-    await executorWrapper.associateToken({
-      accountId: executorAccountId.toString(),
-      tokenId: tokenIdFT.toString(),
-    });
-    const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
-      executorAccountId.toString(),
-    );
-    expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeTruthy();
+  it(
+    'should dissociate the executor account from the given token',
+    itWithRetry(async () => {
+      await executorWrapper.associateToken({
+        accountId: executorAccountId.toString(),
+        tokenId: tokenIdFT.toString(),
+      });
+      const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
+        executorAccountId.toString(),
+      );
+      expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeTruthy();
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Dissociate ${tokenIdFT.toString()} from my account`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Dissociate ${tokenIdFT.toString()} from my account`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('successfully dissociated');
-    expect(observation.raw.status).toBe('SUCCESS');
+      expect(observation.humanMessage).toContain('successfully dissociated');
+      expect(observation.raw.status).toBe('SUCCESS');
 
-    const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
-      executorAccountId.toString(),
-    );
-    expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
-  }));
+      const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
+        executorAccountId.toString(),
+      );
+      expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
+    }),
+  );
 
-  it('should dissociate 2 tokens at once', itWithRetry(async () => {
-    await executorWrapper.associateToken({
-      accountId: executorAccountId.toString(),
-      tokenId: tokenIdFT.toString(),
-    });
-    await executorWrapper.associateToken({
-      accountId: executorAccountId.toString(),
-      tokenId: tokenIdFT2.toString(),
-    });
+  it(
+    'should dissociate 2 tokens at once',
+    itWithRetry(async () => {
+      await executorWrapper.associateToken({
+        accountId: executorAccountId.toString(),
+        tokenId: tokenIdFT.toString(),
+      });
+      await executorWrapper.associateToken({
+        accountId: executorAccountId.toString(),
+        tokenId: tokenIdFT2.toString(),
+      });
 
-    const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
-      executorAccountId.toString(),
-    );
-    expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeTruthy();
-    expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT2.toString())).toBeTruthy();
+      const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
+        executorAccountId.toString(),
+      );
+      expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeTruthy();
+      expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT2.toString())).toBeTruthy();
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Dissociate tokens ${tokenIdFT.toString()} and ${tokenIdFT2.toString()} from my account`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Dissociate tokens ${tokenIdFT.toString()} and ${tokenIdFT2.toString()} from my account`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('successfully dissociated');
-    expect(observation.raw.status).toBe('SUCCESS');
+      expect(observation.humanMessage).toContain('successfully dissociated');
+      expect(observation.raw.status).toBe('SUCCESS');
 
-    const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
-      executorAccountId.toString(),
-    );
-    expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
-    expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT2.toString())).toBeFalsy();
-  }));
+      const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
+        executorAccountId.toString(),
+      );
+      expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
+      expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT2.toString())).toBeFalsy();
+    }),
+  );
 
-  it('should fail dissociating not associated token', itWithRetry(async () => {
-    // check if the account is not associate with the token
-    const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
-      executorAccountId.toString(),
-    );
-    expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
+  it(
+    'should fail dissociating not associated token',
+    itWithRetry(async () => {
+      // check if the account is not associate with the token
+      const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
+        executorAccountId.toString(),
+      );
+      expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Dissociate ${tokenIdFT.toString()} from my account`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Dissociate ${tokenIdFT.toString()} from my account`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('Failed to dissociate');
-    expect(observation.raw.status).not.toBe('SUCCESS');
-  }));
+      expect(observation.humanMessage).toContain('Failed to dissociate');
+      expect(observation.raw.status).not.toBe('SUCCESS');
+    }),
+  );
 
-  it('should fail dissociating not existing token', itWithRetry(async () => {
-    const queryResult = await agentExecutor.invoke({
-      input: `Dissociate token 0.0.22223333444 from my account`,
-    });
+  it(
+    'should fail dissociating not existing token',
+    itWithRetry(async () => {
+      const queryResult = await agentExecutor.invoke({
+        input: `Dissociate token 0.0.22223333444 from my account`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.humanMessage).toContain('Failed to dissociate');
-    expect(observation.raw.status).not.toBe('SUCCESS');
-  }));
+      expect(observation.humanMessage).toContain('Failed to dissociate');
+      expect(observation.raw.status).not.toBe('SUCCESS');
+    }),
+  );
 });

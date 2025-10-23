@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TokenId, TokenSupplyType, PublicKey } from '@hashgraph/sdk';
+import { Client, PrivateKey, AccountId, TokenSupplyType, PublicKey } from '@hashgraph/sdk';
 import { AgentExecutor } from 'langchain/agents';
 import {
   createLangchainTestSetup,
@@ -37,11 +37,11 @@ describe('Associate Token E2E Tests', () => {
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -49,7 +49,7 @@ describe('Associate Token E2E Tests', () => {
 
     const tokenExecutorKey = PrivateKey.generateED25519();
     tokenExecutorAccountId = await operatorWrapper
-      .createAccount({ key: tokenExecutorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: tokenExecutorKey.publicKey, initialBalance: 50 })
       .then(resp => resp.accountId!);
 
     tokenExecutorClient = getCustomClient(tokenExecutorAccountId, tokenExecutorKey);
@@ -71,78 +71,82 @@ describe('Associate Token E2E Tests', () => {
     }
   });
 
-  it('should associate token successfully via agent', itWithRetry(async () => {
-    const tokenIdFT1 = await tokenExecutorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: tokenExecutorAccountId.toString(),
-        autoRenewAccountId: tokenExecutorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+  it(
+    'should associate token successfully via agent',
+    itWithRetry(async () => {
+      const tokenIdFT1 = await tokenExecutorWrapper
+        .createFungibleToken({
+          ...FT_PARAMS,
+          supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
+          adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
+          treasuryAccountId: tokenExecutorAccountId.toString(),
+          autoRenewAccountId: tokenExecutorAccountId.toString(),
+        })
+        .then(resp => resp.tokenId!);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
-    const queryResult = await agentExecutor.invoke({
-      input: `Associate token ${tokenIdFT1.toString()} to my account`,
-    });
+      await wait(MIRROR_NODE_WAITING_TIME);
+      const queryResult = await agentExecutor.invoke({
+        input: `Associate token ${tokenIdFT1.toString()} to my account`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
-    const associated = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0; // presence implies associated
+      const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
+      const associated = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0; // presence implies associated
 
-    expect(observation.humanMessage).toContain('Tokens successfully associated');
-    expect(observation.raw.status).toBe('SUCCESS');
-    expect(associated).toBe(true);
-  }));
+      expect(observation.humanMessage).toContain('Tokens successfully associated');
+      expect(observation.raw.status).toBe('SUCCESS');
+      expect(associated).toBe(true);
+    }),
+  );
 
-  it('should associate two tokens successfully via agent', itWithRetry(async () => {
-    const tokenIdFT1 = await tokenExecutorWrapper
-    .createFungibleToken({
-      ...FT_PARAMS,
-      supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-      adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-      treasuryAccountId: tokenExecutorAccountId.toString(),
-      autoRenewAccountId: tokenExecutorAccountId.toString(),
-    })
-    .then(resp => resp.tokenId!);
-    // Create an extra token
-    const tokenIdFT2 = await tokenExecutorWrapper
-      .createFungibleToken({
-        tokenName: 'AssocToken2',
-        tokenSymbol: 'ASSOC2',
-        tokenMemo: 'FT2',
-        initialSupply: 0,
-        decimals: 0,
-        maxSupply: 1000,
-        supplyType: TokenSupplyType.Finite,
-        supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: tokenExecutorAccountId.toString(),
-        autoRenewAccountId: tokenExecutorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+  it(
+    'should associate two tokens successfully via agent',
+    itWithRetry(async () => {
+      const tokenIdFT1 = await tokenExecutorWrapper
+        .createFungibleToken({
+          ...FT_PARAMS,
+          supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
+          adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
+          treasuryAccountId: tokenExecutorAccountId.toString(),
+          autoRenewAccountId: tokenExecutorAccountId.toString(),
+        })
+        .then(resp => resp.tokenId!);
+      // Create an extra token
+      const tokenIdFT2 = await tokenExecutorWrapper
+        .createFungibleToken({
+          tokenName: 'AssocToken2',
+          tokenSymbol: 'ASSOC2',
+          tokenMemo: 'FT2',
+          initialSupply: 0,
+          decimals: 0,
+          maxSupply: 1000,
+          supplyType: TokenSupplyType.Finite,
+          supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
+          adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
+          treasuryAccountId: tokenExecutorAccountId.toString(),
+          autoRenewAccountId: tokenExecutorAccountId.toString(),
+        })
+        .then(resp => resp.tokenId!);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const queryResult = await agentExecutor.invoke({
-      input: `Associate tokens ${tokenIdFT1.toString()} and ${tokenIdFT2.toString()} to my account`,
-    });
+      const queryResult = await agentExecutor.invoke({
+        input: `Associate tokens ${tokenIdFT1.toString()} and ${tokenIdFT2.toString()} to my account`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
-    await wait(MIRROR_NODE_WAITING_TIME);
+      const observation = extractObservationFromLangchainResponse(queryResult);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
-    const associatedFirst = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0;
-    const associatedSecond = (balances.tokens?.get(tokenIdFT2) ?? 0) >= 0;
+      const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
+      const associatedFirst = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0;
+      const associatedSecond = (balances.tokens?.get(tokenIdFT2) ?? 0) >= 0;
 
-    expect(observation.humanMessage).toContain('Tokens successfully associated');
-    expect(observation.raw.status).toBe('SUCCESS');
-    expect(associatedFirst).toBe(true);
-    expect(associatedSecond).toBe(true);
-  }));
+      expect(observation.humanMessage).toContain('Tokens successfully associated');
+      expect(observation.raw.status).toBe('SUCCESS');
+      expect(associatedFirst).toBe(true);
+      expect(associatedSecond).toBe(true);
+    }),
+  );
 });
-
-
