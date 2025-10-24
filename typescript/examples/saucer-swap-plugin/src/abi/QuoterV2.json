@@ -1,0 +1,328 @@
+[
+    {
+      "type": "constructor",
+      "stateMutability": "undefined",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "_factory"
+        },
+        {
+          "type": "address",
+          "name": "_WHBAR"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "AssociateFail",
+      "inputs": [
+        {
+          "type": "int256",
+          "name": "respCode"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "OwnershipTransferred",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "previousOwner",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "newOwner",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "WHBAR",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "associateQuoterToToken",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "token"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "factory",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "quoteExactInput",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes",
+          "name": "path"
+        },
+        {
+          "type": "uint256",
+          "name": "amountIn"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "amountOut"
+        },
+        {
+          "type": "uint160[]",
+          "name": "sqrtPriceX96AfterList"
+        },
+        {
+          "type": "uint32[]",
+          "name": "initializedTicksCrossedList"
+        },
+        {
+          "type": "uint256",
+          "name": "gasEstimate"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "quoteExactInputSingle",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "tuple",
+          "name": "params",
+          "components": [
+            {
+              "type": "address",
+              "name": "tokenIn"
+            },
+            {
+              "type": "address",
+              "name": "tokenOut"
+            },
+            {
+              "type": "uint256",
+              "name": "amountIn"
+            },
+            {
+              "type": "uint24",
+              "name": "fee"
+            },
+            {
+              "type": "uint160",
+              "name": "sqrtPriceLimitX96"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "amountOut"
+        },
+        {
+          "type": "uint160",
+          "name": "sqrtPriceX96After"
+        },
+        {
+          "type": "uint32",
+          "name": "initializedTicksCrossed"
+        },
+        {
+          "type": "uint256",
+          "name": "gasEstimate"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "quoteExactOutput",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes",
+          "name": "path"
+        },
+        {
+          "type": "uint256",
+          "name": "amountOut"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "amountIn"
+        },
+        {
+          "type": "uint160[]",
+          "name": "sqrtPriceX96AfterList"
+        },
+        {
+          "type": "uint32[]",
+          "name": "initializedTicksCrossedList"
+        },
+        {
+          "type": "uint256",
+          "name": "gasEstimate"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "quoteExactOutputSingle",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "tuple",
+          "name": "params",
+          "components": [
+            {
+              "type": "address",
+              "name": "tokenIn"
+            },
+            {
+              "type": "address",
+              "name": "tokenOut"
+            },
+            {
+              "type": "uint256",
+              "name": "amount"
+            },
+            {
+              "type": "uint24",
+              "name": "fee"
+            },
+            {
+              "type": "uint160",
+              "name": "sqrtPriceLimitX96"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "amountIn"
+        },
+        {
+          "type": "uint160",
+          "name": "sqrtPriceX96After"
+        },
+        {
+          "type": "uint32",
+          "name": "initializedTicksCrossed"
+        },
+        {
+          "type": "uint256",
+          "name": "gasEstimate"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "renounceOwnership",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "transferOwnership",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "newOwner"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "uniswapV3SwapCallback",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "int256",
+          "name": "amount0Delta"
+        },
+        {
+          "type": "int256",
+          "name": "amount1Delta"
+        },
+        {
+          "type": "bytes",
+          "name": "path"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "whbar",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ]
+    }
+  ]

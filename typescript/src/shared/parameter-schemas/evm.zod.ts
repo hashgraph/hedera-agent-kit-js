@@ -12,6 +12,8 @@ export const contractExecuteTransactionParametersNormalised = (context: Context 
       .instanceof(Uint8Array<ArrayBufferLike>)
       .describe('The parameters of the function to execute.'),
     gas: z.number().int().describe('The gas limit for the contract call.'),
+  }).extend({
+    payableAmount: z.number().optional().describe('The amount of HBAR to pay for the transaction.'),
   });
 
 export const transferERC20Parameters = (context: Context = {}) =>

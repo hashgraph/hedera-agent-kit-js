@@ -1,0 +1,53 @@
+{
+  "name": "saucer-swap-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "SaucerSwap plugin for Hedera Agent Kit",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "hedera",
+    "saucerswap",
+    "defi",
+    "plugin",
+    "agent-kit"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@hashgraph/sdk": "^2.72.0",
+    "@langchain/core": "^0.3.66",
+    "@langchain/openai": "^0.6.2",
+    "axios": "^1.7.7",
+    "dotenv": "^17.2.0",
+    "ethers": "^6.15.0",
+    "hedera-agent-kit": "file:../..",
+    "langchain": "^0.3.30",
+    "prompts": "^2.4.2",
+    "tsup": "^8.5.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.6.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ]
+}

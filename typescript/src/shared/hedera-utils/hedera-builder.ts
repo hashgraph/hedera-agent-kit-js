@@ -5,6 +5,8 @@ import {
   AccountId,
   AccountUpdateTransaction,
   ContractExecuteTransaction,
+  Hbar,
+  HbarUnit,
   ScheduleCreateTransaction,
   ScheduleDeleteTransaction,
   ScheduleSignTransaction,
@@ -168,10 +170,20 @@ export default class HederaBuilder {
     return new TopicUpdateTransaction(params);
   }
 
+  /**
+   * Executes a smart contract transaction with optional HBAR payment
+   * @param params - Contract execution parameters including contractId, functionParameters, gas, and optional payableAmount
+   * @returns ContractExecuteTransaction wrapped in ScheduleCreateTransaction if scheduled
+   */
   static executeTransaction(
     params: z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>>,
   ) {
     const tx = new ContractExecuteTransaction(params);
+    
+    if(params.payableAmount) {
+      tx.setPayableAmount(Hbar.from(params.payableAmount, HbarUnit.Tinybar));
+    }
+    
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 

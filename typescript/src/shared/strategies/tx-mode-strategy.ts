@@ -1,11 +1,14 @@
 import {
   AccountId,
   Client,
+  Hbar,
   ScheduleId,
+  Status,
   TokenId,
   TopicId,
   Transaction,
   TransactionId,
+  TransferTransaction,
 } from '@hashgraph/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 
@@ -25,6 +28,7 @@ export interface RawTransactionResponse {
   transactionId: string;
   topicId: TopicId | null;
   scheduleId: ScheduleId | null;
+  error?: string;
 }
 
 export interface ExecuteStrategyResult {

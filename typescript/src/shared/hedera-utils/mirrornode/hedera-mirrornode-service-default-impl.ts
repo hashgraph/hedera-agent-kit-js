@@ -34,7 +34,6 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   async getAccount(accountId: string): Promise<AccountResponse> {
     const url = `${this.baseUrl}/accounts/${accountId}`;
     const response = await fetch(url);
-
     if (!response.ok) {
       throw new Error(
         `Failed to fetch account ${accountId}: ${response.status} ${response.statusText}`,
@@ -269,5 +268,8 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
       throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
     }
     return await response.json();
+  }
+  getBaseUrl(): string {
+    return this.baseUrl;
   }
 }

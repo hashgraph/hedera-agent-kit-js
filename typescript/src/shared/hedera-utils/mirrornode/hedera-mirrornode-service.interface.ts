@@ -32,4 +32,5 @@ export interface IHederaMirrornodeService {
   ): Promise<TokenAllowanceResponse>;
   getAccountNfts(accountId: string): Promise<NftBalanceResponse>;
   getScheduledTransactionDetails(scheduleId: string): Promise<ScheduledTransactionDetailsResponse>;
+  getBaseUrl(): string;
 }

@@ -1,0 +1,31 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"display": "Default",
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"moduleDetection": "force",
+		"outDir": "./dist",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["src/*"]
+		},
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"strict": true
+	},
+	"ts-node": {
+		"esm": true,
+		"experimentalSpecifierResolution": "node"
+	},
+	"include": ["src/**/*.ts", "saucer-swap-plugin/src/config.ts", "saucer-swap-plugin/src/index.ts", "saucer-swap-plugin/src/saucerswap.zod.ts", "saucer-swap-plugin/src/utils.ts"],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"examples",
+		"**/src.ts/**" // <- exclude ethers-style vendored TS sources
+	]
+}
