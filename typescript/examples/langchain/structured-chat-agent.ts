@@ -1,9 +1,9 @@
 import { AgentMode, HederaLangchainToolkit } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import type { ChatPromptTemplate } from '@langchain/core/prompts';
-import { pull } from 'langchain/hub';
-import { AgentExecutor, createStructuredChatAgent } from 'langchain/agents';
-import { BufferMemory } from 'langchain/memory';
+import { pull } from '@langchain/classic/hub';
+import { AgentExecutor, createStructuredChatAgent } from '@langchain/classic/agents';
+import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';

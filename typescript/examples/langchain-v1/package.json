@@ -1,5 +1,5 @@
 {
-  "name": "hedera-agent-toolkit-examples-langchain",
+  "name": "hedera-agent-toolkit-examples-langchain-v1",
   "version": "1.0.0",
   "scripts": {
     "test": "echo \"No tests specified for example package\"",
@@ -9,11 +9,12 @@
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "^2.68.0",
-    "@langchain/classic": "^1.0.2",
+    "@hashgraph/sdk": "^2.77.0",
+    "@langchain/core": "^1.0.4",
     "@langchain/openai": "^1.1.0",
     "dotenv": "^17.2.0",
-    "hedera-agent-kit": "3.4.0",
+    "hedera-agent-kit": "../..",
+    "langchain": "^1.0.4",
     "prompts": "^2.4.2"
   },
   "author": "",

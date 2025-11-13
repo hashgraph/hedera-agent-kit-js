@@ -12,22 +12,16 @@ import {
   coreTransactionQueryPluginToolNames,
   HederaLangchainToolkit,
 } from 'hedera-agent-kit';
-import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
-import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
-import { ChatOpenAI } from "@langchain/openai";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import { createAgent } from "langchain";
+import { ChatOpenAI } from "@langchain/openai";
 
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-  // Initialise OpenAI LLM
-  const llm = new ChatOpenAI({
-    model: 'gpt-4o-mini',
-  });
 
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
@@ -131,41 +125,20 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  // Load the structured chat prompt template
-  const prompt = ChatPromptTemplate.fromMessages([
-    [
-      'system',
-      'You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools',
-    ],
-    ['placeholder', '{chat_history}'],
-    ['human', '{input}'],
-    ['placeholder', '{agent_scratchpad}'],
-  ]);
-
-  // Fetch tools from toolkit
+  // Fetch tools from a toolkit
   const tools: StructuredToolInterface[] = hederaAgentToolkit.getTools();
-  // Create the underlying agent
-  const agent = createToolCallingAgent({
-    llm,
-    tools,
-    prompt,
+
+  const llm = new ChatOpenAI({
+    model: 'gpt-4o-mini',
   });
 
-  // In-memory conversation history
-  const memory = new BufferMemory({
-    memoryKey: 'chat_history',
-    inputKey: 'input',
-    outputKey: 'output',
-    returnMessages: true,
+
+  const agent = createAgent({
+    model: llm,
+    tools: tools,
+    systemPrompt: "You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools"
   });
 
-  // Wrap everything in an executor that will maintain memory
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools,
-    memory,
-    returnIntermediateSteps: false,
-  });
 
   console.log('Hedera Agent CLI Chatbot with Plugin Support — type "exit" to quit');
   console.log('Available plugin tools:');
@@ -189,9 +162,12 @@ async function bootstrap(): Promise<void> {
     }
 
     try {
-      const response = await agentExecutor.invoke({ input: userInput });
-      console.log(JSON.stringify(response, null, 2));
-      console.log(`AI: ${response?.output ?? response}`);
+      const response = await agent.invoke({
+        messages: [
+          { role: "user", content: userInput },
+        ],
+      });
+      console.log(`AI: ${response.messages[response.messages.length - 1].content ?? JSON.stringify(response)}`);
     } catch (err) {
       console.error('Error:', err);
     }
@@ -206,3 +182,4 @@ bootstrap()
   .then(() => {
     process.exit(0);
   });
+
