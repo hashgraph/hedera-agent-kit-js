@@ -8,6 +8,7 @@ import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/acco
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const approveTokenAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -69,6 +70,7 @@ const tool = (context: Context): Tool => ({
   description: approveTokenAllowancePrompt(context),
   parameters: approveTokenAllowanceParameters(context),
   execute: approveTokenAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -33,3 +33,49 @@ export const transactionToolOutputParser = (rawOutput: string): { raw: any; huma
     humanMessage: 'Error: Parsed tool output had an unexpected format.'
   };
 };
+
+/**
+ * A temporary, generic output parser for **all query tools**.
+ * * This function provides a basic, untyped parsing mechanism for the
+ * stringified JSON output from any query tool. It extracts the common
+ * `{ raw: any, humanMessage: string }` structure.
+ * * @remarks
+ * This is a temporary, "one-size-fits-all" solution.
+ * The long-term goal is to replace this with **specific, strongly-typed
+ * output parsers for each individual query tool**. This will allow
+ * for better compile-time type-checking and more robust handling of
+ * each tool's unique `raw` data structure (e.g., `AccountResponse`,
+ * `TokenInfoResponse`, etc.).
+ *
+ * @param rawOutput The stringified JSON content from a query tool's ToolMessage.
+ * @returns A JavaScript object with 'raw' and 'humanMessage' keys.
+ */
+export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMessage: string } => {
+  let parsedObject;
+  try {
+    parsedObject = JSON.parse(rawOutput);
+  } catch (error) {
+    console.error(`untypedQueryOutputParser failed to parse JSON:`, error);
+    return {
+      raw: { status: 'PARSE_ERROR', error: error, originalOutput: rawOutput },
+      humanMessage: 'Error: Failed to parse tool output. The output was malformed.'
+    };
+  }
+
+  // Basic check to ensure the common structure is present
+  if (!parsedObject || typeof parsedObject.raw === 'undefined' || typeof parsedObject.humanMessage === 'undefined') {
+    console.error(`untypedQueryOutputParser: Parsed object missing 'raw' or 'humanMessage' key:`, parsedObject);
+    return {
+      raw: { status: 'PARSE_ERROR', error: "Parsed object missing 'raw' or 'humanMessage'", originalOutput: rawOutput },
+      humanMessage: 'Error: Tool output had an unexpected format.'
+    };
+  }
+
+  return {
+    // The 'raw' data is the untyped JSON object from the tool.
+    // This generic parser just passes it through. A future, tool-specific
+    // parser would validate and cast this 'raw' object into a specific type.
+    raw: parsedObject.raw,
+    humanMessage: parsedObject.humanMessage
+  };
+};

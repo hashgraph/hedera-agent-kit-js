@@ -6,6 +6,7 @@ import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { ExchangeRateResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { exchangeRateQueryParameters } from '@/shared/parameter-schemas/core-misc.zod';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getExchangeRatePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -76,6 +77,7 @@ const tool = (context: Context): Tool => ({
   description: getExchangeRatePrompt(context),
   parameters: exchangeRateQueryParameters(context),
   execute: getExchangeRateQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

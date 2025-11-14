@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { deleteAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const deleteAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -62,6 +63,7 @@ const tool = (context: Context): Tool => ({
   description: deleteAccountPrompt(context),
   parameters: deleteAccountParameters(context),
   execute: deleteAccount,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

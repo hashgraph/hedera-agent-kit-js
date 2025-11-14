@@ -8,6 +8,7 @@ import { TransactionDetailsResponse } from '@/shared/hedera-utils/mirrornode/typ
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { transactionRecordQueryParameters } from '@/shared/parameter-schemas/transaction.zod';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getTransactionRecordQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -100,6 +101,7 @@ const tool = (context: Context): Tool => ({
   description: getTransactionRecordQueryPrompt(context),
   parameters: transactionRecordQueryParameters(context),
   execute: getTransactionRecordQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

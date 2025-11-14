@@ -8,6 +8,7 @@ import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -80,6 +81,7 @@ const tool = (context: Context): Tool => ({
   description: createFungibleTokenPrompt(context),
   parameters: createFungibleTokenParameters(context),
   execute: createFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

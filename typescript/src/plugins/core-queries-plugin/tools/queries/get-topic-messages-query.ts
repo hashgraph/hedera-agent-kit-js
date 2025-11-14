@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Tool } from '@/shared/tools';
 import { TopicMessage, TopicMessagesQueryParams } from '@/shared/hedera-utils/mirrornode/types';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getTopicMessagesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -93,6 +94,7 @@ const tool = (context: Context): Tool => ({
   description: getTopicMessagesQueryPrompt(context),
   parameters: topicMessagesQueryParameters(context),
   execute: getTopicMessagesQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;
