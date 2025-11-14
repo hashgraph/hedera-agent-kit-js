@@ -32,7 +32,7 @@
   "author": "Hashgraph",
   "license": "Apache-2.0",
   "dependencies": {
-    "@langchain/core": "^1.0.4",
+    "@langchain/core": "1.0.4",
     "@elizaos/core": "1.4.2",
     "@hashgraph/sdk": "^2.68.0",
     "@modelcontextprotocol/sdk": "^1.16.0",

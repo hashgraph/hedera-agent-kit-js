@@ -23,6 +23,7 @@ class HederaLangchainToolkit implements BaseToolkit {
           tool.method,
           tool.description,
           tool.parameters,
+          tool.outputParser
         ),
     );
   }

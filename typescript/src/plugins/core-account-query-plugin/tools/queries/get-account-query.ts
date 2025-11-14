@@ -52,12 +52,55 @@ export const getAccountQuery = async (
 
 export const GET_ACCOUNT_QUERY_TOOL = 'get_account_query_tool';
 
+/**
+ * Parses the stringified JSON output from the 'getAccountQuery' tool.
+ * This is a custom parser for this specific query tool.
+ * @param output The stringified JSON from the ToolMessage content.
+ * @returns A JavaScript object with 'raw' and 'humanMessage' keys.
+ */
+const outputParser = (output: string): { raw: any; humanMessage: string } => {
+  let parsedObject;
+  try {
+    parsedObject = JSON.parse(output);
+  } catch (error) {
+    console.error(`[${GET_ACCOUNT_QUERY_TOOL}] outputParser failed to parse JSON:`, error);
+    return {
+      raw: { status: 'PARSE_ERROR', error: error, originalOutput: output },
+      humanMessage: 'Error: Failed to parse tool output. The output was malformed.'
+    };
+  }
+
+  // Check for the SUCCESS case (identified by the 'account' key in 'raw')
+  if (parsedObject && parsedObject.raw && parsedObject.raw.account) {
+    return {
+      raw: parsedObject.raw, // Contains { accountId, account }
+      humanMessage: parsedObject.humanMessage
+    };
+  }
+
+  // Check for the known FAILURE case (identified by the 'error' key in 'raw')
+  if (parsedObject && parsedObject.raw && parsedObject.raw.error) {
+    return {
+      raw: parsedObject.raw, // Contains { status, error }
+      humanMessage: parsedObject.humanMessage || 'An error occurred while fetching account data.'
+    };
+  }
+
+  // Fallback for valid JSON but an unknown structure
+  console.error(`[${GET_ACCOUNT_QUERY_TOOL}] outputParser received unknown JSON structure:`, parsedObject);
+  return {
+    raw: { status: 'PARSE_ERROR', error: 'Unknown JSON structure', originalOutput: output },
+    humanMessage: 'Error: Tool output had an unexpected format.'
+  };
+};
+
 const tool = (context: Context): Tool => ({
   method: GET_ACCOUNT_QUERY_TOOL,
   name: 'Get Account Query',
   description: getAccountQueryPrompt(context),
   parameters: accountQueryParameters(context),
   execute: getAccountQuery,
+  outputParser: outputParser,
 });
 
 export default tool;
