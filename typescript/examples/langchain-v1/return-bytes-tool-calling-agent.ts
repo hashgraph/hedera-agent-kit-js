@@ -3,7 +3,6 @@ import {
   HederaLangchainToolkit,
   ResponseParserService,
 } from 'hedera-agent-kit';
-import { ChatOpenAI } from '@langchain/openai';
 import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -40,13 +39,9 @@ async function bootstrap(): Promise<void> {
   // cast to any to avoid excessively deep type instantiation caused by zod@3.25
   const tools = hederaAgentToolkit.getTools();
 
-  const llm = new ChatOpenAI({
-    model: 'gpt-4o-mini',
-  });
-
   // Create the underlying agent
   const agent = createAgent({
-    model: llm,
+    model: "openai:gpt-4o-mini",
     tools: tools,
     systemPrompt:
       'You are a helpful Hedera assistant. You have Query Tools to read from the mirror node (e.g., check balance) and Transaction Tools to create transactions. Your Transaction Tools have two modes: "Return-Bytes" (prepare and return unsigned bytes, the tool calls wont execute the transactions) or "Execute-Transaction" (autonomously execute and return the receipt). Query tools always just return data.',

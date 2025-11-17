@@ -1,52 +1,30 @@
 import { Client } from '@hashgraph/sdk';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
-import { HederaLangchainToolkit } from '@/langchain';
-import { AgentMode } from '@/shared';
-import { LLMFactory, type LlmOptions, LLMProvider } from './llm-factory';
-import { getOperatorClientForTests } from './client-setup';
-import type { LangchainTestOptions } from './langchain-test-config';
+import {
+  HederaLangchainToolkit,
+} from '@/langchain';
+import { ResponseParserService } from 'hedera-agent-kit';
 import {
   TOOLKIT_OPTIONS,
   DEFAULT_LLM_OPTIONS,
   getProviderApiKeyMap,
+  SYSTEM_PROMPT,
 } from './langchain-test-config';
+
+import { LLMFactory, type LlmOptions, LLMProvider } from './llm-factory';
+
+import { getOperatorClientForTests } from './client-setup';
+import type { LangchainTestOptions } from './langchain-test-config';
+import { createAgent, ReactAgent } from 'langchain';
+import { AgentMode } from '@/shared';
 
 export interface LangchainTestSetup {
   client: Client;
-  agentExecutor: AgentExecutor;
+  agent: ReactAgent;
   toolkit: HederaLangchainToolkit;
+  responseParser: ResponseParserService;
   cleanup: () => void;
 }
 
-/**
- * Creates a test setup for LangChain using the specified plugins and LLM options.
- * This function initializes a complete testing environment with Hedera client, LLM agent,
- * and all necessary tools for blockchain operations testing.
- *
- * @param {LangchainTestOptions} [toolkitOptions=TOOLKIT_OPTIONS] - Configuration for tools, plugins, and agent mode
- * @param {Partial<LlmOptions>} [llmOptions] - LLM configuration (provider, model, temperature, etc.)
- * @param {Client} [customClient] - Optional custom Hedera client instance
- * @returns {Promise<LangchainTestSetup>} Complete test setup with client, agent executor, toolkit, and cleanup function
- * @throws {Error} Throws an error if required API keys are missing for the specified LLM provider
- * @example
- * ```typescript
- * const setup = await createLangchainTestSetup({
- *   tools: ['TRANSFER_HBAR_TOOL', 'CREATE_ACCOUNT_TOOL'],
- *   plugins: [coreAccountPlugin],
- *   agentMode: AgentMode.AUTONOMOUS
- * });
- *
- * try {
- *   const result = await setup.agentExecutor.invoke({
- *     input: "Transfer 1 HBAR to 0.0.12345"
- *   });
- *   console.log(result);
- * } finally {
- *   setup.cleanup();
- * }
- * ```
- */
 export async function createLangchainTestSetup(
   toolkitOptions: LangchainTestOptions = TOOLKIT_OPTIONS,
   llmOptions?: Partial<LlmOptions>,
@@ -94,26 +72,28 @@ export async function createLangchainTestSetup(
     },
   });
 
-  // Create prompt template
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', resolvedLlmOptions.systemPrompt!],
-    ['human', '{input}'],
-    ['placeholder', '{agent_scratchpad}'],
-  ]);
-
-  // Create agent and executor
   const tools = toolkit.getTools();
-  const agent = createToolCallingAgent({ llm, tools, prompt });
 
-  const agentExecutor = new AgentExecutor({
-    agent,
+  const agent = createAgent({
+    model: llm,
     tools,
-    returnIntermediateSteps: true,
-    maxIterations: resolvedLlmOptions.maxIterations ?? 1,
+    systemPrompt: SYSTEM_PROMPT || `
+      You are a Hedera blockchain assistant.
+      You have access to tools for blockchain operations.
+      Correctly extract parameters and call the right Hedera tools.
+    `,
   });
 
-  // Cleanup function
+
+  const responseParser = new ResponseParserService(tools);
+
   const cleanup = () => client.close();
 
-  return { client, agentExecutor, toolkit, cleanup };
+  return {
+    client,
+    agent,
+    toolkit,
+    responseParser,
+    cleanup,
+  };
 }

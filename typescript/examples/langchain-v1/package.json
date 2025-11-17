@@ -1,6 +1,9 @@
 {
   "name": "hedera-agent-toolkit-examples-langchain-v1",
   "version": "1.0.0",
+  "description": "LangChain v1 examples for the Hedera Agent Toolkit",
+  "private": true,
+  "type": "module",
   "scripts": {
     "test": "echo \"No tests specified for example package\"",
     "langchain:structured-chat-agent": "tsx structured-chat-agent.ts",
@@ -10,18 +13,45 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.77.0",
-    "@langchain/core": "^1.0.4",
-    "@langchain/openai": "^1.1.0",
-    "dotenv": "^17.2.0",
     "hedera-agent-kit": "../..",
+    "@langchain/core": "1.0.4",
     "langchain": "^1.0.4",
+    "dotenv": "^17.2.0",
     "prompts": "^2.4.2"
   },
-  "author": "",
-  "license": "Apache-2.0",
-  "description": "",
   "devDependencies": {
     "@types/prompts": "^2.4.9",
-    "tsx": "^4.20.4"
+    "tsx": "^4.20.4",
+    "typescript": "^5.6.2"
+  },
+  "overrides": {
+    "@elizaos/core": {
+      "langchain": "npm:langchain@0.3.15",
+      "@langchain/core": "npm:@langchain/core@0.2.29",
+      "@langchain/openai": "npm:@langchain/openai@0.0.34"
+    },
+    "langchain": {
+      "@elizaos/core": "#langchain-v0"
+    },
+    "@langchain/core": {
+      "@elizaos/core": "#langchain-v0/core"
+    },
+    "@langchain/openai": {
+      "@elizaos/core": "#langchain-v0/openai"
+    }
+  },
+  "imports": {
+    "#langchain-v0": {
+      "import": "langchain@0.3.15",
+      "require": "langchain@0.3.15"
+    },
+    "#langchain-v0/core": {
+      "import": "@langchain/core@0.2.29",
+      "require": "@langchain/core@0.2.29"
+    },
+    "#langchain-v0/openai": {
+      "import": "@langchain/openai@0.0.34",
+      "require": "@langchain/openai@0.0.34"
+    }
   }
 }
