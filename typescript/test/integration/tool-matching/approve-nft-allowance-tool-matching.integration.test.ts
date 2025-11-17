@@ -1,9 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
-import { coreTokenPlugin, coreTokenPluginToolNames } from '@/plugins';
-import { AgentMode } from '@/shared/configuration';
+import { coreTokenPluginToolNames } from '@/plugins';
 
 /**
  * Tool-matching integration tests verify that natural language inputs
@@ -12,18 +11,13 @@ import { AgentMode } from '@/shared/configuration';
 
 describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { APPROVE_NFT_ALLOWANCE_TOOL } = coreTokenPluginToolNames;
 
   beforeAll(async () => {
-    // Use a minimal toolkit with only the target tool to make LLM routing deterministic
-    testSetup = await createLangchainTestSetup({
-      tools: [APPROVE_NFT_ALLOWANCE_TOOL],
-      plugins: [coreTokenPlugin],
-      agentMode: AgentMode.AUTONOMOUS,
-    } as any);
-    agentExecutor = testSetup.agentExecutor;
+    testSetup = await createLangchainTestSetup();
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -45,7 +39,9 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -66,7 +62,9 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -105,7 +103,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
 
       for (const v of variations) {
         const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-        await agentExecutor.invoke({ input: v.input });
+        await agent.invoke({ messages: [{ role: 'user', content: v.input }] });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           APPROVE_NFT_ALLOWANCE_TOOL,
@@ -141,7 +139,9 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
 
       for (const v of variations) {
         const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-        await agentExecutor.invoke({ input: v.input });
+        await agent.invoke({
+          messages: [{ role: 'user', content: v.input }],
+        });
 
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
@@ -169,7 +169,9 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(

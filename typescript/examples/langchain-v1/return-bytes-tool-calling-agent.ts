@@ -7,6 +7,7 @@ import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { createAgent } from 'langchain';
+import { MemorySaver } from '@langchain/langgraph';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ async function bootstrap(): Promise<void> {
     tools: tools,
     systemPrompt:
       'You are a helpful Hedera assistant. You have Query Tools to read from the mirror node (e.g., check balance) and Transaction Tools to create transactions. Your Transaction Tools have two modes: "Return-Bytes" (prepare and return unsigned bytes, the tool calls wont execute the transactions) or "Execute-Transaction" (autonomously execute and return the receipt). Query tools always just return data.',
+    checkpointer: new MemorySaver(),
   });
 
   const responseParsingService = new ResponseParserService(hederaAgentToolkit.getTools());

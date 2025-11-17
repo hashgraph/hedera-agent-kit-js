@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { Client, PrivateKey, TokenId, AccountId, TokenSupplyType, PublicKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,7 +8,8 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
@@ -20,7 +21,8 @@ describe('Get Token Info Query E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   // --- Constants for token creation ---
   const FT_PARAMS = {
@@ -44,7 +46,8 @@ describe('Get Token Info Query E2E Tests', () => {
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
@@ -80,8 +83,14 @@ describe('Get Token Info Query E2E Tests', () => {
     itWithRetry(async () => {
       const newSupplyKey = PrivateKey.generateED25519().publicKey.toString();
       const newAdminKey = executorClient.operatorPublicKey!.toString();
-      await agentExecutor.invoke({
-        input: `For token ${tokenIdFT.toString()}, change the admin key to: ${newAdminKey} and the supply key to: ${newSupplyKey}.`,
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For token ${tokenIdFT.toString()}
+      ], change the admin key to: ${newAdminKey} and the supply key to: ${newSupplyKey}.`,
+          },
+        ],
       });
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
@@ -93,8 +102,14 @@ describe('Get Token Info Query E2E Tests', () => {
   it(
     'should change token keys using default values',
     itWithRetry(async () => {
-      await agentExecutor.invoke({
-        input: `For token ${tokenIdFT.toString()}, change the metadata key to my key and the token memo to 'just updated'`,
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For token ${tokenIdFT.toString()}
+      ], change the metadata key to my key and the token memo to 'just updated'`,
+          },
+        ],
       });
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
@@ -108,16 +123,22 @@ describe('Get Token Info Query E2E Tests', () => {
   it(
     'should fail due to token being originally created without KYC key',
     itWithRetry(async () => {
-      const queryResult = await agentExecutor.invoke({
-        input: `For token ${tokenIdFT.toString()}, change the KYC key to my key`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For token ${tokenIdFT.toString()}
+      ], change the KYC key to my key`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toContain(
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to update token: Cannot update kycKey: token was created without a kycKey',
       );
-      expect(observation.raw.error).toContain(
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
         'Failed to update token: Cannot update kycKey: token was created without a kycKey',
       );
     }),
@@ -128,8 +149,14 @@ describe('Get Token Info Query E2E Tests', () => {
     itWithRetry(async () => {
       const metadataString = 'hello-world';
 
-      await agentExecutor.invoke({
-        input: `For token ${tokenIdFT.toString()}, set the metadata to "${metadataString}" and the token memo to "metadata updated".`,
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For token ${tokenIdFT.toString()}
+      ], set the metadata to "${metadataString}" and the token memo to "metadata updated".`,
+          },
+        ],
       });
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
@@ -149,8 +176,13 @@ describe('Get Token Info Query E2E Tests', () => {
       const secondaryAccountId = await executorWrapper
         .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 20 })
         .then(resp => resp.accountId!);
-      await agentExecutor.invoke({
-        input: `For token ${tokenIdFT.toString()} set auto renew account id to ${secondaryAccountId.toString()}.`,
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For token ${tokenIdFT.toString()} set auto renew account id to ${secondaryAccountId.toString()}.`,
+          },
+        ],
       });
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
@@ -180,14 +212,21 @@ describe('Get Token Info Query E2E Tests', () => {
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      const queryResult = await agentExecutor.invoke({
-        input: `For token ${tokenId.toString()}, change the admin key to my key`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For token ${tokenId.toString()} change the admin key to my key`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.raw.error).toContain('You do not have permission to update this token.');
-      expect(observation.humanMessage).toContain(
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
+        'You do not have permission to update this token.',
+      );
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'You do not have permission to update this token.',
       );
 

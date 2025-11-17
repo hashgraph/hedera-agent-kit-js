@@ -19,7 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "build": "tsup",
-    "format": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --write",
+    "format": "prettier \"{src,test}/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --write",
     "format:check": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --check",
     "lint": "eslint . --ext .ts,.tsx",
     "prepare": "husky",

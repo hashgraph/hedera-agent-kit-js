@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AccountId, Client, PrivateKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,7 +8,7 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
 
@@ -23,7 +23,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   let tokenIdFT: TokenId;
   let tokenIdFT2: TokenId;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   const FT_PARAMS = {
     tokenName: 'AirdropToken',
@@ -63,7 +64,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
     // Setup agent
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // Deploy fungible tokens
     tokenIdFT = await tokenCreatorWrapper
@@ -116,14 +118,19 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       );
       expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeTruthy();
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Dissociate ${tokenIdFT.toString()} from my account`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Dissociate ${tokenIdFT.toString()} from my account`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toContain('successfully dissociated');
-      expect(observation.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('successfully dissociated');
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
       const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
@@ -150,14 +157,19 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeTruthy();
       expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT2.toString())).toBeTruthy();
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Dissociate tokens ${tokenIdFT.toString()} and ${tokenIdFT2.toString()} from my account`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Dissociate tokens ${tokenIdFT.toString()} and ${tokenIdFT2.toString()} from my account`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toContain('successfully dissociated');
-      expect(observation.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('successfully dissociated');
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
       const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
@@ -176,28 +188,38 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       );
       expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Dissociate ${tokenIdFT.toString()} from my account`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Dissociate ${tokenIdFT.toString()} from my account`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toContain('Failed to dissociate');
-      expect(observation.raw.status).not.toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to dissociate');
+      expect(parsedResponse[0].parsedData.raw.status).not.toBe('SUCCESS');
     }),
   );
 
   it(
     'should fail dissociating not existing token',
     itWithRetry(async () => {
-      const queryResult = await agentExecutor.invoke({
-        input: `Dissociate token 0.0.22223333444 from my account`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Dissociate token 0.0.22223333444 from my account`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toContain('Failed to dissociate');
-      expect(observation.raw.status).not.toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to dissociate');
+      expect(parsedResponse[0].parsedData.raw.status).not.toBe('SUCCESS');
     }),
   );
 });

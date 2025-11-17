@@ -12,7 +12,10 @@ import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-
 const associateTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
-  const accountToAssociate = PromptGenerator.getAnyAddressParameterDescription('accountId', context);
+  const accountToAssociate = PromptGenerator.getAnyAddressParameterDescription(
+    'accountId',
+    context,
+  );
 
   return `
 ${contextSnippet}
@@ -66,5 +69,3 @@ const tool = (context: Context): Tool => ({
 });
 
 export default tool;
-
-

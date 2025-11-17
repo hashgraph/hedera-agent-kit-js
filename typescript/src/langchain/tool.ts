@@ -22,7 +22,7 @@ class HederaAgentKitTool extends StructuredTool {
     method: string,
     description: string,
     schema: z.ZodObject<any, any>,
-    responseParsingFunction?: (response: any) => {}, // FIXME: temporary set to undefined
+    responseParsingFunction: (response: any) => {},
   ) {
     super();
 

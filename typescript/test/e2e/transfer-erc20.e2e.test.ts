@@ -1,5 +1,5 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
@@ -7,8 +7,9 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
@@ -17,7 +18,8 @@ import { itWithRetry } from '../utils/retry-util';
 
 describe('Transfer ERC20 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
@@ -44,7 +46,8 @@ describe('Transfer ERC20 Token E2E Tests', () => {
 
     // 4. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     // 5. Create a test ERC20 token with initial supply
@@ -87,12 +90,19 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.status).toBe('SUCCESS');
-      expect(observation.raw.transactionId).toBeDefined();
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
     }),
@@ -108,12 +118,19 @@ describe('Transfer ERC20 Token E2E Tests', () => {
       ];
 
       for (const input of variations) {
-        const result = await agentExecutor.invoke({ input });
-        const observation = extractObservationFromLangchainResponse(result);
+        const result = await agent.invoke({
+          messages: [
+            {
+              role: 'user',
+              content: input,
+            },
+          ],
+        });
+        const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-        expect(observation).toBeDefined();
-        expect(observation.raw.status.toString()).toBe('SUCCESS');
-        expect(observation.raw.transactionId).toBeDefined();
+        expect(parsedResponse).toBeDefined();
+        expect(parsedResponse[0].parsedData.raw.status.toString()).toBe('SUCCESS');
+        expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
       }
     }),
   );
@@ -123,13 +140,22 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation.raw).toBeDefined();
-      expect(observation.raw.transactionId).toBeDefined();
-      expect(observation.raw.scheduleId).not.toBeNull();
-      expect(observation.humanMessage).toContain('Scheduled transfer of ERC20 successfully.');
+      expect(parsedResponse[0].parsedData.raw).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.scheduleId).not.toBeNull();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled transfer of ERC20 successfully.',
+      );
     }),
   );
 });

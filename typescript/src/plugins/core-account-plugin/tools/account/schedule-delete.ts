@@ -56,5 +56,3 @@ const tool = (context: Context): Tool => ({
 });
 
 export default tool;
-
-

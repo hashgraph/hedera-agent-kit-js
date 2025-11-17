@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreConsensusPluginToolNames } from '@/plugins';
 
 describe.skip('Create Topic Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { CREATE_TOPIC_TOOL } = coreConsensusPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -31,9 +31,13 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
       const input = 'Create a new topic';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(CREATE_TOPIC_TOOL, expect.objectContaining({}));
@@ -43,9 +47,13 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
       const input = 'Create a topic with memo "Payments" and set submit key';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -62,14 +70,21 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
         { input: 'Open a new consensus topic', expected: {} },
         { input: 'Create topic with memo "My memo"', expected: { topicMemo: 'My memo' } },
         { input: 'Create topic and set submit key', expected: { isSubmitKey: true } },
-        { input: 'Create topic with transaction memo "TX: memo"', expected: { transactionMemo: 'TX: memo' } },
+        {
+          input: 'Create topic with transaction memo "TX: memo"',
+          expected: { transactionMemo: 'TX: memo' },
+        },
       ];
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
-        await agentExecutor.invoke({ input: variation.input });
+        const spy = vi
+          .spyOn(hederaAPI, 'run')
+          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+        await agent.invoke({
+          messages: [{ role: 'user', content: variation.input }],
+        });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           CREATE_TOPIC_TOOL,

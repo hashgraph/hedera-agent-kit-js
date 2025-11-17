@@ -1,8 +1,6 @@
 import { Client } from '@hashgraph/sdk';
-import {
-  HederaLangchainToolkit,
-} from '@/langchain';
-import { ResponseParserService } from 'hedera-agent-kit';
+import { HederaLangchainToolkit } from '@/langchain';
+import { ResponseParserService } from '@/langchain';
 import {
   TOOLKIT_OPTIONS,
   DEFAULT_LLM_OPTIONS,
@@ -77,13 +75,14 @@ export async function createLangchainTestSetup(
   const agent = createAgent({
     model: llm,
     tools,
-    systemPrompt: SYSTEM_PROMPT || `
+    systemPrompt:
+      SYSTEM_PROMPT ||
+      `
       You are a Hedera blockchain assistant.
       You have access to tools for blockchain operations.
       Correctly extract parameters and call the right Hedera tools.
     `,
   });
-
 
   const responseParser = new ResponseParserService(tools);
 

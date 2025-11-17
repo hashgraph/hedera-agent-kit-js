@@ -155,7 +155,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
 
 export const DEFAULT_LLM_OPTIONS: LlmOptions = {
   provider: LLMProvider.OPENAI,
-  model: 'gpt-4o-mini'
+  model: 'gpt-4o-mini',
 };
 
 export const SYSTEM_PROMPT = `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.

@@ -1,4 +1,6 @@
-export const transactionToolOutputParser = (rawOutput: string): { raw: any; humanMessage: string } => {
+export const transactionToolOutputParser = (
+  rawOutput: string,
+): { raw: any; humanMessage: string } => {
   let parsedObject;
   try {
     parsedObject = JSON.parse(rawOutput);
@@ -6,7 +8,7 @@ export const transactionToolOutputParser = (rawOutput: string): { raw: any; huma
     console.error(`[transactionToolOutputParser] Failed to parse JSON:`, rawOutput, error);
     return {
       raw: { status: 'PARSE_ERROR', error: error, originalOutput: rawOutput },
-      humanMessage: 'Error: Failed to parse tool output. The output was malformed.'
+      humanMessage: 'Error: Failed to parse tool output. The output was malformed.',
     };
   }
 
@@ -14,15 +16,26 @@ export const transactionToolOutputParser = (rawOutput: string): { raw: any; huma
   if (parsedObject && parsedObject.bytes) {
     return {
       raw: parsedObject, // The 'raw' data *is* the object with the bytes
-      humanMessage: 'Transaction bytes are ready for signing.' // The parser can add a helpful default message
+      humanMessage: 'Transaction bytes are ready for signing.', // The parser can add a helpful default message
     };
   }
 
   // Case 2: Handle EXECUTE_TRANSACTION mode output
-  if (parsedObject && parsedObject.raw) {
+  if (
+    parsedObject &&
+    typeof parsedObject.raw !== 'undefined' &&
+    typeof parsedObject.humanMessage !== 'undefined'
+  ) {
+    // <-- MODIFIED: Use destructuring to capture other top-level fields
+    const { raw, humanMessage, ...otherFields } = parsedObject;
+
+    // This ensures any extra data from the tool is not lost
+    // It will be merged into the 'raw' object returned
+    const mergedRaw = { ...raw, ...otherFields };
+
     return {
-      raw: parsedObject.raw,
-      humanMessage: parsedObject.humanMessage || 'Transaction processed, but no summary was provided.'
+      raw: mergedRaw,
+      humanMessage: humanMessage,
     };
   }
 
@@ -30,7 +43,7 @@ export const transactionToolOutputParser = (rawOutput: string): { raw: any; huma
   console.error(`[transactionToolOutputParser] Parsed object has unknown shape:`, parsedObject);
   return {
     raw: { status: 'PARSE_ERROR', originalOutput: rawOutput, parsedObject },
-    humanMessage: 'Error: Parsed tool output had an unexpected format.'
+    humanMessage: 'Error: Parsed tool output had an unexpected format.',
   };
 };
 
@@ -58,16 +71,27 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
     console.error(`untypedQueryOutputParser failed to parse JSON:`, error);
     return {
       raw: { status: 'PARSE_ERROR', error: error, originalOutput: rawOutput },
-      humanMessage: 'Error: Failed to parse tool output. The output was malformed.'
+      humanMessage: 'Error: Failed to parse tool output. The output was malformed.',
     };
   }
 
   // Basic check to ensure the common structure is present
-  if (!parsedObject || typeof parsedObject.raw === 'undefined' || typeof parsedObject.humanMessage === 'undefined') {
-    console.error(`untypedQueryOutputParser: Parsed object missing 'raw' or 'humanMessage' key:`, parsedObject);
+  if (
+    !parsedObject ||
+    typeof parsedObject.raw === 'undefined' ||
+    typeof parsedObject.humanMessage === 'undefined'
+  ) {
+    console.error(
+      `untypedQueryOutputParser: Parsed object missing 'raw' or 'humanMessage' key:`,
+      parsedObject,
+    );
     return {
-      raw: { status: 'PARSE_ERROR', error: "Parsed object missing 'raw' or 'humanMessage'", originalOutput: rawOutput },
-      humanMessage: 'Error: Tool output had an unexpected format.'
+      raw: {
+        status: 'PARSE_ERROR',
+        error: "Parsed object missing 'raw' or 'humanMessage'",
+        originalOutput: rawOutput,
+      },
+      humanMessage: 'Error: Tool output had an unexpected format.',
     };
   }
 
@@ -76,6 +100,6 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
     // This generic parser just passes it through. A future, tool-specific
     // parser would validate and cast this 'raw' object into a specific type.
     raw: parsedObject.raw,
-    humanMessage: parsedObject.humanMessage
+    humanMessage: parsedObject.humanMessage,
   };
 };

@@ -1,4 +1,3 @@
-
 export enum LLMProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
@@ -47,13 +46,13 @@ export class LLMFactory {
 
     switch (provider) {
       case LLMProvider.OPENAI:
-        return `openai:${model}`
+        return `openai:${model}`;
 
       case LLMProvider.ANTHROPIC:
-        return `anthropic:${model}`
+        return `anthropic:${model}`;
 
       case LLMProvider.GROQ:
-        return `groq:${model}`
+        return `groq:${model}`;
 
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);

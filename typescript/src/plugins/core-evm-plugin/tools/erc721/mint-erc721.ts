@@ -14,7 +14,11 @@ import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-
 const mintERC721Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
-  const toAddressDesc = PromptGenerator.getAnyAddressParameterDescription('toAddress', context);
+  const toAddressDesc = PromptGenerator.getAnyAddressParameterDescription(
+    'toAddress',
+    context,
+    false,
+  );
 
   return `
 ${contextSnippet}
@@ -30,6 +34,8 @@ ${usageInstructions}
 
 Example: "Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means minting the ERC721 token with contract id 0.0.6486793 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
 Example: "Mint ERC721 token 0.0.6486793 to 0.0.6486793" means minting the ERC721 token with contract id 0.0.6486793 to the 0.0.6486793 Hedera account id.
+
+NOTE: the 'toAddress' parameter is optional. If not provided, the minting will be performed to the default account as per the context.
 `;
 };
 

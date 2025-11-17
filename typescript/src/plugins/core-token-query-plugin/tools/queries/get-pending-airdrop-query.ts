@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -83,5 +82,3 @@ const tool = (context: Context): Tool => ({
 });
 
 export default tool;
-
-
