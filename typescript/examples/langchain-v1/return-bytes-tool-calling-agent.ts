@@ -67,9 +67,10 @@ async function bootstrap(): Promise<void> {
     }
 
     try {
-      const response = await agent.invoke({
-        messages: [{ role: 'user', content: userInput }],
-      });
+      const response = await agent.invoke(
+        { messages: [{ role: 'user', content: userInput }] },
+        { configurable: { thread_id: '1' } },
+      );
 
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 

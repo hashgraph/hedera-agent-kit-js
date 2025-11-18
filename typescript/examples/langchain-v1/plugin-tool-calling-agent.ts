@@ -18,7 +18,7 @@ import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { createAgent } from 'langchain';
-import { MemorySaver } from "@langchain/langgraph";
+import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 
 dotenv.config();
@@ -137,7 +137,7 @@ async function bootstrap(): Promise<void> {
   const agent = createAgent({
     model: llm,
     tools: tools,
-    systemPrompt: "You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools",
+    systemPrompt: 'You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools',
     checkpointer: new MemorySaver(),
   });
 
@@ -165,9 +165,10 @@ async function bootstrap(): Promise<void> {
     }
 
     try {
-      const response = await agent.invoke({
-        messages: [{ role: 'user', content: userInput }],
-      });
+      const response = await agent.invoke(
+        { messages: [{ role: 'user', content: userInput }] },
+        { configurable: { thread_id: '1' } },
+      );
 
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 
