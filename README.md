@@ -43,6 +43,9 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
   Github repository: https://github.com/buidler-labs/hak-memejob-plugin
 
+- [Bonzo Plugin](https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin) is a unified SDK to the [**Bonzo**](https://bonzo.finance) protocol, exposing the core actions (`deposit`, `withdraw`, `repay`, `borrow`) for decentralised lending and borrowing on Hedera:
+
+  Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
 ---
 ## Developer Examples
