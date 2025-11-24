@@ -28,7 +28,7 @@ describe('Get Contract Info E2E Tests', () => {
     // Create an executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -58,23 +58,29 @@ describe('Get Contract Info E2E Tests', () => {
     executorClient.close();
   });
 
-  it('should fetch contract info for a deployed contract via LangChain agent', itWithRetry(async () => {
-    const input = `Get the contract info for contract ID ${deployedContractId}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+  it(
+    'should fetch contract info for a deployed contract via LangChain agent',
+    itWithRetry(async () => {
+      const input = `Get the contract info for contract ID ${deployedContractId}`;
+      const queryResult = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.raw.contractId).toBe(deployedContractId);
-    expect(observation.raw.contractInfo.contract_id).toBe(deployedContractId);
-    expect(observation.humanMessage).toContain(`details for contract **${deployedContractId}**`);
-  }));
+      expect(observation.raw.contractId).toBe(deployedContractId);
+      expect(observation.raw.contractInfo.contract_id).toBe(deployedContractId);
+      expect(observation.humanMessage).toContain(`details for contract **${deployedContractId}**`);
+    }),
+  );
 
-  it('should handle non-existent contract gracefully via LangChain agent', itWithRetry(async () => {
-    const fakeContractId = '0.0.999999999';
-    const input = `Get the contract info for contract ID ${fakeContractId}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+  it(
+    'should handle non-existent contract gracefully via LangChain agent',
+    itWithRetry(async () => {
+      const fakeContractId = '0.0.999999999';
+      const input = `Get the contract info for contract ID ${fakeContractId}`;
+      const queryResult = await agentExecutor.invoke({ input });
+      const observation = extractObservationFromLangchainResponse(queryResult);
 
-    expect(observation.raw.error).toContain('Failed to get contract info');
-    expect(observation.humanMessage).toContain('Failed to get contract info');
-  }));
+      expect(observation.raw.error).toContain('Failed to get contract info');
+      expect(observation.humanMessage).toContain('Failed to get contract info');
+    }),
+  );
 });
