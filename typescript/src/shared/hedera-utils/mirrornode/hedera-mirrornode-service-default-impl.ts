@@ -270,4 +270,8 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     }
     return await response.json();
   }
+
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
 }
