@@ -6,6 +6,7 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import { wait } from '../../utils/general-util';
 import { getAccountTokenBalancesQuery } from '@/plugins/core-account-query-plugin/tools/queries/get-account-token-balances-query';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   let operatorClient: Client;
@@ -25,7 +26,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 50,
+        initialBalance: 100,
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -41,14 +42,11 @@ describe('Integration - Hedera getTransactionRecord', () => {
   afterAll(async () => {
     if (executorClient) {
       // Transfer remaining balance back to operator and delete an executor account
-      try {
-        await executorWrapper.deleteAccount({
-          accountId: executorAccountId,
-          transferAccountId: operatorAccountId,
-        });
-      } catch (error) {
-        console.warn('Failed to clean up executor account:', error);
-      }
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorAccountId,
+      );
       executorClient.close();
     }
     if (operatorClient) {

@@ -55,7 +55,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     // Create executor (owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 100 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -98,7 +98,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     spenderAccountId = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey,
-        initialBalance: 5,
+        initialBalance: 10,
       })
       .then(resp => resp.accountId!);
 

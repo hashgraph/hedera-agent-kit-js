@@ -30,7 +30,7 @@ describe('Get Contract Info E2E Tests', () => {
     // Create an executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
