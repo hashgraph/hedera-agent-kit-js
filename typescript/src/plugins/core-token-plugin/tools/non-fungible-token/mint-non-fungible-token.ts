@@ -7,6 +7,7 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import { mintNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const mintNonFungibleTokenPrompt = (_context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -66,6 +67,7 @@ const tool = (context: Context): Tool => ({
   description: mintNonFungibleTokenPrompt(context),
   parameters: mintNonFungibleTokenParameters(context),
   execute: mintNonFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

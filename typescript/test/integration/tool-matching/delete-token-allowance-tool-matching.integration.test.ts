@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
 describe('Delete Token Allowance Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { DELETE_TOKEN_ALLOWANCE_TOOL } = coreAccountPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -32,9 +32,13 @@ describe('Delete Token Allowance Tool Matching Integration Tests', () => {
         'Delete token allowance given from 0.0.1001 to account 0.0.2002 for token 0.0.3003';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -51,9 +55,13 @@ describe('Delete Token Allowance Tool Matching Integration Tests', () => {
       const input = 'Delete allowance for account 0.0.4444 for token 0.12345 with memo "cleanup"';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -70,9 +78,13 @@ describe('Delete Token Allowance Tool Matching Integration Tests', () => {
       const input = 'Remove token allowance for spender 0.0.5555 on token 0.0.6666';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(

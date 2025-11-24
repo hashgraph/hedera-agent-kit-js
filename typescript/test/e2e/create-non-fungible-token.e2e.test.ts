@@ -1,5 +1,5 @@
 import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
@@ -7,10 +7,9 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { ResponseParserService } from '@/langchain';
+import { Client, PrivateKey, TokenId } from '@hashgraph/sdk';
 import {
-  extractObservationFromLangchainResponse,
-  extractTokenIdFromObservation,
   wait,
 } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
@@ -19,7 +18,8 @@ import { itWithRetry } from '../utils/retry-util';
 
 describe('Create Non-Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
@@ -39,7 +39,8 @@ describe('Create Non-Fungible Token E2E Tests', () => {
 
     // 3. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     await wait(MIRROR_NODE_WAITING_TIME);
@@ -66,18 +67,27 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Create a non-fungible token named MyNFT with symbol MNFT`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token created successfully');
-      expect(observation.raw.tokenId).toBeDefined();
+      const rawTokenId = parsedResponse[0].parsedData.raw.tokenId;
+      const tokenId = new TokenId(rawTokenId.shard.low, rawTokenId.realm.low, rawTokenId.num.low);
+
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
+      expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
       // Verify on-chain
-      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('MyNFT');
       expect(tokenInfo.symbol).toBe('MNFT');
       expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
@@ -90,17 +100,25 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = 'Create a non-fungible token ArtCollection with symbol ART and max supply 500';
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token created successfully');
-      expect(observation.raw.tokenId).toBeDefined();
+      const rawTokenId = parsedResponse[0].parsedData.raw.tokenId;
+      const tokenId = new TokenId(rawTokenId.shard.low, rawTokenId.realm.low, rawTokenId.num.low);
+
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
+      expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('ArtCollection');
       expect(tokenInfo.symbol).toBe('ART');
       expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
@@ -114,17 +132,25 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       const treasuryAccountId = executorClient.operatorAccountId!.toString();
       const input = `Create a non-fungible token GameItems with symbol GAME, treasury account ${treasuryAccountId}, and max supply 1000`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token created successfully');
-      expect(observation.raw.tokenId).toBeDefined();
+      const rawTokenId = parsedResponse[0].parsedData.raw.tokenId;
+      const tokenId = new TokenId(rawTokenId.shard.low, rawTokenId.realm.low, rawTokenId.num.low);
+
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
+      expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('GameItems');
       expect(tokenInfo.symbol).toBe('GAME');
       expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
@@ -135,13 +161,20 @@ describe('Create Non-Fungible Token E2E Tests', () => {
   it(
     'should schedule creation of a NFT successfully',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Create a non-fungible token named MyNFT with symbol MNFT. Schedule the transaction instead of executing it immediately.`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Create a non-fungible token named MyNFT with symbol MNFT. Schedule the transaction instead of executing it immediately.`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('Scheduled transaction created successfully.');
-      expect(observation.raw.scheduleId).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled transaction created successfully.',
+      );
+      expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
     }),
   );
 });

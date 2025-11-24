@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AccountId, Client, PrivateKey, PublicKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,10 +8,12 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { ReactAgent } from 'langchain';
+import { ResponseParserService } from '@/langchain';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -20,7 +22,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   const FT_PARAMS = {
     tokenName: 'AirdropToken',
@@ -47,7 +50,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
     // Setup agent
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // Deploy fungible token
     tokenIdFT = await executorWrapper
@@ -92,15 +96,20 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     itWithRetry(async () => {
       const recipientId = await createRecipientAccount(0); // no auto-association
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Airdrop 50 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Airdrop 50 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      expect(observation.humanMessage).toContain('Token successfully airdropped');
-      expect(observation.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully airdropped');
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
       const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
       expect(pending.airdrops.length).toBeGreaterThan(0);
@@ -113,14 +122,19 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       const recipient1 = await createRecipientAccount(0);
       const recipient2 = await createRecipientAccount(0);
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Airdrop 10 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipient1.toString()} and 20 to ${recipient2.toString()}`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Airdrop 10 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipient1.toString()} and 20 to ${recipient2.toString()}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      expect(observation.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
       const pending1 = await executorWrapper.getPendingAirdrops(recipient1.toString());
       const pending2 = await executorWrapper.getPendingAirdrops(recipient2.toString());
@@ -136,13 +150,20 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       const recipientId = await createRecipientAccount(0);
       const fakeTokenId = '0.0.999999999';
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Airdrop 5 of token ${fakeTokenId} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Airdrop 5 of token ${fakeTokenId} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toContain('Failed to get token info for a token');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Failed to get token info for a token',
+      );
     }),
   );
 });

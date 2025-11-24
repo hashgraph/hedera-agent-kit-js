@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const submitTopicMessagePrompt = (context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -57,6 +58,7 @@ const tool = (context: Context): Tool => ({
   description: submitTopicMessagePrompt(context),
   parameters: submitTopicMessageParameters(context),
   execute: submitTopicMessage,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,10 +8,11 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { ResponseParserService } from '@/langchain';
 
 describe('Get Pending Airdrop Query E2E Tests', () => {
   let operatorClient: Client;
@@ -20,7 +21,8 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let recipientId: AccountId;
 
   const FT_PARAMS = {
@@ -44,7 +46,8 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     tokenIdFT = await executorWrapper
@@ -92,17 +95,23 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
   it(
     'should return pending airdrops for recipient via natural language',
     itWithRetry(async () => {
-      const queryResult = await agentExecutor.invoke({
-        input: `Show pending airdrops for account ${recipientId.toString()}`,
+      const input = `Show pending airdrops for account ${recipientId.toString()}`;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation.humanMessage).toContain(
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
         `pending airdrops for account **${recipientId.toString()}**`,
       );
-      expect(Array.isArray(observation.raw.pendingAirdrops.airdrops)).toBe(true);
-      expect(observation.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
+      expect(Array.isArray(parsedResponse[0].parsedData.raw.pendingAirdrops.airdrops)).toBe(true);
+      expect(parsedResponse[0].parsedData.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
     }),
   );
 });

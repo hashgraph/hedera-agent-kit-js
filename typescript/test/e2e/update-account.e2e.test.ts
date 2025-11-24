@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,12 +8,13 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
 import { itWithRetry } from '../utils/retry-util';
 
 describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let executorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
@@ -41,7 +42,8 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
     // setting up langchain to run with the execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -74,12 +76,17 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   it(
     'should update memo of a pre-created account via agent',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Update account ${targetAccount.toString()} memo to "updated via agent"`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('updated');
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('updated');
 
       const info = await executionWrapper.getAccountInfo(targetAccount.toString());
       expect(info.accountMemo).toBe('updated via agent');
@@ -89,12 +96,17 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   it(
     'should update maxAutomaticTokenAssociations via agent',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Set max automatic token associations for account ${targetAccount.toString()} to 10`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('updated');
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('updated');
 
       const info = await executionWrapper.getAccountInfo(targetAccount.toString());
       expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
@@ -104,12 +116,17 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   it(
     'should update declineStakingReward flag via agent',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Update account ${targetAccount.toString()} to decline staking rewards`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Update account ${targetAccount.toString()} to decline staking rewards`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('updated');
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('updated');
 
       const info = await executionWrapper.getAccountInfo(targetAccount.toString());
       expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
@@ -119,13 +136,20 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
   it(
     'should schedule account update',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Update account ${targetAccount.toString()} memo to "updated via agent". Schedule the transaction instead of executing it immediately.`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Update account ${targetAccount.toString()} memo to "updated via agent". Schedule the transaction instead of executing it immediately.`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('Scheduled account update created successfully.');
-      expect(observation.raw.scheduleId).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled account update created successfully.',
+      );
+      expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
     }),
   );
 
@@ -133,12 +157,17 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
     'should fail to update a non-existent account',
     itWithRetry(async () => {
       const fakeAccountId = '0.0.999999999';
-      const updateResult = await agentExecutor.invoke({
-        input: `Update account ${fakeAccountId} memo to "x"`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Update account ${fakeAccountId} memo to "x"`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
       );
     }),

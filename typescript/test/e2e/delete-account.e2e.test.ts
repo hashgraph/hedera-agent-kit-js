@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, Key, PrivateKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,12 +8,13 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
 import { itWithRetry } from '../utils/retry-util';
 
 describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
@@ -36,7 +37,8 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
@@ -64,12 +66,17 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       const resp = await createTestAccount();
       const targetAccountId = resp.accountId!.toString();
 
-      const deleteResult = await agentExecutor.invoke({
-        input: `Delete the account ${targetAccountId}`,
+      const deleteResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Delete the account ${targetAccountId}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(deleteResult);
-      expect(observation.humanMessage).toContain('deleted');
+      const parsedResponse = responseParsingService.parseNewToolMessages(deleteResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
 
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
     }),
@@ -81,12 +88,17 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       const resp = await createTestAccount();
       const targetAccountId = resp.accountId!.toString();
 
-      const deleteResult = await agentExecutor.invoke({
-        input: `Delete the account ${targetAccountId} and transfer remaining balance to ${executorClient.operatorAccountId}`,
+      const deleteResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Delete the account ${targetAccountId} and transfer remaining balance to ${executorClient.operatorAccountId}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(deleteResult);
-      expect(observation.humanMessage).toContain('deleted');
+      const parsedResponse = responseParsingService.parseNewToolMessages(deleteResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
 
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
     }),
@@ -97,12 +109,17 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     itWithRetry(async () => {
       const fakeAccountId = '0.0.999999999';
 
-      const deleteResult = await agentExecutor.invoke({
-        input: `Delete the account ${fakeAccountId}`,
+      const deleteResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Delete the account ${fakeAccountId}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(deleteResult);
-      expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
+      const parsedResponse = responseParsingService.parseNewToolMessages(deleteResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
       );
     }),
@@ -118,16 +135,21 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
         executorClient.operatorAccountId?.toString()!,
       );
 
-      const deleteResult = await agentExecutor.invoke({
-        input: `Remove account id ${targetAccountId} and send balance to ${executorClient.operatorAccountId}`,
+      const deleteResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Remove account id ${targetAccountId} and send balance to ${executorClient.operatorAccountId}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(deleteResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(deleteResult);
       const operatorBalanceAfter = await executorWrapper.getAccountHbarBalance(
         executorClient.operatorAccountId?.toString()!,
       );
 
-      expect(observation.humanMessage).toContain('deleted');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
       expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy();
     }),

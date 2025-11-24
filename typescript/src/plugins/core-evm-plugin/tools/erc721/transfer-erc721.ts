@@ -12,6 +12,7 @@ import {
   ERC721_TRANSFER_FUNCTION_NAME,
 } from '@/shared/constants/contracts';
 import { transferERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const transferERC721Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -83,6 +84,7 @@ const tool = (context: Context): Tool => ({
   description: transferERC721Prompt(context),
   parameters: transferERC721Parameters(context),
   execute: transferERC721,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

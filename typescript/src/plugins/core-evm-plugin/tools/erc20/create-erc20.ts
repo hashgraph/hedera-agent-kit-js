@@ -12,6 +12,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { getERC20FactoryAddress, ERC20_FACTORY_ABI } from '@/shared/constants/contracts';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createERC20Prompt = (context: Context = {}) => `
 ${PromptGenerator.getContextSnippet(context)}
@@ -87,6 +88,7 @@ const tool = (context: Context): Tool => ({
   description: createERC20Prompt(context),
   parameters: createERC20Parameters(context),
   execute: createERC20,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

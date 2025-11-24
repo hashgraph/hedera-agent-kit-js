@@ -8,7 +8,9 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getContextSnippet: vi.fn(() => 'CTX'),
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
-    getAccountParameterDescription: vi.fn((_k: string) => 'accountId (str, optional): The account ID'),
+    getAccountParameterDescription: vi.fn(
+      (_k: string) => 'accountId (str, optional): The account ID',
+    ),
   },
 }));
 
@@ -101,5 +103,3 @@ describe('get-pending-airdrop-query tool (unit)', () => {
     expect(res.raw.error).toContain('Failed to get pending airdrops');
   });
 });
-
-

@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeAll, afterEach, vi, afterAll } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { DELETE_TOPIC_TOOL } from '@/plugins/core-consensus-plugin/tools/consensus/delete-topic';
 
 describe.skip('Delete Topic Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -27,10 +27,14 @@ describe.skip('Delete Topic Tool Matching Integration Tests', () => {
     const input = 'Delete topic 0.0.5005';
 
     const hederaAPI = toolkit.getHederaAgentKitAPI();
-    console.log(JSON.stringify(hederaAPI.tools, null, 2));
-    const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
 
-    const resp = await agentExecutor.invoke({ input });
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+    const resp = await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
     console.log(JSON.stringify(resp, null, 2));
 
     expect(spy).toHaveBeenCalledOnce();
@@ -50,8 +54,12 @@ describe.skip('Delete Topic Tool Matching Integration Tests', () => {
 
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     for (const v of variations) {
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-      await agentExecutor.invoke({ input: v.input });
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+      await agent.invoke({
+        messages: [{ role: 'user', content: v.input }],
+      });
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(DELETE_TOPIC_TOOL, expect.objectContaining(v.expected));
       spy.mockRestore();

@@ -8,6 +8,7 @@ import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/tok
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createNonFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -77,6 +78,7 @@ const tool = (context: Context): Tool => ({
   description: createNonFungibleTokenPrompt(context),
   parameters: createNonFungibleTokenParameters(context),
   execute: createNonFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

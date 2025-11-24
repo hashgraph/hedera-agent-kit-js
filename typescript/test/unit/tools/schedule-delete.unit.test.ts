@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, Status } from '@hashgraph/sdk';
-import toolFactory, { SCHEDULE_DELETE_TOOL } from '@/plugins/core-account-plugin/tools/account/schedule-delete';
+import toolFactory, {
+  SCHEDULE_DELETE_TOOL,
+} from '@/plugins/core-account-plugin/tools/account/schedule-delete';
 
 vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
   default: { deleteScheduleTransaction: vi.fn((_params: any) => ({ tx: 'scheduleDeleteTx' })) },
@@ -155,5 +157,3 @@ describe('schedule-delete tool (unit)', () => {
     expect(res.humanMessage).toContain('Failed to delete scheduled transaction');
   });
 });
-
-
