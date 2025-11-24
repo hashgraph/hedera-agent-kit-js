@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId, TokenSupplyType, PublicKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,7 +8,8 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
@@ -23,7 +24,8 @@ describe('Associate Token E2E Tests', () => {
   let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   const FT_PARAMS = {
     tokenName: 'AssocToken',
@@ -56,7 +58,8 @@ describe('Associate Token E2E Tests', () => {
     tokenExecutorWrapper = new HederaOperationsWrapper(tokenExecutorClient);
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -85,18 +88,23 @@ describe('Associate Token E2E Tests', () => {
         .then(resp => resp.tokenId!);
 
       await wait(MIRROR_NODE_WAITING_TIME);
-      const queryResult = await agentExecutor.invoke({
-        input: `Associate token ${tokenIdFT1.toString()} to my account`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Associate token ${tokenIdFT1.toString()} to my account`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
       await wait(MIRROR_NODE_WAITING_TIME);
 
       const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
       const associated = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0; // presence implies associated
 
-      expect(observation.humanMessage).toContain('Tokens successfully associated');
-      expect(observation.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully associated');
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(associated).toBe(true);
     }),
   );
@@ -132,19 +140,24 @@ describe('Associate Token E2E Tests', () => {
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Associate tokens ${tokenIdFT1.toString()} and ${tokenIdFT2.toString()} to my account`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Associate tokens ${tokenIdFT1.toString()} and ${tokenIdFT2.toString()} to my account`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
       await wait(MIRROR_NODE_WAITING_TIME);
 
       const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
       const associatedFirst = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0;
       const associatedSecond = (balances.tokens?.get(tokenIdFT2) ?? 0) >= 0;
 
-      expect(observation.humanMessage).toContain('Tokens successfully associated');
-      expect(observation.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully associated');
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(associatedFirst).toBe(true);
       expect(associatedSecond).toBe(true);
     }),

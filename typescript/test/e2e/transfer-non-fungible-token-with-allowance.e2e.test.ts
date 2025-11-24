@@ -16,14 +16,16 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 
 describe('Transfer NFT With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let ownerClient: Client;
   let spenderClient: Client;
@@ -55,7 +57,8 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
 
     // Set up LangChain executor with spender (who uses allowance)
     testSetup = await createLangchainTestSetup(undefined, undefined, spenderClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // Create NFT token
     const tokenCreate = await ownerWrapper.createNonFungibleToken({
@@ -126,12 +129,19 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
   it('should transfer NFT via allowance to recipient', async () => {
     const input = `Transfer NFT with allowance from ${ownerAccountId.toString()} to ${spenderAccountId.toString()} with serial number 1 of ${nftTokenId}`;
 
-    const transferResult = await agentExecutor.invoke({ input });
+    const transferResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
 
-    const observation = extractObservationFromLangchainResponse(transferResult);
+    const parsedResponse = responseParsingService.parseNewToolMessages(transferResult);
 
-    expect(observation.raw.status).toBe('SUCCESS');
-    expect(observation.humanMessage).toContain(
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
       'Non-fungible tokens successfully transferred with allowance. Transaction ID:',
     );
 

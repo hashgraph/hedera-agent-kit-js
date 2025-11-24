@@ -9,6 +9,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createTopicPrompt = (_context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -63,6 +64,7 @@ const tool = (context: Context): Tool => ({
   description: createTopicPrompt(context),
   parameters: createTopicParameters(context),
   execute: createTopic,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

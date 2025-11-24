@@ -8,6 +8,7 @@ import { deleteTokenAllowanceParameters } from '@/shared/parameter-schemas/accou
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Delete Token Allowance Integration Tests', () => {
   let operatorClient: Client;
@@ -34,7 +35,7 @@ describe('Delete Token Allowance Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await new HederaOperationsWrapper(operatorClient)
       .createAccount({
-        initialBalance: 7,
+        initialBalance: 30,
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -77,6 +78,11 @@ describe('Delete Token Allowance Integration Tests', () => {
 
   afterAll(async () => {
     if (executorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       executorClient.close();
     }
     if (operatorClient) {

@@ -12,6 +12,7 @@ import {
   TokenType,
   TransferTransaction,
 } from '@hashgraph/sdk';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -19,17 +20,19 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
+import { ResponseParserService } from '@/langchain';
 
 /**
  * E2E: Approve allowance for the entire NFT collection (all serials)
  */
 describe('Approve NFT Collection Allowance (all serials) E2E', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: any;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   let operatorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
@@ -81,7 +84,8 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
 
     // 5) Start LangChain test setup with the owner client (so the agent acts as owner)
     testSetup = await createLangchainTestSetup(undefined, undefined, ownerClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // 6) Create an HTS NFT with owner as treasury/admin/supply
     const createResp = await ownerWrapper.createNonFungibleToken({
@@ -149,12 +153,19 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       // Approve for all serials
       const input = `Approve NFT allowance for all serials of token ${nftTokenId} from ${ownerClient.operatorAccountId!.toString()} to ${spenderAccount.toString()}`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.status.toString()).toBe('SUCCESS');
-      expect(observation.raw.transactionId).toBeDefined();
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.status.toString()).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       // Wait for mirror node/allowance propagation
       await wait(MIRROR_NODE_WAITING_TIME);

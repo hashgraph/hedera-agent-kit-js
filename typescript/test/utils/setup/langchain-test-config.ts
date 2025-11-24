@@ -155,11 +155,10 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
 
 export const DEFAULT_LLM_OPTIONS: LlmOptions = {
   provider: LLMProvider.OPENAI,
-  temperature: 1,
-  maxIterations: 1,
   model: 'gpt-4o-mini',
-  systemPrompt: `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
+};
+
+export const SYSTEM_PROMPT = `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
         When a user asks to transfer HBAR, use the transfer_hbar_tool with the correct parameters.
         Extract the amount and recipient account ID from the user's request.
-        Always use the exact tool name and parameter structure expected.`,
-};
+        Always use the exact tool name and parameter structure expected.`;

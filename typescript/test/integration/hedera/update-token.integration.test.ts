@@ -104,7 +104,6 @@ describe('Update Token Integration Tests', () => {
     }
   });
 
-
   it('updates token name, symbol, and memo', async () => {
     const tool = updateTokenTool(context);
     const params: z.infer<ReturnType<typeof updateTokenParameters>> = {
@@ -302,7 +301,5 @@ describe('Update Token Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
     expect(result.humanMessage).toContain('Failed to update topic:');
-
   });
 });
-

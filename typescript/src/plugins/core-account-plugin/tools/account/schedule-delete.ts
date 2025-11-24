@@ -6,6 +6,7 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { scheduleDeleteTransactionParameters } from '@/shared/parameter-schemas/account.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const scheduleDeletePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -51,8 +52,7 @@ const tool = (context: Context): Tool => ({
   description: scheduleDeletePrompt(context),
   parameters: scheduleDeleteTransactionParameters(context),
   execute: scheduleDelete,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;
-
-

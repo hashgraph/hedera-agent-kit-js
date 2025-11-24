@@ -16,15 +16,17 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 
 describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorWrapper: HederaOperationsWrapper;
 
   let operatorClient: Client;
@@ -135,7 +137,8 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
 
     // Setup LangChain agent with spender client
     testSetup = await createLangchainTestSetup(undefined, undefined, spenderClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterEach(async () => {
@@ -152,13 +155,20 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
       `Account ids: ${executorAccountId.toString()}, ${spenderAccountId.toString()}, ${receiverAccountId.toString()}`,
     );
     const input = `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+    const result = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation.humanMessage).toContain(
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
       'Fungible tokens successfully transferred with allowance',
     );
-    expect(observation.raw.status).toBe('SUCCESS');
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
@@ -174,13 +184,20 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
 
   it('should allow spender to transfer tokens to both themselves and receiver in one allowance call', async () => {
     const input = `Use allowance from account ${executorAccountId.toString()} to send 30 ${tokenId.toString()} to account ${spenderAccountId.toString()} and 70 ${tokenId.toString()} to account ${receiverAccountId.toString()}`;
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+    const result = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation.humanMessage).toContain(
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
       'Fungible tokens successfully transferred with allowance',
     );
-    expect(observation.raw.status).toBe('SUCCESS');
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
@@ -202,24 +219,38 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   it(
     'should schedule allowing spender to transfer tokens to themselves using allowance',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}. Schedule the transaction instead of executing it immediately.`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}. Schedule the transaction instead of executing it immediately.`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain(
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Scheduled allowance transfer created successfully.',
       );
-      expect(observation.raw.scheduleId).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
     }),
   );
 
   it('should fail gracefully when trying to transfer more than allowance', async () => {
     const input = `Use allowance from account ${executorAccountId.toString()} to send 300 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+    const result = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation.humanMessage).toContain('Failed to transfer fungible token with allowance');
-    expect(observation.humanMessage).toContain('AMOUNT_EXCEEDS_ALLOWANCE');
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'Failed to transfer fungible token with allowance',
+    );
+    expect(parsedResponse[0].parsedData.humanMessage).toContain('AMOUNT_EXCEEDS_ALLOWANCE');
   });
 });

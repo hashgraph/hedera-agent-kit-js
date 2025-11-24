@@ -16,14 +16,16 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
-import { AgentExecutor } from 'langchain/agents';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ReactAgent } from 'langchain';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Delete Token Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let executorClient: Client;
   let executorAccountId: AccountId;
@@ -53,7 +55,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     // Create executor (owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 100 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -74,7 +76,8 @@ describe('Delete Token Allowance E2E Tests', () => {
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -95,7 +98,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     spenderAccountId = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey,
-        initialBalance: 5,
+        initialBalance: 10,
       })
       .then(resp => resp.accountId!);
 
@@ -128,23 +131,41 @@ describe('Delete Token Allowance E2E Tests', () => {
 
     // Step 2: Delete the token allowance via natural language input
     const input = `Delete token allowance given from ${executorAccountId.toString()} to account ${spenderAccountId.toString()} for token ${tokenId.toString()}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+    const queryResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
     // Step 3: Validate response
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token allowance(s) deleted successfully');
-    expect(observation.raw.status).toBe('SUCCESS');
+    expect(parsedResponse).toBeDefined();
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'Token allowance(s) deleted successfully',
+    );
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
   });
 
   it('should handle deleting a non-existent token allowance gracefully', async () => {
     // No prior approve step
     const input = `Delete token allowance given from ${executorAccountId.toString()} to account ${spenderAccountId.toString()} for token ${tokenId.toString()}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+    const queryResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Token allowance(s) deleted successfully');
-    expect(observation.raw.status).toBe('SUCCESS');
+    expect(parsedResponse).toBeDefined();
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'Token allowance(s) deleted successfully',
+    );
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
   });
 });

@@ -8,7 +8,7 @@ import {
   PublicKey,
   TokenSupplyType,
 } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -16,7 +16,8 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
@@ -28,7 +29,8 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
   let nftTokenId: TokenId;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   const NFT_PARAMS = {
     tokenName: 'MintableNFT',
@@ -52,7 +54,8 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     nftTokenId = await executorWrapper
       .createNonFungibleToken({
@@ -86,18 +89,23 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata ipfs://meta1.json`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata ipfs://meta1.json`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
       await wait(MIRROR_NODE_WAITING_TIME);
 
       const supplyAfter = await executorWrapper
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
 
-      expect(observation.humanMessage).toContain('Token successfully minted.');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully minted.');
       expect(supplyAfter).toBe(supplyBefore + 1);
     }),
   );
@@ -110,20 +118,25 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Mint ${uris.length} NFTs of token ${nftTokenId.toString()} with metadata ${uris.join(
-          ', ',
-        )}`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Mint ${uris.length} NFTs of token ${nftTokenId.toString()} with metadata ${uris.join(
+              ', ',
+            )}`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
       await wait(MIRROR_NODE_WAITING_TIME);
 
       const supplyAfter = await executorWrapper
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
 
-      expect(observation.humanMessage).toContain('Token successfully minted.');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully minted.');
       expect(supplyAfter).toBe(supplyBefore + uris.length);
     }),
   );
@@ -131,13 +144,20 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
   it(
     'should schedule minting a single NFT successfully',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata 'ipfs://meta1.json'. Schedule the transaction instead of executing it immediately.`,
+      const updateResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Mint 1 NFT of token ${nftTokenId.toString()} with metadata 'ipfs://meta1.json'. Schedule the transaction instead of executing it immediately.`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('Scheduled mint transaction created successfully');
-      expect(observation.raw.scheduleId).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(updateResult);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled mint transaction created successfully',
+      );
+      expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
     }),
   );
 
@@ -146,13 +166,18 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
     itWithRetry(async () => {
       const fakeTokenId = '0.0.999999999';
 
-      const queryResult = await agentExecutor.invoke({
-        input: `Mint 1 NFT of token ${fakeTokenId} with metadata ipfs://meta.json`,
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Mint 1 NFT of token ${fakeTokenId} with metadata ipfs://meta.json`,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(observation.humanMessage).toMatch(/INVALID_TOKEN_ID|Failed to mint/i);
+      expect(parsedResponse[0].parsedData.humanMessage).toMatch(/INVALID_TOKEN_ID|Failed to mint/i);
     }),
   );
 });

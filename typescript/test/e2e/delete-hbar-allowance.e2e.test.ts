@@ -8,14 +8,15 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { approveHbarAllowanceParametersNormalised } from '@/shared/parameter-schemas/account.zod';
-import { AgentExecutor } from 'langchain/agents';
-import { extractObservationFromLangchainResponse } from '../utils/general-util';
+import { ReactAgent } from 'langchain';
 
 describe('Delete HBAR Allowance Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let executorClient: Client;
   let executorAccountId: AccountId;
@@ -33,7 +34,7 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     // Create an executor (owner) account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: 30 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -41,7 +42,8 @@ describe('Delete HBAR Allowance Integration Tests', () => {
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -96,20 +98,38 @@ describe('Delete HBAR Allowance Integration Tests', () => {
 
     // Step 3: Delete allowance via tool (no amount param!)
     const input = `Delete HBAR allowance from ${executorAccountId.toString()} to ${spenderAccountId.toString()}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+    const queryResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('HBAR allowance deleted successfully');
+    expect(parsedResponse).toBeDefined();
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'HBAR allowance deleted successfully',
+    );
   });
 
   it('should handle deleting a non-existent allowance gracefully', async () => {
     // No approve step -> directly delete
     const input = `Delete HBAR allowance from ${executorAccountId.toString()} to ${spenderAccountId.toString()}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+    const queryResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('HBAR allowance deleted successfully');
+    expect(parsedResponse).toBeDefined();
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'HBAR allowance deleted successfully',
+    );
   });
 });

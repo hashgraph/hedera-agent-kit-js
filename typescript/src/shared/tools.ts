@@ -8,6 +8,7 @@ export type Tool = {
   description: string;
   parameters: z.ZodObject<any, any>;
   execute: (client: Client, context: Context, params: any) => Promise<any>;
+  outputParser: (rawOutput: string) => { raw: any; humanMessage: string };
 };
 
 export default Tool;
