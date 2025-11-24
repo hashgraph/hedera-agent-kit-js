@@ -30,7 +30,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 8 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -58,66 +58,78 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
     });
   }
 
-  it('deletes a pre-created account via agent (default transfer to operator)', itWithRetry(async () => {
-    const resp = await createTestAccount();
-    const targetAccountId = resp.accountId!.toString();
+  it(
+    'deletes a pre-created account via agent (default transfer to operator)',
+    itWithRetry(async () => {
+      const resp = await createTestAccount();
+      const targetAccountId = resp.accountId!.toString();
 
-    const deleteResult = await agentExecutor.invoke({
-      input: `Delete the account ${targetAccountId}`,
-    });
+      const deleteResult = await agentExecutor.invoke({
+        input: `Delete the account ${targetAccountId}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(deleteResult);
-    expect(observation.humanMessage).toContain('deleted');
+      const observation = extractObservationFromLangchainResponse(deleteResult);
+      expect(observation.humanMessage).toContain('deleted');
 
-    await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-  }));
+      await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
+    }),
+  );
 
-  it('should delete second pre-created account via agent (explicit transfer account)', itWithRetry(async () => {
-    const resp = await createTestAccount();
-    const targetAccountId = resp.accountId!.toString();
+  it(
+    'should delete second pre-created account via agent (explicit transfer account)',
+    itWithRetry(async () => {
+      const resp = await createTestAccount();
+      const targetAccountId = resp.accountId!.toString();
 
-    const deleteResult = await agentExecutor.invoke({
-      input: `Delete the account ${targetAccountId} and transfer remaining balance to ${executorClient.operatorAccountId}`,
-    });
+      const deleteResult = await agentExecutor.invoke({
+        input: `Delete the account ${targetAccountId} and transfer remaining balance to ${executorClient.operatorAccountId}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(deleteResult);
-    expect(observation.humanMessage).toContain('deleted');
+      const observation = extractObservationFromLangchainResponse(deleteResult);
+      expect(observation.humanMessage).toContain('deleted');
 
-    await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-  }));
+      await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
+    }),
+  );
 
-  it('should fail to delete a non-existent account', itWithRetry(async () => {
-    const fakeAccountId = '0.0.999999999';
+  it(
+    'should fail to delete a non-existent account',
+    itWithRetry(async () => {
+      const fakeAccountId = '0.0.999999999';
 
-    const deleteResult = await agentExecutor.invoke({
-      input: `Delete the account ${fakeAccountId}`,
-    });
+      const deleteResult = await agentExecutor.invoke({
+        input: `Delete the account ${fakeAccountId}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(deleteResult);
-    expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
-      /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
-    );
-  }));
+      const observation = extractObservationFromLangchainResponse(deleteResult);
+      expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
+        /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
+      );
+    }),
+  );
 
-  it('should handle natural language variations', itWithRetry(async () => {
-    const resp = await createTestAccount(5);
-    const targetAccountId = resp.accountId!.toString();
+  it(
+    'should handle natural language variations',
+    itWithRetry(async () => {
+      const resp = await createTestAccount(5);
+      const targetAccountId = resp.accountId!.toString();
 
-    const operatorBalanceBefore = await executorWrapper.getAccountHbarBalance(
-      executorClient.operatorAccountId?.toString()!,
-    );
+      const operatorBalanceBefore = await executorWrapper.getAccountHbarBalance(
+        executorClient.operatorAccountId?.toString()!,
+      );
 
-    const deleteResult = await agentExecutor.invoke({
-      input: `Remove account id ${targetAccountId} and send balance to ${executorClient.operatorAccountId}`,
-    });
+      const deleteResult = await agentExecutor.invoke({
+        input: `Remove account id ${targetAccountId} and send balance to ${executorClient.operatorAccountId}`,
+      });
 
-    const observation = extractObservationFromLangchainResponse(deleteResult);
-    const operatorBalanceAfter = await executorWrapper.getAccountHbarBalance(
-      executorClient.operatorAccountId?.toString()!,
-    );
+      const observation = extractObservationFromLangchainResponse(deleteResult);
+      const operatorBalanceAfter = await executorWrapper.getAccountHbarBalance(
+        executorClient.operatorAccountId?.toString()!,
+      );
 
-    expect(observation.humanMessage).toContain('deleted');
-    await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-    expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy();
-  }));
+      expect(observation.humanMessage).toContain('deleted');
+      await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
+      expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy();
+    }),
+  );
 });
