@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { Client, Key, PrivateKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,13 +8,15 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 
 describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let executorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
@@ -36,7 +38,8 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
 
     // setting up langchain to run with the execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -60,36 +63,54 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     targetTopicId = created.topicId!.toString();
   });
 
-  it('should submit a message to a pre-created topic via agent', itWithRetry(async () => {
-    const message = '"submitted via agent"';
-    const res = await agentExecutor.invoke({
-      input: `Submit message ${message} to topic ${targetTopicId}`,
-    });
+  it(
+    'should submit a message to a pre-created topic via agent',
+    itWithRetry(async () => {
+      const message = '"submitted via agent"';
+      const res = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Submit message ${message} to topic ${targetTopicId}`,
+          },
+        ],
+      });
 
-    const observation = extractObservationFromLangchainResponse(res);
+      const parsedResponse = responseParsingService.parseNewToolMessages(res);
 
-    expect(observation.humanMessage).toMatch(/submitted/i);
-    expect(
-      observation.humanMessage.includes('transaction') ||
-        /Message submitted successfully|submitted/i.test(observation.humanMessage),
-    ).toBeTruthy();
+      expect(parsedResponse[0].parsedData.humanMessage).toMatch(/submitted/i);
+      expect(
+        parsedResponse[0].parsedData.humanMessage.includes('transaction') ||
+          /Message submitted successfully|submitted/i.test(
+            parsedResponse[0].parsedData.humanMessage,
+          ),
+      ).toBeTruthy();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const mirrornodeMessages = await operatorWrapper.getTopicMessages(targetTopicId);
+      const mirrornodeMessages = await operatorWrapper.getTopicMessages(targetTopicId);
 
-    expect(mirrornodeMessages.messages.length).toBeGreaterThan(0);
-  }));
+      expect(mirrornodeMessages.messages.length).toBeGreaterThan(0);
+    }),
+  );
 
-  it('should fail to submit to a non-existent topic via agent', itWithRetry(async () => {
-    const fakeTopicId = '0.0.999999999';
-    const res = await agentExecutor.invoke({
-      input: `Submit message "x" to topic ${fakeTopicId}`,
-    });
+  it(
+    'should fail to submit to a non-existent topic via agent',
+    itWithRetry(async () => {
+      const fakeTopicId = '0.0.999999999';
+      const res = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `Submit message "x" to topic ${fakeTopicId}`,
+          },
+        ],
+      });
 
-    const observation = extractObservationFromLangchainResponse(res);
-    expect(observation.humanMessage || JSON.stringify(observation)).toMatch(
-      /INVALID_TOPIC_ID|NOT_FOUND|ACCOUNT_DELETED|INVALID_ARGUMENT/i,
-    );
-  }));
+      const parsedResponse = responseParsingService.parseNewToolMessages(res);
+      expect(parsedResponse[0].parsedData.humanMessage).toMatch(
+        /INVALID_TOPIC_ID|NOT_FOUND|ACCOUNT_DELETED|INVALID_ARGUMENT/i,
+      );
+    }),
+  );
 });

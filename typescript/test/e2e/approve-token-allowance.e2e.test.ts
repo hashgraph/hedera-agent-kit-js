@@ -8,7 +8,7 @@ import {
   TokenId,
   TokenSupplyType,
 } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -16,8 +16,9 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 /**
@@ -31,7 +32,8 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 
 describe('Approve Token Allowance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let executorClient: Client; // acts as an owner
   let operatorWrapper: HederaOperationsWrapper;
@@ -57,7 +59,8 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // create test fungible token
     tokenId = await executorWrapper
@@ -102,13 +105,20 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
   it('should approve fungible token allowance to spender (with memo)', async () => {
     const memo = 'E2E token allow memo';
     const input = `Approve allowance of 25 for token ${tokenId.toString()} to ${spenderAccount.toString()} with memo "${memo}"`;
-    const transactionResult = await agentExecutor.invoke({ input });
+    const transactionResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
     const ownerAccountId = executorClient.operatorAccountId!;
-    const observation = extractObservationFromLangchainResponse(transactionResult);
+    const parsedResponse = responseParsingService.parseNewToolMessages(transactionResult);
 
     // We just assert that the agent ran without throwing. Detailed SUCCESS assertions are part of integration tests.
-    expect(observation.raw.status).toBe('SUCCESS');
-    expect(observation.humanMessage).toContain(
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
       'Fungible token allowance(s) approved successfully. Transaction ID:',
     );
 

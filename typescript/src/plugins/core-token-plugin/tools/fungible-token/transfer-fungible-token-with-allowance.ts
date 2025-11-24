@@ -8,6 +8,7 @@ import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -78,6 +79,7 @@ const tool = (context: Context): Tool => ({
   description: transferFungibleTokenWithAllowancePrompt(context),
   parameters: transferFungibleTokenWithAllowanceParameters(context),
   execute: transferFungibleTokenWithAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

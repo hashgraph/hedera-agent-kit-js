@@ -8,6 +8,7 @@ import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zo
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const mintFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -69,6 +70,7 @@ const tool = (context: Context): Tool => ({
   description: mintFungibleTokenPrompt(context),
   parameters: mintFungibleTokenParameters(context),
   execute: mintFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

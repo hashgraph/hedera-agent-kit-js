@@ -6,6 +6,7 @@ import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TopicInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { getTopicInfoParameters } from '@/shared/parameter-schemas/consensus.zod';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getTopicInfoQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -86,6 +87,7 @@ const tool = (context: Context): Tool => ({
   description: getTopicInfoQueryPrompt(context),
   parameters: getTopicInfoParameters(context),
   execute: getTopicInfoQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

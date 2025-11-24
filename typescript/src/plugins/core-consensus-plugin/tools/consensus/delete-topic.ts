@@ -9,6 +9,7 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { deleteTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const deleteTopicPrompt = (_context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -60,6 +61,7 @@ const tool = (context: Context): Tool => ({
   description: deleteTopicPrompt(context),
   parameters: deleteTopicParameters(context),
   execute: deleteTopic,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

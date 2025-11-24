@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,14 +8,15 @@ import {
   HederaOperationsWrapper,
   LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse } from 'test/utils/general-util';
+import { ResponseParserService } from '@/langchain';
 import { itWithRetry } from '../utils/retry-util';
 import { transferHbarParametersNormalised } from '@/shared/parameter-schemas/account.zod';
 import { z } from 'zod';
 
 describe('Sign Schedule Transaction E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let executorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
@@ -38,7 +39,8 @@ describe('Sign Schedule Transaction E2E Tests', () => {
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -96,13 +98,20 @@ describe('Sign Schedule Transaction E2E Tests', () => {
       // Now sign the scheduled transaction using the agent
       const input = `Sign the scheduled transaction with ID ${scheduleId}`;
 
-      const result = await agentExecutor.invoke({ input });
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      const observation = extractObservationFromLangchainResponse(result);
-      expect(observation.humanMessage || JSON.stringify(observation)).toContain(
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Transaction successfully signed',
       );
-      expect(observation.humanMessage || JSON.stringify(observation)).toContain('Transaction ID');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Transaction ID');
     }),
   );
 
@@ -112,10 +121,17 @@ describe('Sign Schedule Transaction E2E Tests', () => {
       const invalidScheduleId = '0.0.999999';
       const input = `Sign the scheduled transaction with ID ${invalidScheduleId}`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
       // Should handle the error gracefully
-      expect(observation.humanMessage || JSON.stringify(observation)).toContain(
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to sign scheduled transaction',
       );
     }),

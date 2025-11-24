@@ -8,7 +8,7 @@ import {
   PrivateKey,
   TransferTransaction,
 } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -31,7 +31,7 @@ import {
 
 describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let operatorClient: Client;
   let executorClient: Client; // acts as an owner for approval
   let operatorWrapper: HederaOperationsWrapper;
@@ -58,7 +58,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
   });
 
   afterAll(async () => {
@@ -116,7 +116,14 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
     // Ask the agent (running with an executor client) to approve allowance to the spender
     const input = `Approve ${allowanceAmount} HBAR allowance to ${spenderAccount.toString()} with memo "${memo}"`;
-    await agentExecutor.invoke({ input });
+    await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
 
     // Now, using a spender client, spend part of the approved allowance
     await spendViaAllowance(
@@ -140,7 +147,14 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     const balanceBefore = await spenderWrapper.getAccountHbarBalance(spenderAccount.toString());
 
     const input = `Approve ${allowanceAmount} HBAR allowance to ${spenderAccount.toString()}`;
-    await agentExecutor.invoke({ input });
+    await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
 
     await spendViaAllowance(
       executorClient.operatorAccountId!.toString(),

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,7 +8,8 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { wait, extractObservationFromLangchainResponse } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 
@@ -20,7 +21,8 @@ describe('Get Topic Info Query E2E Tests', () => {
   let createdTopicId: TopicId;
   let topicAdminKey: PublicKey;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
@@ -56,7 +58,8 @@ describe('Get Topic Info Query E2E Tests', () => {
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
@@ -74,17 +77,25 @@ describe('Get Topic Info Query E2E Tests', () => {
     testSetup.cleanup();
   });
 
-  it('should fetch topic info via LangChain agent', itWithRetry(async () => {
-    const input = `Get topic info for ${createdTopicId.toString()}`;
+  it(
+    'should fetch topic info via LangChain agent',
+    itWithRetry(async () => {
+      const input = `Get topic info for ${createdTopicId.toString()}`;
 
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation.raw).toBeDefined();
-    expect(observation.raw.topicId).toBe(createdTopicId.toString());
-    expect(observation.raw.topicInfo.topic_id).toBe(createdTopicId.toString());
-    expect(observation.humanMessage).toContain('Here are the details for topic');
-  }));
+      expect(parsedResponse[0].parsedData.raw).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.topicId).toBe(createdTopicId.toString());
+      expect(parsedResponse[0].parsedData.raw.topicInfo.topic_id).toBe(createdTopicId.toString());
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Here are the details for topic');
+    }),
+  );
 });
-
-

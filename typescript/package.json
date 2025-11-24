@@ -19,7 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "build": "tsup",
-    "format": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --write",
+    "format": "prettier \"{src,test}/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --write",
     "format:check": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --check",
     "lint": "eslint . --ext .ts,.tsx",
     "prepare": "husky",
@@ -34,17 +34,21 @@
   "dependencies": {
     "@elizaos/core": "1.4.2",
     "@hashgraph/sdk": "^2.68.0",
-    "@langchain/core": "^0.3.66",
+    "@langchain/core": "1.0.4",
+    "@langchain/openai": "^1.1.1",
     "@modelcontextprotocol/sdk": "^1.16.0",
     "ai": "^4.3.19",
     "bignumber.js": "^9.3.1",
     "ethers": "^6.15.0",
+    "langchain": "^1.0.4",
     "long": "^5.3.2",
     "zod": "^3.25.76",
     "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.31.0",
+    "@semantic-release/changelog": "github:semantic-release/changelog",
+    "@semantic-release/git": "github:semantic-release/git",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
     "@vitest/coverage-v8": "^1.6.0",
@@ -58,16 +62,17 @@
     "husky": "^9.1.7",
     "normalize-url": "^8.0.2",
     "prettier": "^3.6.2",
+    "semantic-release": "24.2.7",
     "tsconfig-paths": "^4.2.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.37.0",
-    "vitest": "^1.6.0",
-    "@langchain/groq": "0.2.3",
-    "@langchain/anthropic": "0.3.26",
-    "@semantic-release/changelog": "github:semantic-release/changelog",
-    "@semantic-release/git": "github:semantic-release/git",
-    "semantic-release": "24.2.7"
+    "vitest": "^1.6.0"
+  },
+  "overrides": {
+    "@elizaos/core": {
+      "langchain": "npm:langchain@0.3.15"
+    }
   },
   "files": [
     "dist/**/*"
