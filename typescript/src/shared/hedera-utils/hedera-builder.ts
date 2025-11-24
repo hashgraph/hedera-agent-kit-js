@@ -5,6 +5,8 @@ import {
   AccountId,
   AccountUpdateTransaction,
   ContractExecuteTransaction,
+  Hbar,
+  HbarUnit,
   ScheduleCreateTransaction,
   ScheduleDeleteTransaction,
   ScheduleSignTransaction,
@@ -74,7 +76,7 @@ export default class HederaBuilder {
   }
 
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
-    const tx = new TransferTransaction(params);
+    const tx = new TransferTransaction(params as any);
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
@@ -98,7 +100,7 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof transferHbarWithAllowanceParametersNormalised>>,
   ) {
     // transfers are passed through the constructor
-    const tx = new TransferTransaction(params);
+    const tx = new TransferTransaction(params as any);
 
     // Add approved transfer (allowance-based) - approved transfer passing through a constructor is not supported
     tx.addApprovedHbarTransfer(
@@ -172,6 +174,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>>,
   ) {
     const tx = new ContractExecuteTransaction(params);
+    if(params.payableAmount) {
+      tx.setPayableAmount(Hbar.from(params.payableAmount, HbarUnit.Tinybar));
+    }
+    
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
