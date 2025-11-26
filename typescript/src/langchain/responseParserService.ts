@@ -89,6 +89,19 @@ class ResponseParserService {
           }
         } else {
           console.warn(`No parsing function found for tool: ${toolName}`);
+          try {
+            console.warn(`Parsing with default JSON.parse for tool: ${toolName}`);
+            allParsedData.push({
+              toolName: toolName,
+              toolCallId: message.tool_call_id,
+              parsedData: JSON.parse(message.content as string),
+            });
+          } catch (error) {
+            console.error(
+              `Failed to parse content for tool ${toolName} with missing parsing function:`,
+              error,
+            );
+          }
         }
       }
     }
