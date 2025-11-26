@@ -1,3 +1,24 @@
+/**
+ * Parse a transaction tool's JSON output into a normalized shape.
+ *
+ * Accepts a stringified JSON `rawOutput` produced by a transaction tool and
+ * returns a consistent `{ raw: any, humanMessage: string }` object.
+ *
+ * Behavior:
+ * - If `rawOutput` is not valid JSON, returns a `raw` object with
+ *   `{ status: 'PARSE_ERROR', error, originalOutput }` and a generic error
+ *   `humanMessage`.
+ * - If the parsed object has a top-level `bytes` field (RETURN_BYTES mode),
+ *   the parsed object is returned as `raw` and a default human-friendly message
+ *   is provided.
+ * - If the parsed object contains both `raw` and `humanMessage` (EXECUTE_TRANSACTION
+ *   mode), any additional top-level fields are merged into the returned `raw`
+ *   object so extra tool information is preserved.
+ * - For any other shape, returns a `PARSE_ERROR` indicating an unexpected format.
+ *
+ * @param rawOutput - JSON string output from a transaction tool
+ * @returns An object containing the untyped `raw` tool data and a `humanMessage`
+ */
 export const transactionToolOutputParser = (
   rawOutput: string,
 ): { raw: any; humanMessage: string } => {
@@ -26,7 +47,6 @@ export const transactionToolOutputParser = (
     typeof parsedObject.raw !== 'undefined' &&
     typeof parsedObject.humanMessage !== 'undefined'
   ) {
-    // <-- MODIFIED: Use destructuring to capture other top-level fields
     const { raw, humanMessage, ...otherFields } = parsedObject;
 
     // This ensures any extra data from the tool is not lost
