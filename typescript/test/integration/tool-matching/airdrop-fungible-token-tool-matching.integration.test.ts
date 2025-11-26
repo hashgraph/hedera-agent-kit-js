@@ -91,7 +91,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
           },
         },
         {
-          input: 'Distribute 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
+          input: 'Airdrop 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
           expected: {
             tokenId: '0.0.7777',
             sourceAccountId: '0.0.1500',
