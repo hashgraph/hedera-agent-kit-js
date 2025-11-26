@@ -205,7 +205,19 @@ node dist/index.js
 
 ElizaOS is a powerful framework for building autonomous AI agents. The Hedera plugin for ElizaOS enables seamless integration with Hedera's blockchain services, allowing you to create sophisticated AI agents that can interact with the Hedera network.
 
-> ⚠️ **Development Status**: The ElizaOS plugin is currently in active development. Features and APIs may change as the plugin evolves.
+**⚠️ Breaking Change: v3.5.0 Import Update**
+
+**`HederaElizaOSToolkit` has moved.**
+If you are upgrading to version `3.5.0` or higher, you must update your import paths:
+
+```typescript
+// ❌ Deprecated (Will fail in v3.5.0+)
+import { HederaElizaOSToolkit } from 'hedera-agent-kit';
+
+// ✅ Correct
+import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos';
+```
+
 
 1. Clone the [Hedera ElizaOS Plugin Repository](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
 2. Install ElizaOS CLI
