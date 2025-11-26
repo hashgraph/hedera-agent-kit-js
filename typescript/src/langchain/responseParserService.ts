@@ -10,7 +10,7 @@ export interface AgentResponse {
 
 type ParsingFunction = (content: string) => {};
 
-export class ResponseParserService {
+class ResponseParserService {
   processedMessageIds: Set<string>;
   tools: HederaAgentKitTool[];
   parsingMap: Map<string, ParsingFunction>;
