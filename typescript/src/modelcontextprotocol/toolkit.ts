@@ -11,14 +11,7 @@ class HederaMCPToolkit extends McpServer {
   constructor({ client, configuration }: { client: Client; configuration: Configuration }) {
     super({
       name: 'Hedera Agent Kit',
-      version: '0.1.0',
-      configuration: {
-        ...configuration,
-        context: {
-          ...configuration.context,
-          mode: 'modelcontextprotocol',
-        },
-      },
+      version: '0.1.0'
     });
 
     const context = configuration.context || {};
