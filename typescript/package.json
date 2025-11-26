@@ -12,6 +12,16 @@
         "types": "./dist/cjs/index.d.ts",
         "default": "./dist/cjs/index.js"
       }
+    },
+    "./elizaos": {
+      "import": {
+        "types": "./dist/esm/elizaos/index.d.mts",
+        "default": "./dist/esm/elizaos/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/elizaos/index.d.ts",
+        "default": "./dist/cjs/elizaos/index.js"
+      }
     }
   },
   "scripts": {

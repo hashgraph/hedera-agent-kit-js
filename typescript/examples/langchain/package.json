@@ -14,7 +14,7 @@
     "@langchain/core": "^1.0.4",
     "@langchain/openai": "^1.1.0",
     "dotenv": "^17.2.0",
-    "hedera-agent-kit": "3.4.0",
+    "hedera-agent-kit": "../..",
     "prompts": "^2.4.2"
   },
   "author": "",
