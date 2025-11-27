@@ -17,9 +17,9 @@ import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
-import { ChatOpenAI } from "@langchain/openai";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { StructuredToolInterface } from '@langchain/core/tools';
 
 dotenv.config();
 
@@ -190,7 +190,6 @@ async function bootstrap(): Promise<void> {
 
     try {
       const response = await agentExecutor.invoke({ input: userInput });
-      console.log(JSON.stringify(response, null, 2));
       console.log(`AI: ${response?.output ?? response}`);
     } catch (err) {
       console.error('Error:', err);
