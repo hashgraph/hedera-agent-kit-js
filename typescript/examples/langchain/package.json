@@ -13,8 +13,9 @@
     "@langchain/classic": "^1.0.2",
     "@langchain/core": "^1.0.4",
     "@langchain/openai": "^1.1.0",
+    "cheerio": "^1.1.2",
     "dotenv": "^17.2.0",
-    "hedera-agent-kit": "../..",
+    "hedera-agent-kit": "3.5.2",
     "prompts": "^2.4.2"
   },
   "author": "",

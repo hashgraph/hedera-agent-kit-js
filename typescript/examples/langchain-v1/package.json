@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.77.0",
-    "hedera-agent-kit": "../..",
-    "@langchain/core": "1.0.4",
-    "langchain": "^1.0.4",
+    "hedera-agent-kit": "3.5.2",
+    "@langchain/core": "1.1.0",
+    "langchain": "^1.1.1",
     "dotenv": "^17.2.0",
     "prompts": "^2.4.2"
   },
