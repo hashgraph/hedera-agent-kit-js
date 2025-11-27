@@ -13,7 +13,7 @@
     "@hashgraph/sdk": "^2.77.0",
     "hedera-agent-kit": "3.5.2",
     "@langchain/core": "1.1.0",
-    "langchain": "^1.1.1",
+    "langchain": "1.1.0",
     "dotenv": "^17.2.0",
     "prompts": "^2.4.2"
   },
