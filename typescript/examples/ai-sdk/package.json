@@ -19,35 +19,5 @@
   "devDependencies": {
     "@types/prompts": "^2.4.9",
     "ts-node": "^10.9.2"
-  },
-  "overrides": {
-    "@elizaos/core": {
-      "langchain": "npm:langchain@0.3.15",
-      "@langchain/core": "npm:@langchain/core@0.2.29",
-      "@langchain/openai": "npm:@langchain/openai@0.0.34"
-    },
-    "langchain": {
-      "@elizaos/core": "#langchain-v0"
-    },
-    "@langchain/core": {
-      "@elizaos/core": "#langchain-v0/core"
-    },
-    "@langchain/openai": {
-      "@elizaos/core": "#langchain-v0/openai"
-    }
-  },
-  "imports": {
-    "#langchain-v0": {
-      "import": "langchain@0.3.15",
-      "require": "langchain@0.3.15"
-    },
-    "#langchain-v0/core": {
-      "import": "@langchain/core@0.2.29",
-      "require": "@langchain/core@0.2.29"
-    },
-    "#langchain-v0/openai": {
-      "import": "@langchain/openai@0.0.34",
-      "require": "@langchain/openai@0.0.34"
-    }
   }
 }
