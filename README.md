@@ -76,41 +76,21 @@ See more info at [https://www.npmjs.com/package/hedera-agent-kit](https://www.np
 - **[Claude](https://console.anthropic.com/settings/keys) & [OpenAI](https://platform.openai.com/api-keys)**: Paid options for production use
 
 ### 1 – Project Setup
-
 Create a directory for your project and install dependencies:
-
 ```bash
 mkdir hello-hedera-agent-kit
 cd hello-hedera-agent-kit
 ```
 
 Init and install with npm
-
 ```bash
 npm init -y
 ```
 
-> This command initializes a CommonJS project by default.
+Open `package.json` and add `"type": "module"` to enable ES modules.
 
 ```bash
-npm install hedera-agent-kit @langchain/core@^0.3 langchain@^0.3 @hashgraph/sdk dotenv
-# NOTE: currently Hedera Agent Kit's Langchain toolkit is only compatible with langchain v0.3  We have v1 support coming very soon!
-```
-
-Then install ONE of these AI provider packages:
-
-```bash
-# Option 1: OpenAI (requires API key)
-npm install @langchain/openai@^0.6
-
-# Option 2: Anthropic Claude (requires API key)
-npm install @langchain/anthropic@^0.3
-
-# Option 3: Groq (free tier available)
-npm install @langchain/groq@^0.2
-
-# Option 4: Ollama (100% free, runs locally)
-npm install @langchain/ollama@^0.2
+npm install hedera-agent-kit @langchain/core langchain @langchain/langgraph @langchain/openai @hashgraph/sdk dotenv
 ```
 
 ### 2 – Configure: Add Environment Variables
@@ -139,7 +119,7 @@ GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
 
-Create a a new file called `index.js` in the `hello-hedera-agent-kit` folder.
+Create a new file called `index.js` in the `hello-hedera-agent-kit` folder.
 
 ```bash
 touch index.js
@@ -149,97 +129,57 @@ Once you have created a new file `index.js` and added the environment variables,
 
 ```javascript
 // index.js
-const dotenv = require("dotenv");
+import { Client, PrivateKey } from '@hashgraph/sdk';
+import { HederaLangchainToolkit, AgentMode } from 'hedera-agent-kit';
+import { createAgent } from 'langchain';
+import { MemorySaver } from '@langchain/langgraph';
+import { ChatOpenAI } from '@langchain/openai';
+import dotenv from 'dotenv';
+
 dotenv.config();
 
-const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { AgentExecutor, createToolCallingAgent } = require("langchain/agents");
-const { Client, PrivateKey } = require("@hashgraph/sdk");
-const {
-  HederaLangchainToolkit,
-  coreQueriesPlugin,
-} = require("hedera-agent-kit");
-
-// Choose your AI provider (install the one you want to use)
-function createLLM() {
-  // Option 1: OpenAI (requires OPENAI_API_KEY in .env)
-  if (process.env.OPENAI_API_KEY) {
-    const { ChatOpenAI } = require("@langchain/openai");
-    return new ChatOpenAI({ model: "gpt-4o-mini" });
-  }
-
-  // Option 2: Anthropic Claude (requires ANTHROPIC_API_KEY in .env)
-  if (process.env.ANTHROPIC_API_KEY) {
-    const { ChatAnthropic } = require("@langchain/anthropic");
-    return new ChatAnthropic({ model: "claude-3-haiku-20240307" });
-  }
-
-  // Option 3: Groq (requires GROQ_API_KEY in .env)
-  if (process.env.GROQ_API_KEY) {
-    const { ChatGroq } = require("@langchain/groq");
-    return new ChatGroq({ model: "llama-3.3-70b-versatile" });
-  }
-
-  // Option 4: Ollama (free, local - requires Ollama installed and running)
-  try {
-    const { ChatOllama } = require("@langchain/ollama");
-    return new ChatOllama({
-      model: "llama3.2",
-      baseUrl: "http://localhost:11434",
-    });
-  } catch (e) {
-    console.error("No AI provider configured. Please either:");
-    console.error(
-      "1. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GROQ_API_KEY in .env",
-    );
-    console.error("2. Install and run Ollama locally (https://ollama.com)");
-    process.exit(1);
-  }
-}
-
 async function main() {
-  // Initialize AI model
-  const llm = createLLM();
-
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
     process.env.ACCOUNT_ID,
-    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY),
+    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY)
   );
 
+  // Prepare Hedera toolkit
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      plugins: [coreQueriesPlugin], // all our core plugins here https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/src/plugins
+      tools: [], // Add specific tools here if needed, or leave empty for defaults/plugins
+      plugins: [], // Add plugins here
+      context: {
+        mode: AgentMode.AUTONOMOUS,
+      },
     },
   });
 
-  // Load the structured chat prompt template
-  const prompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful assistant"],
-    ["placeholder", "{chat_history}"],
-    ["human", "{input}"],
-    ["placeholder", "{agent_scratchpad}"],
-  ]);
-
-  // Fetch tools from toolkit
+  // Fetch tools from a toolkit
   const tools = hederaAgentToolkit.getTools();
 
-  // Create the underlying agent
-  const agent = createToolCallingAgent({
-    llm,
-    tools,
-    prompt,
+  const llm = new ChatOpenAI({
+    model: 'gpt-4o-mini',
+    apiKey: process.env.OPENAI_API_KEY,
   });
 
-  // Wrap everything in an executor that will maintain memory
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools,
+  const agent = createAgent({
+    model: llm,
+    tools: tools,
+    systemPrompt: 'You are a helpful assistant with access to Hedera blockchain tools',
+    checkpointer: new MemorySaver(),
   });
 
-  const response = await agentExecutor.invoke({ input: "what's my balance?" });
-  console.log(response);
+  console.log('Sending a message to the agent...');
+  
+  const response = await agent.invoke(
+    { messages: [{ role: 'user', content: "what's my balance?" }] },
+    { configurable: { thread_id: '1' } }
+  );
+
+  console.log(response.messages[response.messages.length - 1].content);
 }
 
 main().catch(console.error);
@@ -256,17 +196,29 @@ node index.js
 If you would like, try adding in other prompts to the agent to see what it can do.
 
 ```javascript
-...
+// ...
 //original
-  const response = await agentExecutor.invoke({ input: "what's my balance?" });
+  const response = await agent.invoke(
+    { messages: [{ role: 'user', content: "what's my balance?" }] },
+    { configurable: { thread_id: '1' } }
+  );
 // or
-  const response = await agentExecutor.invoke({ input: "create a new token called 'TestToken' with symbol 'TEST'" });
+  const response = await agent.invoke(
+    { messages: [{ role: 'user', content: "create a new token called 'TestToken' with symbol 'TEST'" }] },
+    { configurable: { thread_id: '1' } }
+  );
 // or
-  const response = await agentExecutor.invoke({ input: "transfer 5 HBAR to account 0.0.1234" });
+  const response = await agent.invoke(
+    { messages: [{ role: 'user', content: "transfer 5 HBAR to account 0.0.1234" }] },
+    { configurable: { thread_id: '1' } }
+  );
 // or
-  const response = await agentExecutor.invoke({ input: "create a new topic for project updates" });
-...
-   console.log(response);
+  const response = await agent.invoke(
+    { messages: [{ role: 'user', content: "create a new topic for project updates" }] },
+    { configurable: { thread_id: '1' } }
+  );
+// ...
+   console.log(response.messages[response.messages.length - 1].content);
 ```
 
 > To get other Hedera Agent Kit tools working, take a look at the example agent implementations at [https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/examples/langchain](https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/examples/langchain)
@@ -277,7 +229,7 @@ If you would like, try adding in other prompts to the agent to see what it can d
 
 ### Agent Execution Modes
 
-This tool has two execution modes with AI agents; autonomous excution and return bytes. If you set:
+This tool has two execution modes with AI agents; autonomous execution and return bytes. If you set:
 
 - `mode: AgentMode.RETURN_BYTE` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned.
 - `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
