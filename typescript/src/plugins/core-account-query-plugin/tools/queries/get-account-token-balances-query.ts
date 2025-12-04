@@ -8,6 +8,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenBalancesResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 
 export const getAccountTokenBalancesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -17,7 +18,7 @@ export const getAccountTokenBalancesQueryPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will return the token balances for a given Hedera account.
+This tool will return the token balances for a given Hedera account. The human message will contain parsed balances in display units whereas the extra field will contain the raw token balances response from the mirror node with .
 
 Parameters:
 - ${accountDesc}
@@ -33,13 +34,16 @@ const postProcess = (tokenBalances: TokenBalancesResponse, accountId: string) =>
   const balancesText = tokenBalances.tokens
     .map(
       token =>
-        ` Token: ${token.token_id}, Symbol: ${token.symbol}  Balance: ${token.balance}, Decimals: ${token.decimals}`,
+        ` Token: ${token.token_id}, Symbol: ${token.symbol}  Balance: ${toDisplayUnit(token.balance, token.decimals)}, Decimals: ${token.decimals}`,
     )
     .join('\n');
 
   return `Details for ${accountId}
 --- Token Balances ---
-${balancesText}`;
+${balancesText}
+
+The balances are given in display units.
+`;
 };
 
 export const getAccountTokenBalancesQuery = async (

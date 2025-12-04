@@ -189,7 +189,9 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
           amount: z
             .number()
             .nonnegative()
-            .describe('Amount of tokens to approve (must be positive integer)'),
+            .describe(
+              'Amount of tokens to approve (must be positive, can be float or int) Given in display units, the tool will handle parsing',
+            ),
         }),
       )
       .min(1)

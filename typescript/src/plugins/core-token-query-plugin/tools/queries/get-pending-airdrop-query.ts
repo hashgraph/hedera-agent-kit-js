@@ -4,10 +4,17 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
-import { TokenAirdropsResponse, TokenAirdrop } from '@/shared/hedera-utils/mirrornode/types';
+import {
+  TokenAirdropsResponse,
+  TokenAirdrop,
+  TokenInfo,
+} from '@/shared/hedera-utils/mirrornode/types';
 import { pendingAirdropQueryParameters } from '@/shared/parameter-schemas/token.zod';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
+import { IHederaMirrornodeService } from '@/shared';
+import BigNumber from 'bignumber.js';
 
 export const getPendingAirdropQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -25,25 +32,65 @@ ${usageInstructions}
 `;
 };
 
-const formatAirdrop = (airdrop: TokenAirdrop, index: number) => {
-  const token = airdrop.token_id ?? 'N/A';
-  const amount = airdrop.amount ?? 0;
-  const serial = airdrop.serial_number ?? 'N/A';
-  const sender = airdrop.sender_id ?? 'N/A';
-  const receiver = airdrop.receiver_id ?? 'N/A';
-  const fromTs = airdrop.timestamp?.from ?? 'N/A';
-  const toTs = airdrop.timestamp?.to ?? 'N/A';
-  return `#${index + 1} Token: ${token}, Amount: ${amount}, Serial: ${serial}, Sender: ${sender}, Receiver: ${receiver}, Timestamp: ${fromTs}${toTs ? ` → ${toTs}` : ''}`;
+interface EnrichedTokenAirdrop extends TokenAirdrop {
+  decimals: number;
+  symbol: string;
+}
+
+interface EnrichedTokenAirdropsResponse {
+  airdrops: EnrichedTokenAirdrop[];
+}
+
+const enrichSingleAirdrop = async (
+  airdrop: TokenAirdrop,
+  mirrornodeService: IHederaMirrornodeService,
+): Promise<EnrichedTokenAirdrop> => {
+  const enriched = airdrop as EnrichedTokenAirdrop;
+  const tokenId = airdrop.token_id;
+
+  // Default values
+  let decimals = 0;
+  let symbol = 'N/A';
+
+  if (tokenId) {
+    try {
+      const info: TokenInfo = await mirrornodeService.getTokenInfo(tokenId);
+      decimals = Number(info.decimals) ?? 0;
+      symbol = info.symbol ?? 'N/A';
+    } catch {
+      symbol = 'UNKNOWN';
+    }
+  }
+
+  enriched.decimals = decimals;
+  enriched.symbol = symbol;
+
+  return enriched;
 };
 
-const postProcess = (accountId: string, response: TokenAirdropsResponse) => {
-  const count = response.airdrops?.length ?? 0;
+const postProcess = (accountId: string, enrichedAirdrops: EnrichedTokenAirdrop[]) => {
+  const count = enrichedAirdrops.length;
+
   if (count === 0) {
     return `No pending airdrops found for account ${accountId}`;
   }
 
-  const details = response.airdrops.map(formatAirdrop).join('\n');
-  return `Here are the pending airdrops for account **${accountId}** (total: ${count}):\n\n${details}`;
+  const details = enrichedAirdrops.map(airdrop => {
+    const symbol = airdrop.symbol;
+    const decimals = airdrop.decimals;
+    const serialNumber = airdrop.serial_number;
+
+    if (serialNumber) {
+      return `- **${symbol}** #${serialNumber}`;
+    } else {
+      const amount = new BigNumber(airdrop.amount ?? 0);
+      const displayAmount = toDisplayUnit(amount, decimals);
+      return `- ${displayAmount.toFixed(decimals)} **${symbol}**`;
+    }
+  });
+
+  const detailsStr = details.join('\n');
+  return `Here are the pending airdrops for account **${accountId}** (total: ${count}):\n\n${detailsStr}`;
 };
 
 export const getPendingAirdropQuery = async (
@@ -56,11 +103,24 @@ export const getPendingAirdropQuery = async (
     if (!accountId) throw new Error('Account ID is required and was not provided');
 
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const response = await mirrornodeService.getPendingAirdrops(accountId);
+
+    // 1. Fetch the list of pending airdrops
+    const response: TokenAirdropsResponse = await mirrornodeService.getPendingAirdrops(accountId);
+
+    // 2. Parallel Fetch & Enrich
+    const rawAirdrops = response.airdrops ?? [];
+    const enrichedAirdrops = await Promise.all(
+      rawAirdrops.map(airdrop => enrichSingleAirdrop(airdrop, mirrornodeService)),
+    );
+
+    // 3. Return response
+    const enrichedResponse: EnrichedTokenAirdropsResponse = {
+      airdrops: enrichedAirdrops,
+    };
 
     return {
-      raw: { accountId, pendingAirdrops: response },
-      humanMessage: postProcess(accountId, response),
+      raw: { accountId, pendingAirdrops: enrichedResponse },
+      humanMessage: postProcess(accountId, enrichedAirdrops),
     };
   } catch (error) {
     const desc = 'Failed to get pending airdrops';

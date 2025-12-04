@@ -28,7 +28,7 @@ Parameters:
 - spenderAccountId (string, required): Spender account ID
 - tokenApprovals (array, required): List of approvals. Each item:
   - tokenId (string): Token ID
-  - amount (number): Amount of tokens to approve (must be a positive integer)
+  - amount (number): Amount of tokens to approve (must be a positive number, can be float or int). Given in display units, the tool will handle parsing
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
 `;
