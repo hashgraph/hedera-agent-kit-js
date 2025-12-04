@@ -33,7 +33,7 @@ The Hedera Agent Kit is extensible with third party plugins by other projects.
 
 The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
+👉 See [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md) for the full catalogue & usage examples.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
@@ -53,15 +53,15 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
 ## Developer Examples
 
-You can try out examples of the different types of agents you can build by followin the instructions in the [Developer Examples](docs/DEVEXAMPLES.md) doc in this repo.
+You can try out examples of the different types of agents you can build by followin the instructions in the [Developer Examples](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md) doc in this repo.
 
-First follow instructions in the [Developer Examples to clone and configure the example](docs/DEVEXAMPLES.md), then choose from one of the examples to run:
+First follow instructions in the [Developer Examples to clone and configure the example](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md), then choose from one of the examples to run:
 
-- **Option A -** [Example Tool Calling Agent](docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
-- **Option B -** [Example Structured Chat Agent](docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
-- **Option C -** [Example Return Bytes Agent](docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
-- **Option D -** [Example MCP Server](docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
-- **Option E -** [Example ElizaOS Agent](docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
+- **Option A -** [Example Tool Calling Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
+- **Option B -** [Example Structured Chat Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
+- **Option C -** [Example Return Bytes Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+- **Option D -** [Example MCP Server](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
+- **Option E -** [Example ElizaOS Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
 
 ---
 
@@ -236,7 +236,7 @@ This tool has two execution modes with AI agents; autonomous execution and retur
 
 ### Hedera Plugins & Tools
 
-The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md)
+The Hedera Agent Kit provides a set of tools, bundled into plugins, to interact with the Hedera network. See how to build your own plugins in [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HEDERAPLUGINS.md)
 
 Currently, the following plugins are available:
 
@@ -264,17 +264,17 @@ Currently, the following plugins are available:
 - Get Account Token Balances Query
 - Get Topic Messages Query
 
-_See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
+_See more in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 
 ---
 
 ## Creating Plugins & Contributing
 
-- You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md)
+- You can find a guide for creating plugins in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)
 
-- This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
+- This guide also has instructions for [publishing and registering your plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
-- If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
+- If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
 ## License
 

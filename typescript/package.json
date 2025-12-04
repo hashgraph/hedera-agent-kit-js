@@ -33,7 +33,7 @@
     "format:check": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --check",
     "lint": "eslint . --ext .ts,.tsx",
     "prepare": "husky",
-    "prepack": "npm ci && npm run build"
+    "prepack": "cp ../README.md README.md && npm ci && npm run build"
   },
   "engines": {
     "node": ">=18"
