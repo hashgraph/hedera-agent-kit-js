@@ -119,7 +119,9 @@ export const createNonFungibleTokenParametersNormalised = (_context: Context = {
 
 const AirdropRecipientSchema = z.object({
   accountId: z.string().describe('Recipient account ID (e.g., "0.0.xxxx").'),
-  amount: z.union([z.number(), z.string()]).describe('Amount in base unit.'),
+  amount: z
+    .union([z.number(), z.string()])
+    .describe('Amount in display units, the tool will handle parsing.'),
 });
 
 export const airdropFungibleTokenParameters = (_context: Context = {}) =>
