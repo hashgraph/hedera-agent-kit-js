@@ -307,19 +307,19 @@ import { myPlugin } from "<plugin-name>";
 
 '''javascript
 const hederaAgentToolkit = new HederaLangchainToolkit({
-client,
-configuration: {
-context: {
-mode: AgentMode.AUTONOMOUS,
-},
-plugins: [
-coreTokenPlugin,
-coreAccountPlugin,
-coreConsensusPlugin,
-coreQueriesPlugin,
-myPlugin,
-],
-},
+    client,
+    configuration: {
+        context: {
+            mode: AgentMode.AUTONOMOUS,
+        },
+        plugins: [
+            coreTokenPlugin,
+            coreAccountPlugin,
+            coreConsensusPlugin,
+            coreQueriesPlugin,
+            myPlugin,
+        ],
+    },
 });
 '''
 

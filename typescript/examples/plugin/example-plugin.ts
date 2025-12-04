@@ -24,7 +24,7 @@ Parameters:
 Usage:
 Use this tool to generate personalized greetings in different languages.
 `,
-  outputParser: undefined, // Optional: Required for LangChain v1. If undefined, a default parser is used.
+  outputParser: undefined, // Optional: Recommended for LangChain v1. If undefined, a default parser is used.
   parameters: z.object({
     name: z.string().min(1, 'Name is required'),
     language: z.enum(['en', 'es', 'fr']).optional().default('en'),

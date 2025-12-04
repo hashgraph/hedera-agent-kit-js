@@ -16,7 +16,7 @@ interface Plugin {
   version?: string;       // Optional version string
   description?: string;   // Optional description
   tools: (context: Context) => Tool[];  // Factory function that returns tools
-  outputParser?: (rawOutput: string) => { raw: any; humanMessage: string }; // Optional: Required for LangChain v1 support
+  outputParser?: (rawOutput: string) => { raw: any; humanMessage: string }; // optional output parser. Used by ResponseParserService in langchain adapter. Recommended for LangChain v1
 }
 ```
 
