@@ -1,4 +1,4 @@
-import { HederaAIToolkit, AgentMode, coreTokenPlugin, coreQueriesPlugin, coreAccountPlugin } from 'hedera-agent-kit';
+import { HederaAIToolkit, AgentMode, coreTokenPlugin, coreAccountPlugin } from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -16,11 +16,7 @@ async function bootstrap(): Promise<void> {
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
-      plugins: [
-        coreTokenPlugin,
-        coreQueriesPlugin,
-        coreAccountPlugin
-      ],
+      plugins: [coreTokenPlugin, coreAccountPlugin],
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
@@ -35,7 +31,7 @@ async function bootstrap(): Promise<void> {
   console.log('Hedera Agent CLI Chatbot — type "exit" to quit');
 
   // Chat memory: conversation history
-  const conversationHistory: { role: 'user' | 'assistant', content: string }[] = [];
+  const conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
 
   while (true) {
     const { userInput } = await prompts({
@@ -72,9 +68,11 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal error during CLI bootstrap:', err);
-  process.exit(1);
-}).then(() => {
-  process.exit(0);
-});
+bootstrap()
+  .catch(err => {
+    console.error('Fatal error during CLI bootstrap:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    process.exit(0);
+  });
