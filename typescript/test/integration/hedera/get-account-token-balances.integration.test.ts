@@ -85,7 +85,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       .then(resp => resp.tokenId!);
 
     await executorWrapper.transferFungible({
-      amount: 100,
+      amount: 100, // given in base units. Equals 1 in display units
       to: targetAccountId.toString(),
       from: executorAccountId.toString(),
       tokenId: tokenId.toString(),
@@ -103,7 +103,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     });
     expect(result.humanMessage).toContain('Token Balances');
     expect(result.humanMessage).toContain(`Token: ${tokenId.toString()}`);
-    expect(result.humanMessage).toContain(`Balance: 100`);
+    expect(result.humanMessage).toContain(`Balance: 1`);
     expect(result.humanMessage).toContain(`Decimals: 2`);
   });
 
@@ -119,7 +119,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         tokenName: 'Default Test',
         tokenSymbol: 'DFT',
         tokenMemo: 'Default Test Token',
-        initialSupply: 500,
+        initialSupply: 500, // given in base units. Equals 0.5 in display units
         decimals: 3,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
@@ -134,12 +134,12 @@ describe('Integration - Hedera getTransactionRecord', () => {
     });
 
     expect(result.raw.tokenBalances).toMatchObject({
-      tokens: [{ balance: 500, decimals: 3, token_id: tokenId.toString() }],
+      tokens: [{ balance: 500, decimals: 3, token_id: tokenId.toString() }], // the object contains the balance in base units
     });
     expect(result.humanMessage).toContain('Token Balances');
     expect(result.humanMessage).toContain(executorAccountId.toString());
     expect(result.humanMessage).toContain(`Token: ${tokenId.toString()}`);
-    expect(result.humanMessage).toContain(`Balance: 500`);
+    expect(result.humanMessage).toContain(`Balance: 0.5`);
     expect(result.humanMessage).toContain(`Decimals: 3`);
   });
 
@@ -156,7 +156,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         tokenName: 'Multi Test 1',
         tokenSymbol: 'MT1',
         tokenMemo: 'Multi Test Token 1',
-        initialSupply: 1000,
+        initialSupply: 1000, // given in base units. Equals 10.0 in display units
         decimals: 2,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
@@ -169,7 +169,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         tokenName: 'Multi Test 2',
         tokenSymbol: 'MT2',
         tokenMemo: 'Multi Test Token 2',
-        initialSupply: 2000,
+        initialSupply: 2000, // given in base units. Equals 200.0 in display units
         decimals: 1,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
@@ -179,7 +179,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     // Transfer both tokens to a target account
     await executorWrapper.transferFungible({
-      amount: 150,
+      amount: 150, // given in base units. Equals 15.0 in display units
       to: targetAccountId.toString(),
       from: executorAccountId.toString(),
       tokenId: tokenId1.toString(),
@@ -202,12 +202,12 @@ describe('Integration - Hedera getTransactionRecord', () => {
     expect(result.raw.tokenBalances?.tokens).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          balance: 150,
+          balance: 150, // the object contains the balance in base units
           decimals: 2,
           token_id: tokenId1.toString(),
         }),
         expect.objectContaining({
-          balance: 250,
+          balance: 250, // the object contains the balance in base units
           decimals: 1,
           token_id: tokenId2.toString(),
         }),
@@ -285,7 +285,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         tokenName: 'Filter Test 1',
         tokenSymbol: 'FT1',
         tokenMemo: 'Filter Test Token 1',
-        initialSupply: 1000,
+        initialSupply: 1000, // given in base units. Equals 10.00 in display units
         decimals: 2,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
@@ -298,7 +298,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
         tokenName: 'Filter Test 2',
         tokenSymbol: 'FT2',
         tokenMemo: 'Filter Test Token 2',
-        initialSupply: 2000,
+        initialSupply: 2000, // given in base units. Equals 200.0 in display units
         decimals: 1,
         treasuryAccountId: executorAccountId.toString(),
         supplyType: TokenSupplyType.Infinite,
@@ -308,14 +308,14 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     // Transfer both tokens to a target account
     await executorWrapper.transferFungible({
-      amount: 100,
+      amount: 100, // given in base units. Equals 10.00 in display units
       to: targetAccountId.toString(),
       from: executorAccountId.toString(),
       tokenId: tokenId1.toString(),
     });
 
     await executorWrapper.transferFungible({
-      amount: 200,
+      amount: 200, // given in base units. Equals 2.00 in display units
       to: targetAccountId.toString(),
       from: executorAccountId.toString(),
       tokenId: tokenId2.toString(),

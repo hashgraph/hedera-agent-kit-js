@@ -28,7 +28,7 @@ Parameters:
 - ${sourceAccountDesc}
 - recipients (array, required): A list of recipient objects, each containing:
   - accountId (string): The recipient's account ID (e.g., "0.0.1234")
-  - amount (number or string): The amount of tokens to send to that recipient (in base units)
+  - amount (number or string): The amount of tokens to send to that recipient (in display units)
 - transactionMemo (str, optional): Optional memo for the transaction
 ${usageInstructions}
 
