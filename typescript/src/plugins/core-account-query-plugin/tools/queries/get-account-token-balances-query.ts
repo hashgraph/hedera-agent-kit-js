@@ -42,7 +42,7 @@ const postProcess = (tokenBalances: TokenBalancesResponse, accountId: string) =>
 --- Token Balances ---
 ${balancesText}
 
-The balances are given in display units.
+The token balances are returned in display units!
 `;
 };
 
