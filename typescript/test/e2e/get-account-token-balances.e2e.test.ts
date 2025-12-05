@@ -40,7 +40,7 @@ describe('Get Account Token Balances E2E Tests', () => {
       tokenName: 'E2E Test Token',
       tokenSymbol: 'E2E',
       tokenMemo: 'E2E Testing Token',
-      initialSupply: 100,
+      initialSupply: 100, // given in base units. Equals to 1 in display units
       decimals: 2,
       treasuryAccountId: operatorClient.operatorAccountId!.toString(),
       supplyType: TokenSupplyType.Infinite,
@@ -50,7 +50,7 @@ describe('Get Account Token Balances E2E Tests', () => {
 
     // Transfer some balance to the test account
     await operatorWrapper.transferFungible({
-      amount: 25,
+      amount: 25, // given in base units. Equals to 0.25 in display units
       to: testAccountId,
       from: operatorClient.operatorAccountId!.toString(),
       tokenId,
@@ -79,7 +79,7 @@ describe('Get Account Token Balances E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token Balances');
       expect(parsedResponse[0].parsedData.humanMessage).toContain(`Token: ${tokenId}`);
-      expect(parsedResponse[0].parsedData.humanMessage).toContain(`Balance: 25`);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(`Balance: 0.25`);
     }),
   );
 
