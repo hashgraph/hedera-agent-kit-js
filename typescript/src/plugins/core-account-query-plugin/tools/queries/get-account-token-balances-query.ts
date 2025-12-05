@@ -8,6 +8,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenBalancesResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 
 export const getAccountTokenBalancesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -33,13 +34,16 @@ const postProcess = (tokenBalances: TokenBalancesResponse, accountId: string) =>
   const balancesText = tokenBalances.tokens
     .map(
       token =>
-        ` Token: ${token.token_id}, Symbol: ${token.symbol}  Balance: ${token.balance}, Decimals: ${token.decimals}`,
+        ` Token: ${token.token_id}, Symbol: ${token.symbol}  Balance: ${toDisplayUnit(token.balance, token.decimals)}, Decimals: ${token.decimals}`,
     )
     .join('\n');
 
   return `Details for ${accountId}
 --- Token Balances ---
-${balancesText}`;
+${balancesText}
+
+The token balances are returned in display units!
+`;
 };
 
 export const getAccountTokenBalancesQuery = async (
