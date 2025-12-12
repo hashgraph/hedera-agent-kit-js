@@ -15,6 +15,7 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { z } from 'zod';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Transfer ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;

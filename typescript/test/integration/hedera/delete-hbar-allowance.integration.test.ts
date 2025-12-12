@@ -6,6 +6,7 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { deleteHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 /**
  * Integration tests for Delete HBAR Allowance tool
@@ -32,7 +33,7 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5, // cover fees
+        initialBalance: UsdToHbarService.usdToHbar(1.00), // cover fees
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

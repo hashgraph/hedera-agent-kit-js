@@ -12,6 +12,7 @@ import { ResponseParserService } from '@/langchain';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
   let testSetup: LangchainTestSetup;
@@ -31,7 +32,7 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     // execution account and client creation
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey as Key, initialBalance: 5 })
+      .createAccount({ key: executorAccountKey.publicKey as Key, initialBalance: UsdToHbarService.usdToHbar(0.25) })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     executionWrapper = new HederaOperationsWrapper(executorClient);

@@ -13,6 +13,7 @@ import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Create ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -29,7 +30,7 @@ describe('Create ERC721 Token E2E Tests', () => {
     // 1. Create an executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 10 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.35) })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client

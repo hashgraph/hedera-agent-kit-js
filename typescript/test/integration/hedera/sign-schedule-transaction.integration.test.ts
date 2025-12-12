@@ -4,6 +4,7 @@ import signScheduleTransactionTool from '@/plugins/core-account-plugin/tools/acc
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import {
   signScheduleTransactionParameters,
   transferHbarParametersNormalised,
@@ -24,7 +25,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5, // To cover transfers and account creations
+        initialBalance: UsdToHbarService.usdToHbar(1.00), // To cover transfers and account creations
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

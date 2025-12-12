@@ -10,6 +10,7 @@ import {
 } from '../../utils';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Transfer HBAR Integration Tests', () => {
   let operatorClient: Client;
@@ -27,7 +28,7 @@ describe('Transfer HBAR Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5, // To cover transfers and account creations
+        initialBalance: UsdToHbarService.usdToHbar(1.50), // To cover transfers and account creations
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

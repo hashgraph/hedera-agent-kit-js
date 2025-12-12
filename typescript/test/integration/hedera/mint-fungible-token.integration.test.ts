@@ -8,6 +8,7 @@ import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zo
 import { wait } from '../../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Mint Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -33,7 +34,7 @@ describe('Mint Fungible Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(5) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

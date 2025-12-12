@@ -13,6 +13,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 import { ResponseParserService } from '@/langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Get Pending Airdrop Query E2E Tests', () => {
   let operatorClient: Client;
@@ -41,7 +42,7 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.50) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);

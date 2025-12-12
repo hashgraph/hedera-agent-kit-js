@@ -16,6 +16,7 @@ import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/acco
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 /**
  * Integration tests for Approve Token Allowance tool
@@ -46,14 +47,17 @@ describe('Approve Token Allowance Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(2) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     spenderAccountId = await executorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key, initialBalance: 5 })
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(1),
+      })
       .then(resp => resp.accountId!);
 
     context = {

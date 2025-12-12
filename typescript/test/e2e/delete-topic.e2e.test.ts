@@ -13,6 +13,7 @@ import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Delete Topic E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -31,7 +32,7 @@ describe('Delete Topic E2E Tests', () => {
 
     executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.60) })
       .then(r => r.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

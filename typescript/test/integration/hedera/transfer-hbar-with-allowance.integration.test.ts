@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AccountId, Client, Hbar, HbarAllowance, HbarUnit, Key, PrivateKey } from '@hashgraph/sdk';
 import transferHbarWithAllowanceTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 import { Context, AgentMode } from '@/shared/configuration';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import {
   getCustomClient,
   getOperatorClientForTests,

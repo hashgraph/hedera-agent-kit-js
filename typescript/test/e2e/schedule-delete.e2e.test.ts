@@ -9,6 +9,7 @@ import {
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Schedule Delete E2E Tests', () => {
   let operatorClient: Client;

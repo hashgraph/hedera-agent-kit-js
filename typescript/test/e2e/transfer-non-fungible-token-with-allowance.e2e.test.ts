@@ -21,6 +21,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { ReactAgent } from 'langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Transfer NFT With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;

@@ -9,6 +9,7 @@ import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } f
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Delete Token Allowance Integration Tests', () => {
   let operatorClient: Client;
