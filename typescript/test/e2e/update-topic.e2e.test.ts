@@ -13,6 +13,7 @@ import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Update Topic E2E Tests', () => {
   let operatorClient: Client;
@@ -30,7 +31,7 @@ describe('Update Topic E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.60) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -175,7 +176,7 @@ describe('Update Topic E2E Tests', () => {
     itWithRetry(async () => {
       const secondaryAccountKey = PrivateKey.generateED25519();
       const secondaryAccountId = await executorWrapper
-        .createAccount({ key: secondaryAccountKey.publicKey, initialBalance: 10 })
+        .createAccount({ key: secondaryAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.35) })
         .then(resp => resp.accountId!);
 
       const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccountKey);

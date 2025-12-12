@@ -12,6 +12,7 @@ import { ResponseParserService } from '@/langchain';
 import { itWithRetry } from '../utils/retry-util';
 import { transferHbarParametersNormalised } from '@/shared/parameter-schemas/account.zod';
 import { z } from 'zod';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Sign Schedule Transaction E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -31,7 +32,7 @@ describe('Sign Schedule Transaction E2E Tests', () => {
     // execution account and client creation
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKeyPair.publicKey, initialBalance: 5 })
+      .createAccount({ key: executorKeyPair.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.25) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKeyPair);

@@ -17,6 +17,7 @@ import {
   LangchainTestSetup,
   verifyHbarBalanceChange,
 } from '../utils';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 /**
  * E2E tests for Approve HBAR Allowance using the LangChain agent, similar to transfer-hbar E2E tests.
@@ -50,7 +51,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     // execution account and client creation (owner)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.50) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -78,7 +79,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     spenderAccount = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(0.25),
       })
       .then(resp => resp.accountId!);
 

@@ -18,6 +18,7 @@ import { mintNonFungibleTokenParametersNormalised } from '@/shared/parameter-sch
 import { z } from 'zod';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { wait } from '../../utils/general-util';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Transfer NFT With Allowance Integration Tests', () => {
   let operatorClient: Client;

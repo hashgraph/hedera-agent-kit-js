@@ -8,6 +8,7 @@ import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '../../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Associate Token Integration Tests', () => {
   let operatorClient: Client;
@@ -36,7 +37,7 @@ describe('Associate Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(2) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -44,7 +45,10 @@ describe('Associate Token Integration Tests', () => {
 
     const tokenExecutorKey = PrivateKey.generateED25519();
     tokenExecutorAccountId = await operatorWrapper
-      .createAccount({ key: tokenExecutorKey.publicKey, initialBalance: 20 })
+      .createAccount({
+        key: tokenExecutorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(2),
+      })
       .then(resp => resp.accountId!);
 
     tokenExecutorClient = getCustomClient(tokenExecutorAccountId, tokenExecutorKey);

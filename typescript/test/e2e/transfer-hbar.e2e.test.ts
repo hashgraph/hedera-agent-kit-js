@@ -11,6 +11,7 @@ import {
 } from '../utils';
 import { ResponseParserService } from '@/langchain';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -36,7 +37,7 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
     // execution account and client creation
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.25) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);

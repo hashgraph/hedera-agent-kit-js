@@ -5,6 +5,7 @@ import createERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/create-erc7
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Create ERC721 Integration Tests', () => {
   let operatorClient: Client;
@@ -20,7 +21,7 @@ describe('Create ERC721 Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 20, // For creating NFTs
+        initialBalance: UsdToHbarService.usdToHbar(2), // For creating NFTs
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);

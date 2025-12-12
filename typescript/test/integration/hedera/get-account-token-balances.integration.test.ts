@@ -7,6 +7,7 @@ import { wait } from '../../utils/general-util';
 import { getAccountTokenBalancesQuery } from '@/plugins/core-account-query-plugin/tools/queries/get-account-token-balances-query';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   let operatorClient: Client;
@@ -26,7 +27,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 100,
+        initialBalance: UsdToHbarService.usdToHbar(10),
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -57,7 +58,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
   beforeEach(async () => {
     targetAccountId = await executorWrapper
       .createAccount({
-        initialBalance: 0.001,
+        initialBalance: UsdToHbarService.usdToHbar(0.1),
         key: executorClient.operatorPublicKey!,
         maxAutomaticTokenAssociations: -1, // unlimited associations
       })

@@ -9,6 +9,7 @@ import { mintERC721Parameters, createERC721Parameters } from '@/shared/parameter
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Mint ERC721 Integration Tests', () => {
   let operatorClient: Client;
@@ -25,7 +26,7 @@ describe('Mint ERC721 Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 30, // For creating tokens and minting
+        initialBalance: UsdToHbarService.usdToHbar(1.00), // For creating tokens and minting
         key: executorAccountKey.publicKey,
         maxAutomaticTokenAssociations: -1,
       })

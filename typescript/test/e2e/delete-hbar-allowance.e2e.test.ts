@@ -12,6 +12,7 @@ import { ResponseParserService } from '@/langchain';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { approveHbarAllowanceParametersNormalised } from '@/shared/parameter-schemas/account.zod';
 import { ReactAgent } from 'langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Delete HBAR Allowance Integration Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -34,7 +35,7 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     // Create an executor (owner) account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 30 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.00) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -64,7 +65,7 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     spenderAccountId = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(0.25),
       })
       .then(resp => resp.accountId!);
 

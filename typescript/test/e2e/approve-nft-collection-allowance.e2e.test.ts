@@ -25,6 +25,7 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
 import { ResponseParserService } from '@/langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 /**
  * E2E: Approve allowance for the entire NFT collection (all serials)
@@ -60,7 +61,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 2) Create owner (executor) account and client
     const ownerKey = PrivateKey.generateED25519();
     const ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.50) })
       .then(resp => resp.accountId!);
 
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
@@ -69,7 +70,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 3) Create spender account + client
     spenderKey = PrivateKey.generateED25519();
     spenderAccount = await ownerWrapper
-      .createAccount({ key: spenderKey.publicKey as Key, initialBalance: 15 })
+      .createAccount({ key: spenderKey.publicKey as Key, initialBalance: UsdToHbarService.usdToHbar(0.50) })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccount, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);
@@ -77,7 +78,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 4) Create a recipient account + client
     recipientKey = PrivateKey.generateED25519();
     recipientAccount = await ownerWrapper
-      .createAccount({ key: recipientKey.publicKey as Key, initialBalance: 15 })
+      .createAccount({ key: recipientKey.publicKey as Key, initialBalance: UsdToHbarService.usdToHbar(0.50) })
       .then(resp => resp.accountId!);
     recipientClient = getCustomClient(recipientAccount, recipientKey);
     recipientWrapper = new HederaOperationsWrapper(recipientClient);

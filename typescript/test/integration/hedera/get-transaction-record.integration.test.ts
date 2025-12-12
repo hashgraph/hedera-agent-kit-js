@@ -6,6 +6,7 @@ import { Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   let operatorClient: Client;
@@ -20,7 +21,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     const operatorWrapper = new HederaOperationsWrapper(operatorClient);
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.00) })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);

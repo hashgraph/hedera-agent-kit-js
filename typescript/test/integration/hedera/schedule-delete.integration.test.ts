@@ -4,6 +4,7 @@ import scheduleDeleteTool from '@/plugins/core-account-plugin/tools/account/sche
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import {
   scheduleDeleteTransactionParameters,
   transferHbarParametersNormalised,
@@ -24,7 +25,7 @@ describe('Schedule Delete Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(1.00),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

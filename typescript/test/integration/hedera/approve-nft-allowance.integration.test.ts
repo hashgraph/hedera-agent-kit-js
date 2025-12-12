@@ -18,6 +18,7 @@ import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 /**
  * Integration tests for Approve NFT Allowance tool
@@ -47,7 +48,7 @@ describe('Approve NFT Allowance Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 35, // cover fees for token creation/minting/approvals
+        initialBalance: UsdToHbarService.usdToHbar(8), // cover fees for token creation/minting/approvals
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

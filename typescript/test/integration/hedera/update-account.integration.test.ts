@@ -5,6 +5,7 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 
 describe('Update Account Integration Tests', () => {
   let operatorClient: Client;
@@ -29,7 +30,7 @@ describe('Update Account Integration Tests', () => {
     executorAccountId = await operatorWrapper
       .createAccount({
         key: executorKeyPair.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(1.00),
       })
       .then(resp => resp.accountId!);
 

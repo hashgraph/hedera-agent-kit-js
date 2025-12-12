@@ -15,6 +15,7 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { z } from 'zod';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 describe('Transfer ERC20 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -33,7 +34,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     // 1. Create an executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.60) })
       .then(resp => resp.accountId!);
 
     // 2. Create a recipient account (with the same public key as the executor for simplicity)
