@@ -18,7 +18,7 @@ import BigNumber from 'bignumber.js';
 export interface IHederaMirrornodeService {
   getAccount(accountId: string): Promise<AccountResponse>;
   getAccountHbarBalance(accountId: string): Promise<BigNumber>;
-  getAccountTokenBalances(accountId: string): Promise<TokenBalancesResponse>;
+  getAccountTokenBalances(accountId: string, tokenId?: string): Promise<TokenBalancesResponse>;
   getTopicMessages(queryParams: TopicMessagesQueryParams): Promise<TopicMessagesResponse>;
   getTopicInfo(topicId: string): Promise<TopicInfo>;
   getTokenInfo(tokenId: string): Promise<TokenInfo>;
