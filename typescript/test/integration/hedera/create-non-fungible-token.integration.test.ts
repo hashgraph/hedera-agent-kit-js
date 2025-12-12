@@ -127,6 +127,88 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       expect(result.raw.scheduleId).toBeDefined();
       expect(result.raw.transactionId).toBeDefined();
     });
+
+    it('should create an NFT with infinite supply type', async () => {
+      const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
+        tokenName: 'InfiniteNFT',
+        tokenSymbol: 'INFNFT',
+        supplyType: 'infinite',
+      } as any;
+
+      const tool = createNonFungibleTokenTool(context);
+      const result: any = await tool.execute(operatorClient, context, params);
+
+      const tokenInfo = await executorWrapper.getTokenInfo(result.raw.tokenId!.toString());
+
+      expect(result.humanMessage).toContain('Token created successfully');
+      expect(tokenInfo.name).toBe(params.tokenName);
+      expect(tokenInfo.symbol).toBe(params.tokenSymbol);
+      expect(tokenInfo.tokenType).toBe(TokenType.NonFungibleUnique);
+      expect(tokenInfo.supplyType?.toString()).toBe('INFINITE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(0); // infinite supply has maxSupply of 0
+    });
+
+    it('should create an NFT with explicit finite supply type and default maxSupply', async () => {
+      const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
+        tokenName: 'FiniteNFT',
+        tokenSymbol: 'FINNFT',
+        supplyType: 'finite',
+      } as any;
+
+      const tool = createNonFungibleTokenTool(context);
+      const result: any = await tool.execute(operatorClient, context, params);
+
+      const tokenInfo = await executorWrapper.getTokenInfo(result.raw.tokenId!.toString());
+
+      expect(result.humanMessage).toContain('Token created successfully');
+      expect(tokenInfo.name).toBe(params.tokenName);
+      expect(tokenInfo.symbol).toBe(params.tokenSymbol);
+      expect(tokenInfo.tokenType).toBe(TokenType.NonFungibleUnique);
+      expect(tokenInfo.supplyType?.toString()).toBe('FINITE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
+    });
+
+    it('should create an NFT with finite supply type and custom maxSupply', async () => {
+      const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
+        tokenName: 'CustomFiniteNFT',
+        tokenSymbol: 'CFNFT',
+        supplyType: 'finite',
+        maxSupply: 300,
+      } as any;
+
+      const tool = createNonFungibleTokenTool(context);
+      const result: any = await tool.execute(operatorClient, context, params);
+
+      const tokenInfo = await executorWrapper.getTokenInfo(result.raw.tokenId!.toString());
+
+      expect(result.humanMessage).toContain('Token created successfully');
+      expect(tokenInfo.name).toBe(params.tokenName);
+      expect(tokenInfo.symbol).toBe(params.tokenSymbol);
+      expect(tokenInfo.tokenType).toBe(TokenType.NonFungibleUnique);
+      expect(tokenInfo.supplyType?.toString()).toBe('FINITE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(300);
+    });
+
+    it('should prioritize maxSupply over infinite supplyType (makes it finite)', async () => {
+      const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
+        tokenName: 'PriorityNFT',
+        tokenSymbol: 'PRNFT',
+        supplyType: 'infinite',
+        maxSupply: 150,
+      } as any;
+
+      const tool = createNonFungibleTokenTool(context);
+      const result: any = await tool.execute(operatorClient, context, params);
+
+      const tokenInfo = await executorWrapper.getTokenInfo(result.raw.tokenId!.toString());
+
+      expect(result.humanMessage).toContain('Token created successfully');
+      expect(tokenInfo.name).toBe(params.tokenName);
+      expect(tokenInfo.symbol).toBe(params.tokenSymbol);
+      expect(tokenInfo.tokenType).toBe(TokenType.NonFungibleUnique);
+      expect(tokenInfo.supplyType?.toString()).toBe('FINITE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(150); // maxSupply takes priority
+    });
   });
 
   describe('Invalid Scenarios', () => {

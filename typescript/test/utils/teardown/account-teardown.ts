@@ -66,7 +66,10 @@ export const returnHbarsAndDeleteAccount = async (
     const transferAmount = accountToDeleteBalance.toNumber() - toBaseUnit(0.1, 8).toNumber(); // leave a small amount to pay for the tx
     const transferAmountHbar = new Hbar(transferAmount, HbarUnit.Tinybar);
 
-    if (transferAmount < 0) throw new Error('Not enough HBAR to return');
+    if (transferAmount < 0) {
+      console.error("Not enough HBAR to return - couldn't delete the account.");
+      return;
+    }
 
     await accountToDeleteWrapper.transferHbar({
       hbarTransfers: [
