@@ -33,7 +33,7 @@
     "format:check": "prettier \"src/**/*.{ts,tsx,js,mjs,jsx,json,md}\" --check",
     "lint": "eslint . --ext .ts,.tsx",
     "prepare": "husky",
-    "prepack": "npm ci && npm run build"
+    "prepack": "cp ../README.md README.md && npm ci && npm run build"
   },
   "engines": {
     "node": ">=18"
@@ -56,28 +56,28 @@
     "zod-to-json-schema": "3.24.6"
   },
   "devDependencies": {
-    "@eslint/js": "^9.31.0",
+    "@eslint/js": "9.31.0",
     "@semantic-release/changelog": "github:semantic-release/changelog",
     "@semantic-release/git": "github:semantic-release/git",
-    "@typescript-eslint/eslint-plugin": "^8.37.0",
-    "@typescript-eslint/parser": "^8.37.0",
-    "@vitest/coverage-v8": "^1.6.0",
-    "ansi-escapes": "^7.0.0",
-    "dotenv": "^17.2.1",
-    "esbuild-plugin-alias": "^0.2.1",
-    "eslint": "^9.31.0",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.5.1",
-    "globals": "^16.3.0",
-    "husky": "^9.1.7",
-    "normalize-url": "^8.0.2",
-    "prettier": "^3.6.2",
+    "@typescript-eslint/eslint-plugin": "8.37.0",
+    "@typescript-eslint/parser": "8.37.0",
+    "@vitest/coverage-v8": "1.6.1",
+    "ansi-escapes": "7.0.0",
+    "dotenv": "17.2.1",
+    "esbuild-plugin-alias": "0.2.1",
+    "eslint": "9.31.0",
+    "eslint-config-prettier": "10.1.5",
+    "eslint-plugin-prettier": "5.5.1",
+    "globals": "16.3.0",
+    "husky": "9.1.7",
+    "normalize-url": "8.0.2",
+    "prettier": "3.6.2",
     "semantic-release": "24.2.7",
-    "tsconfig-paths": "^4.2.0",
-    "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.37.0",
-    "vitest": "^1.6.0"
+    "tsconfig-paths": "4.2.0",
+    "tsup": "8.5.0",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.37.0",
+    "vitest": "1.6.1"
   },
   "overrides": {
     "@elizaos/core": {
