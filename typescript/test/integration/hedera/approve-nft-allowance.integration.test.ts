@@ -58,7 +58,10 @@ describe('Approve NFT Allowance Integration Tests', () => {
 
     // Create a spender account using the executor's public key, so the executor can sign association if needed
     spenderAccountId = await executorWrapper
-      .createAccount({ initialBalance: 20, key: executorClient.operatorPublicKey as Key })
+      .createAccount({
+        initialBalance: UsdToHbarService.usdToHbar(2.0),
+        key: executorClient.operatorPublicKey as Key,
+      })
       .then(resp => resp.accountId!);
 
     context = {

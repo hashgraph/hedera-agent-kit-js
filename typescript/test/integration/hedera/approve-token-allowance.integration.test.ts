@@ -47,7 +47,7 @@ describe('Approve Token Allowance Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(2) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(6) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

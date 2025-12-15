@@ -42,7 +42,10 @@ describe('Get Token Info Query E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(3.00) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(10),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -175,7 +178,10 @@ describe('Get Token Info Query E2E Tests', () => {
     'should update autoRenewAccountId',
     itWithRetry(async () => {
       const secondaryAccountId = await executorWrapper
-        .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: UsdToHbarService.usdToHbar(0.60) })
+        .createAccount({
+          key: executorClient.operatorPublicKey!,
+          initialBalance: UsdToHbarService.usdToHbar(0.6),
+        })
         .then(resp => resp.accountId!);
       await agent.invoke({
         messages: [
@@ -197,7 +203,10 @@ describe('Get Token Info Query E2E Tests', () => {
     itWithRetry(async () => {
       const secondaryAccount = PrivateKey.generateED25519();
       const secondaryAccountId = await executorWrapper
-        .createAccount({ key: secondaryAccount.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.60) })
+        .createAccount({
+          key: secondaryAccount.publicKey,
+          initialBalance: UsdToHbarService.usdToHbar(4),
+        })
         .then(resp => resp.accountId!);
 
       const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccount);

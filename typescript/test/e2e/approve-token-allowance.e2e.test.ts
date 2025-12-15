@@ -52,7 +52,7 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
     // execution account and client creation (owner)
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.60) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(5) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

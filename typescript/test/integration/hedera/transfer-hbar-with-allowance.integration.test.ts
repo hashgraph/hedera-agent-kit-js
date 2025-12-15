@@ -28,7 +28,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
     const ownerKeyPair = PrivateKey.generateED25519();
     ownerAccountId = await ownerWrapper
       .createAccount({
-        initialBalance: 30,
+        initialBalance: UsdToHbarService.usdToHbar(3.0),
         key: ownerKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -39,7 +39,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
     const spenderKeyPair = PrivateKey.generateED25519();
     spenderAccountId = await ownerWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(1.0),
         key: spenderKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

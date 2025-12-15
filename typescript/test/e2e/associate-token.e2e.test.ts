@@ -44,7 +44,7 @@ describe('Associate Token E2E Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.50) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(3) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -52,7 +52,10 @@ describe('Associate Token E2E Tests', () => {
 
     const tokenExecutorKey = PrivateKey.generateED25519();
     tokenExecutorAccountId = await operatorWrapper
-      .createAccount({ key: tokenExecutorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.50) })
+      .createAccount({
+        key: tokenExecutorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(3),
+      })
       .then(resp => resp.accountId!);
 
     tokenExecutorClient = getCustomClient(tokenExecutorAccountId, tokenExecutorKey);

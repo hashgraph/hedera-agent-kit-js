@@ -36,7 +36,7 @@ describe('Delete Token Allowance Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await new HederaOperationsWrapper(operatorClient)
       .createAccount({
-        initialBalance: 30,
+        initialBalance: UsdToHbarService.usdToHbar(3.0),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
