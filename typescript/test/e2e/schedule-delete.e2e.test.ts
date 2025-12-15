@@ -26,7 +26,7 @@ describe('Schedule Delete E2E Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(2.5),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);

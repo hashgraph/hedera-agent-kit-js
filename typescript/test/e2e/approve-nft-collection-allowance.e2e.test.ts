@@ -61,7 +61,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 2) Create owner (executor) account and client
     const ownerKey = PrivateKey.generateED25519();
     const ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.50) })
+      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(4.0) })
       .then(resp => resp.accountId!);
 
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
@@ -69,16 +69,22 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
 
     // 3) Create spender account + client
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await ownerWrapper
-      .createAccount({ key: spenderKey.publicKey as Key, initialBalance: UsdToHbarService.usdToHbar(0.50) })
+    spenderAccount = await operatorWrapper
+      .createAccount({
+        key: spenderKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(2),
+      })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccount, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);
 
     // 4) Create a recipient account + client
     recipientKey = PrivateKey.generateED25519();
-    recipientAccount = await ownerWrapper
-      .createAccount({ key: recipientKey.publicKey as Key, initialBalance: UsdToHbarService.usdToHbar(0.50) })
+    recipientAccount = await operatorWrapper
+      .createAccount({
+        key: recipientKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(2),
+      })
       .then(resp => resp.accountId!);
     recipientClient = getCustomClient(recipientAccount, recipientKey);
     recipientWrapper = new HederaOperationsWrapper(recipientClient);

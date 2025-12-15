@@ -37,7 +37,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     const executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: 20,
+        initialBalance: UsdToHbarService.usdToHbar(2.0),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!);
@@ -46,7 +46,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     recipientAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(0.6),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!.toString());

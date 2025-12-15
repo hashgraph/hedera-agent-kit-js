@@ -31,7 +31,7 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
     // Create an owner account
     const ownerKey = PrivateKey.generateED25519();
     ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.35) })
+      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.0) })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
@@ -39,7 +39,7 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
     // Create a spender account
     const spenderKey = PrivateKey.generateED25519();
     spenderAccountId = await operatorWrapper
-      .createAccount({ key: spenderKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.25) })
+      .createAccount({ key: spenderKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.75) })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
 

@@ -34,7 +34,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
     const executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: 20,
+        initialBalance: UsdToHbarService.usdToHbar(1.0),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!);
