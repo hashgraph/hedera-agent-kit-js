@@ -17,6 +17,7 @@ import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 /**
  * Integration tests for Approve Token Allowance tool
@@ -47,7 +48,7 @@ describe('Approve Token Allowance Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(6) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -56,7 +57,7 @@ describe('Approve Token Allowance Integration Tests', () => {
     spenderAccountId = await executorWrapper
       .createAccount({
         key: executorClient.operatorPublicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(1),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
 

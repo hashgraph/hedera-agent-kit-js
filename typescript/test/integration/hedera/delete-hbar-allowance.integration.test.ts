@@ -7,6 +7,7 @@ import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } f
 import { z } from 'zod';
 import { deleteHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 /**
  * Integration tests for Delete HBAR Allowance tool
@@ -29,11 +30,11 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     operatorClient = getOperatorClientForTests();
     operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // create executor account
+    // create an executor account
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(1.00), // cover fees
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -41,8 +42,8 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    // create spender account
-    spenderAccountId = await executorWrapper
+    // Operator creates spender account to preserve executor balance
+    spenderAccountId = await operatorWrapper
       .createAccount({ key: executorClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 

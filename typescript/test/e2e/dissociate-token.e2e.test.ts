@@ -12,6 +12,7 @@ import { ResponseParserService } from '@/langchain';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -57,7 +58,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     // Token creator account
     const tokenCreatorKey = PrivateKey.generateED25519();
     tokenCreatorAccountId = await operatorWrapper
-      .createAccount({ key: tokenCreatorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(4.0) })
+      .createAccount({ key: tokenCreatorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     tokenCreatorClient = getCustomClient(tokenCreatorAccountId, tokenCreatorKey);

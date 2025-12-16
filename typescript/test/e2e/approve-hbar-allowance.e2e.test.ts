@@ -17,6 +17,7 @@ import {
   LangchainTestSetup,
   verifyHbarBalanceChange,
 } from '../utils';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 
 /**
@@ -51,7 +52,10 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     // execution account and client creation (owner)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(0.50) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -79,7 +83,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     spenderAccount = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(0.25),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
 

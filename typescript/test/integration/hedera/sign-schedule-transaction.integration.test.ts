@@ -5,6 +5,7 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 import {
   signScheduleTransactionParameters,
   transferHbarParametersNormalised,
@@ -25,14 +26,15 @@ describe('Sign Schedule Transaction Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(1.00), // To cover transfers and account creations
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    recipientAccountId = await executorWrapper
+    // Operator creates recipient to preserve executor balance
+    recipientAccountId = await operatorWrapper
       .createAccount({ key: executorClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 

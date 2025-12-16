@@ -18,6 +18,7 @@ import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardo
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Get Token Info Query Integration Tests', () => {
   let operatorClient: Client;
@@ -56,7 +57,7 @@ describe('Get Token Info Query Integration Tests', () => {
     executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(5),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
 

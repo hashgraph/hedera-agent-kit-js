@@ -14,6 +14,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Mint ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -34,7 +35,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
     const executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(1.0),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!);

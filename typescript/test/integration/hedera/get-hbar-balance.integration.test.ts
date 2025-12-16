@@ -9,6 +9,7 @@ import { wait } from '../../utils/general-util';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let operatorClient: Client;
@@ -22,10 +23,13 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     operatorClient = getOperatorClientForTests();
     const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // Create intermediate executor account
+    // Create an intermediate executor account
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(1.00) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -33,7 +37,10 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
 
     // Create a recipient account via executor
     recipientAccountId = await executorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key, initialBalance: UsdToHbarService.usdToHbar(0.10) })
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(0.1),
+      })
       .then(resp => resp.accountId!);
 
     await wait(MIRROR_NODE_WAITING_TIME); // wait for mirror node indexing
@@ -71,7 +78,7 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     const tool = getHbarBalanceTool(context);
     const res: any = await tool.execute(executorClient, context, params);
 
-    const expectedBalance = UsdToHbarService.usdToHbar(0.10);
+    const expectedBalance = UsdToHbarService.usdToHbar(0.1);
     expect(res.raw.accountId).toBe(recipientAccountId.toString());
     expect(Number(res.raw.hbarBalance)).toBe(expectedBalance);
     expect(res.humanMessage).toContain(`Account ${recipientAccountId.toString()} has a balance of`);

@@ -14,6 +14,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Get Token Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -44,7 +45,7 @@ describe('Get Token Info Query E2E Tests', () => {
     executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(10),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
       })
       .then(resp => resp.accountId!);
 
@@ -180,7 +181,7 @@ describe('Get Token Info Query E2E Tests', () => {
       const secondaryAccountId = await executorWrapper
         .createAccount({
           key: executorClient.operatorPublicKey!,
-          initialBalance: UsdToHbarService.usdToHbar(0.6),
+          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
         })
         .then(resp => resp.accountId!);
       await agent.invoke({
@@ -205,7 +206,7 @@ describe('Get Token Info Query E2E Tests', () => {
       const secondaryAccountId = await executorWrapper
         .createAccount({
           key: secondaryAccount.publicKey,
-          initialBalance: UsdToHbarService.usdToHbar(4),
+          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         })
         .then(resp => resp.accountId!);
 

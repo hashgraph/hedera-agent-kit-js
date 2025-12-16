@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Dissociate Token Integration Tests', () => {
   let operatorClient: Client;
@@ -31,7 +32,7 @@ describe('Dissociate Token Integration Tests', () => {
     // Executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(3) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
@@ -41,7 +42,7 @@ describe('Dissociate Token Integration Tests', () => {
     tokenCreatorAccountId = await operatorWrapper
       .createAccount({
         key: tokenCreatorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(3),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
     tokenCreatorClient = getCustomClient(tokenCreatorAccountId, tokenCreatorKey);

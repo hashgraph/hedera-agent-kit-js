@@ -4,6 +4,7 @@ import createAccountTool from '@/plugins/core-account-plugin/tools/account/creat
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Create Account Integration Tests', () => {
   let operatorClient: Client;
@@ -19,7 +20,7 @@ describe('Create Account Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(0.5),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);

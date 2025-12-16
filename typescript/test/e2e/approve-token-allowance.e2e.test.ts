@@ -21,6 +21,7 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 /**
  * E2E tests for Approve Token Allowance using the LangChain agent.
@@ -52,7 +53,7 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
     // execution account and client creation (owner)
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(5) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

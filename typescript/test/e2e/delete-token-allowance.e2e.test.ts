@@ -22,6 +22,7 @@ import { ReactAgent } from 'langchain';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Delete Token Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -56,7 +57,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     // Create executor (owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(3.00) })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -99,7 +100,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     spenderAccountId = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(0.35),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
       })
       .then(resp => resp.accountId!);
 

@@ -26,6 +26,7 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { itWithRetry } from '../utils/retry-util';
 import { ResponseParserService } from '@/langchain';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 /**
  * E2E: Approve allowance for the entire NFT collection (all serials)
@@ -61,7 +62,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 2) Create owner (executor) account and client
     const ownerKey = PrivateKey.generateED25519();
     const ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(4.0) })
+      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
@@ -72,7 +73,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     spenderAccount = await operatorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(2),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccount, spenderKey);
@@ -83,7 +84,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     recipientAccount = await operatorWrapper
       .createAccount({
         key: recipientKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(2),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
     recipientClient = getCustomClient(recipientAccount, recipientKey);

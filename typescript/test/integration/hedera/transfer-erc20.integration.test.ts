@@ -9,6 +9,7 @@ import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardo
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Transfer ERC20 Integration Tests', () => {
   let operatorClient: Client;
@@ -26,7 +27,7 @@ describe('Transfer ERC20 Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(1.00), // For creating tokens and transfers
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating tokens and transfers
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);

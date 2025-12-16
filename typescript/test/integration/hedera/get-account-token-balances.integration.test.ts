@@ -8,6 +8,7 @@ import { getAccountTokenBalancesQuery } from '@/plugins/core-account-query-plugi
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   let operatorClient: Client;
@@ -27,7 +28,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(10),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
