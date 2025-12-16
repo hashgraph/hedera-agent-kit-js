@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AccountId, Client, Hbar, HbarAllowance, HbarUnit, Key, PrivateKey } from '@hashgraph/sdk';
 import transferHbarWithAllowanceTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 import { Context, AgentMode } from '@/shared/configuration';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 import {
   getCustomClient,
   getOperatorClientForTests,
@@ -21,31 +23,31 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
-    ownerWrapper = new HederaOperationsWrapper(operatorClient);
+    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // Create an owner account
+    // Operator creates owner account
     const ownerKeyPair = PrivateKey.generateED25519();
-    ownerAccountId = await ownerWrapper
+    ownerAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 30,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: ownerKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKeyPair);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
 
-    // Create a spender account
+    // Operator creates spender account
     const spenderKeyPair = PrivateKey.generateED25519();
-    spenderAccountId = await ownerWrapper
+    spenderAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: spenderKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKeyPair);
 
-    // Create recipient
-    recipientAccountId = await ownerWrapper
+    // Operator creates recipient
+    recipientAccountId = await operatorWrapper
       .createAccount({ key: ownerClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 

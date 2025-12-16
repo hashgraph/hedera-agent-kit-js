@@ -190,7 +190,18 @@ export default class HederaParameterNormaliser {
 
     if (!publicKey) throw new Error('Could not determine public key for supply key');
 
-    const maxSupply = parsedParams.maxSupply ?? 100;
+    // Determine supply type based on user input
+    const hasMaxSupply = parsedParams.maxSupply !== undefined;
+    const userSupplyType = parsedParams.supplyType;
+
+    let isFinite: boolean;
+    if (hasMaxSupply) {
+      // User provided maxSupply, so it must be finite
+      isFinite = true;
+    } else isFinite = userSupplyType !== 'infinite';
+
+    const supplyType = isFinite ? TokenSupplyType.Finite : TokenSupplyType.Infinite;
+    const maxSupply = isFinite ? (parsedParams.maxSupply ?? 100) : undefined;
 
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
@@ -204,7 +215,7 @@ export default class HederaParameterNormaliser {
       treasuryAccountId,
       maxSupply,
       supplyKey: PublicKey.fromString(publicKey), // the supply key is mandatory in the case of NFT
-      supplyType: TokenSupplyType.Finite, // NFTs supply must be finite
+      supplyType,
       autoRenewAccountId: defaultAccountId,
       tokenType: TokenType.NonFungibleUnique,
     };

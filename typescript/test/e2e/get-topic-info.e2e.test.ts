@@ -12,6 +12,8 @@ import { ResponseParserService } from '@/langchain';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Get Topic Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -31,7 +33,7 @@ describe('Get Topic Info Query E2E Tests', () => {
     // Operator creates executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

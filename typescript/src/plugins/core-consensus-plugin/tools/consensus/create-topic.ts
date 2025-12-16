@@ -18,8 +18,8 @@ const createTopicPrompt = (_context: Context = {}) => {
 This tool will create a new topic on the Hedera network.
 
 Parameters:
-- topicMemo (str, optional): A memo for the topic
-- transactionMemo (str, optional): An optional memo to include on the submitted transaction
+- topicMemo (str, optional): A memo stored permanently on the topic itself (not the transaction)
+- transactionMemo (str, optional): A memo attached to the transaction (separate from topicMemo). Use this when the user says "transaction memo" or "set the memo on the transaction"
 - isSubmitKey (bool, optional): Whether to set a submit key for the topic. Set to true if user wants to set a submit key, otherwise false
 ${usageInstructions}
 `;
