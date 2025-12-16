@@ -158,6 +158,52 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
         spy.mockRestore();
       }
     });
+
+    it('should match with infinite supply type parameter', async () => {
+      const input = 'Create an NFT InfiniteCollection with symbol INF and infinite supply';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+        expect.objectContaining({
+          tokenName: 'InfiniteCollection',
+          tokenSymbol: 'INF',
+          supplyType: 'infinite',
+        }),
+      );
+    });
+
+    it('should match with finite supply type parameter', async () => {
+      const input = 'Create an NFT FiniteCollection with symbol FIN and finite supply';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+        expect.objectContaining({
+          tokenName: 'FiniteCollection',
+          tokenSymbol: 'FIN',
+          supplyType: 'finite',
+        }),
+      );
+    });
   });
 
   describe('Tool Available', () => {
