@@ -4,6 +4,8 @@ import deleteTopicTool from '@/plugins/core-consensus-plugin/tools/consensus/del
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Delete Topic Integration Tests', () => {
   let operatorClient: Client;
@@ -18,7 +20,7 @@ describe('Delete Topic Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 5 })
+      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(r => r.accountId!);
     executorClient = getCustomClient(executorId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
