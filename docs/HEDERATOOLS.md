@@ -497,18 +497,22 @@ Creates a non-fungible token (NFT) on Hedera.
 
 #### Parameters
 
-| Parameter           | Type     | Required | Default  | Description                     |
-|---------------------|----------|----------|----------|---------------------------------|
-| `tokenName`         | `string` | ✅        | —        | Name of the token.              |
-| `tokenSymbol`       | `string` | ✅        | —        | Symbol of the token.            |
-| `maxSupply`         | `number` | ❌        | `100`    | Maximum NFT supply.             |
-| `treasuryAccountId` | `string` | ❌        | operator | Treasury account for the token. |
+| Parameter           | Type      | Required | Default    | Description                                                                      |
+|---------------------|-----------|----------|------------|----------------------------------------------------------------------------------|
+| `tokenName`         | `string`  | ✅        | —          | Name of the token.                                                               |
+| `tokenSymbol`       | `string`  | ✅        | —          | Symbol of the token.                                                             |
+| `supplyType`        | `string`  | ❌        | `"finite"` | The supply type of the token. Can be `"finite"` or `"infinite"`.                 |
+| `maxSupply`         | `number`  | ❌        | `100`      | Maximum NFT supply. Only applicable if `supplyType` is `"finite"`.               |
+| `isSupplyKey`       | `boolean` | ❌        | `false`    | If `true`, sets a supply key on the token, allowing future minting.              |
+| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token.                                                  |
 
 #### Example Prompts
 
 ```
 Create an NFT collection called MyNFTs with symbol MNFT
 Create a non-fungible token named ArtCollection with max supply 50
+Create an NFT called LimitedEdition with symbol LE and set supply key
+Create an NFT with infinite supply called OpenArt with symbol OPEN
 ```
 
 ---
