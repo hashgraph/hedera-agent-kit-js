@@ -8,6 +8,8 @@ import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/tok
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { wait } from '../../utils/general-util';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Create Non-Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -23,7 +25,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 20, // For creating NFTs
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating NFTs
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);

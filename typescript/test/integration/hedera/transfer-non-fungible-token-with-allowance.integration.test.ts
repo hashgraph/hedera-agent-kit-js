@@ -18,6 +18,8 @@ import { mintNonFungibleTokenParametersNormalised } from '@/shared/parameter-sch
 import { z } from 'zod';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { wait } from '../../utils/general-util';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Transfer NFT With Allowance Integration Tests', () => {
   let operatorClient: Client;
@@ -37,7 +39,7 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
     // Create an owner (a treasury) account
     const ownerKey = PrivateKey.generateED25519();
     ownerAccountId = await ownerWrapper
-      .createAccount({ initialBalance: 35, key: ownerKey.publicKey })
+      .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), key: ownerKey.publicKey })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
@@ -45,7 +47,7 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
     // Create a spender account
     const spenderKey = PrivateKey.generateECDSA();
     spenderAccountId = await ownerWrapper
-      .createAccount({ initialBalance: 20, key: spenderKey.publicKey })
+      .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), key: spenderKey.publicKey })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);

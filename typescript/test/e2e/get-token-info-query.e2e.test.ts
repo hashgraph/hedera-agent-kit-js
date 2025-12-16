@@ -22,6 +22,8 @@ import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 import { ResponseParserService } from '@/langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Get Token Info Query E2E Tests', () => {
   let operatorClient: Client;
@@ -60,7 +62,10 @@ describe('Get Token Info Query E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);

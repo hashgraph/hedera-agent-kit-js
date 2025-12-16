@@ -6,7 +6,10 @@ dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
 
 // Build setupFiles conditionally. We only enable the slowdown setup when
 // SLOW_TEST_DELAY_MS is defined, so unit tests are not affected.
-const setupFiles: string[] = [];
+const setupFiles: string[] = [
+  // Always include the USD to HBAR service initialization
+  path.resolve(__dirname, 'test/utils/setup/usd-to-hbar-setup.ts'),
+];
 if (process.env.SLOW_TEST_DELAY_MS !== undefined) {
   setupFiles.push(path.resolve(__dirname, 'test/utils/setup/slowdown.ts'));
 }

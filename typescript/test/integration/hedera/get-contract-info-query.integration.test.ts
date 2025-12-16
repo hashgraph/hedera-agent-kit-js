@@ -7,6 +7,8 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import { wait } from '../../utils/general-util';
 import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Integration - Hedera Get Contract Info', () => {
   let operatorClient: Client;
@@ -24,7 +26,10 @@ describe('Integration - Hedera Get Contract Info', () => {
     // create an executor account
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);

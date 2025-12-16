@@ -10,6 +10,8 @@ import { ResponseParserService } from '@/langchain';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Get Account Query E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -37,7 +39,7 @@ describe('Get Account Query E2E Tests', () => {
       const accountId = await hederaOps
         .createAccount({
           key: privateKey.publicKey as Key,
-          initialBalance: 10,
+          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
         })
         .then(resp => resp.accountId!);
 
