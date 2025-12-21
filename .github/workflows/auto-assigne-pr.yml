@@ -1,0 +1,51 @@
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  issues: write   # needed to add assignees
+
+env:
+  # set to a username to always assign that user (e.g. "kalpana-15")
+  # leave empty to fallback to PR author
+  DEFAULT_ASSIGNEE: ""
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gather PR info
+        id: vars
+        run: |
+          ASSIGNEES_COUNT=$(jq '.pull_request.assignees | length' "$GITHUB_EVENT_PATH")
+          AUTHOR=$(jq -r .pull_request.user.login "$GITHUB_EVENT_PATH")
+          PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH")
+          echo "assignees_count=$ASSIGNEES_COUNT" >> "$GITHUB_OUTPUT"
+          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Assign PR (assign DEFAULT_ASSIGNEE or fall back to PR author)
+        if: steps.vars.outputs.assignees_count == '0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_ASSIGNEE: ${{ env.DEFAULT_ASSIGNEE }}
+          AUTHOR: ${{ steps.vars.outputs.author }}
+          PR_NUMBER: ${{ steps.vars.outputs.pr_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # choose assignee: DEFAULT_ASSIGNEE if set, otherwise PR author
+          if [ -n "$DEFAULT_ASSIGNEE" ]; then
+            ASSIGNEE="$DEFAULT_ASSIGNEE"
+          else
+            ASSIGNEE="$AUTHOR"
+          fi
+
+          echo "Assigning PR #$PR_NUMBER to $ASSIGNEE"
+
+          response=$(curl -s -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/issues/$PR_NUMBER/assignees" \
+            -d "{\"assignees\":[\"$ASSIGNEE\"]}")
+
+          echo "API response: $response"
