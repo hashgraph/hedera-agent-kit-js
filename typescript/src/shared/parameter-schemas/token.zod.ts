@@ -417,6 +417,51 @@ export const transferNonFungibleTokenWithAllowanceParametersNormalised = (_conte
     ),
   });
 
+// Transfer NFT (normal transfer - sender is the operator)
+export const transferNonFungibleTokenParameters = (_context: Context) =>
+  z
+    .object({
+      tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
+      recipients: z
+        .array(
+          z.object({
+            recipientId: z.string().describe('Account ID of the recipient'),
+            serialNumber: z.number().positive().describe('Serial number of the NFT to transfer'),
+          }),
+        )
+        .min(1)
+        .describe('Array of recipient and NFT serial number pairs to transfer'),
+      transactionMemo: z
+        .string()
+        .optional()
+        .describe('Optional memo to include with the transaction'),
+    })
+    .superRefine((val, ctx) => {
+      const seenSerials = new Set<number>();
+      for (const { serialNumber } of val.recipients) {
+        if (seenSerials.has(serialNumber)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Duplicate serial number: ${serialNumber}`,
+            path: ['recipients'],
+          });
+        }
+        seenSerials.add(serialNumber);
+      }
+    });
+
+export const transferNonFungibleTokenParametersNormalised = (_context: Context) =>
+  z.object({
+    senderAccountId: z.instanceof(AccountId),
+    transactionMemo: z.string().optional(),
+    transfers: z.array(
+      z.object({
+        nftId: z.instanceof(NftId),
+        receiver: z.instanceof(AccountId),
+      }),
+    ),
+  });
+
 export const transferFungibleTokenWithAllowanceParameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
     tokenId: z.string().describe('Token ID to transfer'),
