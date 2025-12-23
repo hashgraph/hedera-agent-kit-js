@@ -77,7 +77,7 @@ describe('getAccountTokenBalancesQuery Tool', () => {
     expect(res.raw.tokenBalances).toEqual(response);
     expect(res.humanMessage).toContain(`Details for ${accountId}`);
     expect(res.humanMessage).toContain(`Token: ${tokenId}`);
-    expect(res.humanMessage).toContain('Balance: 2500');
+    expect(res.humanMessage).toContain('Balance: 25'); // given in display units
     expect(res.humanMessage).toContain('Decimals: 2');
   });
 

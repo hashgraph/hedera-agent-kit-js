@@ -24,13 +24,21 @@ export const createFungibleTokenParameters = (_context: Context = {}) =>
       .int()
       .optional()
       .default(0)
-      .describe('The initial supply of the token.'),
+      .describe(
+        'The initial supply of the token. Given in display units, the tool will handle parsing',
+      ),
     supplyType: z
       .enum(['finite', 'infinite'])
       .optional()
       .default('finite')
       .describe('Supply type of the token.'),
-    maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
+    maxSupply: z
+      .number()
+      .int()
+      .optional()
+      .describe(
+        'The maximum supply of the token. Given in display units, the tool will handle parsing',
+      ),
     decimals: z.number().int().optional().default(0).describe('The number of decimals.'),
     treasuryAccountId: z.string().optional().describe('The treasury account of the token.'),
     isSupplyKey: z
@@ -109,7 +117,9 @@ export const createNonFungibleTokenParametersNormalised = (_context: Context = {
 
 const AirdropRecipientSchema = z.object({
   accountId: z.string().describe('Recipient account ID (e.g., "0.0.xxxx").'),
-  amount: z.union([z.number(), z.string()]).describe('Amount in base unit.'),
+  amount: z
+    .union([z.number(), z.string()])
+    .describe('Amount in display units, the tool will handle parsing.'),
 });
 
 export const airdropFungibleTokenParameters = (_context: Context = {}) =>
@@ -132,7 +142,11 @@ export const airdropFungibleTokenParametersNormalised = () =>
 export const mintFungibleTokenParameters = (_context: Context = {}) =>
   optionalScheduledTransactionParams(_context).extend({
     tokenId: z.string().describe('The id of the token.'),
-    amount: z.number().describe('The amount of tokens to mint.'),
+    amount: z
+      .number()
+      .describe(
+        'The amount of tokens to mint. Given in display units, the tool will handle parsing',
+      ),
   });
 
 export const mintFungibleTokenParametersNormalised = (_context: Context = {}) =>
