@@ -46,7 +46,7 @@ export const BALANCE_TIERS = {
   MAXIMUM: 20,
 } as const;
 
-export type BalanceTier = typeof BALANCE_TIERS[keyof typeof BALANCE_TIERS];
+export type BalanceTier = (typeof BALANCE_TIERS)[keyof typeof BALANCE_TIERS];
 
 /**
  * Common test toolkit options type used by langchain test setup.
@@ -82,6 +82,7 @@ const {
   APPROVE_NFT_ALLOWANCE_TOOL,
   TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
   TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+  DELETE_NFT_ALLOWANCE_TOOL,
 } = coreTokenPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL, DELETE_TOPIC_TOOL, UPDATE_TOPIC_TOOL } =
   coreConsensusPluginToolNames;
@@ -161,6 +162,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
     TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
     TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+    DELETE_NFT_ALLOWANCE_TOOL,
   ],
   plugins: [
     coreAccountPlugin,

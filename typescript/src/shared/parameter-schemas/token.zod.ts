@@ -371,6 +371,28 @@ export const approveNftAllowanceParametersNormalised = (_context: Context = {}) 
     transactionMemo: z.string().optional(),
   });
 
+// Delete NFT Allowance
+export const deleteNftAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    tokenId: z.string().describe('The NFT token ID'),
+    serialNumbers: z
+      .array(z.number().int().positive())
+      .min(1)
+      .describe('Array of NFT serial numbers to remove allowance for.'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const deleteNftAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    nftWipes: z.array(z.instanceof(NftId)).min(1),
+    ownerAccountId: z.instanceof(AccountId),
+    transactionMemo: z.string().optional(),
+  });
+
 export const transferNonFungibleTokenWithAllowanceParameters = (_context: Context) =>
   z
     .object({
