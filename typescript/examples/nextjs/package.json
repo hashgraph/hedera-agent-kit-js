@@ -12,7 +12,7 @@
     "@hashgraph/hedera-wallet-connect": "^2.0.1-canary.24fffa7.0",
     "@hashgraph/sdk": "2.70.0",
     "@langchain/anthropic": "0.3.26",
-    "@langchain/core": "0.3.79",
+    "@langchain/core": "0.3.80",
     "@langchain/groq": "0.2.3",
     "@langchain/ollama": "0.2.3",
     "@langchain/openai": "0.6.7",
