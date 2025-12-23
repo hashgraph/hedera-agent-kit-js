@@ -79,13 +79,13 @@ export const createNonFungibleTokenParameters = (_context: Context = {}) =>
   optionalScheduledTransactionParams(_context).extend({
     tokenName: z.string().describe('The name of the token.'),
     tokenSymbol: z.string().describe('The symbol of the token.'),
-    maxSupply: z
-      .number()
-      .int()
-      .optional()
-      .default(100)
-      .describe('The maximum supply of the token.'),
+    maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
     treasuryAccountId: z.string().optional().describe('The treasury account of the token.'),
+    supplyType: z.enum(['finite', 'infinite']).optional().describe('Supply type of the token.'),
+    isSupplyKey: z
+      .boolean()
+      .optional()
+      .describe('Determines if the token supply key should be set.'),
   });
 
 export const createNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
@@ -101,10 +101,8 @@ export const createNonFungibleTokenParametersNormalised = (_context: Context = {
       supplyKey: z
         .custom<PublicKey>()
         .describe('The supply key. If not provided, defaults to the operator’s public key.'),
-      supplyType: z
-        .custom<TokenSupplyType>()
-        .default(TokenSupplyType.Finite)
-        .describe('Supply type of the token - must be finite for NFT.'),
+      supplyType: z.custom<TokenSupplyType>().describe('Supply type of the token.'),
+      maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
       tokenType: z
         .custom<TokenType>()
         .default(TokenType.NonFungibleUnique)

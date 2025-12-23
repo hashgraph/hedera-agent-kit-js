@@ -4,6 +4,8 @@ import deleteAccountTool from '@/plugins/core-account-plugin/tools/account/delet
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 import {
   deleteAccountParameters,
   createAccountParametersNormalised,
@@ -23,7 +25,7 @@ describe('Delete Account Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await hederaOperationsWrapper
       .createAccount({
-        initialBalance: 5, // For creating and deleting accounts
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -57,9 +59,10 @@ describe('Delete Account Integration Tests', () => {
   const createTempAccount = async (): Promise<AccountId> => {
     const params: z.infer<ReturnType<typeof createAccountParametersNormalised>> = {
       key: executorClient.operatorPublicKey as Key,
-      initialBalance: 1, // Give it some balance to be transferred upon deletion
+      initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
     };
-    const resp = await executorWrapper.createAccount(params);
+    // Operator creates the temp account to preserve executor balance
+    const resp = await hederaOperationsWrapper.createAccount(params);
     return resp.accountId!;
   };
 

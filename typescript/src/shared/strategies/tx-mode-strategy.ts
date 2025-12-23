@@ -61,12 +61,10 @@ export class ExecuteStrategy implements TxModeStrategy {
 }
 
 class ReturnBytesStrategy implements TxModeStrategy {
-  async handle(tx: Transaction, _client: Client, context: Context) {
+  async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId) throw new Error('…');
     const id = TransactionId.generate(context.accountId);
-    tx.setNodeAccountIds([new AccountId(4), new AccountId(5)])
-      .setTransactionId(id)
-      .freeze();
+    tx.setTransactionId(id).freezeWith(client);
     return { bytes: tx.toBytes() };
   }
 }
