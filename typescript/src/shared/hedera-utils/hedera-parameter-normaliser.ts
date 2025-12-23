@@ -19,6 +19,8 @@ import {
   mintNonFungibleTokenParametersNormalised,
   transferNonFungibleTokenWithAllowanceParameters,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
+  transferNonFungibleTokenParameters,
+  transferNonFungibleTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParameters,
   transferFungibleTokenWithAllowanceParametersNormalised,
   updateTokenParameters,
@@ -156,7 +158,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -206,7 +208,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -261,7 +263,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -448,6 +450,37 @@ export default class HederaParameterNormaliser {
     };
   }
 
+  static normaliseTransferNonFungibleToken(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof transferNonFungibleTokenParametersNormalised>> {
+    // Validate input using schema
+    const parsedParams: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, transferNonFungibleTokenParameters, context);
+
+    // Resolve sender account (defaults to operator)
+    const senderAccountId = AccountResolver.getDefaultAccount(context, client);
+    if (!senderAccountId) {
+      throw new Error('Could not determine sender account ID');
+    }
+
+    // Convert tokenId to SDK TokenId
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    // Map recipients to normalized NFT transfers
+    const transfers = parsedParams.recipients.map(recipient => ({
+      nftId: new NftId(tokenId, Number(recipient.serialNumber)),
+      receiver: AccountId.fromString(recipient.recipientId),
+    }));
+
+    return {
+      senderAccountId: AccountId.fromString(senderAccountId),
+      transactionMemo: parsedParams.transactionMemo,
+      transfers,
+    };
+  }
+
   static async normaliseApproveTokenAllowance(
     params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
     context: Context,
@@ -549,7 +582,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -755,7 +788,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -793,7 +826,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -859,7 +892,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -897,7 +930,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -929,7 +962,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -953,7 +986,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -993,7 +1026,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -1039,7 +1072,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -1078,7 +1111,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
@@ -1146,7 +1179,7 @@ export default class HederaParameterNormaliser {
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
       ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
-          .schedulingParams
+        .schedulingParams
       : { isScheduled: false };
 
     return {
