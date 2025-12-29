@@ -10,7 +10,7 @@
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "2.78.0",
+    "@hashgraph/sdk": "2.77.0",
     "hedera-agent-kit": "../..",
     "@langchain/core": "1.1.8",
     "langchain": "1.2.3",

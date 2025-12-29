@@ -9,7 +9,7 @@
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "2.78.0",
+    "@hashgraph/sdk": "2.77.0",
     "@langchain/classic": "1.0.7",
     "@langchain/core": "1.1.8",
     "@langchain/openai": "1.1.3",

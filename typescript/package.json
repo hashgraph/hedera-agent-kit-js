@@ -43,7 +43,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@elizaos/core": "1.7.0",
-    "@hashgraph/sdk": "2.78.0",
+    "@hashgraph/sdk": "2.68.0",
     "@langchain/core": "1.1.8",
     "@langchain/openai": "1.1.1",
     "@modelcontextprotocol/sdk": "1.16.0",
