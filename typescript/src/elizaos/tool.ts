@@ -75,7 +75,7 @@ class HederaAgentKitTool implements Action {
         generate a comprehensive message to the user about missing params
         `;
 
-        const modelOutput = await runtime.useModel(ModelType.TEXT_LARGE, { promptText });
+        const modelOutput = await runtime.useModel(ModelType.TEXT_LARGE, { prompt: promptText });
         if (callback) {
           await callback({
             text: modelOutput,
@@ -118,6 +118,7 @@ class HederaAgentKitTool implements Action {
       }
     };
   }
+  [key: string]: unknown;
 }
 
 export default HederaAgentKitTool;
