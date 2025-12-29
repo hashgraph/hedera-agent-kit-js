@@ -48,13 +48,16 @@ describe('Approve Token Allowance Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    spenderAccountId = await executorWrapper
+    spenderAccountId = await operatorWrapper
       .createAccount({
         key: executorClient.operatorPublicKey as Key,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
