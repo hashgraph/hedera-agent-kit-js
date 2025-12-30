@@ -24,9 +24,10 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.68.0",
-    "@modelcontextprotocol/sdk": "^1.16.0",
+    "@modelcontextprotocol/sdk": "1.25.1",
     "colors": "^1.4.0",
-    "hedera-agent-kit": "latest"
+    "hedera-agent-kit": "../typescript",
+    "dotenv": "17.2.3"
   },
   "keywords": [
     "mcp",
