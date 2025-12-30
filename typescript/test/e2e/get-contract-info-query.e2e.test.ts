@@ -14,6 +14,7 @@ import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '../utils/test
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Get Contract Info E2E Tests', () => {
   let operatorClient: Client;
@@ -32,7 +33,10 @@ describe('Get Contract Info E2E Tests', () => {
     // Create an executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -53,10 +57,11 @@ describe('Get Contract Info E2E Tests', () => {
   afterAll(async () => {
     // Cleanup: delete executor account
     if (executorWrapper) {
-      await executorWrapper.deleteAccount({
-        accountId: executorAccountId,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorAccountId,
+        operatorClient.operatorAccountId!,
+      );
     }
     if (testSetup) testSetup.cleanup();
     operatorClient.close();

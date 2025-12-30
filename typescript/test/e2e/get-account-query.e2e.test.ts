@@ -1,11 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { Client, Key, PrivateKey, AccountId } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { ResponseParserService } from '@/langchain';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
@@ -19,6 +20,7 @@ describe('Get Account Query E2E Tests', () => {
   let responseParsingService: ResponseParserService;
   let client: Client;
   let hederaOps: HederaOperationsWrapper;
+  let createdAccountId: string | undefined;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
@@ -32,6 +34,17 @@ describe('Get Account Query E2E Tests', () => {
     if (testSetup) testSetup.cleanup();
   });
 
+  afterEach(async () => {
+    if (createdAccountId) {
+      await returnHbarsAndDeleteAccount(
+        hederaOps,
+        AccountId.fromString(createdAccountId),
+        client.operatorAccountId!,
+      );
+      createdAccountId = undefined;
+    }
+  });
+
   it(
     'should return account info for a newly created account',
     itWithRetry(async () => {
@@ -42,6 +55,7 @@ describe('Get Account Query E2E Tests', () => {
           initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
         })
         .then(resp => resp.accountId!);
+      createdAccountId = accountId.toString();
 
       // Give the mirror node a chance to sync
       await wait(MIRROR_NODE_WAITING_TIME);
