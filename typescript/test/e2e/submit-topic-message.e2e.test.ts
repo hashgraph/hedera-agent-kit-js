@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { Client, Key, PrivateKey } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
