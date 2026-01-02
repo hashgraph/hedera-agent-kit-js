@@ -49,6 +49,10 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
   Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
+- [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the CoinCap API to get the current price of HBAR in USD currency.
+
+  Github repository: [https://github.com/henrytongv/coincap-hedera-plugin](https://github.com/henrytongv/coincap-hedera-plugin)
+
 ---
 
 ## Developer Examples
@@ -282,6 +286,4 @@ Apache 2.0
 
 ## Credits
 
-- Special thanks to the developers of the [Stripe Agent Toolkit](https://github.com/stripe/agent-toolkit) who provided the inspiration for the architecture and patterns used in this project.
-
-- Thanks to [LangChain](https://www.langchain.com) who provided the base framework for building agents (on which this kit is based on) and free courses for those who need to learn more about it, available at the [LangChain Academy](https://academy.langchain.com/).
+Special thanks to the developers of the [Stripe Agent Toolkit](https://github.com/stripe/agent-toolkit) who provided the inspiration for the architecture and patterns used in this project.
