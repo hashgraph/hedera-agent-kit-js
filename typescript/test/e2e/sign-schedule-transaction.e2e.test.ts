@@ -14,6 +14,7 @@ import { transferHbarParametersNormalised } from '@/shared/parameter-schemas/acc
 import { z } from 'zod';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Sign Schedule Transaction E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -33,7 +34,10 @@ describe('Sign Schedule Transaction E2E Tests', () => {
     // execution account and client creation
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKeyPair.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorKeyPair.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
@@ -47,17 +51,18 @@ describe('Sign Schedule Transaction E2E Tests', () => {
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       testSetup.cleanup();
       operatorClient.close();
     }
   });
 
   beforeEach(async () => {
-    // Create recipient account
+    // Create a recipient account
     recipientAccountId = await executorWrapper
       .createAccount({
         key: executorClient.operatorPublicKey as Key,

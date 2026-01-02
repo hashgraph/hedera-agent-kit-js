@@ -105,6 +105,8 @@ A plugin for the Hedera **Token Service (HTS)**, enabling creation and managemen
 | [`TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL`](./HEDERATOOLS.md#transfer_fungible_token_with_allowance_tool)   | Transfers fungible token using an allowance              | [View Parameters & Examples](./HEDERATOOLS.md#transfer_fungible_token_with_allowance_tool)         |
 | [`APPROVE_NFT_ALLOWANCE_TOOL`](./HEDERATOOLS.md#approve_nft_allowance_tool)                                     | Approve NFT allowances                                   | [View Parameters & Examples](./HEDERATOOLS.md#approve_nft_allowance_tool)                          |
 | [`TRANSFER_NFT_WITH_ALLOWANCE_TOOL`](./HEDERATOOLS.md#transfer_nft_with_allowance_tool)                         | Transfers NFTs using an allowance                        | [View Parameters & Examples](./HEDERATOOLS.md#transfer_nft_with_allowance_tool)                    |
+| [`DELETE_NFT_ALLOWANCE_TOOL`](./HEDERATOOLS.md#delete_nft_allowance_tool)                                       | Delete NFT allowance(s) for specific serials             | [View Parameters & Examples](./HEDERATOOLS.md#delete_nft_allowance_tool)                           |
+| [`TRANSFER_NON_FUNGIBLE_TOKEN_TOOL`](./HEDERATOOLS.md#transfer_non_fungible_token_tool)                         | Transfers NFTs from operator's account                   | [View Parameters & Examples](./HEDERATOOLS.md#transfer_non_fungible_token_tool)                    |
 
 ---
 
@@ -186,6 +188,9 @@ The following tools support scheduling:
 - `MINT_FUNGIBLE_TOKEN_TOOL`
 - `MINT_NON_FUNGIBLE_TOKEN_TOOL`
 - `TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL`
+- `TRANSFER_HBAR_WITH_ALLOWANCE_TOOL`
+- `TRANSFER_NON_FUNGIBLE_TOKEN_TOOL`
+- `SUBMIT_TOPIC_MESSAGE_TOOL`
 - `CREATE_ERC20_TOOL`
 - `TRANSFER_ERC20_TOOL`
 - `CREATE_ERC721_TOOL`
@@ -194,27 +199,34 @@ The following tools support scheduling:
 
 ### Scheduling Parameters
 
-| Parameter                             | Type                | Default              | Description                                                                                                      |
-|---------------------------------------|---------------------|----------------------|------------------------------------------------------------------------------------------------------------------|
-| `schedulingParams.isScheduled`        | `boolean`           | `false`              | If `true`, the transaction will be created as a scheduled transaction.                                           |
-| `schedulingParams.adminKey`           | `boolean \| string` | `false`              | Admin key that can delete or modify the scheduled transaction. Pass `true` to use operator key.                  |
-| `schedulingParams.payerAccountId`     | `string`            | *(operator account)* | Account that will pay the transaction fee when executed.                                                         |
-| `schedulingParams.expirationTime`     | `string` (ISO 8601) | —                    | Time when the scheduled transaction will expire if not fully signed.                                             |
-| `schedulingParams.waitForExpiry`      | `boolean`           | `false`              | If `true`, execute at expiration time even if not all signatures are collected. Requires `expirationTime`.       |
+The following `schedulingParams` object is accepted by all supported tools.
 
-### Example Prompts
+| Parameter                         | Type                | Default              | Description                                                                                                                                              |
+|-----------------------------------|---------------------|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `schedulingParams.isScheduled`    | `boolean`           | `false`              | If `true`, the transaction will be created as a scheduled transaction.                                                                                   |
+| `schedulingParams.adminKey`       | `boolean \| string` | `false`              | Admin key that can delete or modify the scheduled transaction. Pass `true` to use operator key.                                                          |
+| `schedulingParams.payerAccountId` | `string`            | *(operator account)* | Account that will pay the transaction fee when executed.                                                                                                 |
+| `schedulingParams.expirationTime` | `string` (ISO 8601) | —                    | Time when the scheduled transaction will expire if not fully signed.                                                                                     |
+| `schedulingParams.waitForExpiry`  | `boolean`           | `false`              | If `true`, execute at expiration time even if not all signatures are collected. Requires `expirationTime` to be set.                                     |
 
-```
-Schedule a mint for token 0.0.5005 with metadata https://example.com/nft/1.json
-```
+### Prompting Best Practices
 
-```
-Schedule Mint 0.0.5005 with metadata: ipfs://baf/metadata.json. Make it expire at 11.11.2025 10:00:00.
-```
+> [!IMPORTANT]
+> **Be explicit about scheduling.** The Agent will only schedule a transaction if it clearly detects the intent to strictly schedule it.
 
-```
-Schedule mint for token 0.0.5005 with URI ipfs://QmTest123 and use my operator key as admin key
-```
+To ensure the LLM correctly extracts scheduling parameters:
+1.  **Explicitly state "Schedule this transaction"**.
+2.  **Provide exact expiration dates**. Avoid relative terms like "tomorrow" or "in 2 days" if you want precision. The LLM will attempt to transform explicit dates into valid ISO 8601 timestamps.
+3.  **Specify "wait for expiration"** if you want the transaction to execute specifically at the expiration time.
+
+#### Correct Examples
+
+*   "Schedule a transfer of 1 HBAR to 0.0.1234. Make it expire on 2026-02-01 at 10:00:00 UTC and wait for expiration."
+*   "Schedule account creation with admin key set to my operator key."
+
+#### Incorrect Examples (May be ambiguous)
+*   "Create an account later." (Too vague)
+*   "Transfer 1 HBAR tomorrow." (May be interpreted as a request to wait and run the tool tomorrow, rather than creating a scheduled transaction now)
 
 ---
 

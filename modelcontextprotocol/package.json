@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "homepage": "https://github.com/hedera-dev/hedera-agent-kit",
   "description": "A command line tool for setting up Hedera MCP server",
+  "type": "module",
   "bin": "dist/index.js",
   "files": [
     "dist/index.js",
@@ -24,9 +25,10 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.68.0",
-    "@modelcontextprotocol/sdk": "^1.16.0",
+    "@modelcontextprotocol/sdk": "1.25.2",
     "colors": "^1.4.0",
-    "hedera-agent-kit": "latest"
+    "hedera-agent-kit": "../typescript",
+    "dotenv": "17.2.3"
   },
   "keywords": [
     "mcp",

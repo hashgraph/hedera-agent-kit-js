@@ -26,6 +26,7 @@ describe('Transfer NFT With Allowance Tool Matching Integration', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     await agent.invoke({
@@ -49,6 +50,7 @@ describe('Transfer NFT With Allowance Tool Matching Integration', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
     await agent.invoke({
       messages: [{ role: 'user', content: input }],

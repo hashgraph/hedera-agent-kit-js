@@ -1,5 +1,6 @@
 import {
   AccountAllowanceApproveTransaction,
+  AccountAllowanceDeleteTransaction,
   AccountCreateTransaction,
   AccountDeleteTransaction,
   AccountId,
@@ -31,6 +32,7 @@ import {
   associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
+  deleteNftAllowanceParametersNormalised,
   deleteTokenParametersNormalised,
   dissociateTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
@@ -38,6 +40,7 @@ import {
   updateTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
+  transferNonFungibleTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -94,6 +97,22 @@ export default class HederaBuilder {
     }
 
     return tx;
+  }
+
+  static transferNonFungibleToken(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenParametersNormalised>>,
+  ) {
+    const tx = new TransferTransaction();
+
+    for (const transfer of params.transfers) {
+      tx.addNftTransfer(transfer.nftId, params.senderAccountId, transfer.receiver);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static transferHbarWithAllowance(
@@ -174,10 +193,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>>,
   ) {
     const tx = new ContractExecuteTransaction(params);
-    if(params.payableAmount) {
+    if (params.payableAmount) {
       tx.setPayableAmount(Hbar.from(params.payableAmount, HbarUnit.Tinybar));
     }
-    
+
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
@@ -265,6 +284,22 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>,
   ) {
     return this.buildAccountAllowanceApproveTx(params);
+  }
+
+  static deleteNftAllowance(
+    params: z.infer<ReturnType<typeof deleteNftAllowanceParametersNormalised>>,
+  ) {
+    const tx = new AccountAllowanceDeleteTransaction();
+
+    for (const nftId of params.nftWipes) {
+      tx.deleteAllTokenNftAllowances(nftId, params.ownerAccountId);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static approveTokenAllowance(

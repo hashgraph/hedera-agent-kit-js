@@ -41,7 +41,7 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
   let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
 
-  let spenderAccount: AccountId;
+  let spenderAccountId: AccountId;
   let spenderKey: PrivateKey;
 
   let tokenId: TokenId;
@@ -53,7 +53,11 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
     // execution account and client creation (owner)
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Approve Token Allowance E2E Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -86,6 +90,13 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
+      if (spenderAccountId) {
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          spenderAccountId,
+          operatorClient.operatorAccountId!,
+        );
+      }
       await returnHbarsAndDeleteAccount(
         executorWrapper,
         executorClient.operatorAccountId!,
@@ -99,14 +110,18 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
   beforeEach(async () => {
     // Create a spender account
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await executorWrapper
-      .createAccount({ key: spenderKey.publicKey as Key, initialBalance: 0 })
+    spenderAccountId = await operatorWrapper
+      .createAccount({
+        key: spenderKey.publicKey as Key,
+        initialBalance: 0,
+        accountMemo: 'spender account for Approve Token Allowance E2E Tests',
+      })
       .then(resp => resp.accountId!);
   });
 
   it('should approve fungible token allowance to spender (with memo)', async () => {
     const memo = 'E2E token allow memo';
-    const input = `Approve allowance of 25 for token ${tokenId.toString()} to ${spenderAccount.toString()} with memo "${memo}"`;
+    const input = `Approve allowance of 25 for token ${tokenId.toString()} to ${spenderAccountId.toString()} with memo "${memo}"`;
     const transactionResult = await agent.invoke({
       messages: [
         {
@@ -128,7 +143,7 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
 
     const allowances = await executorWrapper.getTokenAllowances(
       ownerAccountId.toString(),
-      spenderAccount.toString(),
+      spenderAccountId.toString(),
     );
 
     expect(allowances.allowances.find(a => a.owner === ownerAccountId.toString())).toBeTruthy();

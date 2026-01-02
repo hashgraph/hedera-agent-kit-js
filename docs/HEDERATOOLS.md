@@ -43,6 +43,8 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
     - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
     - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
+    - [DELETE_NFT_ALLOWANCE_TOOL](#delete_nft_allowance_tool)
+    - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
     - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
 - [Token Query Tools](#token-query-tools)
     - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
@@ -66,7 +68,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
 
 ### TRANSFER_HBAR_TOOL
 
-Transfer HBAR between accounts.
+Transfer HBAR between accounts. Supports scheduled transactions.
 
 #### Parameters
 
@@ -89,11 +91,17 @@ Can you move 10 HBAR to 0.0.9999?
 Pay 0.01 HBAR to 0.0.1010
 ```
 
+#### Example (Scheduled)
+
+```
+Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### CREATE_ACCOUNT_TOOL
 
-Creates a new Hedera account.
+Creates a new Hedera account. Supports scheduled transactions.
 
 #### Parameters
 
@@ -114,11 +122,17 @@ Create an account with max automatic token associations 10
 Schedule creation of an account with max automatic token associations 10
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule creation of an account with max automatic token associations 10. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### UPDATE_ACCOUNT_TOOL
 
-Update an account's metadata.
+Update an account's metadata. Supports scheduled transactions.
 
 #### Parameters
 
@@ -135,6 +149,12 @@ Update an account's metadata.
 ```
 Update account 0.0.12345 to have max auto associations of 10
 Set my account memo to "Updated account"
+```
+
+#### Example (Scheduled)
+
+```
+Schedule an account update for account 0.0.1234. Set the account memo to "updated with scheduled transaction". Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -204,7 +224,7 @@ Delete HBAR allowance for 0.0.123
 
 ### TRANSFER_HBAR_WITH_ALLOWANCE_TOOL
 
-Transfer HBAR using an existing allowance.
+Transfer HBAR using an existing allowance. Supports scheduled transactions.
 
 #### Parameters
 
@@ -219,6 +239,12 @@ Transfer HBAR using an existing allowance.
 ```
 Transfer 1 HBAR from 0.0.123 to 0.0.456 using allowance
 Use allowance from account 0.0.123 to send 5 HBAR to 0.0.789
+```
+
+#### Example (Scheduled)
+
+```
+Transfer 1 HBAR from 0.0.123 to 0.0.456 using allowance. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -352,7 +378,7 @@ Create topic with transaction memo "TX: memo"
 
 ### SUBMIT_TOPIC_MESSAGE_TOOL
 
-Submit a message to a topic on the Hedera network.
+Submit a message to a topic on the Hedera network. Supports scheduled transactions.
 
 #### Parameters
 
@@ -367,6 +393,12 @@ Submit a message to a topic on the Hedera network.
 ```
 Submit message "Hello World" to topic 0.0.12345
 Post "Event logged" to topic 0.0.12345
+```
+
+#### Example (Scheduled)
+
+```
+Submit message "Hello World" to topic 0.0.12345. Schedule it and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -463,20 +495,20 @@ Get messages from topic 0.0.12345 after 2024-01-01
 
 ### CREATE_FUNGIBLE_TOKEN_TOOL
 
-Creates a fungible token on Hedera.
+Creates a fungible token on Hedera. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter           | Type      | Required | Default    | Description                                     |
-|---------------------|-----------|----------|------------|-------------------------------------------------|
-| `tokenName`         | `string`  | ✅        | —          | The name of the token.                          |
-| `tokenSymbol`       | `string`  | ✅        | —          | The symbol of the token.                        |
-| `initialSupply`     | `number`  | ❌        | `0`        | Initial supply of the token.                    |
-| `supplyType`        | `string`  | ❌        | `"finite"` | Supply type: `"finite"` or `"infinite"`.        |
-| `maxSupply`         | `number`  | ❌        | `1000000`  | Max supply (only applicable for finite tokens). |
-| `decimals`          | `number`  | ❌        | `0`        | Number of decimal places.                       |
-| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token.                 |
-| `isSupplyKey`       | `boolean` | ❌        | `false`    | Whether to set a supply key.                    |
+| Parameter           | Type      | Required | Default    | Description                                                                        |
+|---------------------|-----------|----------|------------|------------------------------------------------------------------------------------|
+| `tokenName`         | `string`  | ✅        | —          | The name of the token.                                                             |
+| `tokenSymbol`       | `string`  | ❌        | —          | The symbol of the token.                                                           |
+| `initialSupply`     | `number`  | ❌        | `0`        | Initial supply of the token (in display units, the tool handles parsing).          |
+| `supplyType`        | `string`  | ❌        | `"finite"` | Supply type: `"finite"` or `"infinite"`.                                           |
+| `maxSupply`         | `number`  | ❌        | `1000000`  | Max supply (in display units, only applicable for finite tokens).                  |
+| `decimals`          | `number`  | ❌        | `0`        | Number of decimal places.                                                          |
+| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token (defaults to operator).                             |
+| `isSupplyKey`       | `boolean` | ❌        | `false`    | Whether to set a supply key.                                                       |
 
 #### Example Prompts
 
@@ -486,14 +518,19 @@ Create a fungible token named GoldCoin with symbol GOLD, initial supply 1000, de
 Create a fungible token MySupplyToken with symbol SUP, treasury account 0.0.5005 and set supply key
 Make a fungible token named TestToken with symbol TST
 Create fungible GLD, Gold, token with infinite supply
-Schedule create fungible token transaction called MyToken with symbol MTK
+```
+
+#### Example (Scheduled)
+
+```
+Schedule create fungible token transaction called MyToken with symbol MTK. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
 
 ### CREATE_NON_FUNGIBLE_TOKEN_TOOL
 
-Creates a non-fungible token (NFT) on Hedera.
+Creates a non-fungible token (NFT) on Hedera. Supports scheduled transactions.
 
 #### Parameters
 
@@ -504,7 +541,7 @@ Creates a non-fungible token (NFT) on Hedera.
 | `supplyType`        | `string`  | ❌        | `"finite"` | The supply type of the token. Can be `"finite"` or `"infinite"`.                 |
 | `maxSupply`         | `number`  | ❌        | `100`      | Maximum NFT supply. Only applicable if `supplyType` is `"finite"`.               |
 | `isSupplyKey`       | `boolean` | ❌        | `false`    | If `true`, sets a supply key on the token, allowing future minting.              |
-| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token.                                                  |
+| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token (defaults to operator).                           |
 
 #### Example Prompts
 
@@ -515,18 +552,24 @@ Create an NFT called LimitedEdition with symbol LE and set supply key
 Create an NFT with infinite supply called OpenArt with symbol OPEN
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule create non-fungible token transaction called MyToken with symbol MTK. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### MINT_FUNGIBLE_TOKEN_TOOL
 
-Mints additional supply of an existing fungible token.
+Mints additional supply of an existing fungible token. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter | Type     | Required | Description           |
-|-----------|----------|----------|-----------------------|
-| `tokenId` | `string` | ✅        | The token ID to mint. |
-| `amount`  | `number` | ✅        | Amount to mint.       |
+| Parameter | Type     | Required | Description                                                            |
+|-----------|----------|----------|------------------------------------------------------------------------|
+| `tokenId` | `string` | ✅        | The token ID to mint.                                                  |
+| `amount`  | `number` | ✅        | Amount to mint (in display units, the tool handles parsing).           |
 
 #### Example Prompts
 
@@ -535,18 +578,24 @@ Mint 1000 of token 0.0.12345
 Mint 50 tokens for 0.0.12345
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule mint 10 of token 0.0.12345. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### MINT_NON_FUNGIBLE_TOKEN_TOOL
 
-Mints NFTs with unique metadata for an existing NFT class.
+Mints NFTs with unique metadata for an existing NFT class. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter | Type       | Required | Description                                      |
-|-----------|------------|----------|--------------------------------------------------|
-| `tokenId` | `string`   | ✅        | The token ID to mint.                            |
-| `uris`    | `string[]` | ✅        | Array of URIs hosting the NFT metadata (max 10). |
+| Parameter | Type       | Required | Description                                         |
+|-----------|------------|----------|-----------------------------------------------------|
+| `tokenId` | `string`   | ✅        | The token ID to mint.                               |
+| `uris`    | `string[]` | ✅        | Array of metadata URIs (max 10).                    |
 
 #### Example Prompts
 
@@ -554,7 +603,12 @@ Mints NFTs with unique metadata for an existing NFT class.
 Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json
 Mint NFTs for token 0.0.6006 with metadata URIs: ipfs://uri1, ipfs://uri2, ipfs://uri3
 Mint NFT 0.0.7007 with metadata ipfs://abc123
-Schedule Mint 0.0.5005 with metadata: ipfs://baf/metadata.json. Make it expire tomorrow.
+```
+
+#### Example (Scheduled)
+
+```
+Schedule Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -640,12 +694,12 @@ Airdrops a fungible token to multiple recipients.
 
 #### Parameters
 
-| Parameter         | Type                                         | Required | Description                                    |
-|-------------------|----------------------------------------------|----------|------------------------------------------------|
-| `tokenId`         | `string`                                     | ✅        | The token ID to airdrop.                       |
-| `sourceAccountId` | `string`                                     | ❌        | Source account (defaults to operator).         |
-| `recipients`      | `Array<{accountId: string, amount: number}>` | ✅        | List of recipients with account ID and amount. |
-| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                      |
+| Parameter         | Type                                         | Required | Description                                                                |
+|-------------------|----------------------------------------------|----------|----------------------------------------------------------------------------|
+| `tokenId`         | `string`                                     | ✅        | The token ID to airdrop.                                                   |
+| `recipients`      | `Array<{accountId: string, amount: number}>` | ✅        | List of recipients with account ID and amount (in display units).          |
+| `sourceAccountId` | `string`                                     | ❌        | Source account ID (defaults to operator).                                  |
+| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                                                  |
 
 #### Example Prompts
 
@@ -663,12 +717,12 @@ Approve fungible token spending allowances.
 
 #### Parameters
 
-| Parameter          | Type                                       | Required | Description                                       |
-|--------------------|--------------------------------------------|----------|---------------------------------------------------|
-| `ownerAccountId`   | `string`                                   | ❌        | Owner account ID (defaults to operator).          |
-| `spenderAccountId` | `string`                                   | ✅        | Spender account ID.                               |
-| `tokenApprovals`   | `Array<{tokenId: string, amount: number}>` | ✅        | List of token approvals with token ID and amount. |
-| `transactionMemo`  | `string`                                   | ❌        | Memo for the transaction.                         |
+| Parameter          | Type                                       | Required | Description                                                               |
+|--------------------|--------------------------------------------|----------|---------------------------------------------------------------------------|
+| `ownerAccountId`   | `string`                                   | ❌        | Owner account ID (defaults to operator if omitted).                       |
+| `spenderAccountId` | `string`                                   | ✅        | Spender account ID.                                                       |
+| `tokenApprovals`   | `Array<{tokenId: string, amount: number}>` | ✅        | List of token approvals with token ID and amount (in display units).      |
+| `transactionMemo`  | `string`                                   | ❌        | Memo for the transaction.                                                 |
 
 #### Example Prompts
 
@@ -685,12 +739,12 @@ Delete fungible token allowance(s).
 
 #### Parameters
 
-| Parameter          | Type       | Required | Description                                   |
-|--------------------|------------|----------|-----------------------------------------------|
-| `ownerAccountId`   | `string`   | ❌        | Owner account ID (defaults to operator).      |
-| `spenderAccountId` | `string`   | ✅        | Spender account ID.                           |
-| `tokenIds`         | `string[]` | ✅        | List of token IDs whose allowances to remove. |
-| `transactionMemo`  | `string`   | ❌        | Memo for the transaction.                     |
+| Parameter          | Type       | Required | Description                                                    |
+|--------------------|------------|----------|----------------------------------------------------------------|
+| `ownerAccountId`   | `string`   | ❌        | Owner account ID (defaults to operator if omitted).            |
+| `spenderAccountId` | `string`   | ✅        | Spender account ID.                                            |
+| `tokenIds`         | `string[]` | ✅        | Array of token IDs specifying which allowances to remove.      |
+| `transactionMemo`  | `string`   | ❌        | Memo for the transaction.                                      |
 
 #### Example Prompts
 
@@ -703,22 +757,28 @@ Remove allowance for spender 0.0.123 on tokens 0.0.456 and 0.0.789
 
 ### TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL
 
-Transfers a fungible token using an existing token allowance.
+Transfers a fungible token using an existing token allowance. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter         | Type                                         | Required | Description                                        |
-|-------------------|----------------------------------------------|----------|----------------------------------------------------|
-| `tokenId`         | `string`                                     | ✅        | The token ID to transfer.                          |
-| `sourceAccountId` | `string`                                     | ✅        | Account ID of the token owner (allowance granter). |
-| `transfers`       | `Array<{accountId: string, amount: number}>` | ✅        | List of transfers with recipient and amount.       |
-| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                          |
+| Parameter         | Type                                         | Required | Description                                                       |
+|-------------------|----------------------------------------------|----------|-------------------------------------------------------------------|
+| `tokenId`         | `string`                                     | ✅        | The token ID to transfer.                                         |
+| `sourceAccountId` | `string`                                     | ✅        | Account ID of the token owner (the allowance granter).            |
+| `transfers`       | `Array<{accountId: string, amount: number}>` | ✅        | List of transfers with recipient and amount (in display units).   |
+| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                                         |
 
 #### Example Prompts
 
 ```
 Spend allowance from 0.0.1002 to send 25 tokens 0.0.33333 to 0.0.2002
 Use allowance from 0.0.1002 to transfer 50 tokens 0.0.33333 to 0.0.2002 and 75 to 0.0.3003
+```
+
+#### Example (Scheduled)
+
+```
+Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allowance. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -746,6 +806,58 @@ Approve NFT allowance for token 0.0.1111 serials 2 and 3 to 0.0.2222
 Authorize NFT allowance on 0.0.3333 for serials 5, 6, 7 to account 0.0.4444
 Approve NFT allowance for all serials of token 0.0.5555 to spender 0.0.6666
 Grant approval for the entire collection token 0.0.1010 to account 0.0.2020
+```
+
+---
+
+### DELETE_NFT_ALLOWANCE_TOOL
+
+Deletes NFT allowance(s) for specific serial numbers.
+
+#### Parameters
+
+| Parameter          | Type       | Required | Description                                               |
+|--------------------|------------|----------|-----------------------------------------------------------|
+| `ownerAccountId`   | `string`   | ❌        | Owner account ID (defaults to operator).                  |
+| `tokenId`          | `string`   | ✅        | The NFT token ID.                                         |
+| `serialNumbers`    | `number[]` | ✅        | Array of serial numbers to remove allowance for.          |
+| `transactionMemo`  | `string`   | ❌        | Memo for the transaction.                                 |
+
+#### Example Prompts
+
+```
+Delete NFT allowance for token 0.0.5005 serial 1
+Remove NFT allowance for token 0.0.1111 serials 2 and 3
+Revoke NFT allowance on 0.0.3333 for serials 5, 6, 7 from owner 0.0.4444
+Delete allowance for NFT token 0.0.1234 serials 10 and 12 with memo "cleanup"
+```
+
+---
+
+### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
+
+Transfers NFTs from the operator's account to specified recipients. Supports scheduled transactions.
+
+#### Parameters
+
+| Parameter         | Type                                                 | Required | Description                                                         |
+|-------------------|------------------------------------------------------|----------|---------------------------------------------------------------------|
+| `tokenId`         | `string`                                             | ✅        | The NFT token ID to transfer.                                       |
+| `recipients`      | `Array<{recipientId: string, serialNumber: number}>` | ✅        | List of recipients with recipient account ID and NFT serial number. |
+| `transactionMemo` | `string`                                             | ❌        | Memo for the transaction.                                           |
+
+#### Example Prompts
+
+```
+Transfer NFT 0.0.12345 serial 1 to 0.0.222
+Send my NFT 0.0.12345 serials 1 and 2 to 0.0.333
+Transfer NFT token 0.0.5555 serial 3 to account 0.0.6666 with memo "gift"
+```
+
+#### Example (Scheduled)
+
+```
+Transfer NFT 0.0.12345 serial 1 to 0.0.222. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -817,7 +929,7 @@ Show pending airdrops for account 0.0.12345
 
 ### CREATE_ERC20_TOOL
 
-Deploys a new ERC-20 token via the BaseERC20Factory.
+Deploys a new ERC-20 token via the BaseERC20Factory. Supports scheduled transactions.
 
 #### Parameters
 
@@ -835,11 +947,17 @@ Create an ERC20 token called MyToken with symbol MTK
 Create ERC20 token TestCoin (TST) with 18 decimals and 1000000 initial supply
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule deploy ERC20 token called MyCoin with symbol MC, 500 initial supply, and 8 decimals. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### TRANSFER_ERC20_TOOL
 
-Transfers an ERC-20 token.
+Transfers an ERC-20 token. Supports scheduled transactions.
 
 #### Parameters
 
@@ -859,11 +977,17 @@ Send 25 erc20 tokens from contract 0.0.1234 to 0.0.5678
 Move 200 erc20 tokens of contract 0.0.3333 to address 0.0.4444
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule transfer 100 0.0.5678 ERC20 tokens from contract to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### CREATE_ERC721_TOOL
 
-Deploys a new ERC-721 token via the BaseERC721Factory.
+Deploys a new ERC-721 token via the BaseERC721Factory. Supports scheduled transactions.
 
 #### Parameters
 
@@ -880,11 +1004,17 @@ Create an ERC721 collection called MyNFTs with symbol MNFT and base URI https://
 Create ERC721 token ArtCollection (ART) with baseURI ipfs://bafybei...
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule deploy ERC721 token called MyNFT with symbol MNFT. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### MINT_ERC721_TOOL
 
-Mints a new ERC-721 token.
+Mints a new ERC-721 token. Supports scheduled transactions.
 
 #### Parameters
 
@@ -900,11 +1030,17 @@ Mint ERC721 token 0.0.12345
 Mint ERC721 0.0.12345 to address 0x1234...5678
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule mint ERC721 token 0.0.5678 to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### TRANSFER_ERC721_TOOL
 
-Transfers an ERC-721 token.
+Transfers an ERC-721 token. Supports scheduled transactions.
 
 #### Parameters
 
@@ -920,6 +1056,12 @@ Transfers an ERC-721 token.
 ```
 Transfer ERC721 token 0.0.12345 with id 1 to 0.0.67890
 Send ERC721 0.0.12345 token ID 5 from 0x123... to 0x456...
+```
+
+#### Example (Scheduled)
+
+```
+Schedule transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---

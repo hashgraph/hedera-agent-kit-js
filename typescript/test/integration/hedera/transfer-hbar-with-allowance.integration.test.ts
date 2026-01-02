@@ -10,6 +10,7 @@ import {
   HederaOperationsWrapper,
   verifyHbarBalanceChange,
 } from '../../utils';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Transfer HBAR With Allowance Integration Tests', () => {
   let operatorClient: Client;
@@ -18,6 +19,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
   let context: Context;
   let recipientAccountId: AccountId;
   let ownerWrapper: HederaOperationsWrapper;
+  let spenderWrapper: HederaOperationsWrapper;
   let ownerAccountId: AccountId;
   let spenderAccountId: AccountId;
 
@@ -25,7 +27,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
     operatorClient = getOperatorClientForTests();
     const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // Operator creates owner account
+    // Operator creates an owner account
     const ownerKeyPair = PrivateKey.generateED25519();
     ownerAccountId = await operatorWrapper
       .createAccount({
@@ -36,7 +38,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
     ownerClient = getCustomClient(ownerAccountId, ownerKeyPair);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
 
-    // Operator creates spender account
+    // Operator creates a spender account
     const spenderKeyPair = PrivateKey.generateED25519();
     spenderAccountId = await operatorWrapper
       .createAccount({
@@ -45,6 +47,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKeyPair);
+    spenderWrapper = new HederaOperationsWrapper(spenderClient);
 
     // Operator creates recipient
     recipientAccountId = await operatorWrapper
@@ -59,24 +62,21 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
 
   afterAll(async () => {
     try {
-      if (recipientAccountId) {
-        await ownerWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      }
-      if (spenderAccountId) {
-        await ownerWrapper.deleteAccount({
-          accountId: spenderAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      }
-      if (ownerAccountId) {
-        await ownerWrapper.deleteAccount({
-          accountId: ownerAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      }
+      await returnHbarsAndDeleteAccount(
+        spenderWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        recipientAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        ownerAccountId,
+        operatorClient.operatorAccountId!,
+      );
     } catch (err) {
       console.warn('Cleanup failed:', err);
     }
