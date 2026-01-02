@@ -282,4 +282,6 @@ Apache 2.0
 
 ## Credits
 
-Special thanks to the developers of the [Stripe Agent Toolkit](https://github.com/stripe/agent-toolkit) who provided the inspiration for the architecture and patterns used in this project.
+- Special thanks to the developers of the [Stripe Agent Toolkit](https://github.com/stripe/agent-toolkit) who provided the inspiration for the architecture and patterns used in this project.
+
+- Thanks to [LangChain](https://www.langchain.com) who provided the base framework for building agents (on which this kit is based on) and free courses for those who need to learn more about it, available at the [LangChain Academy](https://academy.langchain.com/).
