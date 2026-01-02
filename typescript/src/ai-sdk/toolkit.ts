@@ -1,7 +1,7 @@
 import HederaAgentAPI from '../shared/api';
 import { type Configuration } from '@/shared';
 import { ToolDiscovery } from '@/shared/tool-discovery';
-import type { Tool, LanguageModelV1Middleware } from 'ai';
+import type { Tool, LanguageModelMiddleware } from 'ai';
 import { Client } from '@hashgraph/sdk';
 import HederaAgentKitTool from './tool';
 
@@ -27,8 +27,9 @@ class HederaAIToolkit {
     });
   }
 
-  middleware(): LanguageModelV1Middleware {
+  middleware(): LanguageModelMiddleware {
     return {
+      specificationVersion: 'v3',
       wrapGenerate: async ({ doGenerate }) => {
         return doGenerate();
       },
