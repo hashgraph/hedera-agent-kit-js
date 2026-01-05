@@ -64,7 +64,7 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
       // Delete an executor account and transfer remaining balance back to operator
       await returnHbarsAndDeleteAccount(
         executorWrapper,
-        recipientAccountId,
+        executorClient.operatorAccountId!,
         operatorClient.operatorAccountId!,
       );
 
