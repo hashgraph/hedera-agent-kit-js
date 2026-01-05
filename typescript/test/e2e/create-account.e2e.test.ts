@@ -40,7 +40,11 @@ describe('Create Account E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+        accountMemo: 'executor account for Create Account E2E Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -60,13 +64,14 @@ describe('Create Account E2E Tests', () => {
           operatorClient.operatorAccountId!,
         );
       }
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
-      testSetup.cleanup();
-      operatorClient.close();
     }
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorClient.operatorAccountId!,
+      operatorClient.operatorAccountId!,
+    );
+    testSetup.cleanup();
+    operatorClient.close();
   });
 
   describe('Tool Matching and Parameter Extraction', () => {

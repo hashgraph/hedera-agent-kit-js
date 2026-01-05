@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hashgraph/sdk';
 import getTopicMessagesQueryTool from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-messages-query';
 import { Context, AgentMode } from '@/shared/configuration';
@@ -9,6 +9,7 @@ import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Get Topic Messages Query Integration Tests', () => {
   let operatorClient: Client;
@@ -26,7 +27,10 @@ describe('Get Topic Messages Query Integration Tests', () => {
     // Operator creates executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -36,6 +40,14 @@ describe('Get Topic Messages Query Integration Tests', () => {
       mode: AgentMode.AUTONOMOUS,
       accountId: executorAccountId.toString(),
     };
+  });
+
+  afterAll(async () => {
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorClient.operatorAccountId!,
+      operatorClient.operatorAccountId!,
+    );
   });
 
   beforeEach(async () => {
