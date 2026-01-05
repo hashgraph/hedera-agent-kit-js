@@ -35,7 +35,11 @@ describe('Airdrop Fungible Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Airdrop Fungible Token Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -78,6 +82,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
         key: recipientKey.publicKey,
         initialBalance: 0,
         maxAutomaticTokenAssociations,
+        accountMemo: 'recipient account for Airdrop Fungible Token Integration Tests',
       })
       .then(resp => resp.accountId!);
 

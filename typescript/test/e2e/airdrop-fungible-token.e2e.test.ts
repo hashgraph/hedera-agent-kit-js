@@ -47,6 +47,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       .createAccount({
         key: executorKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Airdrop Fungible Token E2E Tests',
       })
       .then(resp => resp.accountId!);
 
@@ -73,13 +74,13 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
+    if (testSetup && operatorClient) {
       await returnHbarsAndDeleteAccount(
         executorWrapper,
-        executorAccountId,
+        executorClient.operatorAccountId!,
         operatorClient.operatorAccountId!,
       );
-      executorClient.close();
+      testSetup.cleanup();
       operatorClient.close();
     }
   });
@@ -92,6 +93,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         key: recipientKey.publicKey,
         initialBalance: 0,
         maxAutomaticTokenAssociations,
+        accountMemo: 'recipient account for Airdrop Fungible Token E2E Tests',
       })
       .then(resp => resp.accountId!);
   };

@@ -29,6 +29,7 @@ describe('Transfer ERC20 Integration Tests', () => {
       .createAccount({
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating tokens and transfers
         key: executorAccountKey.publicKey,
+        accountMemo: 'executor account for Transfer ERC20 Integration Tests',
       })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -85,6 +86,7 @@ describe('Transfer ERC20 Integration Tests', () => {
         .createAccount({
           initialBalance: 5,
           key: executorClient.operatorPublicKey as PublicKey,
+          accountMemo: 'should transfer tokens to another account using Hedera address',
         })
         .then(resp => resp.accountId!.toString());
 
@@ -109,6 +111,7 @@ describe('Transfer ERC20 Integration Tests', () => {
         .createAccount({
           initialBalance: 5,
           key: executorClient.operatorPublicKey as PublicKey,
+          accountMemo: 'should transfer tokens using EVM addresses',
         })
         .then(resp => resp.accountId!.toString());
 
@@ -137,6 +140,8 @@ describe('Transfer ERC20 Integration Tests', () => {
         .createAccount({
           initialBalance: 5,
           key: executorClient.operatorPublicKey as PublicKey,
+          accountMemo:
+            'account for should schedule transfer of ERC20 tokens to another account using Hedera address',
         })
         .then(resp => resp.accountId!.toString());
 
@@ -188,8 +193,9 @@ describe('Transfer ERC20 Integration Tests', () => {
     it('should fail when amount is negative', async () => {
       recipientAccountId = await operatorWrapper
         .createAccount({
-          initialBalance: 5,
+          initialBalance: 0,
           key: executorClient.operatorPublicKey as PublicKey,
+          accountMemo: 'account for should fail when amount is negative',
         })
         .then(resp => resp.accountId!.toString());
 

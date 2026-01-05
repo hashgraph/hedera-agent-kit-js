@@ -15,6 +15,7 @@ import { itWithRetry } from '../utils/retry-util';
 import { ResponseParserService } from '@/langchain';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -37,7 +38,10 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
     // executor account creation
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -72,21 +76,23 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
   afterAll(async () => {
     if (testSetup && executorWrapper && operatorClient) {
       // delete accounts using executor wrapper
-      await executorWrapper.deleteAccount({
-        accountId: targetAccount1,
-        transferAccountId: executorClient.operatorAccountId!,
-      });
-      await executorWrapper.deleteAccount({
-        accountId: targetAccount2,
-        transferAccountId: executorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        targetAccount1,
+        executorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        targetAccount2,
+        executorClient.operatorAccountId!,
+      );
 
-      // delete executor account and transfer remaining balance to operator
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
-
+      // delete an executor account and transfer remaining balance to operator
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       testSetup.cleanup();
       operatorClient.close();
       executorClient.close();
