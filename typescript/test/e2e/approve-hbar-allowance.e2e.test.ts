@@ -82,7 +82,7 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   beforeEach(async () => {
     // Create a spender account with its own key so it can sign the allowance spent
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await executorWrapper
+    spenderAccount = await operatorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
