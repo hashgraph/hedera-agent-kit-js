@@ -195,6 +195,12 @@ describe('Get Token Info Query E2E Tests', () => {
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
 
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        secondaryAccountId,
+        operatorClient.operatorAccountId!,
+      );
+
       expect(tokenDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
     }),
   );

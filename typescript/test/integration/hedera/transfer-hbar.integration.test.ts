@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Transfer HBAR Integration Tests', () => {
   let operatorClient: Client;
@@ -55,18 +56,21 @@ describe('Transfer HBAR Integration Tests', () => {
     if (executorClient) {
       // Transfer remaining balance back to operator and delete an executor account
       try {
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId2,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          recipientAccountId,
+          operatorClient.operatorAccountId!,
+        );
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          recipientAccountId2,
+          operatorClient.operatorAccountId!,
+        );
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          executorClient.operatorAccountId!,
+          operatorClient.operatorAccountId!,
+        );
       } catch (error) {
         console.warn('Failed to clean up accounts:', error);
       }

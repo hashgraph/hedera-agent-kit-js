@@ -51,6 +51,7 @@ describe('Approve NFT Allowance Integration Tests', () => {
       .createAccount({
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), // cover fees for token creation/minting/approvals
         key: executorKeyPair.publicKey,
+        accountMemo: 'executor account for Approve NFT Allowance Integration Tests',
       })
       .then(resp => resp.accountId!);
 
@@ -62,6 +63,7 @@ describe('Approve NFT Allowance Integration Tests', () => {
       .createAccount({
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorClient.operatorPublicKey as Key,
+        accountMemo: 'spender account for Approve NFT Allowance Integration Tests',
       })
       .then(resp => resp.accountId!);
 

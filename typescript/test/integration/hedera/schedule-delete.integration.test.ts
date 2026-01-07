@@ -10,6 +10,7 @@ import {
   scheduleDeleteTransactionParameters,
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Schedule Delete Integration Tests', () => {
   let operatorClient: Client;
@@ -28,6 +29,7 @@ describe('Schedule Delete Integration Tests', () => {
       .createAccount({
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
+        accountMemo: 'executor account for Schedule Delete Integration Tests',
       })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
@@ -35,7 +37,10 @@ describe('Schedule Delete Integration Tests', () => {
 
     // Operator creates recipient to preserve executor balance
     recipientAccountId = await operatorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        accountMemo: 'recipient account for Schedule Delete Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     context = {
@@ -47,15 +52,16 @@ describe('Schedule Delete Integration Tests', () => {
   afterAll(async () => {
     if (executorClient) {
       try {
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          recipientAccountId,
+          operatorClient.operatorAccountId!,
+        );
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          executorClient.operatorAccountId!,
+          operatorClient.operatorAccountId!,
+        );
       } catch (error) {
         console.warn('Failed to clean up accounts:', error);
       }

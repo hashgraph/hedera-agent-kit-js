@@ -10,6 +10,7 @@ import {
   signScheduleTransactionParameters,
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Sign Schedule Transaction Integration Tests', () => {
   let operatorClient: Client;
@@ -28,6 +29,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
       .createAccount({
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
+        accountMemo: 'executor account for Sign Schedule Transaction Integration Tests',
       })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
@@ -35,7 +37,10 @@ describe('Sign Schedule Transaction Integration Tests', () => {
 
     // Operator creates recipient to preserve executor balance
     recipientAccountId = await operatorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        accountMemo: 'recipient account for Sign Schedule Transaction Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     context = {
@@ -47,19 +52,16 @@ describe('Sign Schedule Transaction Integration Tests', () => {
   afterAll(async () => {
     if (executorClient) {
       // Transfer remaining balance back to operator and delete an executor account
-      try {
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      } catch (error) {
-        console.warn('Failed to clean up accounts:', error);
-      }
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        recipientAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       executorClient.close();
     }
     if (operatorClient) {

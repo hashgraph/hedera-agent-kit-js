@@ -57,7 +57,10 @@ describe('Delete Token Allowance E2E Tests', () => {
     // Create executor (owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -110,10 +113,11 @@ describe('Delete Token Allowance E2E Tests', () => {
 
   afterEach(async () => {
     if (spenderAccountId) {
-      await spenderWrapper.deleteAccount({
-        accountId: spenderAccountId,
-        transferAccountId: executorAccountId,
-      });
+      await returnHbarsAndDeleteAccount(
+        spenderWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
     }
   });
 
