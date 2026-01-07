@@ -57,6 +57,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       .createAccount({
         key: executorKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
+        accountMemo: 'executor account for Transfer Fungible Token With Allowance Tool Integration',
       })
       .then(r => r.accountId!);
 
@@ -76,12 +77,12 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   });
 
   afterAll(async () => {
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorAccountId,
+      operatorClient.operatorAccountId!,
+    );
     if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
       executorClient.close();
       operatorClient.close();
     }
@@ -94,6 +95,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       .createAccount({
         key: spenderKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'spender account for Transfer Fungible Token With Allowance Tool Integration',
       })
       .then(r => r.accountId!);
 
@@ -106,6 +108,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       .createAccount({
         key: receiverKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'receiver account for Transfer Fungible Token With Allowance Tool Integration',
       })
       .then(r => r.accountId!);
 

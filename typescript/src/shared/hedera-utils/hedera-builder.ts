@@ -174,10 +174,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>>,
   ) {
     const tx = new ContractExecuteTransaction(params);
-    if(params.payableAmount) {
+    if (params.payableAmount) {
       tx.setPayableAmount(Hbar.from(params.payableAmount, HbarUnit.Tinybar));
     }
-    
+
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 

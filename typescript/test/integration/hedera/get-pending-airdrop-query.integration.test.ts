@@ -36,7 +36,11 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Get Pending Airdrop Query Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -64,6 +68,7 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
         key: recipientKey.publicKey,
         initialBalance: 0,
         maxAutomaticTokenAssociations: 0,
+        accountMemo: 'recipient account for Get Pending Airdrop Query Integration Tests',
       })
       .then(resp => resp.accountId!);
 
