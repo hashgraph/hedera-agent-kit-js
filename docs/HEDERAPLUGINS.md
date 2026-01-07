@@ -106,6 +106,7 @@ A plugin for the Hedera **Token Service (HTS)**, enabling creation and managemen
 | [`APPROVE_NFT_ALLOWANCE_TOOL`](./HEDERATOOLS.md#approve_nft_allowance_tool)                                     | Approve NFT allowances                                   | [View Parameters & Examples](./HEDERATOOLS.md#approve_nft_allowance_tool)                          |
 | [`TRANSFER_NFT_WITH_ALLOWANCE_TOOL`](./HEDERATOOLS.md#transfer_nft_with_allowance_tool)                         | Transfers NFTs using an allowance                        | [View Parameters & Examples](./HEDERATOOLS.md#transfer_nft_with_allowance_tool)                    |
 | [`DELETE_NFT_ALLOWANCE_TOOL`](./HEDERATOOLS.md#delete_nft_allowance_tool)                                       | Delete NFT allowance(s) for specific serials             | [View Parameters & Examples](./HEDERATOOLS.md#delete_nft_allowance_tool)                           |
+| [`TRANSFER_NON_FUNGIBLE_TOKEN_TOOL`](./HEDERATOOLS.md#transfer_non_fungible_token_tool)                         | Transfers NFTs from operator's account                   | [View Parameters & Examples](./HEDERATOOLS.md#transfer_non_fungible_token_tool)                    |
 
 ---
 
