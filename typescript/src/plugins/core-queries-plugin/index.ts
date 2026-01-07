@@ -12,12 +12,14 @@ import getAccountTokenBalancesQuery, {
 import getTopicMessagesQuery, {
   GET_TOPIC_MESSAGES_QUERY_TOOL,
 } from '@/plugins/core-queries-plugin/tools/queries/get-topic-messages-query';
-import getTokenInfoQuery, { GET_TOKEN_INFO_QUERY_TOOL}  from '@/plugins/core-queries-plugin/tools/queries/get-token-info-query';
+import getTokenInfoQuery, {
+  GET_TOKEN_INFO_QUERY_TOOL,
+} from '@/plugins/core-queries-plugin/tools/queries/get-token-info-query';
 
 /**
  * @deprecated This plugin is deprecated. Use the specific query plugins instead:
  * - coreAccountQueryPlugin for account-related queries
- * - coreTokenQueryPlugin for token-related queries  
+ * - coreTokenQueryPlugin for token-related queries
  * - coreConsensusQueryPlugin for consensus-related queries
  * This export will be removed in a future version.
  */
@@ -31,7 +33,7 @@ export const coreQueriesPlugin: Plugin = {
       getAccountQuery(context),
       getAccountTokenBalancesQuery(context),
       getTopicMessagesQuery(context),
-      getTokenInfoQuery(context)
+      getTokenInfoQuery(context),
     ];
   },
 };
@@ -48,7 +50,7 @@ export const coreQueriesPluginToolNames = {
   GET_ACCOUNT_QUERY_TOOL,
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
   GET_TOPIC_MESSAGES_QUERY_TOOL,
-  GET_TOKEN_INFO_QUERY_TOOL
+  GET_TOKEN_INFO_QUERY_TOOL,
 } as const;
 
 export default { coreQueriesPlugin, coreQueriesPluginToolNames };

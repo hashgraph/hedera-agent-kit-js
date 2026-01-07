@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import Long from 'long';
 
 /**
- * The implementation form @hashgraph/sdk is not correctly exported, so a local definition of the type is needed
+ * The implementation from @hashgraph/sdk is not correctly exported, so a local definition of the type is needed
  */
 export type TransferHbarInput = {
   accountId: AccountId | string;
@@ -11,7 +11,7 @@ export type TransferHbarInput = {
 };
 
 /**
- * The implementation of TokenTransfer form @hashgraph/sdk is not correctly exported, so a local definition of the type is needed
+ * The implementation of TokenTransfer from @hashgraph/sdk is not correctly exported, so a local definition of the type is needed
  */
 export type TokenTransferMinimalParams = {
   tokenId: string;

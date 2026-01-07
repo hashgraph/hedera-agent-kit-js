@@ -23,12 +23,17 @@ class HederaLangchainToolkit implements BaseToolkit {
           tool.method,
           tool.description,
           tool.parameters,
+          tool.outputParser,
         ),
     );
   }
 
   getTools(): HederaAgentKitTool[] {
     return this.tools;
+  }
+
+  getHederaAgentKitAPI(): HederaAgentKitAPI {
+    return this._hederaAgentKit;
   }
 }
 

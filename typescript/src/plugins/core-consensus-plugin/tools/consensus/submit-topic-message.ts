@@ -1,13 +1,15 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
-const submitTopicMessagePrompt = (_context: Context = {}) => {
+const submitTopicMessagePrompt = (context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
   return `
@@ -16,6 +18,8 @@ This tool will submit a message to a topic on the Hedera network.
 Parameters:
 - topicId (str, required): The ID of the topic to submit the message to
 - message (str, required): The message to submit to the topic
+- transactionMemo (str, optional): An optional memo to include on the transaction
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
 };
@@ -30,14 +34,19 @@ const submitTopicMessage = async (
   params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
 ) => {
   try {
-    const tx = HederaBuilder.submitTopicMessage(params);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    const normalisedParams = await HederaParameterNormaliser.normaliseSubmitTopicMessage(
+      params,
+      context,
+      client,
+    );
+    const tx = HederaBuilder.submitTopicMessage(normalisedParams);
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to submit message to topic';
+    const desc = 'Failed to submit message to topic';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[submit_topic_message_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -49,6 +58,7 @@ const tool = (context: Context): Tool => ({
   description: submitTopicMessagePrompt(context),
   parameters: submitTopicMessageParameters(context),
   execute: submitTopicMessage,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

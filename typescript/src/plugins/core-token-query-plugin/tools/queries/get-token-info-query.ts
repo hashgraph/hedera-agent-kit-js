@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
 import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getTokenInfoQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -14,7 +15,7 @@ export const getTokenInfoQueryPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will return the information for a given Hedera token.
+This tool will return the information for a given Hedera token. Make sure to return token symbol.
 
 Parameters:
 - tokenId (str): The token ID to query for.
@@ -33,13 +34,12 @@ const postProcess = (tokenInfo: TokenInfo) => {
     return (amount / 10 ** decimals).toLocaleString();
   };
 
-
   const formatKey = (key?: { _type: string; key: string } | null) => {
     if (!key) return 'Not Set';
     return key._type ? `${key.key}` : 'Present';
   };
 
-  const supplyType = tokenInfo.supply_type === 'INFINITE' ? 'Infinite' : tokenInfo.max_supply || 'Finite';
+  const supplyType = tokenInfo.supply_type === 'INFINITE' ? 'Infinite' : 'Finite';
   const freezeStatus = tokenInfo.freeze_default ? 'Frozen' : 'Active';
 
   return `Here are the details for token **${tokenInfo.token_id}**:
@@ -86,11 +86,10 @@ export const getTokenInfoQuery = async (
       humanMessage: postProcess(tokenInfo),
     };
   } catch (error) {
-    console.error('Error getting token info', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get token info';
+    const desc = 'Failed to get token info';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_token_info_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 
@@ -102,6 +101,7 @@ const tool = (context: Context): Tool => ({
   description: getTokenInfoQueryPrompt(context),
   parameters: tokenInfoQueryParameters(context),
   execute: getTokenInfoQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

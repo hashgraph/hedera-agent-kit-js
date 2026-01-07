@@ -1,0 +1,151 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import {
+  AccountId,
+  Client,
+  Key,
+  PrivateKey,
+  PublicKey,
+  TokenId,
+  TokenSupplyType,
+} from '@hashgraph/sdk';
+import { ReactAgent } from 'langchain';
+import {
+  createLangchainTestSetup,
+  getCustomClient,
+  getOperatorClientForTests,
+  HederaOperationsWrapper,
+  LangchainTestSetup,
+} from '../utils';
+import { ResponseParserService } from '@/langchain';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { wait } from '../utils/general-util';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+
+/**
+ * E2E tests for Approve Token Allowance using the LangChain agent.
+ * Flow mirrors HBAR allowance E2E with token setup:
+ * 1. Operator funds an executor (owner) account used by the agent.
+ * 2. Create a spender account.
+ * 3. Create a temporary fungible token with executor as treasury/supply key.
+ * 4. Ask the agent (running as executor) to approve an allowance for that token to the spender.
+ */
+
+describe('Approve Token Allowance E2E Tests with Intermediate Execution Account', () => {
+  let testSetup: LangchainTestSetup;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
+  let operatorClient: Client;
+  let executorClient: Client; // acts as an owner
+  let operatorWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
+
+  let spenderAccountId: AccountId;
+  let spenderKey: PrivateKey;
+
+  let tokenId: TokenId;
+
+  beforeAll(async () => {
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    // execution account and client creation (owner)
+    const executorKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Approve Token Allowance E2E Tests',
+      })
+      .then(resp => resp.accountId!);
+
+    executorClient = getCustomClient(executorAccountId, executorKey);
+    executorWrapper = new HederaOperationsWrapper(executorClient);
+
+    // langchain setup with execution account
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
+
+    // create test fungible token
+    tokenId = await executorWrapper
+      .createFungibleToken({
+        tokenName: 'E2EAllowToken',
+        tokenSymbol: 'E2EALW',
+        tokenMemo: 'FT',
+        initialSupply: 1000,
+        decimals: 2,
+        maxSupply: 100000,
+        supplyType: TokenSupplyType.Finite,
+        supplyKey: executorClient.operatorPublicKey! as PublicKey,
+        adminKey: executorClient.operatorPublicKey! as PublicKey,
+        treasuryAccountId: executorAccountId.toString(),
+        autoRenewAccountId: executorAccountId.toString(),
+      })
+      .then(resp => resp.tokenId!);
+
+    await wait(MIRROR_NODE_WAITING_TIME);
+  });
+
+  afterAll(async () => {
+    if (testSetup && operatorClient) {
+      if (spenderAccountId) {
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          spenderAccountId,
+          operatorClient.operatorAccountId!,
+        );
+      }
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
+      testSetup.cleanup();
+      operatorClient.close();
+    }
+  });
+
+  beforeEach(async () => {
+    // Create a spender account
+    spenderKey = PrivateKey.generateED25519();
+    spenderAccountId = await operatorWrapper
+      .createAccount({
+        key: spenderKey.publicKey as Key,
+        initialBalance: 0,
+        accountMemo: 'spender account for Approve Token Allowance E2E Tests',
+      })
+      .then(resp => resp.accountId!);
+  });
+
+  it('should approve fungible token allowance to spender (with memo)', async () => {
+    const memo = 'E2E token allow memo';
+    const input = `Approve allowance of 25 for token ${tokenId.toString()} to ${spenderAccountId.toString()} with memo "${memo}"`;
+    const transactionResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+    const ownerAccountId = executorClient.operatorAccountId!;
+    const parsedResponse = responseParsingService.parseNewToolMessages(transactionResult);
+
+    // We just assert that the agent ran without throwing. Detailed SUCCESS assertions are part of integration tests.
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'Fungible token allowance(s) approved successfully. Transaction ID:',
+    );
+
+    await wait(MIRROR_NODE_WAITING_TIME);
+
+    const allowances = await executorWrapper.getTokenAllowances(
+      ownerAccountId.toString(),
+      spenderAccountId.toString(),
+    );
+
+    expect(allowances.allowances.find(a => a.owner === ownerAccountId.toString())).toBeTruthy();
+  });
+});

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
@@ -9,6 +9,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createTopicPrompt = (_context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -17,7 +18,8 @@ const createTopicPrompt = (_context: Context = {}) => {
 This tool will create a new topic on the Hedera network.
 
 Parameters:
-- topicMemo (str, optional): A memo for the topic
+- topicMemo (str, optional): A memo stored permanently on the topic itself (not the transaction)
+- transactionMemo (str, optional): A memo attached to the transaction (separate from topicMemo). Use this when the user says "transaction memo" or "set the memo on the transaction"
 - isSubmitKey (bool, optional): Whether to set a submit key for the topic. Set to true if user wants to set a submit key, otherwise false
 ${usageInstructions}
 `;
@@ -47,11 +49,10 @@ const createTopic = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    console.error('[CreateTopic] Error creating topic:', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create topic';
+    const desc = 'Failed to create topic';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_topic_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -63,6 +64,7 @@ const tool = (context: Context): Tool => ({
   description: createTopicPrompt(context),
   parameters: createTopicParameters(context),
   execute: createTopic,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -60,7 +60,7 @@ class HederaAgentKitTool implements Action {
 
       // custom parsing params from Markdown JSON notation to JS object
       const parsedParams = customParseJSONObjectFromText(modelOutput) as Record<string, any>;
-      logger.debug('Parsed params object', parsedParams);
+      logger.debug('Parsed params object' + JSON.stringify(parsedParams, null, 2));
 
       // validating parameters with tools input zod schema
       const validation = parameterSchema.safeParse(parsedParams); // parsing extracted params before calling a tool
@@ -75,7 +75,7 @@ class HederaAgentKitTool implements Action {
         generate a comprehensive message to the user about missing params
         `;
 
-        const modelOutput = await runtime.useModel(ModelType.TEXT_LARGE, { promptText });
+        const modelOutput = await runtime.useModel(ModelType.TEXT_LARGE, { prompt: promptText });
         if (callback) {
           await callback({
             text: modelOutput,
@@ -105,7 +105,7 @@ class HederaAgentKitTool implements Action {
       } catch (err) {
         // handle other errors
         const message = err instanceof Error ? err.message : 'Unknown error';
-        logger.error(`Error running tool ${tool.method}:`, err);
+        logger.error(`Error running tool ${tool.method}:` + err);
 
         if (callback) {
           await callback({
@@ -118,6 +118,7 @@ class HederaAgentKitTool implements Action {
       }
     };
   }
+  [key: string]: unknown;
 }
 
 export default HederaAgentKitTool;

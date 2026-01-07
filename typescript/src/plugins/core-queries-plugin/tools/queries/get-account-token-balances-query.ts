@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenBalancesResponse } from '@/shared/hedera-utils/mirrornode/types';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getAccountTokenBalancesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -58,11 +59,10 @@ export const getAccountTokenBalancesQuery = async (
       humanMessage: postProcess(tokenBalances, normalisedParams.accountId),
     };
   } catch (error) {
-    console.error('Error getting account token balances', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get account token balances';
+    const desc = 'Failed to get account token balances';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_account_token_balances_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 
@@ -74,6 +74,7 @@ const tool = (context: Context): Tool => ({
   description: getAccountTokenBalancesQueryPrompt(context),
   parameters: accountTokenBalancesQueryParameters(context),
   execute: getAccountTokenBalancesQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

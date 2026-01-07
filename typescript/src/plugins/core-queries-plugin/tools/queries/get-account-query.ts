@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { accountQueryParameters } from '@/shared/parameter-schemas/query.zod';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { AccountResponse } from '@/shared/hedera-utils/mirrornode/types';
+import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getAccountQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -43,11 +44,10 @@ export const getAccountQuery = async (
       humanMessage: postProcess(account),
     };
   } catch (error) {
-    console.error('Error getting account query', error);
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get account query';
+    const desc = 'Failed to get account query';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_account_query_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -59,6 +59,7 @@ const tool = (context: Context): Tool => ({
   description: getAccountQueryPrompt(context),
   parameters: accountQueryParameters(context),
   execute: getAccountQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

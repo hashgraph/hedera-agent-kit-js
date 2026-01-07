@@ -2,15 +2,28 @@ import { coreTokenPlugin, coreTokenPluginToolNames } from './core-token-plugin';
 import { coreAccountPlugin, coreAccountPluginToolNames } from './core-account-plugin';
 import { coreConsensusPlugin, coreConsensusPluginToolNames } from './core-consensus-plugin';
 import { coreQueriesPlugin, coreQueriesPluginToolNames } from './core-queries-plugin';
+import { coreMiscQueriesPluginsToolNames, coreMiscQueriesPlugin } from './core-misc-query-plugin';
 import { coreEVMPlugin, coreEVMPluginToolNames } from './core-evm-plugin';
-import { coreAccountQueryPlugin, coreAccountQueryPluginToolNames } from './core-account-query-plugin';
+import {
+  coreAccountQueryPlugin,
+  coreAccountQueryPluginToolNames,
+} from './core-account-query-plugin';
 import { coreTokenQueryPlugin, coreTokenQueryPluginToolNames } from './core-token-query-plugin';
-import { coreConsensusQueryPlugin, coreConsensusQueryPluginToolNames } from './core-consensus-query-plugin';
+import {
+  coreConsensusQueryPlugin,
+  coreConsensusQueryPluginToolNames,
+} from './core-consensus-query-plugin';
+import { coreEVMQueryPlugin, coreEVMQueryPluginToolNames } from './core-evm-query-plugin';
+import {
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
+} from './core-transactions-query-plugin';
 
 export {
   coreTokenPlugin,
   coreAccountPlugin,
   coreConsensusPlugin,
+  coreMiscQueriesPlugin,
   coreQueriesPlugin,
   coreTokenPluginToolNames,
   coreAccountPluginToolNames,
@@ -24,6 +37,11 @@ export {
   coreAccountQueryPluginToolNames,
   coreTokenQueryPluginToolNames,
   coreConsensusQueryPluginToolNames,
+  coreEVMQueryPlugin,
+  coreEVMQueryPluginToolNames,
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
+  coreMiscQueriesPluginsToolNames,
 };
 
 // Deprecated exports for backward compatibility

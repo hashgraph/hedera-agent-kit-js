@@ -111,5 +111,3 @@ export default function WalletConnectPanel({ variant = "panel" }: { variant?: Va
         </div>
     );
 }
-
-

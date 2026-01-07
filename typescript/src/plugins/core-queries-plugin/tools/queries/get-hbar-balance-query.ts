@@ -2,12 +2,13 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import { Client } from '@hashgraph/sdk';
-import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/query.zod';
+import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import BigNumber from 'bignumber.js';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
-import { toHBar } from '@/shared/hedera-utils/hbar-conversion-utils';
+import { toHbar } from '@/shared/hedera-utils/hbar-conversion-utils';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getHbarBalanceQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -41,18 +42,18 @@ export const getHbarBalanceQuery = async (
       client,
     );
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const balance: BigNumber = await mirrornodeService.getAccountHBarBalance(
+    const balance: BigNumber = await mirrornodeService.getAccountHbarBalance(
       normalisedParams.accountId,
     );
     return {
-      raw: { accountId: normalisedParams.accountId, hbarBalance: toHBar(balance).toString() },
-      humanMessage: postProcess(toHBar(balance).toString() as string, normalisedParams.accountId),
+      raw: { accountId: normalisedParams.accountId, hbarBalance: toHbar(balance).toString() },
+      humanMessage: postProcess(toHbar(balance).toString() as string, normalisedParams.accountId),
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to get HBAR balance';
+    const desc = 'Failed to get HBAR balance';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[get_hbar_balance_query_tool]', message);
+    return { raw: { error: message }, humanMessage: message };
   }
 };
 
@@ -64,6 +65,7 @@ const tool = (context: Context): Tool => ({
   description: getHbarBalanceQueryPrompt(context),
   parameters: accountBalanceQueryParameters(context),
   execute: getHbarBalanceQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

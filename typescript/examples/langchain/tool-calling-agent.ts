@@ -1,13 +1,13 @@
-import { HederaLangchainToolkit, AgentMode, coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin } from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
-import { BufferMemory } from 'langchain/memory';
+import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
+import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
-dotenv.config();
 
+dotenv.config();
 
 async function bootstrap(): Promise<void> {
   // Initialise OpenAI LLM
@@ -21,41 +21,15 @@ async function bootstrap(): Promise<void> {
     PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!),
   );
 
-  // all the available tools
-  // const {
-  //   CREATE_FUNGIBLE_TOKEN_TOOL,
-  //   CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-  //   AIRDROP_FUNGIBLE_TOKEN_TOOL,
-  //   MINT_FUNGIBLE_TOKEN_TOOL,
-  //   MINT_NON_FUNGIBLE_TOKEN_TOOL,
-  // } = coreTokenPluginToolNames;
-
-  // const {
-  //   TRANSFER_HBAR_TOOL,
-  // } = coreAccountPluginToolNames;
-
-  // const {
-  //   CREATE_TOPIC_TOOL,
-  //   SUBMIT_TOPIC_MESSAGE_TOOL,
-  // } = coreConsensusPluginToolNames;
-
-  // const {
-  //   GET_HBAR_BALANCE_QUERY_TOOL,
-  //   GET_ACCOUNT_QUERY_TOOL,
-  //   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  //   GET_TOPIC_MESSAGES_QUERY_TOOL,
-  // } = coreQueriesPluginToolNames;
-
   // Prepare Hedera toolkit (load all tools by default)
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      tools: [
-      ], // use an empty array if you want to load all tools
+      tools: [], // use an empty array if you want to load all tools
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
-      plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreTokenQueryPlugin, coreAccountQueryPlugin, coreConsensusQueryPlugin, coreEVMPlugin],
+      plugins: [],
     },
   });
 
@@ -119,9 +93,11 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal error during CLI bootstrap:', err);
-  process.exit(1);
-}).then(() => {
-  process.exit(0);
-});
+bootstrap()
+  .catch(err => {
+    console.error('Fatal error during CLI bootstrap:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    process.exit(0);
+  });

@@ -2,7 +2,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import fse from "fs-extra";
-import prompts, { Choice, PromptObject } from "prompts";
+import prompts, { PromptObject } from "prompts";
 import { bold, cyan, green, red, yellow } from "kolorist";
 // Lazy import to avoid early ESM/CJS warnings disrupting prompts
 async function loadExeca() {
@@ -16,7 +16,6 @@ type Network = "testnet" | "mainnet";
 type CliFlags = {
     mode?: Mode;
     network?: Network;
-    pm?: "npm" | "pnpm" | "yarn" | "bun";
     name?: string;
 };
 
@@ -27,18 +26,9 @@ function parseFlags(argv: string[]): CliFlags {
         const next = argv[i + 1];
         if (arg === "--mode" && next) flags.mode = next as Mode;
         if (arg === "--network" && next) flags.network = next as Network;
-        if (arg === "--pm" && next) flags.pm = next as CliFlags["pm"];
         if ((arg === "--name" || arg === "--project-name") && next) flags.name = next;
     }
     return flags;
-}
-
-function detectPackageManager(): "npm" | "pnpm" | "yarn" | "bun" {
-    const userAgent = process.env.npm_config_user_agent || "";
-    if (userAgent.includes("pnpm")) return "pnpm";
-    if (userAgent.includes("yarn")) return "yarn";
-    if (userAgent.includes("bun")) return "bun";
-    return "npm";
 }
 
 async function main() {
@@ -64,22 +54,6 @@ async function main() {
                 name: "name",
                 message: "Project name",
                 initial: "hedera-agent-app",
-            } as PromptObject,
-            {
-                type: flags.pm ? null : (prev: string) => (prev ? "select" : "select"),
-                name: "pm",
-                message: "Package manager",
-                choices: [
-                    { title: "npm", value: "npm" },
-                    { title: "pnpm", value: "pnpm" },
-                    { title: "yarn", value: "yarn" },
-                    { title: "bun", value: "bun" },
-                ] as Choice[],
-                initial: (() => {
-                    const pm = detectPackageManager();
-                    const idx = ["npm", "pnpm", "yarn", "bun"].indexOf(pm);
-                    return idx === -1 ? 0 : idx;
-                })(),
             } as PromptObject,
             {
                 type: flags.mode ? null : "select",
@@ -167,7 +141,6 @@ async function main() {
     );
 
     const projectName = (flags.name || responses.name || "hedera-agent-app").trim();
-    const pm = (flags.pm || (responses.pm as CliFlags["pm"]) || detectPackageManager()) as NonNullable<CliFlags["pm"]>;
     const mode = (flags.mode || responses.mode || "human") as Mode;
     const network = (flags.network || responses.network || "testnet") as Network;
 
@@ -251,26 +224,7 @@ async function main() {
         await fse.writeFile(appPkgPath, JSON.stringify(appPkg, null, 2) + "\n", "utf8");
     }
 
-    // Install deps
-    console.log(cyan("Installing dependencies..."));
-    const installCmd =
-        pm === "npm"
-            ? ["npm", ["install", "--no-fund", "--no-audit"]]
-            : pm === "pnpm"
-                ? ["pnpm", ["install", "--silent"]]
-                : pm === "yarn"
-                    ? ["yarn", ["install", "--silent", "--non-interactive"]]
-                    : ["bun", ["install"]];
-
-    try {
-        const execa = await loadExeca();
-        await execa(installCmd[0] as string, installCmd[1] as string[], {
-            cwd: targetDir,
-            stdio: "inherit",
-        });
-    } catch (err) {
-        console.log(yellow("Dependency installation failed. You can run it manually later."));
-    }
+    // Skipping automatic dependency installation to let the user install manually
 
     // Initialize git (optional)
     try {
@@ -289,7 +243,8 @@ async function main() {
     console.log(
         `${bold("Next steps:")}\n` +
         `  cd ${projectName}\n` +
-        `  ${pm === "yarn" ? "yarn dev" : pm === "pnpm" ? "pnpm dev" : pm === "bun" ? "bun run dev" : "npm run dev"}\n`
+        `  npm i\n` +
+        `  npm run dev\n`
     );
     // Ensure the CLI exits cleanly even if some child process leaves open handles
     process.exit(0);

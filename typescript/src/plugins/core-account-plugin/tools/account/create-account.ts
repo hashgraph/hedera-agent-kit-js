@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -23,11 +24,16 @@ Parameters:
 - accountMemo (string, optional): Optional memo for the account
 - initialBalance (number, optional, default 0): Initial HBAR to fund the account
 - maxAutomaticTokenAssociations (number, optional, default -1): -1 means unlimited
+- ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
+  if (response.scheduleId) {
+    return `Scheduled transaction created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}\n}`;
+  }
   const accountIdStr = response.accountId ? response.accountId.toString() : 'unknown';
   return `Account created successfully.\nTransaction ID: ${response.transactionId}\nNew Account ID: ${accountIdStr}\n}`;
 };
@@ -48,16 +54,15 @@ const createAccount = async (
       mirrornodeService,
     );
 
-    // Build transaction
+    // Build transaction and wrap in SchedulingTransaction if needed
     const tx = HederaBuilder.createAccount(normalisedParams);
 
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to create account';
+    const desc = 'Failed to create account';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[create_account_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -69,6 +74,7 @@ const tool = (context: Context): Tool => ({
   description: createAccountPrompt(context),
   parameters: createAccountParameters(context),
   execute: createAccount,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

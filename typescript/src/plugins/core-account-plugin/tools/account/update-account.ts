@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const updateAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -23,14 +24,22 @@ Parameters:
 - accountId (string, optional) Account ID to update (e.g., 0.0.xxxxx). If not provided, operator account ID will be used
 - maxAutomaticTokenAssociations (number, optional)
 - stakedAccountId (string, optional)
-- accountMemo (string, optional)
+- accountMemo (string, optional) - memo to be set for the upgraded account
 - declineStakingReward (boolean, optional)
+- ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Account successfully updated. Transaction ID: ${response.transactionId}`;
+  if (response.scheduleId) {
+    return `Scheduled account update created successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `Account successfully updated.
+Transaction ID: ${response.transactionId}`;
 };
 
 const updateAccount = async (
@@ -39,21 +48,21 @@ const updateAccount = async (
   params: z.infer<ReturnType<typeof updateAccountParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseUpdateAccount(
+    const normalisedParams = await HederaParameterNormaliser.normaliseUpdateAccount(
       params,
       context,
       client,
     );
 
-    let tx = HederaBuilder.updateAccount(normalisedParams);
+    // Build transaction and wrap in SchedulingTransaction if needed
+    const tx = HederaBuilder.updateAccount(normalisedParams);
 
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to update account';
+    const desc = 'Failed to update account';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[update_account_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -65,6 +74,7 @@ const tool = (context: Context): Tool => ({
   description: updateAccountPrompt(context),
   parameters: updateAccountParameters(context),
   execute: updateAccount,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

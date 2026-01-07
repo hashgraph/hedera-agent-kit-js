@@ -2,11 +2,12 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { mintNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const mintNonFungibleTokenPrompt = (_context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -25,7 +26,15 @@ Example: "Mint 0.0.6465503 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5g
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-  return `Token ${response.tokenId?.toString()} successfully minted with transaction id ${response.transactionId.toString()}`;
+  if (response.scheduleId) {
+    return `Scheduled mint transaction created successfully.
+Transaction ID: ${response.transactionId.toString()}
+Schedule ID: ${response.scheduleId.toString()}`;
+  }
+  const tokenIdStr = response.tokenId ? response.tokenId.toString() : 'unknown';
+  return `Token successfully minted.
+Transaction ID: ${response.transactionId.toString()}
+Token ID: ${tokenIdStr}`;
 };
 
 const mintNonFungibleToken = async (
@@ -34,18 +43,19 @@ const mintNonFungibleToken = async (
   params: z.infer<ReturnType<typeof mintNonFungibleTokenParameters>>,
 ) => {
   try {
-    const normalisedParams = HederaParameterNormaliser.normaliseMintNonFungibleTokenParams(
+    const normalisedParams = await HederaParameterNormaliser.normaliseMintNonFungibleTokenParams(
       params,
       context,
+      client,
     );
     const tx = HederaBuilder.mintNonFungibleToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+
+    return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to mint non-fungible token';
+    const desc = 'Failed to mint non-fungible token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[mint_non_fungible_token_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -57,6 +67,7 @@ const tool = (context: Context): Tool => ({
   description: mintNonFungibleTokenPrompt(context),
   parameters: mintNonFungibleTokenParameters(context),
   execute: mintNonFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

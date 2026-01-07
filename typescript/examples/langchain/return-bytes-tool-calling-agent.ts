@@ -1,13 +1,13 @@
-import { HederaLangchainToolkit, AgentMode, coreTokenPluginToolNames, coreAccountPluginToolNames, coreConsensusPluginToolNames, coreQueriesPluginToolNames, coreEVMPluginToolNames, coreEVMPlugin, coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin } from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
-import { BufferMemory } from 'langchain/memory';
+import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
+import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
-dotenv.config();
 
+dotenv.config();
 
 async function bootstrap(): Promise<void> {
   // Initialise OpenAI LLM
@@ -26,45 +26,16 @@ async function bootstrap(): Promise<void> {
 
   const agentClient = Client.forTestnet();
 
-  // all the available tools
-  const {
-    CREATE_FUNGIBLE_TOKEN_TOOL,
-  } = coreTokenPluginToolNames;
-
-  const {
-    TRANSFER_HBAR_TOOL,
-  } = coreAccountPluginToolNames;
-
-  const {
-    CREATE_TOPIC_TOOL,
-    SUBMIT_TOPIC_MESSAGE_TOOL,
-  } = coreConsensusPluginToolNames;
-
-  const {
-    GET_HBAR_BALANCE_QUERY_TOOL,
-  } = coreQueriesPluginToolNames;
-
-  const {
-    CREATE_ERC20_TOOL,
-  } = coreEVMPluginToolNames;
-
   // Prepare Hedera toolkit (load all tools by default)
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client: agentClient,
     configuration: {
-      tools: [
-        CREATE_TOPIC_TOOL,
-        SUBMIT_TOPIC_MESSAGE_TOOL,
-        CREATE_FUNGIBLE_TOKEN_TOOL,
-        GET_HBAR_BALANCE_QUERY_TOOL,
-        TRANSFER_HBAR_TOOL,
-        CREATE_ERC20_TOOL,
-      ], // use an empty array if you wantto load all tools
+      tools: [], // use an empty array if you wantto load all tools
       context: {
         mode: AgentMode.RETURN_BYTES,
         accountId: operatorAccountId,
       },
-      plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreQueriesPlugin, coreEVMPlugin],
+      plugins: [], // Load all plugins
     },
   });
 
@@ -138,12 +109,14 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal error during CLI bootstrap:', err);
-  process.exit(1);
-}).then(() => {
-  process.exit(0);
-});
+bootstrap()
+  .catch(err => {
+    console.error('Fatal error during CLI bootstrap:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    process.exit(0);
+  });
 
 function extractBytesFromAgentResponse(response: any): any {
   if (

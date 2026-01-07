@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import type { Tool } from '@/shared/tools';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { deleteAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const deleteAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -47,10 +48,10 @@ const deleteAccount = async (
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return 'Failed to delete account';
+    const desc = 'Failed to delete account';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[delete_account_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
 
@@ -62,6 +63,7 @@ const tool = (context: Context): Tool => ({
   description: deleteAccountPrompt(context),
   parameters: deleteAccountParameters(context),
   execute: deleteAccount,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

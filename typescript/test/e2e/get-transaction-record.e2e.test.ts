@@ -1,0 +1,181 @@
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
+import { ReactAgent } from 'langchain';
+import {
+  createLangchainTestSetup,
+  HederaOperationsWrapper,
+  type LangchainTestSetup,
+  getOperatorClientForTests,
+  getCustomClient,
+} from '../utils';
+import { ResponseParserService } from '@/langchain';
+import { Client, TransactionId, PrivateKey } from '@hashgraph/sdk';
+import { wait } from '../utils/general-util';
+import Long from 'long';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
+
+describe('Get Transaction Record E2E Tests', () => {
+  let testSetup: LangchainTestSetup;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
+  let executorClient: Client;
+  let operatorClient: Client;
+  let executorWrapper: HederaOperationsWrapper;
+  let txIdSdkStyle: TransactionId;
+  let txIdMirrorNodeStyle: string;
+
+  // The operator account (from env variables) funds the setup process.
+  // 1. An executor account is created using the operator account as the source of HBARs.
+  // 2. The executor account is used to perform all Hedera operations required for the tests.
+  // 3. LangChain is configured to run with the executor account as its client.
+  // 4. After all tests are complete, the executor account is deleted and its remaining balance
+  //    is transferred back to the operator account.
+  beforeAll(async () => {
+    operatorClient = getOperatorClientForTests();
+    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    const executorAccountKey = PrivateKey.generateED25519();
+    const executorAccountId = await operatorWrapper
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
+      .then(resp => resp.accountId!);
+
+    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+
+    testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
+    executorWrapper = new HederaOperationsWrapper(executorClient);
+
+    // Create a self-transfer to produce a transaction id
+    const operatorAccountId = executorClient.operatorAccountId!.toString();
+    const rawResponse = await executorWrapper.transferHbar({
+      hbarTransfers: [
+        { accountId: operatorAccountId, amount: 0.00000001 },
+        { accountId: operatorAccountId, amount: -0.00000001 },
+      ],
+    });
+
+    txIdSdkStyle = TransactionId.fromString(rawResponse.transactionId!);
+
+    const padNanos = (n: Long | number) => n.toString().padStart(9, '0');
+    txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${padNanos(
+      txIdSdkStyle.validStart!.nanos!,
+    )}`;
+
+    // Wait for the mirror node to index the transaction
+    await wait(MIRROR_NODE_WAITING_TIME);
+  });
+
+  afterAll(async () => {
+    if (testSetup && operatorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
+      testSetup.cleanup();
+      operatorClient.close();
+    }
+  });
+
+  it(
+    'fetches transaction record - SDK transactionId notation',
+    itWithRetry(async () => {
+      const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        `Transaction Details for ${txIdMirrorNodeStyle}`,
+      );
+    }),
+  );
+
+  it(
+    'fetches transaction record - Mirror Node transactionId notation',
+    itWithRetry(async () => {
+      const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        `Transaction Details for ${txIdMirrorNodeStyle}`,
+      );
+    }),
+  );
+
+  it(
+    'handles non-existent transaction ID',
+    itWithRetry(async () => {
+      const invalidTxId = '0.0.1-1756968265-043000618';
+      const input = `Get the transaction record for transaction ${invalidTxId}`;
+
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get transaction record');
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Not Found');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Failed to get transaction record',
+      );
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Not Found');
+    }),
+  );
+
+  it(
+    'handles invalid transaction ID format',
+    itWithRetry(async () => {
+      const invalidTxId = 'invalid-tx-id';
+      const input = `Get the transaction record for transaction ${invalidTxId}`;
+
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
+        'Invalid transactionId format: invalid-tx-id',
+      );
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get transaction record');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Failed to get transaction record',
+      );
+    }),
+  );
+});

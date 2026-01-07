@@ -1,4 +1,12 @@
-import { AccountId, Client, TokenId, TopicId, Transaction, TransactionId } from '@hashgraph/sdk';
+import {
+  AccountId,
+  Client,
+  ScheduleId,
+  TokenId,
+  TopicId,
+  Transaction,
+  TransactionId,
+} from '@hashgraph/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 
 interface TxModeStrategy {
@@ -11,11 +19,12 @@ interface TxModeStrategy {
 }
 
 export interface RawTransactionResponse {
-  status: number;
+  status: string;
   accountId: AccountId | null;
   tokenId: TokenId | null;
   transactionId: string;
   topicId: TopicId | null;
+  scheduleId: ScheduleId | null;
 }
 
 export interface ExecuteStrategyResult {
@@ -23,7 +32,7 @@ export interface ExecuteStrategyResult {
   humanMessage: string;
 }
 
-class ExecuteStrategy implements TxModeStrategy {
+export class ExecuteStrategy implements TxModeStrategy {
   defaultPostProcess(response: RawTransactionResponse): string {
     return JSON.stringify(response, null, 2);
   }
@@ -31,17 +40,18 @@ class ExecuteStrategy implements TxModeStrategy {
   async handle(
     tx: Transaction,
     client: Client,
-    context: Context,
+    _context: Context,
     postProcess: (response: RawTransactionResponse) => string = this.defaultPostProcess,
   ) {
     const submit = await tx.execute(client);
     const receipt = await submit.getReceipt(client);
     const rawTransactionResponse: RawTransactionResponse = {
-      status: receipt.status._code,
+      status: receipt.status.toString(),
       accountId: receipt.accountId,
       tokenId: receipt.tokenId,
       transactionId: tx.transactionId?.toString() ?? '',
       topicId: receipt.topicId,
+      scheduleId: receipt.scheduleId,
     };
     return {
       raw: rawTransactionResponse,
@@ -51,12 +61,10 @@ class ExecuteStrategy implements TxModeStrategy {
 }
 
 class ReturnBytesStrategy implements TxModeStrategy {
-  async handle(tx: Transaction, _client: Client, context: Context) {
+  async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId) throw new Error('…');
     const id = TransactionId.generate(context.accountId);
-    tx.setNodeAccountIds([new AccountId(4), new AccountId(5)])
-      .setTransactionId(id)
-      .freeze();
+    tx.setTransactionId(id).freezeWith(client);
     return { bytes: tx.toBytes() };
   }
 }
