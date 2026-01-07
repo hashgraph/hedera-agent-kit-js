@@ -28,6 +28,7 @@ vi.mock('@/shared/utils/prompt-generator', () => ({
     PromptGenerator: {
         getContextSnippet: vi.fn(() => 'CTX'),
         getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
+        getScheduledTransactionParamsDescription: vi.fn(() => 'Scheduled Params'),
     },
 }));
 
@@ -79,6 +80,41 @@ describe('transfer-non-fungible-token tool', () => {
 
         const res: any = await tool.execute(client, context, params);
         expect(res.raw.status).toBe('SUCCESS');
+    });
+
+    it('returns scheduled transaction info when scheduled', async () => {
+        const { handleTransaction } = await import('@/shared/strategies/tx-mode-strategy');
+        (handleTransaction as any).mockImplementationOnce(
+            async (
+                _tx: any,
+                _client: any,
+                _context: any,
+                post: (arg0: { status: string; transactionId: string; scheduleId: string }) => any,
+            ) => {
+                const raw = {
+                    status: 'SUCCESS',
+                    transactionId: '0.0.1234@1700000000.000000001',
+                    scheduleId: '0.0.5678',
+                };
+                return { raw, humanMessage: post ? post(raw) : JSON.stringify(raw) };
+            },
+        );
+
+        const tool = toolFactory(context);
+        const client = makeClient();
+
+        const params = {
+            tokenId: '0.0.2001',
+            recipients: [{ recipientId: '0.0.3001', serialNumber: 1 }],
+            schedulingParams: { isScheduled: true },
+        };
+
+        const res: any = await tool.execute(client, context, params);
+        expect(res.raw.status).toBe('SUCCESS');
+        expect(res.humanMessage).toContain(
+            'Scheduled non-fungible token transfer created successfully',
+        );
+        expect(res.humanMessage).toContain('Schedule ID: 0.0.5678');
     });
 
     it('returns aligned error when thrown', async () => {
