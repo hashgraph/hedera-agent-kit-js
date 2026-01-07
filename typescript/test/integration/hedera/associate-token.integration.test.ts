@@ -38,7 +38,11 @@ describe('Associate Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+        accountMemo: 'executor account for Associate Token Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -49,6 +53,7 @@ describe('Associate Token Integration Tests', () => {
       .createAccount({
         key: tokenExecutorKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+        accountMemo: 'token executor account for Associate Token Integration Tests',
       })
       .then(resp => resp.accountId!);
 

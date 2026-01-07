@@ -68,6 +68,15 @@ describe('Associate Token E2E Tests', () => {
   });
 
   afterAll(async () => {
+    if (tokenExecutorClient && operatorClient) {
+      await returnHbarsAndDeleteAccount(
+        tokenExecutorWrapper,
+        tokenExecutorAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      tokenExecutorClient.close();
+    }
+
     if (executorClient && operatorClient) {
       await returnHbarsAndDeleteAccount(
         executorWrapper,
