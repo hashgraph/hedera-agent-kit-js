@@ -43,6 +43,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
     - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
     - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
+    - [TRANSFER_NON_FUNGIBLE_TOKEN_TOOL](#transfer_non_fungible_token_tool)
     - [TRANSFER_NFT_WITH_ALLOWANCE_TOOL](#transfer_nft_with_allowance_tool)
 - [Token Query Tools](#token-query-tools)
     - [GET_TOKEN_INFO_QUERY_TOOL](#get_token_info_query_tool)
@@ -746,6 +747,28 @@ Approve NFT allowance for token 0.0.1111 serials 2 and 3 to 0.0.2222
 Authorize NFT allowance on 0.0.3333 for serials 5, 6, 7 to account 0.0.4444
 Approve NFT allowance for all serials of token 0.0.5555 to spender 0.0.6666
 Grant approval for the entire collection token 0.0.1010 to account 0.0.2020
+```
+
+---
+
+### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
+
+Transfers NFTs from the operator's account to specified recipients.
+
+#### Parameters
+
+| Parameter         | Type                                                 | Required | Description                                                         |
+|-------------------|------------------------------------------------------|----------|---------------------------------------------------------------------|
+| `tokenId`         | `string`                                             | ✅        | The NFT token ID to transfer.                                       |
+| `recipients`      | `Array<{recipientId: string, serialNumber: number}>` | ✅        | List of recipients with recipient account ID and NFT serial number. |
+| `transactionMemo` | `string`                                             | ❌        | Memo for the transaction.                                           |
+
+#### Example Prompts
+
+```
+Transfer NFT 0.0.12345 serial 1 to 0.0.222
+Send my NFT 0.0.12345 serials 1 and 2 to 0.0.333
+Transfer NFT token 0.0.5555 serial 3 to account 0.0.6666 with memo "gift"
 ```
 
 ---
