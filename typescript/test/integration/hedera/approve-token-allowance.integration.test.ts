@@ -51,6 +51,7 @@ describe('Approve Token Allowance Integration Tests', () => {
       .createAccount({
         key: executorKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+        accountMemo: 'executor account for Approve Token Allowance Integration Tests',
       })
       .then(resp => resp.accountId!);
 
@@ -61,6 +62,7 @@ describe('Approve Token Allowance Integration Tests', () => {
       .createAccount({
         key: executorClient.operatorPublicKey as Key,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'spender account for Approve Token Allowance Integration Tests',
       })
       .then(resp => resp.accountId!);
 
@@ -83,21 +85,21 @@ describe('Approve Token Allowance Integration Tests', () => {
   });
 
   afterAll(async () => {
+    try {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
+    } catch (e) {
+      console.warn('Failed to clean up accounts:', e);
+    }
     if (executorClient) {
-      try {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          spenderAccountId,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      } catch (e) {
-        console.warn('Failed to clean up accounts:', e);
-      }
       executorClient.close();
     }
     if (operatorClient) operatorClient.close();

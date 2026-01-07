@@ -5,10 +5,11 @@ import {
   getOperatorClientForTests,
   LangchainTestSetup,
 } from '../utils';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { ResponseParserService } from '@/langchain';
 import { ReactAgent } from 'langchain';
 import HederaOperationsWrapper from '../utils/hedera-operations/HederaOperationsWrapper';
-import { Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
@@ -31,6 +32,7 @@ describe('Create Account E2E Tests', () => {
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
+  let createdAccountIds: string[] = [];
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
@@ -38,7 +40,11 @@ describe('Create Account E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+        accountMemo: 'executor account for Create Account E2E Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -51,13 +57,21 @@ describe('Create Account E2E Tests', () => {
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
-      testSetup.cleanup();
-      operatorClient.close();
+      for (const accountId of createdAccountIds) {
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          AccountId.fromString(accountId),
+          operatorClient.operatorAccountId!,
+        );
+      }
     }
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorClient.operatorAccountId!,
+      operatorClient.operatorAccountId!,
+    );
+    testSetup.cleanup();
+    operatorClient.close();
   });
 
   describe('Tool Matching and Parameter Extraction', () => {
@@ -76,6 +90,7 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
+        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect((info.key as PublicKey).toStringRaw()).toBe(publicKey.toStringRaw());
@@ -96,6 +111,7 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
+        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect(info.accountMemo).toBe('E2E test account');
@@ -120,6 +136,7 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
+        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect((info.key as Key).toString()).toBe(publicKey.toString());
@@ -171,6 +188,7 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
+        createdAccountIds.push(newAccountId);
 
         const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
         expect(balance.toNumber()).toBeGreaterThanOrEqual(0.0001 * 1e8);
@@ -192,6 +210,7 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
+        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect(info.accountMemo).toBe(longMemo);

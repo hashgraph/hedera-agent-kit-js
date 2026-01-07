@@ -65,7 +65,10 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     // Create an executor account (token owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(r => r.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -100,7 +103,10 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     // Spender account
     spenderKey = PrivateKey.generateECDSA();
     spenderAccountId = await operatorWrapper
-      .createAccount({ key: spenderKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: spenderKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(r => r.accountId!);
 
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
@@ -109,7 +115,10 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     // Receiver account
     receiverKey = PrivateKey.generateECDSA();
     receiverAccountId = await operatorWrapper
-      .createAccount({ key: receiverKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: receiverKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(r => r.accountId!);
 
     receiverClient = getCustomClient(receiverAccountId, receiverKey);

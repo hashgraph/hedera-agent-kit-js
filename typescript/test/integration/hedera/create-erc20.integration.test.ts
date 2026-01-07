@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
 import { z } from 'zod';
 import createERC20Tool from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { Context, AgentMode } from '@/shared/configuration';
@@ -7,6 +7,7 @@ import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } f
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Create ERC20 Integration Tests', () => {
   let operatorClient: Client;
@@ -14,13 +15,14 @@ describe('Create ERC20 Integration Tests', () => {
   let context: Context;
   let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let executorAccountId: AccountId;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
     operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
     const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
+    executorAccountId = await operatorWrapper
       .createAccount({
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating NFTs
         key: executorAccountKey.publicKey,
@@ -36,10 +38,13 @@ describe('Create ERC20 Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient) {
+    if (executorClient && operatorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorAccountId,
+        operatorClient.operatorAccountId!,
+      );
       executorClient.close();
-    }
-    if (operatorClient) {
       operatorClient.close();
     }
   });
