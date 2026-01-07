@@ -6,7 +6,8 @@ import {
   type LangchainTestSetup,
 } from '../utils';
 import { ResponseParserService } from '@/langchain';
-import { Client, TokenSupplyType } from '@hashgraph/sdk';
+import { Client, TokenSupplyType, AccountId } from '@hashgraph/sdk';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
@@ -154,6 +155,13 @@ describe('Get Account Token Balances E2E Tests', () => {
   );
 
   afterAll(async () => {
+    if (testAccountId && operatorClient) {
+      await returnHbarsAndDeleteAccount(
+        operatorWrapper,
+        AccountId.fromString(testAccountId),
+        operatorClient.operatorAccountId!,
+      );
+    }
     if (testSetup) {
       testSetup.cleanup();
     }

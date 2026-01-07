@@ -13,6 +13,7 @@ import { ResponseParserService } from '@/langchain';
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
@@ -38,7 +39,10 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
     // execution account and client creation
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -52,10 +56,11 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       testSetup.cleanup();
       operatorClient.close();
     }
@@ -71,10 +76,11 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   });
 
   afterEach(async () => {
-    await executorWrapper.deleteAccount({
-      accountId: recipientAccount,
-      transferAccountId: executorClient.operatorAccountId!,
-    });
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      recipientAccount,
+      operatorClient.operatorAccountId!,
+    );
   });
 
   it(

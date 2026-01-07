@@ -10,6 +10,7 @@ import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/accoun
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let operatorClient: Client;
@@ -54,16 +55,18 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   afterAll(async () => {
     if (executorWrapper && operatorClient) {
       // Delete a recipient account and transfer remaining balance back to executor
-      await executorWrapper.deleteAccount({
-        accountId: recipientAccountId,
-        transferAccountId: executorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        recipientAccountId,
+        operatorClient.operatorAccountId!,
+      );
 
       // Delete an executor account and transfer remaining balance back to operator
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
 
       executorClient.close();
       operatorClient.close();

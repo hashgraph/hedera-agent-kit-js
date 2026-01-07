@@ -40,7 +40,7 @@ describe('Transfer ERC721 Integration Tests', () => {
 
     recipientAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
         key: executorClient.operatorPublicKey as PublicKey,
       })
       .then(resp => resp.accountId!.toString());

@@ -14,6 +14,7 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
   let testSetup: LangchainTestSetup;
@@ -33,7 +34,10 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     // execution account and client creation
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey as Key, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorAccountKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     executionWrapper = new HederaOperationsWrapper(executorClient);
@@ -46,10 +50,12 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executionWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executionWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
+
       testSetup.cleanup();
       operatorClient.close();
     }

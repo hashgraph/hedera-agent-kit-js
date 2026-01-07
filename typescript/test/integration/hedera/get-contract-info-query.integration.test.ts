@@ -9,6 +9,7 @@ import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '../../utils/t
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Integration - Hedera Get Contract Info', () => {
   let operatorClient: Client;
@@ -78,10 +79,11 @@ describe('Integration - Hedera Get Contract Info', () => {
 
   afterAll(async () => {
     if (executorClient && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorAccountId,
+        operatorClient.operatorAccountId!,
+      );
       executorClient.close();
       operatorClient.close();
     }
