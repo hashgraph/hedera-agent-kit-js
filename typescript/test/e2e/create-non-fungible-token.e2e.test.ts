@@ -15,6 +15,8 @@ import {
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Create Non-Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -31,7 +33,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     // 1. Create executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client
@@ -175,6 +177,38 @@ describe('Create Non-Fungible Token E2E Tests', () => {
         'Scheduled transaction created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
+    }),
+  );
+
+  it(
+    'creates an NFT with infinite supply',
+    itWithRetry(async () => {
+      const input = 'Create a non-fungible token InfiniteCollection with symbol INF and infinite supply';
+
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      const rawTokenId = parsedResponse[0].parsedData.raw.tokenId;
+      const tokenId = new TokenId(rawTokenId.shard.low, rawTokenId.realm.low, rawTokenId.num.low);
+
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
+      expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
+
+      await wait(MIRROR_NODE_WAITING_TIME);
+
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
+      expect(tokenInfo.name).toBe('InfiniteCollection');
+      expect(tokenInfo.symbol).toBe('INF');
+      expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
+      expect(tokenInfo.supplyType!.toString()).toBe('INFINITE');
+      expect(tokenInfo.maxSupply?.toInt()).toBe(0); // infinite supply has maxSupply of 0
     }),
   );
 });

@@ -25,6 +25,30 @@ import {
 } from '@/plugins';
 
 /**
+ * Balance tiers for test account funding.
+ * These are defined in USD and should be converted to HBAR at runtime
+ * using UsdToHbarService.usdToHbar().
+ *
+ * Tiers:
+ * - MINIMAL:  $0.50 - Basic operations (single transfer, simple query)
+ * - STANDARD: $5.00 - Most common test scenarios (token operations, multiple transfers)
+ * - ELEVATED: $10.00 - Complex operations (NFT minting, multiple token operations)
+ * - MAXIMUM:  $20.00 - Heavy operations (contract deployments, extensive token operations)
+ */
+export const BALANCE_TIERS = {
+  /** $0.50 - Basic operations (single transfer, simple query) */
+  MINIMAL: 0.5,
+  /** $5.00 - Most common test scenarios (token operations, multiple transfers) */
+  STANDARD: 5,
+  /** $10.00 - Complex operations (NFT minting, multiple token operations) */
+  ELEVATED: 10,
+  /** $20.00 - Heavy operations (contract deployments, extensive token operations) */
+  MAXIMUM: 20,
+} as const;
+
+export type BalanceTier = typeof BALANCE_TIERS[keyof typeof BALANCE_TIERS];
+
+/**
  * Common test toolkit options type used by langchain test setup.
  */
 export interface LangchainTestOptions {
@@ -57,6 +81,7 @@ const {
   ASSOCIATE_TOKEN_TOOL,
   APPROVE_NFT_ALLOWANCE_TOOL,
   TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+  TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
   TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 } = coreTokenPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL, DELETE_TOPIC_TOOL, UPDATE_TOPIC_TOOL } =
@@ -137,6 +162,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
     TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
     TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
     TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+    TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
   ],
   plugins: [
     coreAccountPlugin,

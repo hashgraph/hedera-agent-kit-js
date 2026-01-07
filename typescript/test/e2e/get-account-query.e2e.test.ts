@@ -37,7 +37,7 @@ describe('Get Account Query E2E Tests', () => {
       const accountId = await hederaOps
         .createAccount({
           key: privateKey.publicKey as Key,
-          initialBalance: 10,
+          initialBalance: 0.1,
         })
         .then(resp => resp.accountId!);
 

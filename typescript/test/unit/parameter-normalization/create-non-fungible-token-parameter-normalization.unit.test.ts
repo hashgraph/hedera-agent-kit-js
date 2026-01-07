@@ -222,4 +222,130 @@ describe('HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams', () =
     expect(result.schedulingParams?.waitForExpiry).toBe(true);
     expect(result.supplyKey?.toStringDer()).toBe(adminKeyPair.publicKey.toStringDer());
   });
+
+  describe('Supply Type Handling', () => {
+    it('defaults to finite supply with maxSupply 100 when neither supplyType nor maxSupply provided', async () => {
+      (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.1234');
+      mirrorNode.getAccount.mockResolvedValueOnce({
+        accountPublicKey: PublicKey.unusableKey().toStringDer(),
+      });
+
+      const params = { tokenName: 'NFT', tokenSymbol: 'NFTS' } as any;
+
+      const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+        params,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.supplyType.toString()).toBe('FINITE');
+      expect(result.maxSupply).toBe(100);
+    });
+
+    it('sets finite supply type when maxSupply is provided', async () => {
+      (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.1234');
+      mirrorNode.getAccount.mockResolvedValueOnce({
+        accountPublicKey: PublicKey.unusableKey().toStringDer(),
+      });
+
+      const params = { tokenName: 'NFT', tokenSymbol: 'NFTS', maxSupply: 500 } as any;
+
+      const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+        params,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.supplyType.toString()).toBe('FINITE');
+      expect(result.maxSupply).toBe(500);
+    });
+
+    it('sets infinite supply type when explicitly requested', async () => {
+      (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.1234');
+      mirrorNode.getAccount.mockResolvedValueOnce({
+        accountPublicKey: PublicKey.unusableKey().toStringDer(),
+      });
+
+      const params = { tokenName: 'NFT', tokenSymbol: 'NFTS', supplyType: 'infinite' } as any;
+
+      const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+        params,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.supplyType.toString()).toBe('INFINITE');
+      expect(result.maxSupply).toBeUndefined();
+    });
+
+    it('prioritizes maxSupply over supplyType when both provided (maxSupply makes it finite)', async () => {
+      (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.1234');
+      mirrorNode.getAccount.mockResolvedValueOnce({
+        accountPublicKey: PublicKey.unusableKey().toStringDer(),
+      });
+
+      const params = {
+        tokenName: 'NFT',
+        tokenSymbol: 'NFTS',
+        maxSupply: 250,
+        supplyType: 'infinite',
+      } as any;
+
+      const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+        params,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.supplyType.toString()).toBe('FINITE');
+      expect(result.maxSupply).toBe(250);
+    });
+
+    it('sets finite supply type when supplyType is explicitly "finite"', async () => {
+      (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.1234');
+      mirrorNode.getAccount.mockResolvedValueOnce({
+        accountPublicKey: PublicKey.unusableKey().toStringDer(),
+      });
+
+      const params = { tokenName: 'NFT', tokenSymbol: 'NFTS', supplyType: 'finite' } as any;
+
+      const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+        params,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.supplyType.toString()).toBe('FINITE');
+      expect(result.maxSupply).toBe(100);
+    });
+
+    it('uses custom maxSupply with finite supplyType', async () => {
+      (AccountResolver.getDefaultAccount as any).mockReturnValue('0.0.1234');
+      mirrorNode.getAccount.mockResolvedValueOnce({
+        accountPublicKey: PublicKey.unusableKey().toStringDer(),
+      });
+
+      const params = {
+        tokenName: 'NFT',
+        tokenSymbol: 'NFTS',
+        supplyType: 'finite',
+        maxSupply: 750,
+      } as any;
+
+      const result = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+        params,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.supplyType.toString()).toBe('FINITE');
+      expect(result.maxSupply).toBe(750);
+    });
+  });
 });

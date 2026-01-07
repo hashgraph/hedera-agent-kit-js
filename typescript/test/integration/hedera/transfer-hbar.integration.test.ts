@@ -10,6 +10,9 @@ import {
 } from '../../utils';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Transfer HBAR Integration Tests', () => {
   let operatorClient: Client;
@@ -27,18 +30,19 @@ describe('Transfer HBAR Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5, // To cover transfers and account creations
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    recipientAccountId = await executorWrapper
+    // Operator creates recipient accounts to preserve executor balance
+    recipientAccountId = await operatorWrapper
       .createAccount({ key: executorClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 
-    recipientAccountId2 = await executorWrapper
+    recipientAccountId2 = await operatorWrapper
       .createAccount({ key: executorClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 
@@ -52,18 +56,21 @@ describe('Transfer HBAR Integration Tests', () => {
     if (executorClient) {
       // Transfer remaining balance back to operator and delete an executor account
       try {
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId2,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          recipientAccountId,
+          operatorClient.operatorAccountId!,
+        );
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          recipientAccountId2,
+          operatorClient.operatorAccountId!,
+        );
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          executorClient.operatorAccountId!,
+          operatorClient.operatorAccountId!,
+        );
       } catch (error) {
         console.warn('Failed to clean up accounts:', error);
       }

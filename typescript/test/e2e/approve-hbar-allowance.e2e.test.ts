@@ -17,6 +17,9 @@ import {
   LangchainTestSetup,
   verifyHbarBalanceChange,
 } from '../utils';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 /**
  * E2E tests for Approve HBAR Allowance using the LangChain agent, similar to transfer-hbar E2E tests.
@@ -50,7 +53,10 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     // execution account and client creation (owner)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -63,10 +69,11 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       testSetup.cleanup();
       operatorClient.close();
     }
@@ -75,10 +82,10 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   beforeEach(async () => {
     // Create a spender account with its own key so it can sign the allowance spent
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await executorWrapper
+    spenderAccount = await operatorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
 
@@ -88,10 +95,11 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
   afterEach(async () => {
     // Clean up spender account, transferring remaining balance back to the executor (owner)
-    await spenderWrapper.deleteAccount({
-      accountId: spenderAccount,
-      transferAccountId: executorClient.operatorAccountId!,
-    });
+    await returnHbarsAndDeleteAccount(
+      spenderWrapper,
+      spenderAccount,
+      operatorClient.operatorAccountId!,
+    );
   });
 
   const spendViaAllowance = async (ownerId: string, spenderId: string, amountHbar: number) => {

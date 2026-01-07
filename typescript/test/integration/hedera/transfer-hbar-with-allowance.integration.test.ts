@@ -2,12 +2,15 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AccountId, Client, Hbar, HbarAllowance, HbarUnit, Key, PrivateKey } from '@hashgraph/sdk';
 import transferHbarWithAllowanceTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 import { Context, AgentMode } from '@/shared/configuration';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 import {
   getCustomClient,
   getOperatorClientForTests,
   HederaOperationsWrapper,
   verifyHbarBalanceChange,
 } from '../../utils';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Transfer HBAR With Allowance Integration Tests', () => {
   let operatorClient: Client;
@@ -16,36 +19,38 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
   let context: Context;
   let recipientAccountId: AccountId;
   let ownerWrapper: HederaOperationsWrapper;
+  let spenderWrapper: HederaOperationsWrapper;
   let ownerAccountId: AccountId;
   let spenderAccountId: AccountId;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
-    ownerWrapper = new HederaOperationsWrapper(operatorClient);
+    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // Create an owner account
+    // Operator creates an owner account
     const ownerKeyPair = PrivateKey.generateED25519();
-    ownerAccountId = await ownerWrapper
+    ownerAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 30,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: ownerKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKeyPair);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
 
-    // Create a spender account
+    // Operator creates a spender account
     const spenderKeyPair = PrivateKey.generateED25519();
-    spenderAccountId = await ownerWrapper
+    spenderAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: spenderKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKeyPair);
+    spenderWrapper = new HederaOperationsWrapper(spenderClient);
 
-    // Create recipient
-    recipientAccountId = await ownerWrapper
+    // Operator creates recipient
+    recipientAccountId = await operatorWrapper
       .createAccount({ key: ownerClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 
@@ -57,24 +62,21 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
 
   afterAll(async () => {
     try {
-      if (recipientAccountId) {
-        await ownerWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      }
-      if (spenderAccountId) {
-        await ownerWrapper.deleteAccount({
-          accountId: spenderAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      }
-      if (ownerAccountId) {
-        await ownerWrapper.deleteAccount({
-          accountId: ownerAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      }
+      await returnHbarsAndDeleteAccount(
+        spenderWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        recipientAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        ownerAccountId,
+        operatorClient.operatorAccountId!,
+      );
     } catch (err) {
       console.warn('Cleanup failed:', err);
     }

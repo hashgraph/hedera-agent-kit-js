@@ -15,6 +15,8 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { z } from 'zod';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Transfer ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -36,7 +38,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     const executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: 20,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!);
@@ -45,7 +47,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     recipientAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(0.6),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!.toString());

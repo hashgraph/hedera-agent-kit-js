@@ -14,6 +14,8 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 import { ReactAgent } from 'langchain';
 import { ResponseParserService } from '@/langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -42,7 +44,11 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     // Executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Airdrop Fungible Token E2E Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -68,13 +74,13 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
+    if (testSetup && operatorClient) {
       await returnHbarsAndDeleteAccount(
         executorWrapper,
-        executorAccountId,
+        executorClient.operatorAccountId!,
         operatorClient.operatorAccountId!,
       );
-      executorClient.close();
+      testSetup.cleanup();
       operatorClient.close();
     }
   });
@@ -87,6 +93,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         key: recipientKey.publicKey,
         initialBalance: 0,
         maxAutomaticTokenAssociations,
+        accountMemo: 'recipient account for Airdrop Fungible Token E2E Tests',
       })
       .then(resp => resp.accountId!);
   };

@@ -21,6 +21,8 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { ReactAgent } from 'langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Transfer NFT With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -30,6 +32,7 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
   let ownerClient: Client;
   let spenderClient: Client;
   let ownerWrapper: HederaOperationsWrapper;
+  let operatorWrapper: HederaOperationsWrapper;
   let spenderWrapper: HederaOperationsWrapper;
   let ownerAccountId: AccountId;
   let spenderAccountId: AccountId;
@@ -37,20 +40,20 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
-    ownerWrapper = new HederaOperationsWrapper(operatorClient);
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
     // Create a treasury (owner) account
     const ownerKey = PrivateKey.generateED25519();
-    ownerAccountId = await ownerWrapper
-      .createAccount({ initialBalance: 100, key: ownerKey.publicKey })
+    ownerAccountId = await operatorWrapper
+      .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), key: ownerKey.publicKey })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
 
     // Create a spender account
     const spenderKey = PrivateKey.generateED25519();
-    spenderAccountId = await ownerWrapper
-      .createAccount({ initialBalance: 50, key: spenderKey.publicKey })
+    spenderAccountId = await operatorWrapper
+      .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), key: spenderKey.publicKey })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);

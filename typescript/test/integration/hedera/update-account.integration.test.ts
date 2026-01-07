@@ -5,6 +5,9 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Update Account Integration Tests', () => {
   let operatorClient: Client;
@@ -29,7 +32,7 @@ describe('Update Account Integration Tests', () => {
     executorAccountId = await operatorWrapper
       .createAccount({
         key: executorKeyPair.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
 
@@ -43,10 +46,11 @@ describe('Update Account Integration Tests', () => {
 
   afterEach(async () => {
     const customHederaOperationsWrapper = new HederaOperationsWrapper(executorClient);
-    await customHederaOperationsWrapper.deleteAccount({
-      accountId: executorClient.operatorAccountId!,
-      transferAccountId: operatorClient.operatorAccountId!,
-    });
+    await returnHbarsAndDeleteAccount(
+      customHederaOperationsWrapper,
+      executorClient.operatorAccountId!,
+      operatorClient.operatorAccountId!,
+    );
     executorClient.close();
   });
 

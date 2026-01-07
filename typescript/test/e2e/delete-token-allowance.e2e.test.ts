@@ -21,6 +21,8 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { ReactAgent } from 'langchain';
 import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Delete Token Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
@@ -55,7 +57,10 @@ describe('Delete Token Allowance E2E Tests', () => {
     // Create executor (owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 100 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -98,7 +103,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     spenderAccountId = await executorWrapper
       .createAccount({
         key: spenderKey.publicKey,
-        initialBalance: 10,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
       })
       .then(resp => resp.accountId!);
 
@@ -108,10 +113,11 @@ describe('Delete Token Allowance E2E Tests', () => {
 
   afterEach(async () => {
     if (spenderAccountId) {
-      await spenderWrapper.deleteAccount({
-        accountId: spenderAccountId,
-        transferAccountId: executorAccountId,
-      });
+      await returnHbarsAndDeleteAccount(
+        spenderWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
     }
   });
 
