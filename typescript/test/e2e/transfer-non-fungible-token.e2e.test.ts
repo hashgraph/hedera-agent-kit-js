@@ -75,13 +75,14 @@ describe('Transfer NFT E2E Tests', () => {
     });
     nftTokenId = tokenCreate.tokenId!.toString();
 
-    // Mint NFTs via wrapper (mint 3 for the tests)
+    // Mint NFTs via wrapper (mint 4 for the tests)
     await ownerWrapper.mintNft({
       tokenId: nftTokenId,
       metadata: [
         new TextEncoder().encode('ipfs://meta-1.json'),
         new TextEncoder().encode('ipfs://meta-2.json'),
         new TextEncoder().encode('ipfs://meta-3.json'),
+        new TextEncoder().encode('ipfs://meta-4.json'),
       ],
     });
 
@@ -170,5 +171,26 @@ describe('Transfer NFT E2E Tests', () => {
     expect(
       recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 3),
     ).toBeTruthy();
+  });
+
+  it('should schedule an NFT transfer via natural language', async () => {
+    const input = `Schedule a transfer of NFT ${nftTokenId} serial 4 to ${recipientAccountId.toString()}`;
+
+    const transferResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
+
+    const parsedResponse = responseParsingService.parseNewToolMessages(transferResult);
+
+    expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+    expect(parsedResponse[0].parsedData.humanMessage).toContain(
+      'Scheduled non-fungible token transfer created successfully',
+    );
+    expect(parsedResponse[0].parsedData.humanMessage).toContain('Schedule ID:');
   });
 });

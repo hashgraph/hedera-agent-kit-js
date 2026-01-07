@@ -450,11 +450,11 @@ export default class HederaParameterNormaliser {
     };
   }
 
-  static normaliseTransferNonFungibleToken(
+  static async normaliseTransferNonFungibleToken(
     params: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>>,
     context: Context,
     client: Client,
-  ): z.infer<ReturnType<typeof transferNonFungibleTokenParametersNormalised>> {
+  ): Promise<z.infer<ReturnType<typeof transferNonFungibleTokenParametersNormalised>>> {
     // Validate input using schema
     const parsedParams: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>> =
       this.parseParamsWithSchema(params, transferNonFungibleTokenParameters, context);
@@ -474,10 +474,17 @@ export default class HederaParameterNormaliser {
       receiver: AccountId.fromString(recipient.recipientId),
     }));
 
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+        .schedulingParams
+      : { isScheduled: false };
+
     return {
       senderAccountId: AccountId.fromString(senderAccountId),
       transactionMemo: parsedParams.transactionMemo,
       transfers,
+      schedulingParams,
     };
   }
 

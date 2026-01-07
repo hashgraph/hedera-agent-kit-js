@@ -23,12 +23,18 @@ Parameters:
   - recipientId (string): Account to transfer to
   - serialNumber (number): NFT serial number to transfer
 - transactionMemo (string, optional): Optional memo for the transaction
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
+    if (response.scheduleId) {
+        return `Scheduled non-fungible token transfer created successfully.
+Transaction ID: ${response.transactionId}
+Schedule ID: ${response.scheduleId.toString()}`;
+    }
     return `Non-fungible tokens successfully transferred. Transaction ID: ${response.transactionId}`;
 };
 
@@ -38,7 +44,7 @@ const transferNonFungibleToken = async (
     params: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>>,
 ) => {
     try {
-        const normalisedParams = HederaParameterNormaliser.normaliseTransferNonFungibleToken(
+        const normalisedParams = await HederaParameterNormaliser.normaliseTransferNonFungibleToken(
             params,
             context,
             client,

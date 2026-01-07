@@ -419,8 +419,8 @@ export const transferNonFungibleTokenWithAllowanceParametersNormalised = (_conte
 
 // Transfer NFT (normal transfer - sender is the operator)
 export const transferNonFungibleTokenParameters = (_context: Context) =>
-  z
-    .object({
+  optionalScheduledTransactionParams(_context)
+    .extend({
       tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
       recipients: z
         .array(
@@ -451,7 +451,7 @@ export const transferNonFungibleTokenParameters = (_context: Context) =>
     });
 
 export const transferNonFungibleTokenParametersNormalised = (_context: Context) =>
-  z.object({
+  optionalScheduledTransactionParamsNormalised(_context).extend({
     senderAccountId: z.instanceof(AccountId),
     transactionMemo: z.string().optional(),
     transfers: z.array(

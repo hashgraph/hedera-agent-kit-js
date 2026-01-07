@@ -169,4 +169,24 @@ describe('Transfer NFT Integration Tests', () => {
         expect(result.raw.status).not.toBe('SUCCESS');
         expect(result.humanMessage).toContain('Failed to transfer non-fungible token');
     });
+
+    it('should schedule an NFT transfer', async () => {
+        const params = {
+            tokenId: nftTokenId,
+            recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 3 }],
+            transactionMemo: 'Scheduled NFT transfer test',
+            schedulingParams: {
+                isScheduled: true,
+            },
+        };
+
+        const tool = transferNonFungibleToken(context);
+        const result = await tool.execute(ownerClient, context, params);
+
+        expect(result.raw.status).toBe('SUCCESS');
+        expect(result.humanMessage).toContain(
+            'Scheduled non-fungible token transfer created successfully',
+        );
+        expect(result.humanMessage).toContain('Schedule ID:');
+    });
 });
