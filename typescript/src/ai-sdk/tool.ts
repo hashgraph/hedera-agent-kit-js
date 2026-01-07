@@ -9,8 +9,9 @@ export default function HederaAgentKitTool(
   schema: z.ZodObject<any, any>,
 ) {
   return tool({
+    type: undefined,
     description: description,
-    parameters: schema,
+    inputSchema: schema,
     execute: (arg: z.output<typeof schema>) => {
       return hederaAPI.run(method, arg);
     },
