@@ -11,6 +11,8 @@ import {
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParameters,
   createNonFungibleTokenParametersNormalised,
+  deleteNftAllowanceParameters,
+  deleteNftAllowanceParametersNormalised,
   dissociateTokenParameters,
   dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
@@ -419,6 +421,36 @@ export default class HederaParameterNormaliser {
       ],
       transactionMemo: parsedParams.transactionMemo,
     } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
+  }
+
+  static normaliseDeleteNftAllowance(
+    params: z.infer<ReturnType<typeof deleteNftAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof deleteNftAllowanceParametersNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> =
+      this.parseParamsWithSchema(params, deleteNftAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    if (!parsedParams.serialNumbers || parsedParams.serialNumbers.length === 0) {
+      throw new Error('serial_numbers must be provided');
+    }
+
+    // Convert serial numbers to NftId array
+    const nftWipes = parsedParams.serialNumbers.map((serial) => new NftId(tokenId, serial));
+
+    return {
+      nftWipes,
+      ownerAccountId: AccountId.fromString(ownerAccountId),
+      transactionMemo: parsedParams.transactionMemo,
+    };
   }
 
   static normaliseTransferNonFungibleTokenWithAllowance(

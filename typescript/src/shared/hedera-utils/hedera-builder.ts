@@ -1,5 +1,6 @@
 import {
   AccountAllowanceApproveTransaction,
+  AccountAllowanceDeleteTransaction,
   AccountCreateTransaction,
   AccountDeleteTransaction,
   AccountId,
@@ -31,6 +32,7 @@ import {
   associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
+  deleteNftAllowanceParametersNormalised,
   deleteTokenParametersNormalised,
   dissociateTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
@@ -282,6 +284,22 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>,
   ) {
     return this.buildAccountAllowanceApproveTx(params);
+  }
+
+  static deleteNftAllowance(
+    params: z.infer<ReturnType<typeof deleteNftAllowanceParametersNormalised>>,
+  ) {
+    const tx = new AccountAllowanceDeleteTransaction();
+
+    for (const nftId of params.nftWipes) {
+      tx.deleteAllTokenNftAllowances(nftId, params.ownerAccountId);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static approveTokenAllowance(

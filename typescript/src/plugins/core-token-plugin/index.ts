@@ -21,6 +21,9 @@ import mintNonFungibleTokenTool, {
 import approveNftAllowanceTool, {
   APPROVE_NFT_ALLOWANCE_TOOL,
 } from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
+import deleteNftAllowanceTool, {
+  DELETE_NFT_ALLOWANCE_TOOL,
+} from '@/plugins/core-token-plugin/tools/non-fungible-token/delete-non-fungible-token-allowance';
 import updateTokenTool, { UPDATE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/update-token';
 import dissociateTokenTool, {
   DISSOCIATE_TOKEN_TOOL,
@@ -47,6 +50,7 @@ export const coreTokenPlugin: Plugin = {
       airdropFungibleToken(context),
       mintNonFungibleTokenTool(context),
       approveNftAllowanceTool(context),
+      deleteNftAllowanceTool(context),
       updateTokenTool(context),
       dissociateTokenTool(context),
       associateTokenTool(context),
@@ -65,6 +69,7 @@ export const coreTokenPluginToolNames = {
   CREATE_NON_FUNGIBLE_TOKEN_TOOL,
   MINT_NON_FUNGIBLE_TOKEN_TOOL,
   APPROVE_NFT_ALLOWANCE_TOOL,
+  DELETE_NFT_ALLOWANCE_TOOL,
   DISSOCIATE_TOKEN_TOOL,
   ASSOCIATE_TOKEN_TOOL,
   UPDATE_TOKEN_TOOL,
