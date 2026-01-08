@@ -43,14 +43,14 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@elizaos/core": "1.7.0",
-    "@hashgraph/sdk": "2.68.0",
-    "@langchain/core": "1.1.8",
-    "@langchain/openai": "1.1.1",
+    "@hashgraph/sdk": "2.79.0",
+    "@langchain/core": "1.1.11",
+    "@langchain/openai": "1.2.1",
     "@modelcontextprotocol/sdk": "1.25.2",
     "ai": "6.0.5",
     "bignumber.js": "9.3.1",
     "ethers": "6.15.0",
-    "langchain": "1.2.3",
+    "langchain": "1.2.6",
     "long": "5.3.2",
     "zod": "3.25.76",
     "zod-to-json-schema": "3.24.6"
