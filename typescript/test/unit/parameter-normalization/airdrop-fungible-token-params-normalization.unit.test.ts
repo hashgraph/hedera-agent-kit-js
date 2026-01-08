@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import Long from 'long';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { toBaseUnit } from '@/shared/hedera-utils/decimals-utils';
 
@@ -28,12 +27,8 @@ describe('normaliseAirdropFungibleTokenParams Unit Tests', () => {
     );
 
     expect(result.tokenTransfers).toHaveLength(3); // 2 recipients + 1 sender
-    expect(result.tokenTransfers[0].amount).toStrictEqual(
-      Long.fromString(toBaseUnit(5, 2).toString()),
-    );
-    expect(result.tokenTransfers[1].amount).toStrictEqual(
-      Long.fromString(toBaseUnit(10, 2).toString()),
-    );
+    expect(result.tokenTransfers[0].amount.toString()).toStrictEqual(toBaseUnit(5, 2).toString());
+    expect(result.tokenTransfers[1].amount.toString()).toStrictEqual(toBaseUnit(10, 2).toString());
     expect(result.tokenTransfers[2].amount.toString()).toBe('-1500'); // total negated
   });
 

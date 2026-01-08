@@ -41,14 +41,18 @@ export type Tool = {
   description: string;
   parameters: z.ZodObject<any, any>;
   execute: (client: Client, context: Context, params: any) => Promise<any>;
+  // transactionToolOutputParser and untypedQueryOutputParser can be used. If required, define a custom parser
+  outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
 };
 ```
+
+See [typescript/src/shared/tools.ts](../typescript/src/shared/tools.ts) for the full definition.
 
 ### Step-by-Step Guide
 
 **Step 1: Create Plugin Directory Structure**
 
-```typescript
+```
   my-custom-plugin/
   ├── index.ts                    # Plugin definition and exports
   ├── tools/
@@ -144,11 +148,12 @@ Create your plugin index file (index.ts):
   } as const;
 
   export default { myCustomPlugin, myCustomPluginToolNames };
+```
+**Step 4: Register Your Plugin**
 
-  Step 4: Register Your Plugin
+Add your plugin to the main plugins index (src/plugins/index.ts):
 
-  Add your plugin to the main plugins index (src/plugins/index.ts):
-
+``` typescript
   import { myCustomPlugin, myCustomPluginToolNames } from './my-custom-plugin';
 
   export {
@@ -174,11 +179,32 @@ Create your plugin index file (index.ts):
 
 **Transaction Handling**
 
-- Use handleTransaction() to facilitate human-in-the-loop and autonomous execution flows
-- Respect the AgentMode (AUTONOMOUS vs RETURN_BYTES)
+- Use `handleTransaction()` to facilitate human-in-the-loop and autonomous execution flows
+- Respect the AgentMode (`AUTONOMOUS` vs `RETURN_BYTES`)
 - Implement proper transaction building patterns
 
+### Tool Output Parsing
+
+The Hedera Agent Kit tools return a structured JSON output that needs to be parsed to be useful for the agent and the user.
+
+**LangChain v0.3 (Classic)**
+In the classic approach, the agent handles the tool output automatically, but you may need to parse it if you are handling tool calls manually.
+
+**LangChain v1 (New)**
+In LangChain v1, we use the `ResponseParserService` to handle tool outputs. This service normalizes the output from both transaction and query tools into a consistent format:
+
+```typescript
+{
+  raw: any;          // The raw data returned by the tool (e.g., transaction receipt, query result)
+  humanMessage: string; // A human-readable message describing the result
+}
+```
+
+This allows you to easily display a user-friendly message while still having access to the raw data for further processing.
+
 ### Using Your Custom Plugin
+
+#### LangChain v0.3 (Classic)
 
 ```typescript
 import { HederaLangchainToolkit } from "hedera-agent-kit";
@@ -199,15 +225,51 @@ const toolkit = new HederaLangchainToolkit({
 });
 ```
 
+#### LangChain v1 (New)
+
+```typescript
+import { HederaLangchainToolkit, ResponseParserService } from "hedera-agent-kit";
+import {
+  myCustomPlugin,
+  myCustomPluginToolNames,
+} from "./plugins/my-custom-plugin";
+
+// Initialize toolkit
+const toolkit = new HederaLangchainToolkit({
+  client,
+  configuration: {
+    tools: [myCustomPluginToolNames.MY_TOOL],
+    plugins: [myCustomPlugin],
+    context: {
+      mode: AgentMode.AUTONOMOUS,
+    },
+  },
+});
+
+// Initialize response parser
+const responseParsingService = new ResponseParserService(toolkit.getTools());
+
+// ... inside your agent loop ...
+const response = await agent.invoke({ messages: [/* ... */] });
+
+// Parse tool outputs
+const parsedToolData = responseParsingService.parseNewToolMessages(response);
+const toolCall = parsedToolData[0]; // assuming only one tool was called
+
+if (toolCall) {
+  console.log('Human Message:', toolCall.parsedData.humanMessage);
+  console.log('Raw Data:', toolCall.parsedData.raw);
+}
+```
+
 ### Examples and References
 
 - See existing core plugins in typescript/src/plugins/core-\*-plugin/
-- Follow the patterns established in tools like [transfer-hbar.ts](typescript/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
-- See [typescript/examples/langchain/tool-calling-agent.ts](typescript/examples/langchain/tool-calling-agent.ts) for usage examples
-
+- Follow the patterns established in tools like [transfer-hbar.ts](../typescript/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
+- See [typescript/examples/langchain-v1/tool-calling-agent.ts](../typescript/examples/langchain/tool-calling-agent.ts) for usage examples
 ## Publish and Register Your Plugin
 
-To create a plugin to be use with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish an npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
+To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
 
 Once you have a repository, published npm package, and a README with a description of the functionality included in that plugin in your plugin's repo, as well as the required and optional parameters, you can add it to the Hedera Agent Kit by forking and opening a Pull Request to:
 
@@ -219,7 +281,7 @@ Once you have a repository, published npm package, and a README with a descripti
 
 Feel free to also [reach out to the Hedera Agent Kit maintainers on Discord](https://hedera.com/discord) or another channel so we can test out your plugin, include it in our docs, and let our community know thorough marketing and community channels.
 
-Please also reach out in the Hedera Discord in the Support > developer-help-desk channelor create an Issue in this repository for help building, publishing, and promoting your plugin
+Please also reach out in the Hedera Discord in the Support > developer-help-desk channel create an Issue in this repository for help building, publishing, and promoting your plugin
 
 ## Plugin README Template
 
@@ -245,19 +307,19 @@ import { myPlugin } from "<plugin-name>";
 
 '''javascript
 const hederaAgentToolkit = new HederaLangchainToolkit({
-  client,
-  configuration: {
-    context: {
-      mode: AgentMode.AUTONOMOUS,
+    client,
+    configuration: {
+        context: {
+            mode: AgentMode.AUTONOMOUS,
+        },
+        plugins: [
+            coreTokenPlugin,
+            coreAccountPlugin,
+            coreConsensusPlugin,
+            coreQueriesPlugin,
+            myPlugin,
+        ],
     },
-    plugins: [
-      coreTokenPlugin,
-      coreAccountPlugin,
-      coreConsensusPlugin,
-      coreQueriesPlugin,
-      myPlugin,
-    ],
-  },
 });
 '''
 

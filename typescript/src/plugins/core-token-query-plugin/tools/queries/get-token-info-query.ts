@@ -6,6 +6,7 @@ import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getTokenInfoQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -100,6 +101,7 @@ const tool = (context: Context): Tool => ({
   description: getTokenInfoQueryPrompt(context),
   parameters: tokenInfoQueryParameters(context),
   execute: getTokenInfoQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

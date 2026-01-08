@@ -8,6 +8,7 @@ import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -25,9 +26,9 @@ This tool creates a fungible token on Hedera.
 Parameters:
 - tokenName (str, required): The name of the token
 - tokenSymbol (str, optional): The symbol of the token
-- initialSupply (int, optional): The initial supply of the token, defaults to 0
+- initialSupply (int, optional): The initial supply of the token, defaults to 0. Given in display units, the tool will handle parsing
 - supplyType (str, optional): The supply type of the token. Can be "finite" or "infinite". Defaults to "finite"
-- maxSupply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified
+- maxSupply (int, optional): The maximum supply of the token. Only applicable if supplyType is "finite". Defaults to 1,000,000 if not specified. Given in display units, the tool will handle parsing
 - decimals (int, optional): The number of decimals the token supports. Defaults to 0
 - ${treasuryAccountDesc}
 - isSupplyKey (boolean, optional): If user wants to set supply key set to true, otherwise false
@@ -80,6 +81,7 @@ const tool = (context: Context): Tool => ({
   description: createFungibleTokenPrompt(context),
   parameters: createFungibleTokenParameters(context),
   execute: createFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

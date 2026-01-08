@@ -16,8 +16,17 @@ interface Plugin {
   version?: string;       // Optional version string
   description?: string;   // Optional description
   tools: (context: Context) => Tool[];  // Factory function that returns tools
+  outputParser?: (rawOutput: string) => { raw: any; humanMessage: string }; // optional output parser. Used by ResponseParserService in langchain adapter. Recommended for LangChain v1
 }
 ```
+
+### LangChain v1 Support
+
+For LangChain v1, tools should provide an `outputParser` to structure the tool output correctly. This is defined in the `Tool` interface in [typescript/src/shared/tools.ts](../../src/shared/tools.ts).
+
+You can use the default `transactionToolOutputParser` for tools that execute Hedera transactions. This parser is available in [typescript/src/shared/utils/default-tool-output-parsing.ts](../../src/shared/utils/default-tool-output-parsing.ts).
+
+If you don't provide an `outputParser`, a default one will be used, but providing a specific one ensures better handling of transaction results and errors.
 
 ## Creating a Plugin
 
@@ -42,6 +51,7 @@ const createMyTool = (context: Context): Tool => ({
     // Your tool implementation
     return 'Tool result';
   },
+  outputParser: undefined, // Optional: Define a custom parser or use transactionToolOutputParser for LangChain v1
 });
 ```
 

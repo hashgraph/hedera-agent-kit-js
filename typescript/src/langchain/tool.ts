@@ -15,11 +15,14 @@ class HederaAgentKitTool extends StructuredTool {
 
   schema: z.ZodObject<any, any>;
 
+  responseParsingFunction?: (response: any) => {};
+
   constructor(
     HederaAgentKitAPI: HederaAgentKitAPI,
     method: string,
     description: string,
     schema: z.ZodObject<any, any>,
+    responseParsingFunction?: (response: any) => {},
   ) {
     super();
 
@@ -28,6 +31,7 @@ class HederaAgentKitTool extends StructuredTool {
     this.name = method;
     this.description = description;
     this.schema = schema;
+    this.responseParsingFunction = responseParsingFunction;
   }
 
   _call(

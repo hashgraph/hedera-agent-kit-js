@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { deleteHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const deleteHbarAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -65,6 +66,7 @@ const tool = (context: Context): Tool => ({
   description: deleteHbarAllowancePrompt(context),
   parameters: deleteHbarAllowanceParameters(context),
   execute: deleteHbarAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

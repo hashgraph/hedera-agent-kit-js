@@ -100,5 +100,3 @@ describe('Get Topic Info Tool (unit)', () => {
     expect(res.raw.error).toBe('Failed to get topic info');
   });
 });
-
-

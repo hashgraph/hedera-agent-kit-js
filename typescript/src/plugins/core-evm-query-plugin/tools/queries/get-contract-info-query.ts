@@ -6,6 +6,7 @@ import { Client } from '@hashgraph/sdk';
 import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { ContractInfo } from '@/shared/hedera-utils/mirrornode/types';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getContractInfoQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -91,6 +92,7 @@ const tool = (context: Context): Tool => ({
   description: getContractInfoQueryPrompt(context),
   parameters: contractInfoQueryParameters(context),
   execute: getContractInfoQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

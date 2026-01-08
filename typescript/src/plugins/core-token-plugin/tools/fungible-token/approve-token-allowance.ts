@@ -8,6 +8,7 @@ import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/acco
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const approveTokenAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -27,7 +28,7 @@ Parameters:
 - spenderAccountId (string, required): Spender account ID
 - tokenApprovals (array, required): List of approvals. Each item:
   - tokenId (string): Token ID
-  - amount (number): Amount of tokens to approve (must be a positive integer)
+  - amount (number): Amount of tokens to approve (must be a positive number, can be float or int). Given in display units, the tool will handle parsing
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
 `;
@@ -57,7 +58,7 @@ const approveTokenAllowance = async (
     const desc = 'Failed to approve token allowance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[approve_token_allowance_tool]', message);
-    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+    return { raw: { status: Status.InvalidTransaction.toString(), error: message }, humanMessage: message };
   }
 };
 
@@ -69,6 +70,7 @@ const tool = (context: Context): Tool => ({
   description: approveTokenAllowancePrompt(context),
   parameters: approveTokenAllowanceParameters(context),
   execute: approveTokenAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

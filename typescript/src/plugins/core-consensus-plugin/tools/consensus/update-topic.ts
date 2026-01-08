@@ -14,6 +14,7 @@ import {
   updateTopicParametersNormalised,
 } from '@/shared/parameter-schemas/consensus.zod';
 import { TopicInfo } from '@/shared/hedera-utils/mirrornode/types';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const checkValidityOfUpdates = async (
   params: z.infer<ReturnType<typeof updateTopicParametersNormalised>>,
@@ -131,6 +132,7 @@ const tool = (context: Context): Tool => ({
   description: updateTopicPrompt(context),
   parameters: updateTopicParameters(context),
   execute: updateTopic,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

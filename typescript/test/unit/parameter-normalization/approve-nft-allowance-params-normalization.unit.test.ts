@@ -100,11 +100,7 @@ describe('HederaParameterNormaliser.normaliseApproveNftAllowance', () => {
 
     for (const p of cases) {
       expect(() =>
-        HederaParameterNormaliser.normaliseApproveNftAllowance(
-          p as any,
-          mockContext,
-          mockClient,
-        ),
+        HederaParameterNormaliser.normaliseApproveNftAllowance(p as any, mockContext, mockClient),
       ).toThrowError(/serialNumbers must contain at least one serial/i);
     }
   });

@@ -8,6 +8,9 @@ import { deleteTokenAllowanceParameters } from '@/shared/parameter-schemas/accou
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Delete Token Allowance Integration Tests', () => {
   let operatorClient: Client;
@@ -30,11 +33,11 @@ describe('Delete Token Allowance Integration Tests', () => {
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
 
-    // create executor account
+    // create an executor account
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await new HederaOperationsWrapper(operatorClient)
       .createAccount({
-        initialBalance: 7,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -77,6 +80,11 @@ describe('Delete Token Allowance Integration Tests', () => {
 
   afterAll(async () => {
     if (executorClient) {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       executorClient.close();
     }
     if (operatorClient) {

@@ -7,11 +7,15 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const associateTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
-  const accountToAssociate = PromptGenerator.getAnyAddressParameterDescription('accountId', context);
+  const accountToAssociate = PromptGenerator.getAnyAddressParameterDescription(
+    'accountId',
+    context,
+  );
 
   return `
 ${contextSnippet}
@@ -61,8 +65,7 @@ const tool = (context: Context): Tool => ({
   description: associateTokenPrompt(context),
   parameters: associateTokenParameters(context),
   execute: associateToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;
-
-

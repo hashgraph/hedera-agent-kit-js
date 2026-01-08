@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
 
 describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { CREATE_NON_FUNGIBLE_TOKEN_TOOL } = coreTokenPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -31,9 +31,13 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
       const input = 'Create a new non-fungible token called MyNFT with symbol MNFT';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -50,9 +54,13 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
         'Create a non-fungible token named ArtCollection with symbol ART and max supply 500';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -69,9 +77,13 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
       const input = 'Create an NFT GameItems with symbol GAME, treasury account 0.0.5005';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -89,9 +101,13 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
         'Schedule create non-fungible token transaction called MyToken with symbol MTK. Make it expire tomorrow and wait for its expiration time with executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -128,8 +144,12 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-        await agentExecutor.invoke({ input: variation.input });
+        const spy = vi
+          .spyOn(hederaAPI, 'run')
+          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+        await agent.invoke({
+          messages: [{ role: 'user', content: variation.input }],
+        });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           CREATE_NON_FUNGIBLE_TOKEN_TOOL,
@@ -137,6 +157,52 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
         );
         spy.mockRestore();
       }
+    });
+
+    it('should match with infinite supply type parameter', async () => {
+      const input = 'Create an NFT InfiniteCollection with symbol INF and infinite supply';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+        expect.objectContaining({
+          tokenName: 'InfiniteCollection',
+          tokenSymbol: 'INF',
+          supplyType: 'infinite',
+        }),
+      );
+    });
+
+    it('should match with finite supply type parameter', async () => {
+      const input = 'Create an NFT FiniteCollection with symbol FIN and finite supply';
+
+      const hederaAPI = toolkit.getHederaAgentKitAPI();
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(spy).toHaveBeenCalledWith(
+        CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+        expect.objectContaining({
+          tokenName: 'FiniteCollection',
+          tokenSymbol: 'FIN',
+          supplyType: 'finite',
+        }),
+      );
     });
   });
 

@@ -7,6 +7,9 @@ import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { parseHederaTimestamp, wait } from '../../utils/general-util';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Schedule Transaction Integration tests', () => {
   let operatorClient: Client;
@@ -36,7 +39,8 @@ describe('Schedule Transaction Integration tests', () => {
     executorAccountId = await operatorWrapper
       .createAccount({
         key: executorKeyPair.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Schedule Transaction Integration tests',
       })
       .then(resp => resp.accountId!);
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
@@ -46,7 +50,8 @@ describe('Schedule Transaction Integration tests', () => {
     updateAccountId = await operatorWrapper
       .createAccount({
         key: updateAccountKeyPair.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'update account for Schedule Transaction Integration tests',
       })
       .then(resp => resp.accountId!);
     updateAccountClient = getCustomClient(updateAccountId, updateAccountKeyPair);
@@ -59,15 +64,16 @@ describe('Schedule Transaction Integration tests', () => {
   });
 
   afterEach(async () => {
-    await executorWrapper.deleteAccount({
-      accountId: executorClient.operatorAccountId!,
-      transferAccountId: operatorClient.operatorAccountId!,
-    });
-
-    await updateAccountWrapper.deleteAccount({
-      accountId: updateAccountId,
-      transferAccountId: operatorClient.operatorAccountId!,
-    });
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorClient.operatorAccountId!,
+      operatorClient.operatorAccountId!,
+    );
+    await returnHbarsAndDeleteAccount(
+      updateAccountWrapper,
+      updateAccountId,
+      operatorClient.operatorAccountId!,
+    );
     executorClient.close();
     updateAccountClient.close();
   });

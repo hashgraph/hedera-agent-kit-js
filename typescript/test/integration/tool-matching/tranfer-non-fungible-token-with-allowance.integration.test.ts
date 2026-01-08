@@ -1,4 +1,4 @@
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
@@ -6,13 +6,13 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 
 describe('Transfer NFT With Allowance Tool Matching Integration', () => {
   let setup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL } = coreTokenPluginToolNames;
 
   beforeAll(async () => {
     setup = await createLangchainTestSetup();
-    agentExecutor = setup.agentExecutor;
+    agent = setup.agent;
     toolkit = setup.toolkit;
   });
 
@@ -24,9 +24,13 @@ describe('Transfer NFT With Allowance Tool Matching Integration', () => {
   it('matches tool for simple NFT allowance transfer', async () => {
     const input = 'Transfer NFT 0.0.2001 serial 5 from 0.0.1002 to 0.0.3003 using allowance';
     const hederaAPI = toolkit.getHederaAgentKitAPI();
-    const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-    await agentExecutor.invoke({ input });
+    await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
 
     expect(spy).toHaveBeenCalledOnce();
     expect(spy).toHaveBeenCalledWith(
@@ -43,8 +47,12 @@ describe('Transfer NFT With Allowance Tool Matching Integration', () => {
     const input =
       'Use allowance from 0.0.1002 to send NFT 0.0.2001 serial 1 to 0.0.3003 and serial 2 to 0.0.4004';
     const hederaAPI = toolkit.getHederaAgentKitAPI();
-    const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-    await agentExecutor.invoke({ input });
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+    await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
 
     expect(spy).toHaveBeenCalledWith(
       TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,

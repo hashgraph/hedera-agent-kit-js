@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { transferNonFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const transferNonFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -60,6 +61,7 @@ const tool = (context: Context): Tool => ({
   description: transferNonFungibleTokenWithAllowancePrompt(context),
   parameters: transferNonFungibleTokenWithAllowanceParameters(context).innerType(),
   execute: transferNonFungibleTokenWithAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

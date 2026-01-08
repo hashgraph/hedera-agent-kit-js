@@ -7,6 +7,7 @@ import { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenBalancesResponse } from '@/shared/hedera-utils/mirrornode/types';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getAccountTokenBalancesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -73,6 +74,7 @@ const tool = (context: Context): Tool => ({
   description: getAccountTokenBalancesQueryPrompt(context),
   parameters: accountTokenBalancesQueryParameters(context),
   execute: getAccountTokenBalancesQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

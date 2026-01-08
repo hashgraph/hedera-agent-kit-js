@@ -29,9 +29,7 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getContextSnippet: vi.fn(() => 'CTX'),
-    getAccountParameterDescription: vi.fn(
-      () => 'ownerAccountId (string): Owner account ID',
-    ),
+    getAccountParameterDescription: vi.fn(() => 'ownerAccountId (string): Owner account ID'),
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
   },
 }));

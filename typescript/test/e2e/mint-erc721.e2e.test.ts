@@ -1,5 +1,5 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
@@ -7,15 +7,19 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Mint ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
@@ -31,7 +35,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
     const executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: 20,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         maxAutomaticTokenAssociations: -1,
       })
       .then(resp => resp.accountId!);
@@ -50,21 +54,29 @@ describe('Mint ERC721 Token E2E Tests', () => {
 
     // 4. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     await wait(MIRROR_NODE_WAITING_TIME);
 
     // 5. Create a test ERC721 token
     const createInput = 'Create an ERC721 token named MintTest with symbol MNT';
-    const createResult = await agentExecutor.invoke({ input: createInput });
-    const createObservation = extractObservationFromLangchainResponse(createResult);
+    const createResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: createInput,
+        },
+      ],
+    });
+    const createParsedResponse = responseParsingService.parseNewToolMessages(createResult);
 
-    if (!createObservation.erc721Address) {
+    if (!createParsedResponse[0].parsedData.raw.erc721Address) {
       throw new Error('Failed to create test ERC721 token for minting');
     }
 
-    testTokenAddress = createObservation.erc721Address;
+    testTokenAddress = createParsedResponse[0].parsedData.raw.erc721Address;
     await wait(MIRROR_NODE_WAITING_TIME);
   });
 
@@ -90,12 +102,19 @@ describe('Mint ERC721 Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.status).toBe('SUCCESS');
-      expect(observation.raw.transactionId).toBeDefined();
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
     }),
   );
 
@@ -104,12 +123,20 @@ describe('Mint ERC721 Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Mint ERC721 token ${testTokenAddress}`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.status).toBe('SUCCESS');
-      expect(observation.raw.transactionId).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
     }),
   );
 
@@ -123,12 +150,19 @@ describe('Mint ERC721 Token E2E Tests', () => {
       ];
 
       for (const input of variations) {
-        const result = await agentExecutor.invoke({ input });
-        const observation = extractObservationFromLangchainResponse(result);
+        const result = await agent.invoke({
+          messages: [
+            {
+              role: 'user',
+              content: input,
+            },
+          ],
+        });
+        const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-        expect(observation).toBeDefined();
-        expect(observation.raw.status).toBe('SUCCESS');
-        expect(observation.raw.transactionId).toBeDefined();
+        expect(parsedResponse).toBeDefined();
+        expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
+        expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
       }
     }),
   );
@@ -136,16 +170,25 @@ describe('Mint ERC721 Token E2E Tests', () => {
   it(
     'schedules minting ERC721 token to another account via natural language',
     itWithRetry(async () => {
-      const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
+      const input = `Mint ERC721 token from contract: ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
       // Validate response structure
-      expect(observation.raw).toBeDefined();
-      expect(observation.raw.transactionId).toBeDefined();
-      expect(observation.raw.scheduleId).not.toBeNull();
-      expect(observation.humanMessage).toContain('Scheduled minting of ERC721 successfully.');
+      expect(parsedResponse[0].parsedData.raw).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.scheduleId).not.toBeNull();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled minting of ERC721 successfully.',
+      );
     }),
   );
 });

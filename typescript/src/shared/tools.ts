@@ -8,6 +8,8 @@ export type Tool = {
   description: string;
   parameters: z.ZodObject<any, any>;
   execute: (client: Client, context: Context, params: any) => Promise<any>;
+  // transactionToolOutputParser and untypedQueryOutputParser can be used. If required, define a custom parser
+  outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
 };
 
 export default Tool;

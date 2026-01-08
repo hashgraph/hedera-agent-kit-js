@@ -8,6 +8,9 @@ import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
 import { wait } from '../../utils/general-util';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   let operatorClient: Client;
@@ -21,10 +24,13 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     operatorClient = getOperatorClientForTests();
     const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-    // Create intermediate executor account
+    // Create an intermediate executor account
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 5 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -32,7 +38,10 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
 
     // Create a recipient account via executor
     recipientAccountId = await executorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key, initialBalance: 1 })
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(0.1),
+      })
       .then(resp => resp.accountId!);
 
     await wait(MIRROR_NODE_WAITING_TIME); // wait for mirror node indexing
@@ -46,16 +55,18 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   afterAll(async () => {
     if (executorWrapper && operatorClient) {
       // Delete a recipient account and transfer remaining balance back to executor
-      await executorWrapper.deleteAccount({
-        accountId: recipientAccountId,
-        transferAccountId: executorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        recipientAccountId,
+        operatorClient.operatorAccountId!,
+      );
 
       // Delete an executor account and transfer remaining balance back to operator
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
 
       executorClient.close();
       operatorClient.close();
@@ -70,8 +81,9 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     const tool = getHbarBalanceTool(context);
     const res: any = await tool.execute(executorClient, context, params);
 
+    const expectedBalance = UsdToHbarService.usdToHbar(0.1);
     expect(res.raw.accountId).toBe(recipientAccountId.toString());
-    expect(Number(res.raw.hbarBalance)).toBe(1);
+    expect(Number(res.raw.hbarBalance)).toBe(expectedBalance);
     expect(res.humanMessage).toContain(`Account ${recipientAccountId.toString()} has a balance of`);
   });
 

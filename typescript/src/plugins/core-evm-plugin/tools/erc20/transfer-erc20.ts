@@ -12,6 +12,7 @@ import {
   ERC20_TRANSFER_FUNCTION_ABI,
   ERC20_TRANSFER_FUNCTION_NAME,
 } from '@/shared/constants/contracts';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const transferERC20Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -77,6 +78,7 @@ const tool = (context: Context): Tool => ({
   description: transferERC20Prompt(context),
   parameters: transferERC20Parameters(context),
   execute: transferERC20,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

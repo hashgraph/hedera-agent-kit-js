@@ -5,6 +5,8 @@ import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { z } from 'zod';
 import { approveHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 /**
  * Integration tests for Approve HBAR Allowance tool
@@ -30,7 +32,7 @@ describe('Approve HBAR Allowance Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5, // cover fees
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -38,7 +40,8 @@ describe('Approve HBAR Allowance Integration Tests', () => {
     executorClient = getCustomClient(executorAccountId, executorKeyPair);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    spenderAccountId = await executorWrapper
+    // Operator creates a spender account to preserve executor balance
+    spenderAccountId = await operatorWrapper
       .createAccount({ key: executorClient.operatorPublicKey as Key })
       .then(resp => resp.accountId!);
 

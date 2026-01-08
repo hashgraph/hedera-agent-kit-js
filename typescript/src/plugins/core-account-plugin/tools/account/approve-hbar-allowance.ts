@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { approveHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const approveHbarAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -63,6 +64,7 @@ const tool = (context: Context): Tool => ({
   description: approveHbarAllowancePrompt(context),
   parameters: approveHbarAllowanceParameters(context),
   execute: approveHbarAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -12,6 +12,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { getERC721FactoryAddress, ERC721_FACTORY_ABI } from '@/shared/constants/contracts';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createERC721Prompt = (context: Context = {}) => `
 ${PromptGenerator.getContextSnippet(context)}
@@ -87,6 +88,7 @@ const tool = (context: Context): Tool => ({
   description: createERC721Prompt(context),
   parameters: createERC721Parameters(context),
   execute: createERC721,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

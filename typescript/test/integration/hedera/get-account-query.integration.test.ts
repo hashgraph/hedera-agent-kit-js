@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Get Account Query Integration Tests', () => {
   let customClient: Client;
@@ -26,7 +28,7 @@ describe('Get Account Query Integration Tests', () => {
     createdAccountId = await hederaOperationsWrapper
       .createAccount({
         key: privateKey.publicKey as Key,
-        initialBalance: 10,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
       })
       .then(resp => resp.accountId!);
 

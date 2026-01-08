@@ -3,6 +3,8 @@ import { Client, Key, PrivateKey, Status } from '@hashgraph/sdk';
 import createAccountTool from '@/plugins/core-account-plugin/tools/account/create-account';
 import { Context, AgentMode } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Create Account Integration Tests', () => {
   let operatorClient: Client;
@@ -18,7 +20,7 @@ describe('Create Account Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 2,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -68,7 +70,7 @@ describe('Create Account Integration Tests', () => {
 
     it('should create an account with initial balance and memo', async () => {
       const params = {
-        initialBalance: 0.05,
+        initialBalance: UsdToHbarService.usdToHbar(0.1),
         accountMemo: 'Integration test account',
       };
 
@@ -80,7 +82,7 @@ describe('Create Account Integration Tests', () => {
       const newAccountId = result.raw.accountId!.toString();
 
       const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
-      expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8);
+      expect(balance.toNumber()).toBeGreaterThanOrEqual(UsdToHbarService.usdToHbar(0.1) * 1e8);
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe('Integration test account');

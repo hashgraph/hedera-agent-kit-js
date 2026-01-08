@@ -8,6 +8,7 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { deleteTokenAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const deleteTokenAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -68,6 +69,7 @@ const tool = (context: Context): Tool => ({
   description: deleteTokenAllowancePrompt(context),
   parameters: deleteTokenAllowanceParameters(context),
   execute: deleteTokenAllowance,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { AccountId, Client, Key, PrivateKey, Hbar, HbarUnit, HbarAllowance } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -10,10 +10,13 @@ import {
   verifyHbarBalanceChange,
 } from '../utils';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Transfer HBAR With Allowance E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let operatorClient: Client;
   let ownerClient: Client;
   let spenderClient: Client;
@@ -30,7 +33,10 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
     // Create an owner account
     const ownerKey = PrivateKey.generateED25519();
     ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: 10 })
+      .createAccount({
+        key: ownerKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
@@ -38,7 +44,10 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
     // Create a spender account
     const spenderKey = PrivateKey.generateED25519();
     spenderAccountId = await operatorWrapper
-      .createAccount({ key: spenderKey.publicKey, initialBalance: 5 })
+      .createAccount({
+        key: spenderKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
 
@@ -52,7 +61,7 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
 
     // Set up LangChain executor with spender (who uses allowance)
     testSetup = await createLangchainTestSetup(undefined, undefined, spenderClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
 
     // Approve HBAR allowance: owner → spender
     await ownerWrapper.approveHbarAllowance({
@@ -71,18 +80,23 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
 
     // Cleanup created accounts
     try {
-      await ownerWrapper.deleteAccount({
-        accountId: recipientAccount,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
-      await ownerWrapper.deleteAccount({
-        accountId: spenderAccountId,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
-      await ownerWrapper.deleteAccount({
-        accountId: ownerAccountId,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        recipientAccount,
+        operatorClient.operatorAccountId!,
+      );
+
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
+
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        ownerAccountId,
+        operatorClient.operatorAccountId!,
+      );
     } catch (err) {
       console.warn('Cleanup failed:', err);
     }
@@ -110,7 +124,14 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
       const amountToTransfer = 0.2;
 
       const input = `Transfer ${amountToTransfer} HBAR from ${ownerAccountId.toString()} to ${recipientAccount.toString()} using allowance`;
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
       await verifyHbarBalanceChange(
         recipientAccount.toString(),
@@ -129,7 +150,14 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
       const memo = 'Allowance-based HBAR transfer test';
 
       const input = `Spend allowance from ${ownerAccountId.toString()} to send ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${memo}"`;
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
       await verifyHbarBalanceChange(
         recipientAccount.toString(),
@@ -147,7 +175,14 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
       const amountToTransfer = 0.00000001;
 
       const input = `Transfer ${amountToTransfer} HBAR from ${ownerAccountId.toString()} to ${recipientAccount.toString()} using allowance`;
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
       await verifyHbarBalanceChange(
         recipientAccount.toString(),
@@ -166,7 +201,14 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
       const amountToTransfer = 0.05;
 
       const input = `Use allowance from ${ownerAccountId.toString()} to send ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${longMemo}"`;
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
       await verifyHbarBalanceChange(
         recipientAccount.toString(),
@@ -191,7 +233,14 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
       const balanceBefore2 = await ownerWrapper.getAccountHbarBalance(recipient2.toString());
 
       const input = `Use allowance from ${ownerAccountId.toString()} to send 0.05 HBAR to ${recipientAccount.toString()} and 0.05 HBAR to ${recipient2.toString()}`;
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
       await verifyHbarBalanceChange(
         recipientAccount.toString(),

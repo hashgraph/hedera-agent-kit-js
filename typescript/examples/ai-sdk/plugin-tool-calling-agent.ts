@@ -3,7 +3,7 @@ import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { openai } from '@ai-sdk/openai';
-import { generateText, wrapLanguageModel } from 'ai';
+import { generateText, stepCountIs, wrapLanguageModel } from 'ai';
 
 dotenv.config();
 
@@ -53,7 +53,7 @@ async function bootstrap(): Promise<void> {
       break;
     }
 
-    // Add user message to history
+    // Add a user message to the history
     conversationHistory.push({ role: 'user', content: userInput });
 
     try {
@@ -61,7 +61,7 @@ async function bootstrap(): Promise<void> {
         model,
         messages: conversationHistory,
         tools: hederaAgentToolkit.getTools(),
-        maxSteps: 2, // Important to set this to 2 to allow for the LLM to use the tool result to answer the user
+        stopWhen: stepCountIs(2),
       });
 
       // Add AI response to history

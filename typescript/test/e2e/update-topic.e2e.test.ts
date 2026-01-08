@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { Client, PrivateKey, AccountId, PublicKey, TopicId } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -8,10 +8,13 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Update Topic E2E Tests', () => {
   let operatorClient: Client;
@@ -20,7 +23,8 @@ describe('Update Topic E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
   let topicId: TopicId;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
@@ -28,12 +32,16 @@ describe('Update Topic E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 20 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
@@ -65,109 +73,159 @@ describe('Update Topic E2E Tests', () => {
     }
   });
 
-  it('should change topic keys using passed values', itWithRetry(async () => {
-    const newSubmitKey = PrivateKey.generateED25519().publicKey.toString();
+  it(
+    'should change topic keys using passed values',
+    itWithRetry(async () => {
+      const newSubmitKey = PrivateKey.generateED25519().publicKey.toString();
 
-    await agentExecutor.invoke({
-      input: `For topic ${topicId.toString()} the submit key to: ${newSubmitKey}.`,
-    });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For topic ${topicId.toString()} the submit key to: ${newSubmitKey}.`,
+          },
+        ],
+      });
 
-    const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
-    expect((topicDetails.adminKey as PublicKey).toString()).toBe(
-      executorClient.operatorPublicKey!.toString(),
-    );
-    expect((topicDetails.submitKey as PublicKey).toString()).toBe(newSubmitKey);
-  }));
+      const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
+      expect((topicDetails.adminKey as PublicKey).toString()).toBe(
+        executorClient.operatorPublicKey!.toString(),
+      );
+      expect((topicDetails.submitKey as PublicKey).toString()).toBe(newSubmitKey);
+    }),
+  );
 
-  it('should change topic keys using default values (my key)', itWithRetry(async () => {
-    await agentExecutor.invoke({
-      input: `For topic ${topicId.toString()}, change the submit key to my key and set the topic memo to 'just updated'`,
-    });
+  it(
+    'should change topic keys using default values (my key)',
+    itWithRetry(async () => {
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For topic ${topicId.toString()}
+      ], change the submit key to my key and set the topic memo to 'just updated'`,
+          },
+        ],
+      });
 
-    const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
-    expect((topicDetails.submitKey as PublicKey).toStringDer()).toBe(
-      executorClient.operatorPublicKey!.toStringDer(),
-    );
-    expect(topicDetails.topicMemo).toBe('just updated');
-  }));
+      const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
+      expect((topicDetails.submitKey as PublicKey).toStringDer()).toBe(
+        executorClient.operatorPublicKey!.toStringDer(),
+      );
+      expect(topicDetails.topicMemo).toBe('just updated');
+    }),
+  );
 
-  it('should fail due to topic being originally created without submitKey', itWithRetry(async () => {
-    // Create a topic without a submitKey
-    const topicWithoutSubmit = await executorWrapper
-      .createTopic({
-        autoRenewAccountId: executorAccountId.toString(),
-        isSubmitKey: false,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        topicMemo: 'no-submit',
-      })
-      .then(resp => resp.topicId!);
+  it(
+    'should fail due to topic being originally created without submitKey',
+    itWithRetry(async () => {
+      // Create a topic without a submitKey
+      const topicWithoutSubmit = await executorWrapper
+        .createTopic({
+          autoRenewAccountId: executorAccountId.toString(),
+          isSubmitKey: false,
+          adminKey: executorClient.operatorPublicKey! as PublicKey,
+          topicMemo: 'no-submit',
+        })
+        .then(resp => resp.topicId!);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const queryResult = await agentExecutor.invoke({
-      input: `For topic ${topicWithoutSubmit.toString()}, change the submit key to my key`,
-    });
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For topic ${topicWithoutSubmit.toString()}
+      ], change the submit key to my key`,
+          },
+        ],
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation.humanMessage).toContain(
-      'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
-    );
-    expect(observation.raw.error).toContain(
-      'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
-    );
-  }));
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
+      );
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
+        'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
+      );
+    }),
+  );
 
-  it('should update autoRenewAccountId', itWithRetry(async () => {
-    // To set some account as the auto-renew account, it must have the same public key as the operator of the agent
-    const secondaryAccountId = await executorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 0 })
-      .then(resp => resp.accountId!);
+  it(
+    'should update autoRenewAccountId',
+    itWithRetry(async () => {
+      // To set some account as the auto-renew account, it must have the same public key as the operator of the agent
+      const secondaryAccountId = await executorWrapper
+        .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 0 })
+        .then(resp => resp.accountId!);
 
-    await agentExecutor.invoke({
-      input: `For topic ${topicId.toString()} set auto renew account id to ${secondaryAccountId.toString()}.`,
-    });
+      await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For topic ${topicId.toString()} set auto renew account id to ${secondaryAccountId.toString()}.`,
+          },
+        ],
+      });
 
-    const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
+      const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
 
-    expect(topicDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
-  }));
+      expect(topicDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
+    }),
+  );
 
-  it('should reject updates by an unauthorized operator', itWithRetry(async () => {
-    const secondaryAccountKey = PrivateKey.generateED25519();
-    const secondaryAccountId = await executorWrapper
-      .createAccount({ key: secondaryAccountKey.publicKey, initialBalance: 10 })
-      .then(resp => resp.accountId!);
+  it(
+    'should reject updates by an unauthorized operator',
+    itWithRetry(async () => {
+      const secondaryAccountKey = PrivateKey.generateED25519();
+      const secondaryAccountId = await executorWrapper
+        .createAccount({
+          key: secondaryAccountKey.publicKey,
+          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        })
+        .then(resp => resp.accountId!);
 
-    const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccountKey);
-    const secondaryWrapper = new HederaOperationsWrapper(secondaryClient);
-    const topicIdBySecondary = await secondaryWrapper
-      .createTopic({
-        autoRenewAccountId: secondaryClient.operatorAccountId!.toString(),
-        isSubmitKey: true,
-        adminKey: secondaryClient.operatorPublicKey! as PublicKey,
-        submitKey: secondaryClient.operatorPublicKey! as PublicKey,
-        topicMemo: 'secondary-topic',
-      })
-      .then(resp => resp.topicId!);
+      const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccountKey);
+      const secondaryWrapper = new HederaOperationsWrapper(secondaryClient);
+      const topicIdBySecondary = await secondaryWrapper
+        .createTopic({
+          autoRenewAccountId: secondaryClient.operatorAccountId!.toString(),
+          isSubmitKey: true,
+          adminKey: secondaryClient.operatorPublicKey! as PublicKey,
+          submitKey: secondaryClient.operatorPublicKey! as PublicKey,
+          topicMemo: 'secondary-topic',
+        })
+        .then(resp => resp.topicId!);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+      await wait(MIRROR_NODE_WAITING_TIME);
 
-    const queryResult = await agentExecutor.invoke({
-      input: `For topic ${topicIdBySecondary.toString()}, change the admin key to my key`,
-    });
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: `For topic ${topicIdBySecondary.toString()}
+      ], change the admin key to my key`,
+          },
+        ],
+      });
 
-    const observation = extractObservationFromLangchainResponse(queryResult);
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation.raw.error).toContain('You do not have permission to update this topic.');
-    expect(observation.humanMessage).toContain('You do not have permission to update this topic.');
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
+        'You do not have permission to update this topic.',
+      );
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'You do not have permission to update this topic.',
+      );
 
-    await returnHbarsAndDeleteAccount(
-      secondaryWrapper,
-      secondaryAccountId,
-      operatorClient.operatorAccountId!,
-    );
+      await returnHbarsAndDeleteAccount(
+        secondaryWrapper,
+        secondaryAccountId,
+        operatorClient.operatorAccountId!,
+      );
 
-    secondaryClient.close();
-  }));
+      secondaryClient.close();
+    }),
+  );
 });

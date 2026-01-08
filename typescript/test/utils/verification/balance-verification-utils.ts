@@ -26,6 +26,7 @@ export async function verifyHbarBalanceChange(
   );
 
   // Use BigNumber comparison with proper decimal precision (8 places for HBAR)
-  expect(balanceAfter.decimalPlaces(8).isGreaterThanOrEqualTo(balanceBefore.decimalPlaces(8))).toBe(true);
+  expect(balanceAfter.decimalPlaces(8).isGreaterThanOrEqualTo(balanceBefore.decimalPlaces(8))).toBe(
+    true,
+  );
 }
-

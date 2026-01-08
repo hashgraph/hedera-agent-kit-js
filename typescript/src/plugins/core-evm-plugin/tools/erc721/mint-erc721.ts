@@ -9,11 +9,16 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { ERC721_MINT_FUNCTION_ABI, ERC721_MINT_FUNCTION_NAME } from '@/shared/constants/contracts';
 import { mintERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const mintERC721Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
-  const toAddressDesc = PromptGenerator.getAnyAddressParameterDescription('toAddress', context);
+  const toAddressDesc = PromptGenerator.getAnyAddressParameterDescription(
+    'toAddress',
+    context,
+    false,
+  );
 
   return `
 ${contextSnippet}
@@ -29,6 +34,8 @@ ${usageInstructions}
 
 Example: "Mint ERC721 token 0.0.6486793 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means minting the ERC721 token with contract id 0.0.6486793 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
 Example: "Mint ERC721 token 0.0.6486793 to 0.0.6486793" means minting the ERC721 token with contract id 0.0.6486793 to the 0.0.6486793 Hedera account id.
+
+NOTE: the 'toAddress' parameter is optional. If not provided, the minting will be performed to the default account as per the context.
 `;
 };
 
@@ -75,6 +82,7 @@ const tool = (context: Context): Tool => ({
   description: mintERC721Prompt(context),
   parameters: mintERC721Parameters(context),
   execute: mintERC721,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

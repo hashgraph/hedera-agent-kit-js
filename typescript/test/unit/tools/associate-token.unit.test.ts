@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, Status } from '@hashgraph/sdk';
-import toolFactory, { ASSOCIATE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/associate-token';
+import toolFactory, {
+  ASSOCIATE_TOKEN_TOOL,
+} from '@/plugins/core-token-plugin/tools/associate-token';
 import z from 'zod';
 import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 
@@ -128,5 +130,3 @@ describe('associate-token tool (unit)', () => {
     expect(res.raw.error).toBe('Failed to associate token(s)');
   });
 });
-
-
