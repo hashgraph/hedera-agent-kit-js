@@ -465,20 +465,20 @@ Get messages from topic 0.0.12345 after 2024-01-01
 
 ### CREATE_FUNGIBLE_TOKEN_TOOL
 
-Creates a fungible token on Hedera.
+Creates a fungible token on Hedera. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter           | Type      | Required | Default    | Description                                     |
-|---------------------|-----------|----------|------------|-------------------------------------------------|
-| `tokenName`         | `string`  | ✅        | —          | The name of the token.                          |
-| `tokenSymbol`       | `string`  | ✅        | —          | The symbol of the token.                        |
-| `initialSupply`     | `number`  | ❌        | `0`        | Initial supply of the token.                    |
-| `supplyType`        | `string`  | ❌        | `"finite"` | Supply type: `"finite"` or `"infinite"`.        |
-| `maxSupply`         | `number`  | ❌        | `1000000`  | Max supply (only applicable for finite tokens). |
-| `decimals`          | `number`  | ❌        | `0`        | Number of decimal places.                       |
-| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token.                 |
-| `isSupplyKey`       | `boolean` | ❌        | `false`    | Whether to set a supply key.                    |
+| Parameter           | Type      | Required | Default    | Description                                                                        |
+|---------------------|-----------|----------|------------|------------------------------------------------------------------------------------|
+| `tokenName`         | `string`  | ✅        | —          | The name of the token.                                                             |
+| `tokenSymbol`       | `string`  | ❌        | —          | The symbol of the token.                                                           |
+| `initialSupply`     | `number`  | ❌        | `0`        | Initial supply of the token (in display units, the tool handles parsing).          |
+| `supplyType`        | `string`  | ❌        | `"finite"` | Supply type: `"finite"` or `"infinite"`.                                           |
+| `maxSupply`         | `number`  | ❌        | `1000000`  | Max supply (in display units, only applicable for finite tokens).                  |
+| `decimals`          | `number`  | ❌        | `0`        | Number of decimal places.                                                          |
+| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token (defaults to operator).                             |
+| `isSupplyKey`       | `boolean` | ❌        | `false`    | Whether to set a supply key.                                                       |
 
 #### Example Prompts
 
@@ -495,7 +495,7 @@ Schedule create fungible token transaction called MyToken with symbol MTK
 
 ### CREATE_NON_FUNGIBLE_TOKEN_TOOL
 
-Creates a non-fungible token (NFT) on Hedera.
+Creates a non-fungible token (NFT) on Hedera. Supports scheduled transactions.
 
 #### Parameters
 
@@ -506,7 +506,7 @@ Creates a non-fungible token (NFT) on Hedera.
 | `supplyType`        | `string`  | ❌        | `"finite"` | The supply type of the token. Can be `"finite"` or `"infinite"`.                 |
 | `maxSupply`         | `number`  | ❌        | `100`      | Maximum NFT supply. Only applicable if `supplyType` is `"finite"`.               |
 | `isSupplyKey`       | `boolean` | ❌        | `false`    | If `true`, sets a supply key on the token, allowing future minting.              |
-| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token.                                                  |
+| `treasuryAccountId` | `string`  | ❌        | operator   | Treasury account for the token (defaults to operator).                           |
 
 #### Example Prompts
 
@@ -521,14 +521,14 @@ Create an NFT with infinite supply called OpenArt with symbol OPEN
 
 ### MINT_FUNGIBLE_TOKEN_TOOL
 
-Mints additional supply of an existing fungible token.
+Mints additional supply of an existing fungible token. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter | Type     | Required | Description           |
-|-----------|----------|----------|-----------------------|
-| `tokenId` | `string` | ✅        | The token ID to mint. |
-| `amount`  | `number` | ✅        | Amount to mint.       |
+| Parameter | Type     | Required | Description                                                            |
+|-----------|----------|----------|------------------------------------------------------------------------|
+| `tokenId` | `string` | ✅        | The token ID to mint.                                                  |
+| `amount`  | `number` | ✅        | Amount to mint (in display units, the tool handles parsing).           |
 
 #### Example Prompts
 
@@ -541,14 +541,14 @@ Mint 50 tokens for 0.0.12345
 
 ### MINT_NON_FUNGIBLE_TOKEN_TOOL
 
-Mints NFTs with unique metadata for an existing NFT class.
+Mints NFTs with unique metadata for an existing NFT class. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter | Type       | Required | Description                                      |
-|-----------|------------|----------|--------------------------------------------------|
-| `tokenId` | `string`   | ✅        | The token ID to mint.                            |
-| `uris`    | `string[]` | ✅        | Array of URIs hosting the NFT metadata (max 10). |
+| Parameter | Type       | Required | Description                                         |
+|-----------|------------|----------|-----------------------------------------------------|
+| `tokenId` | `string`   | ✅        | The token ID to mint.                               |
+| `uris`    | `string[]` | ✅        | Array of metadata URIs (max 10).                    |
 
 #### Example Prompts
 
@@ -642,12 +642,12 @@ Airdrops a fungible token to multiple recipients.
 
 #### Parameters
 
-| Parameter         | Type                                         | Required | Description                                    |
-|-------------------|----------------------------------------------|----------|------------------------------------------------|
-| `tokenId`         | `string`                                     | ✅        | The token ID to airdrop.                       |
-| `sourceAccountId` | `string`                                     | ❌        | Source account (defaults to operator).         |
-| `recipients`      | `Array<{accountId: string, amount: number}>` | ✅        | List of recipients with account ID and amount. |
-| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                      |
+| Parameter         | Type                                         | Required | Description                                                                |
+|-------------------|----------------------------------------------|----------|----------------------------------------------------------------------------|
+| `tokenId`         | `string`                                     | ✅        | The token ID to airdrop.                                                   |
+| `recipients`      | `Array<{accountId: string, amount: number}>` | ✅        | List of recipients with account ID and amount (in display units).          |
+| `sourceAccountId` | `string`                                     | ❌        | Source account ID (defaults to operator).                                  |
+| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                                                  |
 
 #### Example Prompts
 
@@ -665,12 +665,12 @@ Approve fungible token spending allowances.
 
 #### Parameters
 
-| Parameter          | Type                                       | Required | Description                                       |
-|--------------------|--------------------------------------------|----------|---------------------------------------------------|
-| `ownerAccountId`   | `string`                                   | ❌        | Owner account ID (defaults to operator).          |
-| `spenderAccountId` | `string`                                   | ✅        | Spender account ID.                               |
-| `tokenApprovals`   | `Array<{tokenId: string, amount: number}>` | ✅        | List of token approvals with token ID and amount. |
-| `transactionMemo`  | `string`                                   | ❌        | Memo for the transaction.                         |
+| Parameter          | Type                                       | Required | Description                                                               |
+|--------------------|--------------------------------------------|----------|---------------------------------------------------------------------------|
+| `ownerAccountId`   | `string`                                   | ❌        | Owner account ID (defaults to operator if omitted).                       |
+| `spenderAccountId` | `string`                                   | ✅        | Spender account ID.                                                       |
+| `tokenApprovals`   | `Array<{tokenId: string, amount: number}>` | ✅        | List of token approvals with token ID and amount (in display units).      |
+| `transactionMemo`  | `string`                                   | ❌        | Memo for the transaction.                                                 |
 
 #### Example Prompts
 
@@ -687,12 +687,12 @@ Delete fungible token allowance(s).
 
 #### Parameters
 
-| Parameter          | Type       | Required | Description                                   |
-|--------------------|------------|----------|-----------------------------------------------|
-| `ownerAccountId`   | `string`   | ❌        | Owner account ID (defaults to operator).      |
-| `spenderAccountId` | `string`   | ✅        | Spender account ID.                           |
-| `tokenIds`         | `string[]` | ✅        | List of token IDs whose allowances to remove. |
-| `transactionMemo`  | `string`   | ❌        | Memo for the transaction.                     |
+| Parameter          | Type       | Required | Description                                                    |
+|--------------------|------------|----------|----------------------------------------------------------------|
+| `ownerAccountId`   | `string`   | ❌        | Owner account ID (defaults to operator if omitted).            |
+| `spenderAccountId` | `string`   | ✅        | Spender account ID.                                            |
+| `tokenIds`         | `string[]` | ✅        | Array of token IDs specifying which allowances to remove.      |
+| `transactionMemo`  | `string`   | ❌        | Memo for the transaction.                                      |
 
 #### Example Prompts
 
@@ -705,16 +705,16 @@ Remove allowance for spender 0.0.123 on tokens 0.0.456 and 0.0.789
 
 ### TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL
 
-Transfers a fungible token using an existing token allowance.
+Transfers a fungible token using an existing token allowance. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter         | Type                                         | Required | Description                                        |
-|-------------------|----------------------------------------------|----------|----------------------------------------------------|
-| `tokenId`         | `string`                                     | ✅        | The token ID to transfer.                          |
-| `sourceAccountId` | `string`                                     | ✅        | Account ID of the token owner (allowance granter). |
-| `transfers`       | `Array<{accountId: string, amount: number}>` | ✅        | List of transfers with recipient and amount.       |
-| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                          |
+| Parameter         | Type                                         | Required | Description                                                       |
+|-------------------|----------------------------------------------|----------|-------------------------------------------------------------------|
+| `tokenId`         | `string`                                     | ✅        | The token ID to transfer.                                         |
+| `sourceAccountId` | `string`                                     | ✅        | Account ID of the token owner (the allowance granter).            |
+| `transfers`       | `Array<{accountId: string, amount: number}>` | ✅        | List of transfers with recipient and amount (in display units).   |
+| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                                         |
 
 #### Example Prompts
 
