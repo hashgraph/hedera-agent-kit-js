@@ -49,6 +49,10 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
   Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
+- [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the CoinCap API to get the current price of HBAR in USD currency.
+
+  Github repository: [https://github.com/henrytongv/coincap-hedera-plugin](https://github.com/henrytongv/coincap-hedera-plugin)
+
 ---
 
 ## Developer Examples
