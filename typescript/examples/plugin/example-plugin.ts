@@ -8,6 +8,7 @@ import {
   AccountResolver,
 } from 'hedera-agent-kit';
 import { Client, TransferTransaction, Hbar, AccountId } from '@hashgraph/sdk';
+import { transactionToolOutputParser } from '../../src';
 
 // Example: Simple greeting tool
 const createGreetingTool = (_context: Context): Tool => ({
@@ -23,6 +24,7 @@ Parameters:
 Usage:
 Use this tool to generate personalized greetings in different languages.
 `,
+  outputParser: undefined, // Optional: Recommended for LangChain v1. If undefined, a default parser is used.
   parameters: z.object({
     name: z.string().min(1, 'Name is required'),
     language: z.enum(['en', 'es', 'fr']).optional().default('en'),
@@ -74,6 +76,7 @@ ${usageInstructions}
       sourceAccountId: z.string().optional(),
       transactionMemo: z.string().optional(),
     }),
+    outputParser: transactionToolOutputParser, // Recommended for LangChain v1: Parses transaction results into { raw, humanMessage } format. Applicable for transaction tools
     execute: async (
       client: Client,
       context: Context,

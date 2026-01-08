@@ -1,18 +1,21 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { Client, TokenSupplyType } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { Client, TokenSupplyType, AccountId } from '@hashgraph/sdk';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
 
 describe('Get Account Token Balances E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
   let testAccountId: string;
@@ -20,7 +23,8 @@ describe('Get Account Token Balances E2E Tests', () => {
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     operatorClient = testSetup.client;
     operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
@@ -37,7 +41,7 @@ describe('Get Account Token Balances E2E Tests', () => {
       tokenName: 'E2E Test Token',
       tokenSymbol: 'E2E',
       tokenMemo: 'E2E Testing Token',
-      initialSupply: 100,
+      initialSupply: 100, // given in base units. Equals to 1 in display units
       decimals: 2,
       treasuryAccountId: operatorClient.operatorAccountId!.toString(),
       supplyType: TokenSupplyType.Infinite,
@@ -47,7 +51,7 @@ describe('Get Account Token Balances E2E Tests', () => {
 
     // Transfer some balance to the test account
     await operatorWrapper.transferFungible({
-      amount: 25,
+      amount: 25, // given in base units. Equals to 0.25 in display units
       to: testAccountId,
       from: operatorClient.operatorAccountId!.toString(),
       tokenId,
@@ -62,14 +66,21 @@ describe('Get Account Token Balances E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Get the token balances for account ${testAccountId}`;
 
-      const result = await agentExecutor.invoke({ input });
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      const observation = extractObservationFromLangchainResponse(result);
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token Balances');
-      expect(observation.humanMessage).toContain(`Token: ${tokenId}`);
-      expect(observation.humanMessage).toContain(`Balance: 25`);
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token Balances');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(`Token: ${tokenId}`);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(`Balance: 0.25`);
     }),
   );
 
@@ -78,13 +89,22 @@ describe('Get Account Token Balances E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Show me my token balances`;
 
-      const result = await agentExecutor.invoke({ input });
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      const observation = extractObservationFromLangchainResponse(result);
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token Balances');
-      expect(observation.humanMessage).toContain(operatorClient.operatorAccountId!.toString());
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token Balances');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        operatorClient.operatorAccountId!.toString(),
+      );
     }),
   );
 
@@ -94,12 +114,19 @@ describe('Get Account Token Balances E2E Tests', () => {
       const nonExistentAccountId = '0.0.999999999';
       const input = `Get the token balances for account ${nonExistentAccountId}`;
 
-      const result = await agentExecutor.invoke({ input });
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      const observation = extractObservationFromLangchainResponse(result);
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.error).toContain('Failed to fetch');
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to fetch');
     }),
   );
 
@@ -109,16 +136,32 @@ describe('Get Account Token Balances E2E Tests', () => {
       const invalidAccountId = 'invalid-account-id';
       const input = `Get the token balances for account ${invalidAccountId}`;
 
-      const result = await agentExecutor.invoke({ input });
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      const observation = extractObservationFromLangchainResponse(result);
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.error).toContain('Failed to fetch balance for account');
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
+        'Failed to fetch balance for account',
+      );
     }),
   );
 
   afterAll(async () => {
+    if (testAccountId && operatorClient) {
+      await returnHbarsAndDeleteAccount(
+        operatorWrapper,
+        AccountId.fromString(testAccountId),
+        operatorClient.operatorAccountId!,
+      );
+    }
     if (testSetup) {
       testSetup.cleanup();
     }

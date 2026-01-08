@@ -8,6 +8,7 @@ import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zo
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const mintFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -20,7 +21,7 @@ This tool will mint a given amount (supply) of an existing fungible token on Hed
 
 Parameters:
 - tokenId (str, required): The id of the token
-- amount (number, required): The amount to be minted
+- amount (number, required): The amount to be minted. Given in display units, the tool will handle parsing
 ${usageInstructions}
 
 Example: "Mint 1 of 0.0.6458037" means minting the amount of 1 of the token with id 0.0.6458037.
@@ -69,6 +70,7 @@ const tool = (context: Context): Tool => ({
   description: mintFungibleTokenPrompt(context),
   parameters: mintFungibleTokenParameters(context),
   execute: mintFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

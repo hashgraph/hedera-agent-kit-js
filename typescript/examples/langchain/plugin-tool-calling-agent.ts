@@ -12,13 +12,14 @@ import {
   coreTransactionQueryPluginToolNames,
   HederaLangchainToolkit,
 } from 'hedera-agent-kit';
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
-import { BufferMemory } from 'langchain/memory';
+import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
+import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { StructuredToolInterface } from '@langchain/core/tools';
 
 dotenv.config();
 
@@ -142,8 +143,7 @@ async function bootstrap(): Promise<void> {
   ]);
 
   // Fetch tools from toolkit
-  const tools = hederaAgentToolkit.getTools();
-
+  const tools: StructuredToolInterface[] = hederaAgentToolkit.getTools();
   // Create the underlying agent
   const agent = createToolCallingAgent({
     llm,

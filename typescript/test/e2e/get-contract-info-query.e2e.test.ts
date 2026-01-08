@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   getCustomClient,
   getOperatorClientForTests,
@@ -8,9 +8,13 @@ import {
   createLangchainTestSetup,
   type LangchainTestSetup,
 } from '../utils';
-import { wait, extractObservationFromLangchainResponse } from '../utils/general-util';
+import { ResponseParserService } from '@/langchain';
+import { wait } from '../utils/general-util';
 import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Get Contract Info E2E Tests', () => {
   let operatorClient: Client;
@@ -19,7 +23,8 @@ describe('Get Contract Info E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
   let deployedContractId: string;
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
@@ -28,7 +33,10 @@ describe('Get Contract Info E2E Tests', () => {
     // Create an executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 10 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -42,39 +50,63 @@ describe('Get Contract Info E2E Tests', () => {
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
   });
 
   afterAll(async () => {
     // Cleanup: delete executor account
     if (executorWrapper) {
-      await executorWrapper.deleteAccount({
-        accountId: executorAccountId,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorAccountId,
+        operatorClient.operatorAccountId!,
+      );
     }
     if (testSetup) testSetup.cleanup();
     operatorClient.close();
     executorClient.close();
   });
 
-  it('should fetch contract info for a deployed contract via LangChain agent', itWithRetry(async () => {
-    const input = `Get the contract info for contract ID ${deployedContractId}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+  it(
+    'should fetch contract info for a deployed contract via LangChain agent',
+    itWithRetry(async () => {
+      const input = `Get the contract info for contract ID ${deployedContractId}`;
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation.raw.contractId).toBe(deployedContractId);
-    expect(observation.raw.contractInfo.contract_id).toBe(deployedContractId);
-    expect(observation.humanMessage).toContain(`details for contract **${deployedContractId}**`);
-  }));
+      expect(parsedResponse[0].parsedData.raw.contractId).toBe(deployedContractId);
+      expect(parsedResponse[0].parsedData.raw.contractInfo.contract_id).toBe(deployedContractId);
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        `details for contract **${deployedContractId}**`,
+      );
+    }),
+  );
 
-  it('should handle non-existent contract gracefully via LangChain agent', itWithRetry(async () => {
-    const fakeContractId = '0.0.999999999';
-    const input = `Get the contract info for contract ID ${fakeContractId}`;
-    const queryResult = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(queryResult);
+  it(
+    'should handle non-existent contract gracefully via LangChain agent',
+    itWithRetry(async () => {
+      const fakeContractId = '0.0.999999999';
+      const input = `Get the contract info for contract ID ${fakeContractId}`;
+      const queryResult = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-    expect(observation.raw.error).toContain('Failed to get contract info');
-    expect(observation.humanMessage).toContain('Failed to get contract info');
-  }));
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get contract info');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to get contract info');
+    }),
+  );
 });

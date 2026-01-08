@@ -5,3 +5,7 @@ export * from './plugin';
 export * from './strategies/tx-mode-strategy';
 export * from './utils';
 export * from './constants/contracts';
+export { IHederaMirrornodeService } from './hedera-utils/mirrornode/hedera-mirrornode-service.interface';
+export { getMirrornodeService } from './hedera-utils/mirrornode/hedera-mirrornode-utils';
+export { default as HederaBuilder } from './hedera-utils/hedera-builder';
+export { contractExecuteTransactionParametersNormalised } from './parameter-schemas/evm.zod';

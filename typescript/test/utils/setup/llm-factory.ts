@@ -1,8 +1,3 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatAnthropic } from '@langchain/anthropic';
-import { ChatGroq } from '@langchain/groq';
-import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-
 export enum LLMProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
@@ -12,74 +7,52 @@ export enum LLMProvider {
 export interface LlmOptions {
   provider: LLMProvider;
   model?: string;
-  temperature: number;
   apiKey?: string;
-  baseURL?: string;
-  maxIterations: number;
-  systemPrompt: string;
 }
 
 /**
- * Factory class for creating Large Language Model (LLM) instances based on the specified provider and configuration options.
- * Supports multiple LLM providers including OpenAI, Anthropic, and Groq.
+ * Factory class for creating string identifiers for Large Language Models (LLMs)
+ * based on the specified provider. Supports multiple LLM providers including
+ * OpenAI, Anthropic, and Groq.
  */
 export class LLMFactory {
   /**
-   * Creates and configures an LLM instance based on the provided options.
+   * Creates a string identifier for an LLM based on the provided options.
+   * If no model is specified, a default for the provider is used.
    *
    * @param {LlmOptions} options - Configuration options for the LLM
    * @param {LLMProvider} options.provider - The LLM provider to use (OPENAI, ANTHROPIC, GROQ)
-   * @param {string} [options.model] - Specific model name. If not provided, uses provider default
-   * @param {number} [options.temperature=0] - Controls randomness in responses (0-1, where 0 is deterministic)
-   * @param {string} options.apiKey - API key for the specified provider (required)
-   * @param {string} [options.baseURL] - Custom base URL for API requests (OpenAI only)
-   * @returns {BaseChatModel} Configured LLM instance ready for use
-   * @throws {Error} Throws an error if the API key is missing or provider is unsupported
+   * @param {string} [options.model] - Specific model name. If not provided, uses provider default.
+   * @returns {string} A string identifier in the format 'provider:model'
+   * @throws {Error} Throws an error if the provider is unsupported
    * @example
    * ```typescript
-   * const llm = LLMFactory.createLLM({
-   *   provider: LLMProvider.OPENAI,
-   *   model: 'gpt-4o-mini',
-   *   temperature: 0.1,
-   *   apiKey: process.env.OPENAI_API_KEY
+   * const llmIdentifier = LLMFactory.createLLM({
+   * provider: LLMProvider.OPENAI,
+   * model: 'gpt-4o-mini'
    * });
+   * // llmIdentifier = "openai:gpt-4o-mini"
+   *
+   * const defaultGroq = LLMFactory.createLLM({
+   * provider: LLMProvider.GROQ
+   * });
+   * // defaultGroq = "groq:llama3-8b-8192"
    * ```
    */
-  static createLLM(options: LlmOptions): BaseChatModel {
+  static createLLM(options: LlmOptions): string {
     const provider: LLMProvider = options.provider;
 
     const model: string = options?.model || this.getDefaultModel(provider);
 
-    const temperature = options?.temperature ?? 0;
-    const baseURL = options?.baseURL;
-
-    const apiKey = options?.apiKey;
-    if (!apiKey) {
-      throw new Error(`Missing API key for provider: ${provider}`);
-    }
-
     switch (provider) {
       case LLMProvider.OPENAI:
-        return new ChatOpenAI({
-          model,
-          temperature,
-          apiKey,
-          configuration: baseURL ? { baseURL } : undefined,
-        });
+        return `openai:${model}`;
 
       case LLMProvider.ANTHROPIC:
-        return new ChatAnthropic({
-          model,
-          temperature,
-          apiKey,
-        });
+        return `anthropic:${model}`;
 
       case LLMProvider.GROQ:
-        return new ChatGroq({
-          model,
-          temperature,
-          apiKey,
-        });
+        return `groq:${model}`;
 
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);

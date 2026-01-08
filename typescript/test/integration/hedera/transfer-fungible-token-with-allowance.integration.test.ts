@@ -15,6 +15,8 @@ import { z } from 'zod';
 import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   let operatorClient: Client;
@@ -52,7 +54,11 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     // Executor account (token owner)
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 50 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
+        accountMemo: 'executor account for Transfer Fungible Token With Allowance Tool Integration',
+      })
       .then(r => r.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -71,12 +77,12 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   });
 
   afterAll(async () => {
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorAccountId,
+      operatorClient.operatorAccountId!,
+    );
     if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
       executorClient.close();
       operatorClient.close();
     }
@@ -86,7 +92,11 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     // Spender account
     spenderKey = PrivateKey.generateED25519();
     spenderAccountId = await executorWrapper
-      .createAccount({ key: spenderKey.publicKey, initialBalance: 10 })
+      .createAccount({
+        key: spenderKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'spender account for Transfer Fungible Token With Allowance Tool Integration',
+      })
       .then(r => r.accountId!);
 
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
@@ -95,7 +105,11 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     // Receiver account
     receiverKey = PrivateKey.generateED25519();
     receiverAccountId = await executorWrapper
-      .createAccount({ key: receiverKey.publicKey, initialBalance: 10 })
+      .createAccount({
+        key: receiverKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'receiver account for Transfer Fungible Token With Allowance Tool Integration',
+      })
       .then(r => r.accountId!);
 
     receiverClient = getCustomClient(receiverAccountId, receiverKey);

@@ -9,6 +9,9 @@ import {
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Schedule Delete E2E Tests', () => {
   let operatorClient: Client;
@@ -25,7 +28,7 @@ describe('Schedule Delete E2E Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
         key: executorKeyPair.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -45,15 +48,16 @@ describe('Schedule Delete E2E Tests', () => {
   afterAll(async () => {
     if (executorClient) {
       try {
-        await executorWrapper.deleteAccount({
-          accountId: recipientAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          recipientAccountId,
+          operatorClient.operatorAccountId!,
+        );
+        await returnHbarsAndDeleteAccount(
+          executorWrapper,
+          executorClient.operatorAccountId!,
+          operatorClient.operatorAccountId!,
+        );
       } catch (error) {
         console.warn('Failed to clean up accounts:', error);
       }

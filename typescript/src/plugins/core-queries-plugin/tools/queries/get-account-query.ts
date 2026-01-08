@@ -6,6 +6,7 @@ import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { AccountResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getAccountQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -58,6 +59,7 @@ const tool = (context: Context): Tool => ({
   description: getAccountQueryPrompt(context),
   parameters: accountQueryParameters(context),
   execute: getAccountQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

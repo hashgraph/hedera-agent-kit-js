@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
 
 describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { SIGN_SCHEDULE_TRANSACTION_TOOL } = coreAccountPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -32,9 +32,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
 
       // Get the Hedera Agent Kit API from the toolkit
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -49,9 +53,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'Please sign scheduled transaction 0.0.789012';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -68,9 +76,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'Approve the scheduled transaction 0.0.345678';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -85,9 +97,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'Execute the scheduled transaction with ID 0.0.901234';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -102,9 +118,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'Authorize scheduled transaction 0.0.567890';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -119,9 +139,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'Confirm the scheduled transaction 0.0.111222';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -147,9 +171,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+        const spy = vi
+          .spyOn(hederaAPI, 'run')
+          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-        await agentExecutor.invoke({ input: variation.input });
+        await agent.invoke({
+          messages: [{ role: 'user', content: variation.input }],
+        });
 
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
@@ -167,9 +195,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
         'Please sign the scheduled transaction with ID 0.0.123456789 as soon as possible';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -184,9 +216,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'I need to sign scheduled transaction 0.0.987654321 for approval';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -201,9 +237,13 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       const input = 'Sign scheduled transaction 0.0.123';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue(''); //spies on the run method of the HederaAgentKitAPI and stops it from executing
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(

@@ -8,6 +8,7 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { toHbar } from '@/shared/hedera-utils/hbar-conversion-utils';
+import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 export const getHbarBalanceQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -64,6 +65,7 @@ const tool = (context: Context): Tool => ({
   description: getHbarBalanceQueryPrompt(context),
   parameters: accountBalanceQueryParameters(context),
   execute: getHbarBalanceQuery,
+  outputParser: untypedQueryOutputParser,
 });
 
 export default tool;

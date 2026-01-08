@@ -7,6 +7,7 @@ import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/t
 import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const dissociateTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -64,6 +65,7 @@ const tool = (context: Context): Tool => ({
   description: dissociateTokenPrompt(context),
   parameters: dissociateTokenParameters(context),
   execute: dissociateToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -1,5 +1,5 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
@@ -7,15 +7,20 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { Client, TransactionId, PrivateKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import Long from 'long';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 describe('Get Transaction Record E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
@@ -34,13 +39,17 @@ describe('Get Transaction Record E2E Tests', () => {
 
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 5 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     // Create a self-transfer to produce a transaction id
@@ -65,57 +74,108 @@ describe('Get Transaction Record E2E Tests', () => {
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       testSetup.cleanup();
       operatorClient.close();
     }
   });
 
-  it('fetches transaction record - SDK transactionId notation', itWithRetry(async () => {
-    const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+  it(
+    'fetches transaction record - SDK transactionId notation',
+    itWithRetry(async () => {
+      const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain(`Transaction Details for ${txIdMirrorNodeStyle}`);
-  }));
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        `Transaction Details for ${txIdMirrorNodeStyle}`,
+      );
+    }),
+  );
 
-  it('fetches transaction record - Mirror Node transactionId notation', itWithRetry(async () => {
-    const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+  it(
+    'fetches transaction record - Mirror Node transactionId notation',
+    itWithRetry(async () => {
+      const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain(`Transaction Details for ${txIdMirrorNodeStyle}`);
-  }));
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        `Transaction Details for ${txIdMirrorNodeStyle}`,
+      );
+    }),
+  );
 
-  it('handles non-existent transaction ID', itWithRetry(async () => {
-    const invalidTxId = '0.0.1-1756968265-043000618';
-    const input = `Get the transaction record for transaction ${invalidTxId}`;
+  it(
+    'handles non-existent transaction ID',
+    itWithRetry(async () => {
+      const invalidTxId = '0.0.1-1756968265-043000618';
+      const input = `Get the transaction record for transaction ${invalidTxId}`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.raw.error).toContain('Failed to get transaction record');
-    expect(observation.raw.error).toContain('Not Found');
-    expect(observation.humanMessage).toContain('Failed to get transaction record');
-    expect(observation.humanMessage).toContain('Not Found');
-  }));
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get transaction record');
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Not Found');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Failed to get transaction record',
+      );
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Not Found');
+    }),
+  );
 
-  it('handles invalid transaction ID format', itWithRetry(async () => {
-    const invalidTxId = 'invalid-tx-id';
-    const input = `Get the transaction record for transaction ${invalidTxId}`;
+  it(
+    'handles invalid transaction ID format',
+    itWithRetry(async () => {
+      const invalidTxId = 'invalid-tx-id';
+      const input = `Get the transaction record for transaction ${invalidTxId}`;
 
-    const result = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-    expect(observation).toBeDefined();
-    expect(observation.raw.error).toContain('Invalid transactionId format: invalid-tx-id');
-    expect(observation.raw.error).toContain('Failed to get transaction record');
-    expect(observation.humanMessage).toContain('Failed to get transaction record');
-  }));
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.error).toContain(
+        'Invalid transactionId format: invalid-tx-id',
+      );
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get transaction record');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Failed to get transaction record',
+      );
+    }),
+  );
 });

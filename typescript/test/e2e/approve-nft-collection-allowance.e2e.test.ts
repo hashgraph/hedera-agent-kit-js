@@ -12,6 +12,7 @@ import {
   TokenType,
   TransferTransaction,
 } from '@hashgraph/sdk';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -19,17 +20,21 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../utils';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
+import { ResponseParserService } from '@/langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 /**
  * E2E: Approve allowance for the entire NFT collection (all serials)
  */
 describe('Approve NFT Collection Allowance (all serials) E2E', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: any;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
 
   let operatorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
@@ -57,7 +62,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 2) Create owner (executor) account and client
     const ownerKey = PrivateKey.generateED25519();
     const ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
@@ -65,23 +70,30 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
 
     // 3) Create spender account + client
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await ownerWrapper
-      .createAccount({ key: spenderKey.publicKey as Key, initialBalance: 15 })
+    spenderAccount = await operatorWrapper
+      .createAccount({
+        key: spenderKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccount, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);
 
     // 4) Create a recipient account + client
     recipientKey = PrivateKey.generateED25519();
-    recipientAccount = await ownerWrapper
-      .createAccount({ key: recipientKey.publicKey as Key, initialBalance: 15 })
+    recipientAccount = await operatorWrapper
+      .createAccount({
+        key: recipientKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
     recipientClient = getCustomClient(recipientAccount, recipientKey);
     recipientWrapper = new HederaOperationsWrapper(recipientClient);
 
     // 5) Start LangChain test setup with the owner client (so the agent acts as owner)
     testSetup = await createLangchainTestSetup(undefined, undefined, ownerClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // 6) Create an HTS NFT with owner as treasury/admin/supply
     const createResp = await ownerWrapper.createNonFungibleToken({
@@ -149,12 +161,19 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       // Approve for all serials
       const input = `Approve NFT allowance for all serials of token ${nftTokenId} from ${ownerClient.operatorAccountId!.toString()} to ${spenderAccount.toString()}`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.raw.status.toString()).toBe('SUCCESS');
-      expect(observation.raw.transactionId).toBeDefined();
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.status.toString()).toBe('SUCCESS');
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       // Wait for mirror node/allowance propagation
       await wait(MIRROR_NODE_WAITING_TIME);

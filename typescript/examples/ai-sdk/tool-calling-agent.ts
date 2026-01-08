@@ -1,9 +1,15 @@
-import { HederaAIToolkit, AgentMode, coreTokenPlugin, coreQueriesPlugin, coreAccountPlugin } from 'hedera-agent-kit';
+import {
+  HederaAIToolkit,
+  AgentMode,
+  coreTokenPlugin,
+  coreAccountPlugin,
+  coreConsensusPlugin,
+} from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { openai } from '@ai-sdk/openai';
-import { generateText, wrapLanguageModel } from 'ai';
+import { generateText, stepCountIs, wrapLanguageModel } from 'ai';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -16,11 +22,7 @@ async function bootstrap(): Promise<void> {
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
-      plugins: [
-        coreTokenPlugin,
-        coreQueriesPlugin,
-        coreAccountPlugin
-      ],
+      plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin],
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
@@ -35,7 +37,7 @@ async function bootstrap(): Promise<void> {
   console.log('Hedera Agent CLI Chatbot — type "exit" to quit');
 
   // Chat memory: conversation history
-  const conversationHistory: { role: 'user' | 'assistant', content: string }[] = [];
+  const conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
 
   while (true) {
     const { userInput } = await prompts({
@@ -50,7 +52,7 @@ async function bootstrap(): Promise<void> {
       break;
     }
 
-    // Add user message to history
+    // Add a user message to the history
     conversationHistory.push({ role: 'user', content: userInput });
 
     try {
@@ -58,7 +60,7 @@ async function bootstrap(): Promise<void> {
         model,
         messages: conversationHistory,
         tools: hederaAgentToolkit.getTools(),
-        maxSteps: 2, // Important to set this to 2 to allow for the LLM to use the tool result to answer the user
+        stopWhen: stepCountIs(2),
       });
 
       // Add AI response to history
@@ -72,9 +74,11 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Fatal error during CLI bootstrap:', err);
-  process.exit(1);
-}).then(() => {
-  process.exit(0);
-});
+bootstrap()
+  .catch(err => {
+    console.error('Fatal error during CLI bootstrap:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    process.exit(0);
+  });

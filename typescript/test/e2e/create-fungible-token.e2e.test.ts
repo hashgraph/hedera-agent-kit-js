@@ -1,5 +1,4 @@
 import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
@@ -7,22 +6,23 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
-import { Client, PrivateKey } from '@hashgraph/sdk';
-import {
-  extractObservationFromLangchainResponse,
-  extractTokenIdFromObservation,
-  wait,
-} from '../utils/general-util';
+import { Client, PrivateKey, TokenId } from '@hashgraph/sdk';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { ReactAgent } from 'langchain';
+import { ResponseParserService } from '@/langchain';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Create Fungible Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
+  let responseParsingService: ResponseParserService;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
@@ -31,7 +31,7 @@ describe('Create Fungible Token E2E Tests', () => {
     // 1. Create an executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 50 })
+      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client
@@ -39,7 +39,8 @@ describe('Create Fungible Token E2E Tests', () => {
 
     // 3. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     await wait(MIRROR_NODE_WAITING_TIME);
@@ -66,18 +67,28 @@ describe('Create Fungible Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = `Create a fungible token named MyToken with symbol MTK`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token created successfully');
-      expect(observation.raw.tokenId).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      const rawTokenId = parsedResponse[0].parsedData.raw.tokenId;
+      const tokenId = new TokenId(rawTokenId.shard.low, rawTokenId.realm.low, rawTokenId.num.low);
+
+      expect(parsedResponse[0]).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
+      expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
       // Verify on-chain
-      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('MyToken');
       expect(tokenInfo.symbol).toBe('MTK');
       expect(tokenInfo.decimals).toBe(0);
@@ -90,17 +101,26 @@ describe('Create Fungible Token E2E Tests', () => {
       const input =
         'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const tokenId = extractTokenIdFromObservation(observation);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('Token created successfully');
-      expect(observation.raw.tokenId).toBeDefined();
+      const rawTokenId = parsedResponse[0].parsedData.raw.tokenId;
+      const tokenId = new TokenId(rawTokenId.shard.low, rawTokenId.realm.low, rawTokenId.num.low);
+
+      expect(parsedResponse[0]).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
+      expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
-      const tokenInfo = await executorWrapper.getTokenInfo(tokenId);
+      const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('GoldCoin');
       expect(tokenInfo.symbol).toBe('GLD');
       expect(tokenInfo.decimals).toBe(2);
@@ -112,13 +132,24 @@ describe('Create Fungible Token E2E Tests', () => {
   it(
     'should schedule creation of a FT successfully',
     itWithRetry(async () => {
-      const updateResult = await agentExecutor.invoke({
-        input: `Create a fungible token named MyToken with symbol MTK. Schedule the transaction instead of executing it immediately.`,
+      const input = `Create a fungible token named MyToken with symbol MTK. Schedule the transaction instead of executing it immediately.`;
+
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
       });
 
-      const observation = extractObservationFromLangchainResponse(updateResult);
-      expect(observation.humanMessage).toContain('Scheduled transaction created successfully.');
-      expect(observation.raw.scheduleId).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse[0]).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled transaction created successfully.',
+      );
+      expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
     }),
   );
 
@@ -128,12 +159,20 @@ describe('Create Fungible Token E2E Tests', () => {
       const input =
         'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('cannot exceed max supply');
-      expect(observation.raw.error).toBeDefined();
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      expect(parsedResponse[0]).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('cannot exceed max supply');
+      expect(parsedResponse[0].parsedData.raw.error).toBeDefined();
     }),
   );
 });

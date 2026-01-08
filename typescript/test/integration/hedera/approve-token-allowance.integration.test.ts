@@ -16,6 +16,8 @@ import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/acco
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 /**
  * Integration tests for Approve Token Allowance tool
@@ -46,14 +48,22 @@ describe('Approve Token Allowance Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 15 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+        accountMemo: 'executor account for Approve Token Allowance Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    spenderAccountId = await executorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key, initialBalance: 5 })
+    spenderAccountId = await operatorWrapper
+      .createAccount({
+        key: executorClient.operatorPublicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'spender account for Approve Token Allowance Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     context = {
@@ -75,21 +85,21 @@ describe('Approve Token Allowance Integration Tests', () => {
   });
 
   afterAll(async () => {
+    try {
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        spenderAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
+    } catch (e) {
+      console.warn('Failed to clean up accounts:', e);
+    }
     if (executorClient) {
-      try {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          spenderAccountId,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      } catch (e) {
-        console.warn('Failed to clean up accounts:', e);
-      }
       executorClient.close();
     }
     if (operatorClient) operatorClient.close();

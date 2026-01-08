@@ -7,6 +7,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const updateAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -73,6 +74,7 @@ const tool = (context: Context): Tool => ({
   description: updateAccountPrompt(context),
   parameters: updateAccountParameters(context),
   execute: updateAccount,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;
