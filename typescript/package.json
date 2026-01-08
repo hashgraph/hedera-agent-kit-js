@@ -46,7 +46,7 @@
     "@hashgraph/sdk": "2.68.0",
     "@langchain/core": "1.1.8",
     "@langchain/openai": "1.1.1",
-    "@modelcontextprotocol/sdk": "1.25.1",
+    "@modelcontextprotocol/sdk": "1.25.2",
     "ai": "6.0.5",
     "bignumber.js": "9.3.1",
     "ethers": "6.15.0",
