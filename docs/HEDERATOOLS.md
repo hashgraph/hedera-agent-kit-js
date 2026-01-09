@@ -68,7 +68,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
 
 ### TRANSFER_HBAR_TOOL
 
-Transfer HBAR between accounts.
+Transfer HBAR between accounts. Supports scheduled transactions.
 
 #### Parameters
 
@@ -91,11 +91,17 @@ Can you move 10 HBAR to 0.0.9999?
 Pay 0.01 HBAR to 0.0.1010
 ```
 
+#### Example (Scheduled)
+
+```
+Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### CREATE_ACCOUNT_TOOL
 
-Creates a new Hedera account.
+Creates a new Hedera account. Supports scheduled transactions.
 
 #### Parameters
 
@@ -116,11 +122,17 @@ Create an account with max automatic token associations 10
 Schedule creation of an account with max automatic token associations 10
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule creation of an account with max automatic token associations 10. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### UPDATE_ACCOUNT_TOOL
 
-Update an account's metadata.
+Update an account's metadata. Supports scheduled transactions.
 
 #### Parameters
 
@@ -137,6 +149,12 @@ Update an account's metadata.
 ```
 Update account 0.0.12345 to have max auto associations of 10
 Set my account memo to "Updated account"
+```
+
+#### Example (Scheduled)
+
+```
+Schedule an account update for account 0.0.1234. Set the account memo to "updated with scheduled transaction". Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -206,7 +224,7 @@ Delete HBAR allowance for 0.0.123
 
 ### TRANSFER_HBAR_WITH_ALLOWANCE_TOOL
 
-Transfer HBAR using an existing allowance.
+Transfer HBAR using an existing allowance. Supports scheduled transactions.
 
 #### Parameters
 
@@ -221,6 +239,12 @@ Transfer HBAR using an existing allowance.
 ```
 Transfer 1 HBAR from 0.0.123 to 0.0.456 using allowance
 Use allowance from account 0.0.123 to send 5 HBAR to 0.0.789
+```
+
+#### Example (Scheduled)
+
+```
+Transfer 1 HBAR from 0.0.123 to 0.0.456 using allowance. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -354,7 +378,7 @@ Create topic with transaction memo "TX: memo"
 
 ### SUBMIT_TOPIC_MESSAGE_TOOL
 
-Submit a message to a topic on the Hedera network.
+Submit a message to a topic on the Hedera network. Supports scheduled transactions.
 
 #### Parameters
 
@@ -369,6 +393,12 @@ Submit a message to a topic on the Hedera network.
 ```
 Submit message "Hello World" to topic 0.0.12345
 Post "Event logged" to topic 0.0.12345
+```
+
+#### Example (Scheduled)
+
+```
+Submit message "Hello World" to topic 0.0.12345. Schedule it and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -488,7 +518,12 @@ Create a fungible token named GoldCoin with symbol GOLD, initial supply 1000, de
 Create a fungible token MySupplyToken with symbol SUP, treasury account 0.0.5005 and set supply key
 Make a fungible token named TestToken with symbol TST
 Create fungible GLD, Gold, token with infinite supply
-Schedule create fungible token transaction called MyToken with symbol MTK
+```
+
+#### Example (Scheduled)
+
+```
+Schedule create fungible token transaction called MyToken with symbol MTK. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -517,6 +552,12 @@ Create an NFT called LimitedEdition with symbol LE and set supply key
 Create an NFT with infinite supply called OpenArt with symbol OPEN
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule create non-fungible token transaction called MyToken with symbol MTK. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### MINT_FUNGIBLE_TOKEN_TOOL
@@ -535,6 +576,12 @@ Mints additional supply of an existing fungible token. Supports scheduled transa
 ```
 Mint 1000 of token 0.0.12345
 Mint 50 tokens for 0.0.12345
+```
+
+#### Example (Scheduled)
+
+```
+Schedule mint 10 of token 0.0.12345. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -556,7 +603,12 @@ Mints NFTs with unique metadata for an existing NFT class. Supports scheduled tr
 Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json
 Mint NFTs for token 0.0.6006 with metadata URIs: ipfs://uri1, ipfs://uri2, ipfs://uri3
 Mint NFT 0.0.7007 with metadata ipfs://abc123
-Schedule Mint 0.0.5005 with metadata: ipfs://baf/metadata.json. Make it expire tomorrow.
+```
+
+#### Example (Scheduled)
+
+```
+Schedule Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -723,6 +775,12 @@ Spend allowance from 0.0.1002 to send 25 tokens 0.0.33333 to 0.0.2002
 Use allowance from 0.0.1002 to transfer 50 tokens 0.0.33333 to 0.0.2002 and 75 to 0.0.3003
 ```
 
+#### Example (Scheduled)
+
+```
+Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allowance. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### APPROVE_NFT_ALLOWANCE_TOOL
@@ -778,7 +836,7 @@ Delete allowance for NFT token 0.0.1234 serials 10 and 12 with memo "cleanup"
 
 ### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
 
-Transfers NFTs from the operator's account to specified recipients.
+Transfers NFTs from the operator's account to specified recipients. Supports scheduled transactions.
 
 #### Parameters
 
@@ -794,6 +852,12 @@ Transfers NFTs from the operator's account to specified recipients.
 Transfer NFT 0.0.12345 serial 1 to 0.0.222
 Send my NFT 0.0.12345 serials 1 and 2 to 0.0.333
 Transfer NFT token 0.0.5555 serial 3 to account 0.0.6666 with memo "gift"
+```
+
+#### Example (Scheduled)
+
+```
+Transfer NFT 0.0.12345 serial 1 to 0.0.222. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
@@ -865,7 +929,7 @@ Show pending airdrops for account 0.0.12345
 
 ### CREATE_ERC20_TOOL
 
-Deploys a new ERC-20 token via the BaseERC20Factory.
+Deploys a new ERC-20 token via the BaseERC20Factory. Supports scheduled transactions.
 
 #### Parameters
 
@@ -883,11 +947,17 @@ Create an ERC20 token called MyToken with symbol MTK
 Create ERC20 token TestCoin (TST) with 18 decimals and 1000000 initial supply
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule deploy ERC20 token called MyCoin with symbol MC, 500 initial supply, and 8 decimals. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### TRANSFER_ERC20_TOOL
 
-Transfers an ERC-20 token.
+Transfers an ERC-20 token. Supports scheduled transactions.
 
 #### Parameters
 
@@ -907,11 +977,17 @@ Send 25 erc20 tokens from contract 0.0.1234 to 0.0.5678
 Move 200 erc20 tokens of contract 0.0.3333 to address 0.0.4444
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule transfer 100 0.0.5678 ERC20 tokens from contract to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### CREATE_ERC721_TOOL
 
-Deploys a new ERC-721 token via the BaseERC721Factory.
+Deploys a new ERC-721 token via the BaseERC721Factory. Supports scheduled transactions.
 
 #### Parameters
 
@@ -928,11 +1004,17 @@ Create an ERC721 collection called MyNFTs with symbol MNFT and base URI https://
 Create ERC721 token ArtCollection (ART) with baseURI ipfs://bafybei...
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule deploy ERC721 token called MyNFT with symbol MNFT. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### MINT_ERC721_TOOL
 
-Mints a new ERC-721 token.
+Mints a new ERC-721 token. Supports scheduled transactions.
 
 #### Parameters
 
@@ -948,11 +1030,17 @@ Mint ERC721 token 0.0.12345
 Mint ERC721 0.0.12345 to address 0x1234...5678
 ```
 
+#### Example (Scheduled)
+
+```
+Schedule mint ERC721 token 0.0.5678 to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
 ---
 
 ### TRANSFER_ERC721_TOOL
 
-Transfers an ERC-721 token.
+Transfers an ERC-721 token. Supports scheduled transactions.
 
 #### Parameters
 
@@ -968,6 +1056,12 @@ Transfers an ERC-721 token.
 ```
 Transfer ERC721 token 0.0.12345 with id 1 to 0.0.67890
 Send ERC721 0.0.12345 token ID 5 from 0x123... to 0x456...
+```
+
+#### Example (Scheduled)
+
+```
+Schedule transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
