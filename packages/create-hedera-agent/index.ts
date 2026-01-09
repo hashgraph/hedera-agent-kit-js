@@ -282,16 +282,16 @@ async function main() {
         stdio: "pipe",
       }
     );
-  } catch {}
+  } catch { }
 
   // Next steps
   console.log("");
   console.log(green("Done."));
   console.log(
     `${bold("Next steps:")}\n` +
-      `  cd ${projectName}\n` +
-      `  npm i\n` +
-      `  npm run dev\n`
+    `  cd ${projectName}\n` +
+    `  npm i\n` +
+    `  npm run dev\n`
   );
   // Ensure the CLI exits cleanly even if some child process leaves open handles
   process.exit(0);
