@@ -25,6 +25,7 @@ describe.skip('Get Token Info Query Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const tokenId = '0.0.1231233';
@@ -45,6 +46,7 @@ describe.skip('Get Token Info Query Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const tokenId = '0.0.1231233';
@@ -65,6 +67,7 @@ describe.skip('Get Token Info Query Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const tokenId = '0.0.1231233';
@@ -85,6 +88,7 @@ describe.skip('Get Token Info Query Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const tokenId = '0.0.1231233';
@@ -105,6 +109,7 @@ describe.skip('Get Token Info Query Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const tokenId = '0.0.1231233';

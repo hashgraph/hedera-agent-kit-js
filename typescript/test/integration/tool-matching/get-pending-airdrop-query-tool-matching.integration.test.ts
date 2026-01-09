@@ -29,6 +29,7 @@ describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
       const spy = vi
         .spyOn(hederaAPI, 'run')
         .mockReset()
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       const accountId = '0.0.1231233';
@@ -52,6 +53,7 @@ describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 

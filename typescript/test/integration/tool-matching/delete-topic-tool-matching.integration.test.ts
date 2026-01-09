@@ -30,6 +30,7 @@ describe.skip('Delete Topic Tool Matching Integration Tests', () => {
 
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const resp = await agent.invoke({
@@ -56,6 +57,7 @@ describe.skip('Delete Topic Tool Matching Integration Tests', () => {
     for (const v of variations) {
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
       await agent.invoke({
         messages: [{ role: 'user', content: v.input }],

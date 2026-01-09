@@ -37,7 +37,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
         "Approve NFT allowance for token 0.0.5005 serial 1 to spender 0.0.7007 from 0.0.6006 with memo 'gift'";
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -60,7 +60,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const input = 'Approve NFT allowance for token 0.0.1111 serials 2 and 3 to 0.0.2222';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -102,7 +102,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const v of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+        const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
         await agent.invoke({ messages: [{ role: 'user', content: v.input }] });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
@@ -138,7 +138,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const v of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+        const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
         await agent.invoke({
           messages: [{ role: 'user', content: v.input }],
         });
@@ -167,7 +167,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       const input = 'Approve the entire NFT collection 0.0.7777 to spender 0.0.8888';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],

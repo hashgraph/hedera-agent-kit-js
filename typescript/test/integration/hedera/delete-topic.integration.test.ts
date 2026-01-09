@@ -20,7 +20,10 @@ describe('Delete Topic Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     const executorId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(r => r.accountId!);
     executorClient = getCustomClient(executorId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
