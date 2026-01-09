@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import { Client, Status } from '@hashgraph/sdk';
 import toolFactory, {
   CREATE_ERC721_TOOL,
@@ -51,12 +51,14 @@ vi.mock('@hashgraph/sdk', async () => {
   const actual: any = await vi.importActual('@hashgraph/sdk');
   return {
     ...actual,
-    TransactionRecordQuery: vi.fn(() => ({
-      setTransactionId: vi.fn().mockReturnThis(),
-      execute: vi.fn().mockResolvedValue({
-        contractFunctionResult: { getAddress: vi.fn(() => 'abcdef') },
-      }),
-    })),
+    TransactionRecordQuery: vi.fn(function () {
+      return {
+        setTransactionId: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue({
+          contractFunctionResult: { getAddress: vi.fn(() => 'abcdef') },
+        }),
+      };
+    }),
   };
 });
 
@@ -100,8 +102,8 @@ describe('createERC721 tool (unit)', () => {
   });
 
   it('executes happy path and returns ERC721 address and message', async () => {
-    mockedNormaliser.normaliseCreateERC721Params.mockResolvedValue(normalisedParams);
-    mockedBuilder.executeTransaction.mockReturnValue({} as any);
+    (mockedNormaliser.normaliseCreateERC721Params as Mock).mockResolvedValue(normalisedParams);
+    (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
 
     const tool = toolFactory(context);
     const client = makeClient();
@@ -125,8 +127,8 @@ describe('createERC721 tool (unit)', () => {
   });
 
   it('returns early when in RETURN_BYTES mode', async () => {
-    mockedNormaliser.normaliseCreateERC721Params.mockResolvedValue(normalisedParams);
-    mockedBuilder.executeTransaction.mockReturnValue({} as any);
+    (mockedNormaliser.normaliseCreateERC721Params as Mock).mockResolvedValue(normalisedParams);
+    (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
 
     const customContext: any = { accountId: '0.0.1001', mode: AgentMode.RETURN_BYTES };
     const tool = toolFactory(customContext);
@@ -141,7 +143,7 @@ describe('createERC721 tool (unit)', () => {
   });
 
   it('returns error message when an Error is thrown', async () => {
-    mockedBuilder.executeTransaction.mockImplementation(() => {
+    (mockedBuilder.executeTransaction as Mock).mockImplementation(() => {
       throw new Error('boom');
     });
 
@@ -156,7 +158,7 @@ describe('createERC721 tool (unit)', () => {
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
-    mockedBuilder.executeTransaction.mockImplementation(() => {
+    (mockedBuilder.executeTransaction as Mock).mockImplementation(() => {
       throw 'string error';
     });
 

@@ -12,13 +12,6 @@ class HederaMCPToolkit extends McpServer {
     super({
       name: 'Hedera Agent Kit',
       version: '0.1.0',
-      configuration: {
-        ...configuration,
-        context: {
-          ...configuration.context,
-          mode: 'modelcontextprotocol',
-        },
-      },
     });
 
     const context = configuration.context || {};
@@ -27,10 +20,12 @@ class HederaMCPToolkit extends McpServer {
     this._hederaAgentKit = new HederaAgentKitAPI(client, configuration.context, allTools);
 
     allTools.map(tool => {
-      this.tool(
+      this.registerTool(
         tool.method,
-        tool.description,
-        tool.parameters.shape,
+        {
+          description: tool.description,
+          inputSchema: tool.parameters.shape,
+        },
         async (arg: any, _extra: RequestHandlerExtra<any, any>) => {
           const result = await this._hederaAgentKit.run(tool.method, arg);
           return {

@@ -10,10 +10,10 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const transferNonFungibleTokenPrompt = (context: Context = {}) => {
-    const contextSnippet = PromptGenerator.getContextSnippet(context);
-    const usageInstructions = PromptGenerator.getParameterUsageInstructions();
+  const contextSnippet = PromptGenerator.getContextSnippet(context);
+  const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
-    return `
+  return `
 ${contextSnippet}
 This tool will transfer non-fungible tokens (NFTs) from the operator's account to specified recipients.
 
@@ -30,45 +30,45 @@ ${usageInstructions}
 };
 
 const postProcess = (response: RawTransactionResponse) => {
-    if (response.scheduleId) {
-        return `Scheduled non-fungible token transfer created successfully.
+  if (response.scheduleId) {
+    return `Scheduled non-fungible token transfer created successfully.
 Transaction ID: ${response.transactionId}
 Schedule ID: ${response.scheduleId.toString()}`;
-    }
-    return `Non-fungible tokens successfully transferred. Transaction ID: ${response.transactionId}`;
+  }
+  return `Non-fungible tokens successfully transferred. Transaction ID: ${response.transactionId}`;
 };
 
 const transferNonFungibleToken = async (
-    client: Client,
-    context: Context,
-    params: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>>,
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>>,
 ) => {
-    try {
-        const normalisedParams = await HederaParameterNormaliser.normaliseTransferNonFungibleToken(
-            params,
-            context,
-            client,
-        );
+  try {
+    const normalisedParams = await HederaParameterNormaliser.normaliseTransferNonFungibleToken(
+      params,
+      context,
+      client,
+    );
 
-        const tx = HederaBuilder.transferNonFungibleToken(normalisedParams);
-        return await handleTransaction(tx, client, context, postProcess);
-    } catch (error) {
-        const desc = 'Failed to transfer non-fungible token';
-        const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-        console.error('[transfer_non_fungible_token_tool]', message);
-        return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
-    }
+    const tx = HederaBuilder.transferNonFungibleToken(normalisedParams);
+    return await handleTransaction(tx, client, context, postProcess);
+  } catch (error) {
+    const desc = 'Failed to transfer non-fungible token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[transfer_non_fungible_token_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+  }
 };
 
 export const TRANSFER_NON_FUNGIBLE_TOKEN_TOOL = 'transfer_non_fungible_token_tool';
 
 const tool = (context: Context): Tool => ({
-    method: TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
-    name: 'Transfer Non Fungible Token',
-    description: transferNonFungibleTokenPrompt(context),
-    parameters: transferNonFungibleTokenParameters(context).innerType(),
-    execute: transferNonFungibleToken,
-    outputParser: transactionToolOutputParser,
+  method: TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+  name: 'Transfer Non Fungible Token',
+  description: transferNonFungibleTokenPrompt(context),
+  parameters: transferNonFungibleTokenParameters(context).innerType(),
+  execute: transferNonFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

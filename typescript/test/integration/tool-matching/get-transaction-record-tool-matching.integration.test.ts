@@ -25,6 +25,7 @@ describe.skip('Get Transaction Record - Tool Matching Integration Tests', () => 
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const txId = '0.0.5-1755169980-651721264';
@@ -45,6 +46,7 @@ describe.skip('Get Transaction Record - Tool Matching Integration Tests', () => 
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const txId = '0.0.90@1756968265.343000618';

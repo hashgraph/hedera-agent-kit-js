@@ -45,7 +45,10 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
     // Create a treasury (owner) account
     const ownerKey = PrivateKey.generateED25519();
     ownerAccountId = await operatorWrapper
-      .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), key: ownerKey.publicKey })
+      .createAccount({
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+        key: ownerKey.publicKey,
+      })
       .then(resp => resp.accountId!);
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
     ownerWrapper = new HederaOperationsWrapper(ownerClient);
@@ -53,7 +56,10 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
     // Create a spender account
     const spenderKey = PrivateKey.generateED25519();
     spenderAccountId = await operatorWrapper
-      .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), key: spenderKey.publicKey })
+      .createAccount({
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        key: spenderKey.publicKey,
+      })
       .then(resp => resp.accountId!);
     spenderClient = getCustomClient(spenderAccountId, spenderKey);
     spenderWrapper = new HederaOperationsWrapper(spenderClient);

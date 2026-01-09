@@ -34,6 +34,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -60,6 +61,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -86,6 +88,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -113,6 +116,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -143,6 +147,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -169,7 +174,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
         'Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire tomorrow and wait for its expiration time with executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -208,6 +213,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       for (const variation of variations) {
         const spy = vi
           .spyOn(hederaAPI, 'run')
+          .mockReset()
           .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
         await agent.invoke({
@@ -237,6 +243,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -264,6 +271,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({

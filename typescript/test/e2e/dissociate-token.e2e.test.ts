@@ -58,7 +58,10 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     // Token creator account
     const tokenCreatorKey = PrivateKey.generateED25519();
     tokenCreatorAccountId = await operatorWrapper
-      .createAccount({ key: tokenCreatorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: tokenCreatorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     tokenCreatorClient = getCustomClient(tokenCreatorAccountId, tokenCreatorKey);

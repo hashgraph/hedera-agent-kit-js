@@ -25,6 +25,7 @@ describe.skip('Get Contract Info - Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const contractId = '0.0.5005';
@@ -45,6 +46,7 @@ describe.skip('Get Contract Info - Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const contractId = '0.0.6006';

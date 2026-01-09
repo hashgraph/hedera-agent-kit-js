@@ -62,7 +62,10 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
     // 2) Create owner (executor) account and client
     const ownerKey = PrivateKey.generateED25519();
     const ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: ownerKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     ownerClient = getCustomClient(ownerAccountId, ownerKey);

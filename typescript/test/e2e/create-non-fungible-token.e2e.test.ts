@@ -9,9 +9,7 @@ import {
 } from '../utils';
 import { ResponseParserService } from '@/langchain';
 import { Client, PrivateKey, TokenId } from '@hashgraph/sdk';
-import {
-  wait,
-} from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
@@ -33,7 +31,10 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     // 1. Create executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD) })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client
@@ -183,7 +184,8 @@ describe('Create Non-Fungible Token E2E Tests', () => {
   it(
     'creates an NFT with infinite supply',
     itWithRetry(async () => {
-      const input = 'Create a non-fungible token InfiniteCollection with symbol INF and infinite supply';
+      const input =
+        'Create a non-fungible token InfiniteCollection with symbol INF and infinite supply';
 
       const result = await agent.invoke({
         messages: [

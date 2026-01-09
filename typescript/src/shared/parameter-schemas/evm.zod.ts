@@ -6,15 +6,20 @@ import {
 } from '@/shared/parameter-schemas/common.zod';
 
 export const contractExecuteTransactionParametersNormalised = (context: Context = {}) =>
-  optionalScheduledTransactionParamsNormalised(context).extend({
-    contractId: z.string().describe('The ID of the contract to execute.'),
-    functionParameters: z
-      .instanceof(Uint8Array<ArrayBufferLike>)
-      .describe('The parameters of the function to execute.'),
-    gas: z.number().int().describe('The gas limit for the contract call.'),
-  }).extend({
-    payableAmount: z.number().optional().describe('The amount of HBAR to pay for the transaction.'),
-  });
+  optionalScheduledTransactionParamsNormalised(context)
+    .extend({
+      contractId: z.string().describe('The ID of the contract to execute.'),
+      functionParameters: z
+        .instanceof(Uint8Array<ArrayBufferLike>)
+        .describe('The parameters of the function to execute.'),
+      gas: z.number().int().describe('The gas limit for the contract call.'),
+    })
+    .extend({
+      payableAmount: z
+        .number()
+        .optional()
+        .describe('The amount of HBAR to pay for the transaction.'),
+    });
 export const transferERC20Parameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
     contractId: z.string().describe('The id of the ERC20 contract.'),

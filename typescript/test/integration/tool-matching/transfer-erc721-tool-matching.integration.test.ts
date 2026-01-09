@@ -33,6 +33,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -57,6 +58,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -81,6 +83,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -135,6 +138,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       for (const variation of variations) {
         const spy = vi
           .spyOn(hederaAPI, 'run')
+          .mockReset()
           .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
         await agent.invoke({
           messages: [{ role: 'user', content: variation.input }],
@@ -177,6 +181,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       for (const variation of variations) {
         const spy = vi
           .spyOn(hederaAPI, 'run')
+          .mockReset()
           .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
         await agent.invoke({
           messages: [{ role: 'user', content: variation.input }],
@@ -196,6 +201,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -220,6 +226,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
@@ -244,6 +251,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
+        .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({

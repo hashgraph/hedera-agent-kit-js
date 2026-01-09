@@ -30,6 +30,7 @@ describe.skip('Get Exchange Rate Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     await agent.invoke({
@@ -46,6 +47,7 @@ describe.skip('Get Exchange Rate Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     await agent.invoke({
@@ -65,6 +67,7 @@ describe.skip('Get Exchange Rate Tool Matching Integration Tests', () => {
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     await agent.invoke({
