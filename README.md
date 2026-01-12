@@ -23,7 +23,9 @@
 
 ## Key Features
 
-This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the original version. It is designed to be more flexible and easier to use, with a focus on developer experience. It enables direct API execution through a simple HederaAgentAPI class, with an individual LangChain tools call for each example.
+The Hedera Agent Kit is an open-source toolkit that brings intelligent agent workflows to the Hedera network. It’s designed for developers who want to integrate Hedera account management and Hedera native functionality into agent applications. With the Hedera Agent Kit, developers can build agents that interact on-chain through a conversational interface. This means Hedera agents can do more than process information; they can also send tokens, manage accounts, store data on Hedera Consensus Service, and coordinate workflows directly on a public ledger.
+
+This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the original version. It is designed to be more flexible and easier to use, with a focus on developer experience. It enables direct API execution through a simple HederaAgentAPI class, with an individual LangChain tools call for each example. [Learn more about Hedera Agent Kit V3](https://hedera.com/blog/whats-new-in-ai-studio/)
 
 The Hedera Agent Kit is extensible with third party plugins by other projects.
 
