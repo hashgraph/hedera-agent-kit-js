@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
-    AccountId,
-    Client,
-    PrivateKey,
-    PublicKey,
-    TokenType,
-    TokenSupplyType,
+  AccountId,
+  Client,
+  PrivateKey,
+  PublicKey,
+  TokenType,
+  TokenSupplyType,
 } from '@hashgraph/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
@@ -19,174 +19,180 @@ import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Transfer NFT Integration Tests', () => {
-    let operatorClient: Client;
-    let ownerClient: Client;
-    let recipientClient: Client;
-    let ownerWrapper: HederaOperationsWrapper;
-    let operatorWrapper: HederaOperationsWrapper;
-    let recipientWrapper: HederaOperationsWrapper;
-    let ownerAccountId: AccountId;
-    let recipientAccountId: AccountId;
-    let nftTokenId: string;
-    let context: Context;
+  let operatorClient: Client;
+  let ownerClient: Client;
+  let recipientClient: Client;
+  let ownerWrapper: HederaOperationsWrapper;
+  let operatorWrapper: HederaOperationsWrapper;
+  let recipientWrapper: HederaOperationsWrapper;
+  let ownerAccountId: AccountId;
+  let recipientAccountId: AccountId;
+  let nftTokenId: string;
+  let context: Context;
 
-    beforeAll(async () => {
-        operatorClient = getOperatorClientForTests();
-        operatorWrapper = new HederaOperationsWrapper(operatorClient);
+  beforeAll(async () => {
+    operatorClient = getOperatorClientForTests();
+    operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
-        // Create an owner (treasury) account
-        const ownerKey = PrivateKey.generateED25519();
-        ownerAccountId = await operatorWrapper
-            .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), key: ownerKey.publicKey })
-            .then(resp => resp.accountId!);
-        ownerClient = getCustomClient(ownerAccountId, ownerKey);
-        ownerWrapper = new HederaOperationsWrapper(ownerClient);
+    // Create an owner (treasury) account
+    const ownerKey = PrivateKey.generateED25519();
+    ownerAccountId = await operatorWrapper
+      .createAccount({
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+        key: ownerKey.publicKey,
+      })
+      .then(resp => resp.accountId!);
+    ownerClient = getCustomClient(ownerAccountId, ownerKey);
+    ownerWrapper = new HederaOperationsWrapper(ownerClient);
 
-        // Create a recipient account
-        const recipientKey = PrivateKey.generateECDSA();
-        recipientAccountId = await operatorWrapper
-            .createAccount({ initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), key: recipientKey.publicKey })
-            .then(resp => resp.accountId!);
-        recipientClient = getCustomClient(recipientAccountId, recipientKey);
-        recipientWrapper = new HederaOperationsWrapper(recipientClient);
+    // Create a recipient account
+    const recipientKey = PrivateKey.generateECDSA();
+    recipientAccountId = await operatorWrapper
+      .createAccount({
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        key: recipientKey.publicKey,
+      })
+      .then(resp => resp.accountId!);
+    recipientClient = getCustomClient(recipientAccountId, recipientKey);
+    recipientWrapper = new HederaOperationsWrapper(recipientClient);
 
-        // Context for tool execution (owner executes)
-        context = {
-            mode: AgentMode.AUTONOMOUS,
-            accountId: ownerAccountId.toString(),
-        };
+    // Context for tool execution (owner executes)
+    context = {
+      mode: AgentMode.AUTONOMOUS,
+      accountId: ownerAccountId.toString(),
+    };
 
-        // Create NFT token
-        const tokenCreate = await ownerWrapper.createNonFungibleToken({
-            tokenName: 'TestNFT',
-            tokenSymbol: 'TNFT',
-            tokenMemo: 'Transfer integration test',
-            tokenType: TokenType.NonFungibleUnique,
-            supplyType: TokenSupplyType.Finite,
-            maxSupply: 10,
-            treasuryAccountId: ownerAccountId.toString(),
-            adminKey: ownerClient.operatorPublicKey! as PublicKey,
-            supplyKey: ownerClient.operatorPublicKey! as PublicKey,
-            autoRenewAccountId: ownerAccountId.toString(),
-        });
-        nftTokenId = tokenCreate.tokenId!.toString();
-
-        // Mint NFTs via the mintNft method
-        const mintParams: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>> = {
-            tokenId: nftTokenId,
-            metadata: [
-                new TextEncoder().encode('ipfs://meta-1.json'),
-                new TextEncoder().encode('ipfs://meta-2.json'),
-            ],
-        };
-
-        await ownerWrapper.mintNft(mintParams);
-
-        // Associate recipient with token
-        await recipientWrapper.associateToken({
-            accountId: recipientAccountId.toString(),
-            tokenId: nftTokenId,
-        });
+    // Create NFT token
+    const tokenCreate = await ownerWrapper.createNonFungibleToken({
+      tokenName: 'TestNFT',
+      tokenSymbol: 'TNFT',
+      tokenMemo: 'Transfer integration test',
+      tokenType: TokenType.NonFungibleUnique,
+      supplyType: TokenSupplyType.Finite,
+      maxSupply: 10,
+      treasuryAccountId: ownerAccountId.toString(),
+      adminKey: ownerClient.operatorPublicKey! as PublicKey,
+      supplyKey: ownerClient.operatorPublicKey! as PublicKey,
+      autoRenewAccountId: ownerAccountId.toString(),
     });
+    nftTokenId = tokenCreate.tokenId!.toString();
 
-    afterAll(async () => {
-        try {
-            // Cleanup accounts and HBARs
-            await returnHbarsAndDeleteAccount(
-                ownerWrapper,
-                recipientAccountId,
-                operatorClient.operatorAccountId!,
-            );
-            await returnHbarsAndDeleteAccount(
-                ownerWrapper,
-                ownerAccountId,
-                operatorClient.operatorAccountId!,
-            );
-        } catch (err) {
-            console.warn('Cleanup failed:', err);
-        }
-        ownerClient?.close();
-        recipientClient?.close();
-        operatorClient?.close();
+    // Mint NFTs via the mintNft method
+    const mintParams: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>> = {
+      tokenId: nftTokenId,
+      metadata: [
+        new TextEncoder().encode('ipfs://meta-1.json'),
+        new TextEncoder().encode('ipfs://meta-2.json'),
+      ],
+    };
+
+    await ownerWrapper.mintNft(mintParams);
+
+    // Associate recipient with token
+    await recipientWrapper.associateToken({
+      accountId: recipientAccountId.toString(),
+      tokenId: nftTokenId,
     });
+  });
 
-    it('should transfer NFT from owner to recipient', async () => {
-        const params = {
-            tokenId: nftTokenId,
-            recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 1 }],
-            transactionMemo: 'NFT transfer test',
-        };
+  afterAll(async () => {
+    try {
+      // Cleanup accounts and HBARs
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        recipientAccountId,
+        operatorClient.operatorAccountId!,
+      );
+      await returnHbarsAndDeleteAccount(
+        ownerWrapper,
+        ownerAccountId,
+        operatorClient.operatorAccountId!,
+      );
+    } catch (err) {
+      console.warn('Cleanup failed:', err);
+    }
+    ownerClient?.close();
+    recipientClient?.close();
+    operatorClient?.close();
+  });
 
-        const tool = transferNonFungibleToken(context);
-        const result = await tool.execute(ownerClient, context, params);
+  it('should transfer NFT from owner to recipient', async () => {
+    const params = {
+      tokenId: nftTokenId,
+      recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 1 }],
+      transactionMemo: 'NFT transfer test',
+    };
 
-        expect(result.raw.status).toBe('SUCCESS');
-        expect(result.humanMessage).toContain(
-            'Non-fungible tokens successfully transferred. Transaction ID:',
-        );
+    const tool = transferNonFungibleToken(context);
+    const result = await tool.execute(ownerClient, context, params);
 
-        await wait(MIRROR_NODE_WAITING_TIME);
-        const recipientNfts = await recipientWrapper.getAccountNfts(recipientAccountId.toString());
-        expect(
-            recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 1),
-        ).toBeTruthy();
-    });
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(result.humanMessage).toContain(
+      'Non-fungible tokens successfully transferred. Transaction ID:',
+    );
 
-    it('should transfer multiple NFTs to the same recipient', async () => {
-        const params = {
-            tokenId: nftTokenId,
-            recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 2 }],
-            transactionMemo: 'NFT transfer second serial',
-        };
+    await wait(MIRROR_NODE_WAITING_TIME);
+    const recipientNfts = await recipientWrapper.getAccountNfts(recipientAccountId.toString());
+    expect(
+      recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 1),
+    ).toBeTruthy();
+  });
 
-        const tool = transferNonFungibleToken(context);
-        const result = await tool.execute(ownerClient, context, params);
+  it('should transfer multiple NFTs to the same recipient', async () => {
+    const params = {
+      tokenId: nftTokenId,
+      recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 2 }],
+      transactionMemo: 'NFT transfer second serial',
+    };
 
-        expect(result.raw.status).toBe('SUCCESS');
+    const tool = transferNonFungibleToken(context);
+    const result = await tool.execute(ownerClient, context, params);
 
-        await wait(MIRROR_NODE_WAITING_TIME);
-        const recipientNfts = await recipientWrapper.getAccountNfts(recipientAccountId.toString());
-        expect(
-            recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 2),
-        ).toBeTruthy();
-    });
+    expect(result.raw.status).toBe('SUCCESS');
 
-    it('should fail when trying to transfer NFT not owned', async () => {
-        // Recipient trying to transfer an NFT they don't own
-        const recipientContext: Context = {
-            mode: AgentMode.AUTONOMOUS,
-            accountId: recipientAccountId.toString(),
-        };
+    await wait(MIRROR_NODE_WAITING_TIME);
+    const recipientNfts = await recipientWrapper.getAccountNfts(recipientAccountId.toString());
+    expect(
+      recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 2),
+    ).toBeTruthy();
+  });
 
-        const params = {
-            tokenId: nftTokenId,
-            recipients: [{ recipientId: ownerAccountId.toString(), serialNumber: 99 }], // non-existent serial
-        };
+  it('should fail when trying to transfer NFT not owned', async () => {
+    // Recipient trying to transfer an NFT they don't own
+    const recipientContext: Context = {
+      mode: AgentMode.AUTONOMOUS,
+      accountId: recipientAccountId.toString(),
+    };
 
-        const tool = transferNonFungibleToken(recipientContext);
-        const result = await tool.execute(recipientClient, recipientContext, params);
+    const params = {
+      tokenId: nftTokenId,
+      recipients: [{ recipientId: ownerAccountId.toString(), serialNumber: 99 }], // non-existent serial
+    };
 
-        expect(result.raw.status).not.toBe('SUCCESS');
-        expect(result.humanMessage).toContain('Failed to transfer non-fungible token');
-    });
+    const tool = transferNonFungibleToken(recipientContext);
+    const result = await tool.execute(recipientClient, recipientContext, params);
 
-    it('should schedule an NFT transfer', async () => {
-        const params = {
-            tokenId: nftTokenId,
-            recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 3 }],
-            transactionMemo: 'Scheduled NFT transfer test',
-            schedulingParams: {
-                isScheduled: true,
-            },
-        };
+    expect(result.raw.status).not.toBe('SUCCESS');
+    expect(result.humanMessage).toContain('Failed to transfer non-fungible token');
+  });
 
-        const tool = transferNonFungibleToken(context);
-        const result = await tool.execute(ownerClient, context, params);
+  it('should schedule an NFT transfer', async () => {
+    const params = {
+      tokenId: nftTokenId,
+      recipients: [{ recipientId: recipientAccountId.toString(), serialNumber: 3 }],
+      transactionMemo: 'Scheduled NFT transfer test',
+      schedulingParams: {
+        isScheduled: true,
+      },
+    };
 
-        expect(result.raw.status).toBe('SUCCESS');
-        expect(result.humanMessage).toContain(
-            'Scheduled non-fungible token transfer created successfully',
-        );
-        expect(result.humanMessage).toContain('Schedule ID:');
-    });
+    const tool = transferNonFungibleToken(context);
+    const result = await tool.execute(ownerClient, context, params);
+
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(result.humanMessage).toContain(
+      'Scheduled non-fungible token transfer created successfully',
+    );
+    expect(result.humanMessage).toContain('Schedule ID:');
+  });
 });

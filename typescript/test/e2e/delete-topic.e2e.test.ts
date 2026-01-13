@@ -33,7 +33,10 @@ describe('Delete Topic E2E Tests', () => {
 
     executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(r => r.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);

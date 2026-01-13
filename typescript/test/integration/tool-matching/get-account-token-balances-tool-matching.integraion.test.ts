@@ -25,6 +25,7 @@ describe.skip('Get Account Token Balances - Tool Matching Integration Tests', ()
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const accountId = '0.0.5544333';
@@ -45,6 +46,7 @@ describe.skip('Get Account Token Balances - Tool Matching Integration Tests', ()
     const hederaAPI = toolkit.getHederaAgentKitAPI();
     const spy = vi
       .spyOn(hederaAPI, 'run')
+      .mockReset()
       .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
     const input = `Show me my token balances`;

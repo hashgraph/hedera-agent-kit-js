@@ -9,8 +9,6 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { LedgerId, Client } from "@hashgraph/sdk";
 import {
   AgentMode,
-  Configuration,
-  Context,
   coreAccountPlugin,
   coreAccountPluginToolNames,
   coreConsensusPlugin,
@@ -19,6 +17,7 @@ import {
   coreTokenPluginToolNames,
   HederaMCPToolkit,
 } from "hedera-agent-kit";
+import type { Configuration, Context } from "hedera-agent-kit";
 
 import * as dotenv from "dotenv";
 
@@ -176,9 +175,7 @@ export async function main() {
   log("Hedera MCP Server running on stdio", "info");
 }
 
-if (require.main === module) {
-  main().catch((error) => {
-    handleError(error);
-    process.exit(1);
-  });
-}
+main().catch((error) => {
+  handleError(error);
+  process.exit(1);
+});
