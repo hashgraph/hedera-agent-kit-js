@@ -35,7 +35,7 @@ The Hedera Agent Kit is extensible with third party plugins by other projects.
 
 The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
-👉 See [docs/PLUGINS.md](docs/PLUGINS.md) for the full catalogue & usage examples.
+👉 See [docs/HEDERAPLUGINS.md](docs/HEDERAPLUGINS.md) for the full catalogue & usage examples for Hedera Tools.
 
 Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
