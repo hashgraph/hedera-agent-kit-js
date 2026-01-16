@@ -64,15 +64,15 @@ export class GetHbarBalanceQueryTool extends BaseTool {
     };
   }
 
-  async shouldSecondaryAction(request: any, context: Context): Promise<boolean> {
+  async shouldSecondaryAction(_request: any, _context: Context): Promise<boolean> {
     return false;
   }
 
-  async secondaryAction(request: any, client: Client, context: Context) {
+  async secondaryAction(request: any, _client: Client, _context: Context) {
     return request;
   }
 
-  async handleError(error: unknown, context: Context): Promise<any> {
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get HBAR balance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_hbar_balance_query_tool]', message);

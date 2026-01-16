@@ -8,7 +8,6 @@ import { transferHbarWithAllowanceParameters } from '@/shared/parameter-schemas/
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
-import { enforcePolicies } from '@/shared/policy';
 
 const transferHbarWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);

@@ -67,7 +67,7 @@ export class TransferHbarTool extends BaseTool {
     return await HederaParameterNormaliser.normaliseTransferHbar(params, context, client);
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
     return HederaBuilder.transferHbar(normalisedParams);
   }
 
