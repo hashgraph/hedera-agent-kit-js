@@ -18,7 +18,7 @@ export class TokenAllowlistPolicy implements Policy {
     'delete_token_allowance_tool',
     'update_token_tool',
     'airdrop_fungible_token_tool',
-  ];
+  ]; //FIXME: those tools do not support policies yet
   affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   /* Set of allowed token IDs (string format) */

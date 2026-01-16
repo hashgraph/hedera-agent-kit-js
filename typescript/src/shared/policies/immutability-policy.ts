@@ -19,7 +19,7 @@ const HasTokenId = z
 export class ImmutabilityPolicy implements Policy {
   name = 'Immutability Policy';
   description = 'Prevents modification or deletion of specific Accounts and Tokens';
-  relevantTools = ['update_account_tool', 'delete_account_tool', 'update_token_tool'];
+  relevantTools = ['update_account_tool', 'delete_account_tool', 'update_token_tool']; //FIXME: those tools do not support policies yet
   affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   private immutableAccounts: Set<string> = new Set();

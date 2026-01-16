@@ -52,12 +52,12 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
         policies: [
-          new RequiredMemoPolicy(),
-          new MaxHbarTransferPolicy(5), // Limit 5 HBAR
-          new NoInfiniteSupplyPolicy(),
-          new ImmutabilityPolicy({
-            accounts: [process.env.ACCOUNT_ID!], // Make the operator account immutable
-          }),
+          new RequiredMemoPolicy(), // FIXME: currently only works for transfer_hbar_tool
+          // new MaxHbarTransferPolicy(5), // Limit 5 HBAR
+          // new NoInfiniteSupplyPolicy(),
+          // new ImmutabilityPolicy({
+          //   accounts: [process.env.ACCOUNT_ID!], // Make the operator account immutable
+          // }),
         ],
       },
     },
@@ -81,13 +81,16 @@ async function bootstrap(): Promise<void> {
   const responseParsingService = new ResponseParserService(hederaAgentToolkit.getTools());
 
   console.log('Hedera Policy Agent Demo');
-  console.log('policies: RequiredMemo, MaxHbarTransfer(5), NoInfiniteSupply, Immutability(Operator)');
+  console.log(
+    'policies: RequiredMemo, MaxHbarTransfer(5), NoInfiniteSupply, Immutability(Operator)',
+  );
   console.log('Try asking the agent to:');
   console.log('1. "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)');
-  console.log('2. "Transfer 10 HBAR to 0.0.12345 with memo Test" (Should fail due to max amount)');
-  console.log('3. "Transfer 1 HBAR to 0.0.12345 with memo Valid" (Should succeed)');
-  console.log('4. "Create a token with infinite supply" (Should fail)');
-  console.log('5. "Update my account memo" (Should fail due to immutability)');
+  console.log('2. "Transfer 1 HBAR to 0.0.12345 with memo "Test"" (Should succeed)');
+  // console.log('2. "Transfer 10 HBAR to 0.0.12345 with memo Test" (Should fail due to max amount)');
+  // console.log('3. "Transfer 1 HBAR to 0.0.12345 with memo Valid" (Should succeed)');
+  // console.log('4. "Create a token with infinite supply" (Should fail)');
+  // console.log('5. "Update my account memo" (Should fail due to immutability)');
   console.log('---------------------------------------------------------');
 
   while (true) {

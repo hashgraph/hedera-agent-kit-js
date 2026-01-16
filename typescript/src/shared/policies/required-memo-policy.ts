@@ -5,17 +5,17 @@ export class RequiredMemoPolicy implements Policy {
   description = 'Ensures that every transaction includes a non-empty memo';
   relevantTools = [
     'transfer_hbar_tool',
-    'transfer_hbar_with_allowance_tool',
-    'create_account_tool',
-    'create_fungible_token_tool',
-    'create_non_fungible_token_tool',
-    'create_topic_tool',
-    'transfer_non_fungible_token_tool',
-    'transfer_fungible_token_with_allowance_tool',
-    'approve_hbar_allowance_tool',
-    'approve_nft_allowance_tool',
-    'approve_token_allowance_tool',
-  ];
+    // 'transfer_hbar_with_allowance_tool',
+    // 'create_account_tool',
+    // 'create_fungible_token_tool',
+    // 'create_non_fungible_token_tool',
+    // 'create_topic_tool',
+    // 'transfer_non_fungible_token_tool',
+    // 'transfer_fungible_token_with_allowance_tool',
+    // 'approve_hbar_allowance_tool',
+    // 'approve_nft_allowance_tool',
+    // 'approve_token_allowance_tool',
+  ]; //FIXME: those tools do not support policies yet
   affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   shouldBlock(params: any): boolean {

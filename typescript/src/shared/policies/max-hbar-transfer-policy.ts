@@ -4,7 +4,7 @@ import { Hbar } from '@hashgraph/sdk';
 export class MaxHbarTransferPolicy implements Policy {
   name = 'Max HBAR Transfer';
   description = 'Limits the maximum HBAR amount that can be transferred';
-  relevantTools = ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool'];
+  relevantTools = ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool']; //FIXME: those tools do not support policies yet
   affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   constructor(private maxAmount: number) { }
