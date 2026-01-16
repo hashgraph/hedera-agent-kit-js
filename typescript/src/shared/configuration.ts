@@ -21,7 +21,7 @@ export type Context = {
   // Mirrornode config
   mirrornodeService?: IHederaMirrornodeService;
 
-  // Custom policies to enforce
+  // Policies to enforce
   policies?: Policy[];
 };
 
