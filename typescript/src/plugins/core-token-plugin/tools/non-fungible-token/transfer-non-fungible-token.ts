@@ -8,9 +8,6 @@ import { transferNonFungibleTokenParameters } from '@/shared/parameter-schemas/t
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
-import { enforcePolicies } from '@/shared/policy';
-
-export const TRANSFER_NON_FUNGIBLE_TOKEN_TOOL = 'transfer_non_fungible_token_tool';
 
 const transferNonFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -54,10 +51,6 @@ const transferNonFungibleToken = async (
       client,
     );
 
-    if (context.policies) {
-      await enforcePolicies(context.policies, TRANSFER_NON_FUNGIBLE_TOKEN_TOOL, normalisedParams);
-    }
-
     const tx = HederaBuilder.transferNonFungibleToken(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
@@ -67,6 +60,8 @@ const transferNonFungibleToken = async (
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
+
+export const TRANSFER_NON_FUNGIBLE_TOKEN_TOOL = 'transfer_non_fungible_token_tool';
 
 const tool = (context: Context): Tool => ({
   method: TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,

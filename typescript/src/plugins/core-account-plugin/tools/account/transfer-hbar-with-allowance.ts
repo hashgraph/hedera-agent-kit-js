@@ -10,8 +10,6 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import { enforcePolicies } from '@/shared/policy';
 
-export const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
-
 const transferHbarWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
@@ -47,10 +45,6 @@ const transferHbarWithAllowance = async (
       client,
     );
 
-    if (context.policies) {
-      await enforcePolicies(context.policies, TRANSFER_HBAR_WITH_ALLOWANCE_TOOL, normalisedParams);
-    }
-
     const tx = HederaBuilder.transferHbarWithAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
@@ -60,6 +54,8 @@ const transferHbarWithAllowance = async (
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
+
+export const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
 
 const tool = (context: Context): Tool => ({
   method: TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,

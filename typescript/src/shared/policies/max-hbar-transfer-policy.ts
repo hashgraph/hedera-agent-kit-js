@@ -1,12 +1,13 @@
-import { Policy } from '@/shared';
+import { Policy, ToolExecutionPoint } from '@/shared';
 import { Hbar } from '@hashgraph/sdk';
 
 export class MaxHbarTransferPolicy implements Policy {
   name = 'Max HBAR Transfer';
   description = 'Limits the maximum HBAR amount that can be transferred';
   relevantTools = ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool'];
+  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
-  constructor(private maxAmount: number) {}
+  constructor(private maxAmount: number) { }
 
   shouldBlock(params: any): boolean {
     // 1. Check transfer_hbar and transfer_hbar_with_allowance

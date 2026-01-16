@@ -1,10 +1,11 @@
-import { Policy } from '@/shared';
+import { Policy, ToolExecutionPoint } from '@/shared';
 import { TokenSupplyType } from '@hashgraph/sdk';
 
 export class NoInfiniteSupplyPolicy implements Policy {
   name = 'No Infinite Supply Policy';
   description = 'Prevents the creation of tokens with Infinite supply type';
   relevantTools = ['create_fungible_token_tool', 'create_non_fungible_token_tool'];
+  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   shouldBlock(params: any): boolean {
     // Check if supplyType is set to Infinite

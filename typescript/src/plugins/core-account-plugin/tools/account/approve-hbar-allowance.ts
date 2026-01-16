@@ -8,9 +8,6 @@ import { approveHbarAllowanceParameters } from '@/shared/parameter-schemas/accou
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
-import { enforcePolicies } from '@/shared/policy';
-
-export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
 
 const approveHbarAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -49,9 +46,6 @@ const approveHbarAllowance = async (
       context,
       client,
     );
-    if (context.policies) {
-      await enforcePolicies(context.policies, APPROVE_HBAR_ALLOWANCE_TOOL, normalisedParams);
-    }
     const tx = HederaBuilder.approveHbarAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
   } catch (error) {
@@ -61,6 +55,8 @@ const approveHbarAllowance = async (
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
+
+export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
 
 const tool = (context: Context): Tool => ({
   method: APPROVE_HBAR_ALLOWANCE_TOOL,

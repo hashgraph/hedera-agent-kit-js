@@ -1,4 +1,4 @@
-import { Policy } from '@/shared';
+import { Policy, ToolExecutionPoint } from '@/shared';
 import { AccountId, TokenId } from '@hashgraph/sdk';
 import { z } from 'zod';
 
@@ -20,6 +20,7 @@ export class ImmutabilityPolicy implements Policy {
   name = 'Immutability Policy';
   description = 'Prevents modification or deletion of specific Accounts and Tokens';
   relevantTools = ['update_account_tool', 'delete_account_tool', 'update_token_tool'];
+  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   private immutableAccounts: Set<string> = new Set();
   private immutableTokens: Set<string> = new Set();

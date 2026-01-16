@@ -1,4 +1,4 @@
-import { Policy } from '@/shared';
+import { Policy, ToolExecutionPoint } from '@/shared';
 
 export class RequiredMemoPolicy implements Policy {
   name = 'Required Memo';
@@ -16,6 +16,7 @@ export class RequiredMemoPolicy implements Policy {
     'approve_nft_allowance_tool',
     'approve_token_allowance_tool',
   ];
+  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   shouldBlock(params: any): boolean {
     // Check if transactionMemo is present and non-empty

@@ -1,4 +1,4 @@
-import { Policy } from '@/shared';
+import { Policy, ToolExecutionPoint } from '@/shared';
 import { TokenId, NftId } from '@hashgraph/sdk';
 
 export class TokenAllowlistPolicy implements Policy {
@@ -19,6 +19,7 @@ export class TokenAllowlistPolicy implements Policy {
     'update_token_tool',
     'airdrop_fungible_token_tool',
   ];
+  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   /* Set of allowed token IDs (string format) */
   private allowedTokens: Set<string>;
