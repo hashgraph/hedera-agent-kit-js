@@ -15,6 +15,7 @@ import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/heder
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { AccountResolver } from '@/shared';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { enforcePolicies } from '@/shared/policy';
 
 const checkValidityOfUpdates = async (
   params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>,
@@ -119,6 +120,11 @@ const updateToken = async (
       context,
       client,
     );
+
+    if (context.policies) {
+      await enforcePolicies(context.policies, UPDATE_TOKEN_TOOL, normalisedParams);
+    }
+
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
 

@@ -9,6 +9,7 @@ import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { enforcePolicies } from '@/shared/policy';
 
 const createNonFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -61,6 +62,11 @@ const createNonFungibleToken = async (
       client,
       mirrornodeService,
     );
+
+    if (context.policies) {
+      await enforcePolicies(context.policies, CREATE_NON_FUNGIBLE_TOKEN_TOOL, normalisedParams);
+    }
+
     const tx = HederaBuilder.createNonFungibleToken(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);

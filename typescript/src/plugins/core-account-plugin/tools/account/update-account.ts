@@ -8,6 +8,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { enforcePolicies } from '@/shared/policy';
 
 const updateAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -53,6 +54,10 @@ const updateAccount = async (
       context,
       client,
     );
+
+    if (context.policies) {
+      await enforcePolicies(context.policies, UPDATE_ACCOUNT_TOOL, normalisedParams);
+    }
 
     // Build transaction and wrap in SchedulingTransaction if needed
     const tx = HederaBuilder.updateAccount(normalisedParams);

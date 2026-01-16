@@ -1154,3 +1154,18 @@ Ensures that every transaction (where applicable) includes a non-empty memo.
 
 **Relevant Tools:**
 - `TRANSFER_HBAR_TOOL`, `CREATE_ACCOUNT_TOOL`, `CREATE_TOPIC_TOOL`, and many others.
+
+### ImmutabilityPolicy
+Prevents modification or deletion of specific Accounts and Tokens.
+
+**Relevant Tools:**
+- `UPDATE_ACCOUNT_TOOL`
+- `DELETE_ACCOUNT_TOOL`
+- `UPDATE_TOKEN_TOOL`
+
+### NoInfiniteSupplyPolicy
+Prevents the creation of tokens with Infinite supply type.
+
+**Relevant Tools:**
+- `CREATE_FUNGIBLE_TOKEN_TOOL`
+- `CREATE_NON_FUNGIBLE_TOKEN_TOOL`

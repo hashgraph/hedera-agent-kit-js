@@ -13,3 +13,5 @@ export * from './policy';
 export * from './policies/max-hbar-transfer-policy';
 export * from './policies/token-allowlist-policy';
 export * from './policies/required-memo-policy';
+export * from './policies/immutability-policy';
+export * from './policies/no-infinite-supply-policy';
