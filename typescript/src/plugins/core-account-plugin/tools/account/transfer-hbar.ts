@@ -8,6 +8,9 @@ import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { enforcePolicies } from '@/shared/policy';
+
+export const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
 
 const transferHbarPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -55,6 +58,11 @@ const transferHbar = async (
       context,
       client,
     );
+
+    if (context.policies) {
+      await enforcePolicies(context.policies, TRANSFER_HBAR_TOOL, normalisedParams);
+    }
+
     const tx = HederaBuilder.transferHbar(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);
@@ -65,8 +73,6 @@ const transferHbar = async (
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
-
-export const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
 
 const tool = (context: Context): Tool => ({
   method: TRANSFER_HBAR_TOOL,

@@ -1,0 +1,24 @@
+{
+  "name": "hedera-agent-toolkit-examples-policy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "2.79.0",
+    "@langchain/core": "1.1.11",
+    "dotenv": "17.2.3",
+    "hedera-agent-kit": "../..",
+    "langchain": "1.2.6",
+    "prompts": "2.4.2",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/prompts": "2.4.9",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

@@ -9,6 +9,9 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { enforcePolicies } from '@/shared/policy';
+
+export const CREATE_ACCOUNT_TOOL = 'create_account_tool';
 
 const createAccountPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -54,6 +57,10 @@ const createAccount = async (
       mirrornodeService,
     );
 
+    if (context.policies) {
+      await enforcePolicies(context.policies, CREATE_ACCOUNT_TOOL, normalisedParams);
+    }
+
     // Build transaction and wrap in SchedulingTransaction if needed
     const tx = HederaBuilder.createAccount(normalisedParams);
 
@@ -65,8 +72,6 @@ const createAccount = async (
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 };
-
-export const CREATE_ACCOUNT_TOOL = 'create_account_tool';
 
 const tool = (context: Context): Tool => ({
   method: CREATE_ACCOUNT_TOOL,
