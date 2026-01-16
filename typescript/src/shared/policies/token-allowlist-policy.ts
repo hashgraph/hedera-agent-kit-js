@@ -10,8 +10,6 @@ export class TokenAllowlistPolicy implements Policy {
     'transfer_fungible_token_with_allowance_tool',
     'mint_fungible_token_tool',
     'mint_non_fungible_token_tool',
-    'burn_token_tool',
-    'wipe_token_tool',
     'associate_token_tool',
     'dissociate_token_tool',
     'approve_nft_allowance_tool',
@@ -19,12 +17,6 @@ export class TokenAllowlistPolicy implements Policy {
     'approve_token_allowance_tool',
     'delete_token_allowance_tool',
     'update_token_tool',
-    'pause_token_tool',
-    'unpause_token_tool',
-    'freeze_token_tool',
-    'unfreeze_token_tool',
-    'grant_token_kyc_tool',
-    'revoke_token_kyc_tool',
     'airdrop_fungible_token_tool',
   ];
 
