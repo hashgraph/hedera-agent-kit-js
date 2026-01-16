@@ -75,7 +75,7 @@ export class TransferHbarTool extends BaseTool {
     return await handleTransaction(transaction, client, context, postProcess);
   }
 
-  async handleError(error: unknown, context: Context): Promise<any> {
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to transfer HBAR';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_hbar_tool]', message);
