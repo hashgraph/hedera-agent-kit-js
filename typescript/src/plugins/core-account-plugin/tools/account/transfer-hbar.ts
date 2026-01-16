@@ -62,16 +62,16 @@ export class TransferHbarTool extends BaseTool {
   async normalizeParams(
     params: z.infer<ReturnType<typeof transferHbarParameters>>,
     context: Context,
-    client: Client
+    client: Client,
   ) {
     return await HederaParameterNormaliser.normaliseTransferHbar(params, context, client);
   }
 
-  async action(normalisedParams: any, context: Context, client: Client) {
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     return HederaBuilder.transferHbar(normalisedParams);
   }
 
-  async submit(transaction: any, client: Client, context: Context) {
+  async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
 

@@ -1,4 +1,4 @@
-import { Policy, ToolExecutionPoint } from '@/shared';
+import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
 import { AccountId, TokenId } from '@hashgraph/sdk';
 import { z } from 'zod';
 
@@ -30,7 +30,10 @@ export class ImmutabilityPolicy implements Policy {
     if (config.tokens) config.tokens.forEach(id => this.immutableTokens.add(id));
   }
 
-  shouldBlock(params: unknown): boolean {
+  shouldBlock(validationParams: PolicyValidationParams): boolean {
+    const params = validationParams.normalisedParams;
+    if (!params) return false;
+
     // Check for accountId using Zod runtime validation
     const accountResult = HasAccountId.safeParse(params);
     if (accountResult.success) {

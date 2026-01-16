@@ -53,7 +53,7 @@ export class GetHbarBalanceQueryTool extends BaseTool {
     return HederaParameterNormaliser.normaliseHbarBalanceParams(params, context, client);
   }
 
-  async action(normalisedParams: any, context: Context, client: Client) {
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const balance: BigNumber = await mirrornodeService.getAccountHbarBalance(
       normalisedParams.accountId,
@@ -64,11 +64,11 @@ export class GetHbarBalanceQueryTool extends BaseTool {
     };
   }
 
-  async shouldSubmit(request: any, context: Context): Promise<boolean> {
+  async shouldSecondaryAction(request: any, context: Context): Promise<boolean> {
     return false;
   }
 
-  async submit(request: any, client: Client, context: Context) {
+  async secondaryAction(request: any, client: Client, context: Context) {
     return request;
   }
 

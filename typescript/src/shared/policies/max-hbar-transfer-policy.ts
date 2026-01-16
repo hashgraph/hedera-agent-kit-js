@@ -1,4 +1,4 @@
-import { Policy, ToolExecutionPoint } from '@/shared';
+import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
 import { Hbar } from '@hashgraph/sdk';
 
 export class MaxHbarTransferPolicy implements Policy {
@@ -9,9 +9,12 @@ export class MaxHbarTransferPolicy implements Policy {
 
   constructor(private maxAmount: number) { }
 
-  shouldBlock(params: any): boolean {
+  shouldBlock(validationParams: PolicyValidationParams): boolean {
     // 1. Check transfer_hbar and transfer_hbar_with_allowance
     // Both use hbarTransfers array in normalised params (for transfer_hbar it includes source debit)
+    const params = validationParams.normalisedParams;
+    if (!params) return false;
+
     if (params.hbarTransfers) {
       for (const t of params.hbarTransfers) {
         // We only care about positive transfers (credits to others) to limit value being sent.

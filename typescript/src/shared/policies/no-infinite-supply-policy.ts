@@ -1,4 +1,4 @@
-import { Policy, ToolExecutionPoint } from '@/shared';
+import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
 import { TokenSupplyType } from '@hashgraph/sdk';
 
 export class NoInfiniteSupplyPolicy implements Policy {
@@ -7,9 +7,12 @@ export class NoInfiniteSupplyPolicy implements Policy {
   relevantTools = ['create_fungible_token_tool', 'create_non_fungible_token_tool']; //FIXME: those tools do not support policies yet
   affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
-  shouldBlock(params: any): boolean {
+  shouldBlock(validationParams: PolicyValidationParams): boolean {
     // Check if supplyType is set to Infinite
     // Params are normalized, so supplyType should be a TokenSupplyType object/enum
+    const params = validationParams.normalisedParams;
+    if (!params) return false;
+
     if (params.supplyType) {
       // Direct comparison with SDK enum/object
       if (params.supplyType === TokenSupplyType.Infinite) {

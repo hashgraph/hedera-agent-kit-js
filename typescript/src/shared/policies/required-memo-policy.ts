@@ -1,4 +1,4 @@
-import { Policy, ToolExecutionPoint } from '@/shared';
+import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
 
 export class RequiredMemoPolicy implements Policy {
   name = 'Required Memo';
@@ -18,8 +18,11 @@ export class RequiredMemoPolicy implements Policy {
   ]; //FIXME: those tools do not support policies yet
   affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
-  shouldBlock(params: any): boolean {
+  shouldBlock(validationParams: PolicyValidationParams): boolean {
     // Check if transactionMemo is present and non-empty
+    const params = validationParams.normalisedParams;
+    if (!params) return false;
+
     return !params.transactionMemo || params.transactionMemo.trim().length === 0;
   }
 }

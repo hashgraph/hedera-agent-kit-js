@@ -1,4 +1,4 @@
-import { Policy, ToolExecutionPoint } from '@/shared';
+import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
 import { TokenId, NftId } from '@hashgraph/sdk';
 
 export class TokenAllowlistPolicy implements Policy {
@@ -28,7 +28,10 @@ export class TokenAllowlistPolicy implements Policy {
     this.allowedTokens = new Set(allowedTokens);
   }
 
-  shouldBlock(params: any): boolean {
+  shouldBlock(validationParams: PolicyValidationParams): boolean {
+    const params = validationParams.normalisedParams;
+    if (!params) return false;
+
     const tokensToCheck: string[] = [];
 
     // Helper to add if valid

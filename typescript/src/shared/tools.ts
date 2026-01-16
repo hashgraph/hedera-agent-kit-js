@@ -14,7 +14,7 @@ export interface Tool {
   outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
 }
 
-export abstract class BaseTool<TParams = any, TNormalisedParams = any, TResult = any> implements Tool {
+export abstract class BaseTool<TParams = any, TNormalisedParams = any> implements Tool {
   abstract method: string;
   abstract name: string;
   abstract description: string;
@@ -23,29 +23,35 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any, TResult =
 
   async execute(client: Client, context: Context, params: TParams): Promise<any> {
     try {
-      // 1. PreToolExcutionHook
+      // 1. PreToolExecutionHook
       await this.preToolExecutionHook(context, params);
 
       // 2. ParamsNormalization
       const normalisedParams = await this.normalizeParams(params, context, client);
 
       // 3. PostParamsNormalizationHook
-      await this.postParamsNormalizationHook(context, normalisedParams);
+      await this.postParamsNormalizationHook(context, params, normalisedParams);
 
-      // 4. Action (Core Tool Logic)
-      const request = await this.action(normalisedParams, context, client);
+      // 4. Core Action (Core Tool Logic)
+      const coreActionResult = await this.coreAction(normalisedParams, context, client); // transactions will be created here
 
-      // 5. PostActionHook
-      await this.postActionHook(context, request);
+      // 5. PostCoreActionHook
+      await this.postCoreActionHook(context, params, normalisedParams, coreActionResult);
 
-      // 6. Submit (Optional)
-      let result = request;
-      if (await this.shouldSubmit(request, context)) {
-        result = await this.submit(request, client, context);
+      // 6. Secondary Action (Optional)
+      let result = coreActionResult;
+      if (await this.shouldSecondaryAction(coreActionResult, context)) {
+        result = await this.secondaryAction(coreActionResult, client, context); // optional secondary action like tx signing, is not required for query tools and can be omitted
       }
 
-      // 7. PostSubmitHook
-      return await this.postSubmitHook(result, context);
+      // 7. PostToolExecutionHook
+      return await this.postToolExecutionHook(
+        result,
+        params,
+        normalisedParams,
+        coreActionResult,
+        context,
+      );
     } catch (error) {
       return this.handleError(error, context);
     }
@@ -54,39 +60,77 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any, TResult =
   // Hooks
   async preToolExecutionHook(context: Context, params: TParams): Promise<void> {
     if (context.policies) {
-      await enforcePolicies(context.policies, this.method, params, ToolExecutionPoint.PreToolExecution);
-    }
-  }
-
-  async postParamsNormalizationHook(context: Context, normalisedParams: TNormalisedParams): Promise<void> {
-    if (context.policies) {
       await enforcePolicies(
         context.policies,
         this.method,
-        normalisedParams,
-        ToolExecutionPoint.PostParamsNormalization
+        { rawParams: params },
+        ToolExecutionPoint.PreToolExecution,
       );
     }
   }
 
-  async postActionHook(context: Context, request: any): Promise<void> {
+  async postParamsNormalizationHook(
+    context: Context,
+    params: TParams,
+    normalisedParams: TNormalisedParams,
+  ): Promise<void> {
     if (context.policies) {
-      await enforcePolicies(context.policies, this.method, request, ToolExecutionPoint.PostAction);
+      await enforcePolicies(
+        context.policies,
+        this.method,
+        { rawParams: params, normalisedParams },
+        ToolExecutionPoint.PostParamsNormalization,
+      );
     }
   }
 
-  async shouldSubmit(request: any, context: Context): Promise<boolean> {
+  async postCoreActionHook(
+    context: Context,
+    params: TParams,
+    normalisedParams: TNormalisedParams,
+    coreActionResult: any,
+  ): Promise<void> {
+    if (context.policies) {
+      await enforcePolicies(
+        context.policies,
+        this.method,
+        { rawParams: params, normalisedParams, coreActionResult },
+        ToolExecutionPoint.PostCoreAction,
+      );
+    }
+  }
+
+  /*
+    Default implementation always returns true. Override in derived classes to implement custom logic.
+   */
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
     return true;
   }
 
-  async postSubmitHook(result: any, context: Context): Promise<any> {
+  async postToolExecutionHook(
+    toolResult: any,
+    params: TParams,
+    normalisedParams: TNormalisedParams,
+    coreActionResult: any,
+    context: Context,
+  ): Promise<any> {
     if (context.policies) {
-      await enforcePolicies(context.policies, this.method, result, ToolExecutionPoint.PostSubmit);
+      await enforcePolicies(
+        context.policies,
+        this.method,
+        {
+          rawParams: params,
+          normalisedParams,
+          coreActionResult,
+          toolResult,
+        },
+        ToolExecutionPoint.PostSecondaryAction,
+      );
     }
-    return result;
+    return toolResult;
   }
 
-  async handleError(error: unknown, context: Context): Promise<any> {
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = `Failed to execute ${this.name}`;
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error(`[${this.method}]`, message);
@@ -94,9 +138,17 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any, TResult =
   }
 
   // Abstract steps
-  abstract normalizeParams(params: TParams, context: Context, client: Client): Promise<TNormalisedParams>;
-  abstract action(normalisedParams: TNormalisedParams, context: Context, client: Client): Promise<any>;
-  abstract submit(request: any, client: Client, context: Context): Promise<any>;
+  abstract normalizeParams(
+    params: TParams,
+    context: Context,
+    client: Client,
+  ): Promise<TNormalisedParams>;
+  abstract coreAction(
+    normalisedParams: TNormalisedParams,
+    context: Context,
+    client: Client,
+  ): Promise<any>;
+  abstract secondaryAction(request: any, client: Client, context: Context): Promise<any>;
 }
 
 export default Tool;
