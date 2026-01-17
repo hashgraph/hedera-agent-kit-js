@@ -13,11 +13,12 @@ import {
   NftBalanceResponse,
   ScheduledTransactionDetailsResponse,
 } from './types';
+import BigNumber from 'bignumber.js';
 
 export interface IHederaMirrornodeService {
   getAccount(accountId: string): Promise<AccountResponse>;
   getAccountHbarBalance(accountId: string): Promise<BigNumber>;
-  getAccountTokenBalances(accountId: string): Promise<TokenBalancesResponse>;
+  getAccountTokenBalances(accountId: string, tokenId?: string): Promise<TokenBalancesResponse>;
   getTopicMessages(queryParams: TopicMessagesQueryParams): Promise<TopicMessagesResponse>;
   getTopicInfo(topicId: string): Promise<TopicInfo>;
   getTokenInfo(tokenId: string): Promise<TokenInfo>;
@@ -32,4 +33,5 @@ export interface IHederaMirrornodeService {
   ): Promise<TokenAllowanceResponse>;
   getAccountNfts(accountId: string): Promise<NftBalanceResponse>;
   getScheduledTransactionDetails(scheduleId: string): Promise<ScheduledTransactionDetailsResponse>;
+  getBaseUrl(): string;
 }

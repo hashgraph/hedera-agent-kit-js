@@ -26,6 +26,8 @@ import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { z } from 'zod';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 /**
  * E2E test: Create an HTS NFT, approve NFT allowance for a spender, then verify the spender
@@ -61,7 +63,10 @@ describe('Approve NFT Allowance E2E', () => {
     // 2) Create owner (executor) account and client
     const ownerKey = PrivateKey.generateED25519();
     const ownerAccountId = await operatorWrapper
-      .createAccount({ key: ownerKey.publicKey, initialBalance: 50 })
+      .createAccount({
+        key: ownerKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     ownerClient = getCustomClient(ownerAccountId, ownerKey);
@@ -69,8 +74,11 @@ describe('Approve NFT Allowance E2E', () => {
 
     // 3) Create a spender account with its own key and client
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await ownerWrapper
-      .createAccount({ key: spenderKey.publicKey as Key, initialBalance: 15 })
+    spenderAccount = await operatorWrapper
+      .createAccount({
+        key: spenderKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     spenderClient = getCustomClient(spenderAccount, spenderKey);
@@ -78,8 +86,11 @@ describe('Approve NFT Allowance E2E', () => {
 
     // 3b) Create a separate recipient account (simple key, no custom client needed for transfer)
     const recipientKey = PrivateKey.generateED25519();
-    recipientAccount = await ownerWrapper
-      .createAccount({ key: recipientKey.publicKey as Key, initialBalance: 15 })
+    recipientAccount = await operatorWrapper
+      .createAccount({
+        key: recipientKey.publicKey as Key,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
     recipientClient = getCustomClient(recipientAccount, recipientKey);
     recipientWrapper = new HederaOperationsWrapper(recipientClient);

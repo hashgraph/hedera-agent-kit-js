@@ -8,6 +8,8 @@ import { airdropFungibleTokenParameters } from '@/shared/parameter-schemas/token
 import { wait } from '../../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 describe('Airdrop Fungible Token Integration Tests', () => {
   let operatorClient: Client;
@@ -33,7 +35,11 @@ describe('Airdrop Fungible Token Integration Tests', () => {
 
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 25 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Airdrop Fungible Token Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -76,6 +82,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
         key: recipientKey.publicKey,
         initialBalance: 0,
         maxAutomaticTokenAssociations,
+        accountMemo: 'recipient account for Airdrop Fungible Token Integration Tests',
       })
       .then(resp => resp.accountId!);
 

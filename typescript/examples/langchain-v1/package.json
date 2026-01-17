@@ -1,0 +1,25 @@
+{
+  "name": "hedera-agent-toolkit-examples-langchain-v1",
+  "version": "1.0.0",
+  "description": "LangChain v1 examples for the Hedera Agent Toolkit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"No tests specified for example package\"",
+    "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
+    "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "2.79.0",
+    "hedera-agent-kit": "../..",
+    "@langchain/core": "1.1.11",
+    "langchain": "1.2.6",
+    "dotenv": "17.2.3",
+    "prompts": "2.4.2"
+  },
+  "devDependencies": {
+    "@types/prompts": "2.4.9",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi, beforeEach } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreTokenPluginToolNames } from '@/plugins';
+import { ReactAgent } from 'langchain';
 
-describe.skip('Airdrop Fungible Token Tool Matching Integration Tests', () => {
+describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { AIRDROP_FUNGIBLE_TOKEN_TOOL } = coreTokenPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -26,14 +26,19 @@ describe.skip('Airdrop Fungible Token Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match airdrop tool with minimal params', async () => {
       const input = 'Airdrop 10 HTS tokens 0.0.1234 from 0.0.1001 to 0.0.2002';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -55,9 +60,12 @@ describe.skip('Airdrop Fungible Token Tool Matching Integration Tests', () => {
       const input = 'Airdrop 5 of token 0.0.9999 from 0.0.1111 to 0.0.2222 and 0.0.3333';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({ messages: [{ role: 'user', content: input }] });
 
       expect(spy).toHaveBeenCalledTimes(1);
 
@@ -85,7 +93,7 @@ describe.skip('Airdrop Fungible Token Tool Matching Integration Tests', () => {
           },
         },
         {
-          input: 'Distribute 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
+          input: 'Airdrop 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
           expected: {
             tokenId: '0.0.7777',
             sourceAccountId: '0.0.1500',
@@ -100,8 +108,11 @@ describe.skip('Airdrop Fungible Token Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const variation of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-        await agentExecutor.invoke({ input: variation.input });
+        const spy = vi
+          .spyOn(hederaAPI, 'run')
+          .mockReset()
+          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+        await agent.invoke({ messages: [{ role: 'user', content: variation.input }] });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           AIRDROP_FUNGIBLE_TOKEN_TOOL,

@@ -1,5 +1,5 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   HederaOperationsWrapper,
@@ -7,15 +7,19 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
+import { ResponseParserService } from '@/langchain';
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Create ERC20 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let executorClient: Client;
   let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
@@ -27,7 +31,10 @@ describe('Create ERC20 Token E2E Tests', () => {
     // 1. Create an executor account (funded by operator)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 10 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+      })
       .then(resp => resp.accountId!);
 
     // 2. Build executor client
@@ -35,7 +42,8 @@ describe('Create ERC20 Token E2E Tests', () => {
 
     // 3. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     await wait(MIRROR_NODE_WAITING_TIME);
@@ -58,12 +66,21 @@ describe('Create ERC20 Token E2E Tests', () => {
     itWithRetry(async () => {
       const input = 'Create an ERC20 token named MyERC20 with symbol M20';
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const erc20Address = observation.erc20Address;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+      const erc20Address = parsedResponse[0].parsedData.raw.erc20Address;
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('ERC20 token created successfully');
+      expect(parsedResponse[0].parsedData).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'ERC20 token created successfully',
+      );
       expect(erc20Address).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
@@ -80,12 +97,22 @@ describe('Create ERC20 Token E2E Tests', () => {
       const input =
         'Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000';
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
-      const erc20Address = observation.erc20Address;
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
 
-      expect(observation).toBeDefined();
-      expect(observation.humanMessage).toContain('ERC20 token created successfully');
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+      const erc20Address = parsedResponse[0].parsedData.raw.erc20Address;
+
+      expect(parsedResponse[0].parsedData).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'ERC20 token created successfully',
+      );
       expect(erc20Address).toBeDefined();
 
       await wait(MIRROR_NODE_WAITING_TIME);
@@ -101,14 +128,23 @@ describe('Create ERC20 Token E2E Tests', () => {
       const name = `MyERC20-${new Date().getTime().toString()}`;
       const input = `Create an ERC20 token named "${name}" with symbol M20. Schedule this transaction instead of executing it immediately.`;
 
-      const result = await agentExecutor.invoke({ input });
-      const observation = extractObservationFromLangchainResponse(result);
+      const result = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
       // Validate response structure
-      expect(observation.raw).toBeDefined();
-      expect(observation.raw.transactionId).toBeDefined();
-      expect(observation.raw.scheduleId).toBeDefined();
-      expect(observation.humanMessage).toContain('Scheduled creation of ERC20 successfully.');
+      expect(parsedResponse[0].parsedData.raw).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain(
+        'Scheduled creation of ERC20 successfully.',
+      );
     }),
   );
 });

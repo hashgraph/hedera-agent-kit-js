@@ -14,6 +14,7 @@ import {
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { AccountResolver } from '@/shared';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const checkValidityOfUpdates = async (
   params: z.infer<ReturnType<typeof updateTokenParametersNormalised>>,
@@ -145,6 +146,7 @@ const tool = (context: Context): Tool => ({
   description: updateTokenPrompt(context),
   parameters: updateTokenParameters(context),
   execute: updateToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

@@ -1,4 +1,4 @@
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
@@ -6,13 +6,13 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 
 describe('Transfer HBAR With Allowance Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { TRANSFER_HBAR_WITH_ALLOWANCE_TOOL } = coreAccountPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -30,8 +30,13 @@ describe('Transfer HBAR With Allowance Tool Matching Integration Tests', () => {
     it('should match transfer HBAR with allowance tool for simple allowance transfer', async () => {
       const input = 'Transfer 2 HBAR from 0.0.1002 to 0.0.2002 using allowance';
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-      await agentExecutor.invoke({ input });
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
@@ -51,8 +56,13 @@ describe('Transfer HBAR With Allowance Tool Matching Integration Tests', () => {
       const input =
         'Use allowance from 0.0.1002 to send 5 HBAR to 0.0.2002 and 10 HBAR to 0.0.3003';
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-      await agentExecutor.invoke({ input });
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
@@ -69,8 +79,13 @@ describe('Transfer HBAR With Allowance Tool Matching Integration Tests', () => {
     it('should match even if phrased differently ("spend allowance from...")', async () => {
       const input = 'Spend allowance from account 0.0.1002 to send 3.5 HBAR to 0.0.2002';
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-      await agentExecutor.invoke({ input });
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
@@ -89,8 +104,13 @@ describe('Transfer HBAR With Allowance Tool Matching Integration Tests', () => {
     it('should not falsely trigger when input does not mention allowance', async () => {
       const input = 'Transfer 10 HBAR from 0.0.1002 to 0.0.2002';
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-      await agentExecutor.invoke({ input });
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
       expect(spy).not.toHaveBeenCalledWith(TRANSFER_HBAR_WITH_ALLOWANCE_TOOL, expect.anything());
     });
   });

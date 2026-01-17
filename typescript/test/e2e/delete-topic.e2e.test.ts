@@ -6,16 +6,20 @@ import {
   getOperatorClientForTests,
   getCustomClient,
 } from '../utils';
-import { AgentExecutor } from 'langchain/agents';
+import { ResponseParserService } from '@/langchain';
+import { ReactAgent } from 'langchain';
 import { Client, PrivateKey, AccountId } from '@hashgraph/sdk';
-import { extractObservationFromLangchainResponse, wait } from '../utils/general-util';
+import { wait } from '../utils/general-util';
 import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 import { itWithRetry } from '../utils/retry-util';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 
 describe('Delete Topic E2E Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
+  let responseParsingService: ResponseParserService;
   let operatorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
@@ -29,20 +33,32 @@ describe('Delete Topic E2E Tests', () => {
 
     executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: 20 })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(r => r.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
     executorWrapper = new HederaOperationsWrapper(executorClient);
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
+    responseParsingService = testSetup.responseParser;
 
     // create a topic to delete
     const createInput = 'Create a new Hedera topic';
-    const createResult = await agentExecutor.invoke({ input: createInput });
-    const createObservation = extractObservationFromLangchainResponse(createResult);
-    if (!createObservation.raw?.topicId) throw new Error('Failed to create topic for delete test');
+    const createResult = await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: createInput,
+        },
+      ],
+    });
+    const createParsedResponse = responseParsingService.parseNewToolMessages(createResult);
+    if (!createParsedResponse[0].parsedData.raw?.topicId)
+      throw new Error('Failed to create topic for delete test');
   });
 
   afterAll(async () => {
@@ -57,20 +73,30 @@ describe('Delete Topic E2E Tests', () => {
     }
   });
 
-  it('deletes topic via natural language', itWithRetry(async () => {
-    // create a topic to be deleted
-    const createParams: any = { adminKey: executorClient.operatorPublicKey };
-    const createResult: any = await executorWrapper.createTopic(createParams);
-    if (!createResult.topicId) throw new Error('Failed to create topic for delete test');
+  it(
+    'deletes topic via natural language',
+    itWithRetry(async () => {
+      // create a topic to be deleted
+      const createParams: any = { adminKey: executorClient.operatorPublicKey };
+      const createResult: any = await executorWrapper.createTopic(createParams);
+      if (!createResult.topicId) throw new Error('Failed to create topic for delete test');
 
-    const input = `Delete topic ${createResult.topicId!}`;
-    const res = await agentExecutor.invoke({ input });
-    const observation = extractObservationFromLangchainResponse(res);
+      const input = `Delete topic ${createResult.topicId!}`;
+      const res = await agent.invoke({
+        messages: [
+          {
+            role: 'user',
+            content: input,
+          },
+        ],
+      });
+      const parsedResponse = responseParsingService.parseNewToolMessages(res);
 
-    expect(observation).toBeDefined();
-    expect(observation.humanMessage).toContain('Topic with id');
-    expect(observation.raw.transactionId).toBeDefined();
+      expect(parsedResponse).toBeDefined();
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Topic with id');
+      expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
-  }));
+      await wait(MIRROR_NODE_WAITING_TIME);
+    }),
+  );
 });

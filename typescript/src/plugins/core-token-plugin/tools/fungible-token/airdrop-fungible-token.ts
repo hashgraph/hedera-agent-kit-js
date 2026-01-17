@@ -8,6 +8,7 @@ import { airdropFungibleTokenParameters } from '@/shared/parameter-schemas/token
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const airdropFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -27,7 +28,7 @@ Parameters:
 - ${sourceAccountDesc}
 - recipients (array, required): A list of recipient objects, each containing:
   - accountId (string): The recipient's account ID (e.g., "0.0.1234")
-  - amount (number or string): The amount of tokens to send to that recipient (in base units)
+  - amount (number or string): The amount of tokens to send to that recipient (in display units)
 - transactionMemo (str, optional): Optional memo for the transaction
 ${usageInstructions}
 
@@ -71,6 +72,7 @@ const tool = (context: Context): Tool => ({
   description: airdropFungibleTokenPrompt(context),
   parameters: airdropFungibleTokenParameters(context),
   execute: airdropFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

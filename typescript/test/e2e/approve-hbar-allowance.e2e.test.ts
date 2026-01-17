@@ -8,7 +8,7 @@ import {
   PrivateKey,
   TransferTransaction,
 } from '@hashgraph/sdk';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import {
   createLangchainTestSetup,
   getCustomClient,
@@ -17,6 +17,9 @@ import {
   LangchainTestSetup,
   verifyHbarBalanceChange,
 } from '../utils';
+import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown';
 
 /**
  * E2E tests for Approve HBAR Allowance using the LangChain agent, similar to transfer-hbar E2E tests.
@@ -31,7 +34,7 @@ import {
 
 describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let operatorClient: Client;
   let executorClient: Client; // acts as an owner for approval
   let operatorWrapper: HederaOperationsWrapper;
@@ -50,7 +53,10 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     // execution account and client creation (owner)
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
-      .createAccount({ key: executorAccountKey.publicKey, initialBalance: 15 })
+      .createAccount({
+        key: executorAccountKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorAccountKey);
@@ -58,15 +64,16 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
   });
 
   afterAll(async () => {
     if (testSetup && operatorClient) {
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
+      await returnHbarsAndDeleteAccount(
+        executorWrapper,
+        executorClient.operatorAccountId!,
+        operatorClient.operatorAccountId!,
+      );
       testSetup.cleanup();
       operatorClient.close();
     }
@@ -75,10 +82,10 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
   beforeEach(async () => {
     // Create a spender account with its own key so it can sign the allowance spent
     spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await executorWrapper
+    spenderAccount = await operatorWrapper
       .createAccount({
         key: spenderKey.publicKey as Key,
-        initialBalance: 5,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
       })
       .then(resp => resp.accountId!);
 
@@ -88,10 +95,11 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
   afterEach(async () => {
     // Clean up spender account, transferring remaining balance back to the executor (owner)
-    await spenderWrapper.deleteAccount({
-      accountId: spenderAccount,
-      transferAccountId: executorClient.operatorAccountId!,
-    });
+    await returnHbarsAndDeleteAccount(
+      spenderWrapper,
+      spenderAccount,
+      operatorClient.operatorAccountId!,
+    );
   });
 
   const spendViaAllowance = async (ownerId: string, spenderId: string, amountHbar: number) => {
@@ -116,7 +124,14 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
 
     // Ask the agent (running with an executor client) to approve allowance to the spender
     const input = `Approve ${allowanceAmount} HBAR allowance to ${spenderAccount.toString()} with memo "${memo}"`;
-    await agentExecutor.invoke({ input });
+    await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
 
     // Now, using a spender client, spend part of the approved allowance
     await spendViaAllowance(
@@ -140,7 +155,14 @@ describe('Approve HBAR Allowance E2E Tests with Intermediate Execution Account',
     const balanceBefore = await spenderWrapper.getAccountHbarBalance(spenderAccount.toString());
 
     const input = `Approve ${allowanceAmount} HBAR allowance to ${spenderAccount.toString()}`;
-    await agentExecutor.invoke({ input });
+    await agent.invoke({
+      messages: [
+        {
+          role: 'user',
+          content: input,
+        },
+      ],
+    });
 
     await spendViaAllowance(
       executorClient.operatorAccountId!.toString(),

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { AgentExecutor } from 'langchain/agents';
+import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreAccountPluginToolNames } from '@/plugins';
@@ -11,13 +11,13 @@ import { coreAccountPluginToolNames } from '@/plugins';
 
 describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
-  let agentExecutor: AgentExecutor;
+  let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
   const { DELETE_HBAR_ALLOWANCE_TOOL } = coreAccountPluginToolNames;
 
   beforeAll(async () => {
     testSetup = await createLangchainTestSetup();
-    agentExecutor = testSetup.agentExecutor;
+    agent = testSetup.agent;
     toolkit = testSetup.toolkit;
   });
 
@@ -36,9 +36,14 @@ describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
       const input = 'Delete HBAR allowance from 0.0.1001 to 0.0.2002';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -54,9 +59,14 @@ describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
       const input = 'Revoke HBAR allowance to 0.0.3333 with memo "cleanup"';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -72,9 +82,14 @@ describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
       const input = 'Remove HBAR allowance for spender 0.0.4444';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agentExecutor.invoke({ input });
+      await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
 
       expect(spy).toHaveBeenCalledOnce();
       // no explicit ownerAccountId expected
@@ -105,8 +120,13 @@ describe('Delete HBAR Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const v of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockResolvedValue('');
-        await agentExecutor.invoke({ input: v.input });
+        const spy = vi
+          .spyOn(hederaAPI, 'run')
+          .mockReset()
+          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+        await agent.invoke({
+          messages: [{ role: 'user', content: v.input }],
+        });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           DELETE_HBAR_ALLOWANCE_TOOL,

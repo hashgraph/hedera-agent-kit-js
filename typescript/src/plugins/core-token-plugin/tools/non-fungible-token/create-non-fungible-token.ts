@@ -8,6 +8,7 @@ import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/tok
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
 const createNonFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -25,7 +26,9 @@ This tool creates a non-fungible token (NFT) on Hedera.
 Parameters:
 - tokenName (str, required): Name of the token
 - tokenSymbol (str, required): Symbol of the token
-- maxSupply (int, optional): Maximum NFT supply. Defaults to 100 if not provided
+- supplyType (str, optional): The supply type of the token. Can be "finite" or "infinite". Defaults to "finite"
+- maxSupply (int, optional): Maximum NFT supply. Only applicable if supplyType is "finite". Defaults to 100 if not specified
+- isSupplyKey (boolean, optional): If user wants to set supply key set to true, otherwise false
 - ${treasuryAccountDesc}
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
@@ -77,6 +80,7 @@ const tool = (context: Context): Tool => ({
   description: createNonFungibleTokenPrompt(context),
   parameters: createNonFungibleTokenParameters(context),
   execute: createNonFungibleToken,
+  outputParser: transactionToolOutputParser,
 });
 
 export default tool;

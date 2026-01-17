@@ -1,24 +1,28 @@
 #!/usr/bin/env node
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import colors from "colors";
-const { green, red, yellow } = colors;
+// CRITICAL: Redirect stdout to stderr BEFORE importing anything
+// This prevents any SDK console.log from polluting the MCP JSON-RPC channel
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+process.stdout.write = process.stderr.write.bind(process.stderr);
 
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { LedgerId, Client } from "@hashgraph/sdk";
 import {
   AgentMode,
-  Configuration,
-  Context,
   coreAccountPlugin,
   coreAccountPluginToolNames,
   coreConsensusPlugin,
   coreConsensusPluginToolNames,
   coreTokenPlugin,
   coreTokenPluginToolNames,
-  coreQueriesPlugin,
-  coreQueriesPluginToolNames,
   HederaMCPToolkit,
 } from "hedera-agent-kit";
+import type { Configuration, Context } from "hedera-agent-kit";
+
+import * as dotenv from "dotenv";
+
+// Load .env but suppress any output
+dotenv.config({ path: "../.env" });
 
 type Options = {
   tools?: string[];
@@ -39,13 +43,6 @@ const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } =
   coreConsensusPluginToolNames;
 
-const {
-  GET_HBAR_BALANCE_QUERY_TOOL,
-  GET_ACCOUNT_QUERY_TOOL,
-  GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  GET_TOPIC_MESSAGES_QUERY_TOOL,
-} = coreQueriesPluginToolNames;
-
 const ACCEPTED_ARGS = [
   "agent-mode",
   "account-id",
@@ -61,11 +58,13 @@ const ACCEPTED_TOOLS = [
   TRANSFER_HBAR_TOOL,
   CREATE_TOPIC_TOOL,
   SUBMIT_TOPIC_MESSAGE_TOOL,
-  GET_HBAR_BALANCE_QUERY_TOOL,
-  GET_ACCOUNT_QUERY_TOOL,
-  GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  GET_TOPIC_MESSAGES_QUERY_TOOL,
 ];
+
+// Helper function for stderr logging without colors when in MCP mode
+function log(message: string, level: "info" | "error" | "warn" = "info") {
+  const prefix = level === "error" ? "❌" : level === "warn" ? "⚠️" : "✅";
+  console.error(`${prefix} ${message}`);
+}
 
 export function parseArgs(args: string[]): Options {
   const options: Options = {
@@ -73,7 +72,6 @@ export function parseArgs(args: string[]): Options {
     context: {},
   };
 
-  console.log(args);
   args.forEach((arg) => {
     if (arg.startsWith("--")) {
       const [key, value] = arg.slice(2).split("=");
@@ -124,13 +122,13 @@ export function parseArgs(args: string[]): Options {
 }
 
 function handleError(error: any) {
-  console.error(red("\n🚨  Error initializing Hedera MCP server:\n"));
-  console.error(yellow(`   ${error.message}\n`));
+  log(`Error initializing Hedera MCP server: ${error.message}`, "error");
 }
 
 export async function main() {
   const options = parseArgs(process.argv.slice(2));
   let client: Client;
+
   if (options.ledgerId == LedgerId.TESTNET) {
     client = Client.forTestnet();
   } else {
@@ -144,28 +142,22 @@ export async function main() {
   if (operatorId && operatorKey) {
     try {
       client.setOperator(operatorId, operatorKey);
-      console.error(green(`✅ Operator set: ${operatorId}`));
+      log(`Operator set: ${operatorId}`, "info");
     } catch (error) {
-      console.error(red(`❌ Failed to set operator: ${error}`));
+      log(`Failed to set operator: ${error}`, "error");
       throw error;
     }
   } else {
-    console.error(
-      yellow(
-        "⚠️  No operator credentials found in environment variables (HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY)",
-      ),
+    log(
+      "No operator credentials found in environment variables (HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY)",
+      "warn",
     );
   }
 
   const configuration: Configuration = {
     tools: options.tools,
     context: options.context,
-    plugins: [
-      coreTokenPlugin,
-      coreAccountPlugin,
-      coreConsensusPlugin,
-      coreQueriesPlugin,
-    ],
+    plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin],
   };
 
   const server = new HederaMCPToolkit({
@@ -173,14 +165,17 @@ export async function main() {
     configuration: configuration,
   });
 
+  // Restore stdout ONLY for MCP communication
+  process.stdout.write = originalStdoutWrite;
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // We use console.error instead of console.log since console.log will output to stdio, which will confuse the MCP server
-  console.error(green("✅ Hedera MCP Server running on stdio"));
+
+  // Only log to stderr - stdout is reserved for MCP JSON-RPC communication
+  log("Hedera MCP Server running on stdio", "info");
 }
 
-if (require.main === module) {
-  main().catch((error) => {
-    handleError(error);
-  });
-}
+main().catch((error) => {
+  handleError(error);
+  process.exit(1);
+});

@@ -9,19 +9,20 @@
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "^2.68.0",
-    "@langchain/core": "^0.3.66",
-    "@langchain/openai": "^0.6.2",
-    "dotenv": "^17.2.0",
-    "hedera-agent-kit": "3.4.0",
-    "langchain": "^0.3.30",
-    "prompts": "^2.4.2"
+    "@hashgraph/sdk": "2.79.0",
+    "@langchain/classic": "1.0.8",
+    "@langchain/core": "1.1.11",
+    "@langchain/openai": "1.2.1",
+    "cheerio": "1.1.2",
+    "dotenv": "17.2.3",
+    "hedera-agent-kit": "../..",
+    "prompts": "2.4.2"
   },
   "author": "",
   "license": "Apache-2.0",
   "description": "",
   "devDependencies": {
-    "@types/prompts": "^2.4.9",
-    "tsx": "^4.20.4"
+    "@types/prompts": "2.4.9",
+    "tsx": "4.20.6"
   }
 }

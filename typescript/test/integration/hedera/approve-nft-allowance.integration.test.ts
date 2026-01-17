@@ -18,6 +18,8 @@ import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
+import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
 
 /**
  * Integration tests for Approve NFT Allowance tool
@@ -47,8 +49,9 @@ describe('Approve NFT Allowance Integration Tests', () => {
     const executorKeyPair = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: 35, // cover fees for token creation/minting/approvals
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), // cover fees for token creation/minting/approvals
         key: executorKeyPair.publicKey,
+        accountMemo: 'executor account for Approve NFT Allowance Integration Tests',
       })
       .then(resp => resp.accountId!);
 
@@ -57,7 +60,11 @@ describe('Approve NFT Allowance Integration Tests', () => {
 
     // Create a spender account using the executor's public key, so the executor can sign association if needed
     spenderAccountId = await executorWrapper
-      .createAccount({ initialBalance: 20, key: executorClient.operatorPublicKey as Key })
+      .createAccount({
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        key: executorClient.operatorPublicKey as Key,
+        accountMemo: 'spender account for Approve NFT Allowance Integration Tests',
+      })
       .then(resp => resp.accountId!);
 
     context = {

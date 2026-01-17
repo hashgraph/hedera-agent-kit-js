@@ -1,10 +1,13 @@
 import {
   AccountAllowanceApproveTransaction,
+  AccountAllowanceDeleteTransaction,
   AccountCreateTransaction,
   AccountDeleteTransaction,
   AccountId,
   AccountUpdateTransaction,
   ContractExecuteTransaction,
+  Hbar,
+  HbarUnit,
   ScheduleCreateTransaction,
   ScheduleDeleteTransaction,
   ScheduleSignTransaction,
@@ -29,6 +32,7 @@ import {
   associateTokenParametersNormalised,
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParametersNormalised,
+  deleteNftAllowanceParametersNormalised,
   deleteTokenParametersNormalised,
   dissociateTokenParametersNormalised,
   mintFungibleTokenParametersNormalised,
@@ -36,6 +40,7 @@ import {
   updateTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
+  transferNonFungibleTokenParametersNormalised,
 } from '@/shared/parameter-schemas/token.zod';
 import z from 'zod';
 import {
@@ -74,7 +79,7 @@ export default class HederaBuilder {
   }
 
   static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
-    const tx = new TransferTransaction(params);
+    const tx = new TransferTransaction(params as any);
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
@@ -94,11 +99,27 @@ export default class HederaBuilder {
     return tx;
   }
 
+  static transferNonFungibleToken(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenParametersNormalised>>,
+  ) {
+    const tx = new TransferTransaction();
+
+    for (const transfer of params.transfers) {
+      tx.addNftTransfer(transfer.nftId, params.senderAccountId, transfer.receiver);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
+  }
+
   static transferHbarWithAllowance(
     params: z.infer<ReturnType<typeof transferHbarWithAllowanceParametersNormalised>>,
   ) {
     // transfers are passed through the constructor
-    const tx = new TransferTransaction(params);
+    const tx = new TransferTransaction(params as any);
 
     // Add approved transfer (allowance-based) - approved transfer passing through a constructor is not supported
     tx.addApprovedHbarTransfer(
@@ -172,6 +193,10 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof contractExecuteTransactionParametersNormalised>>,
   ) {
     const tx = new ContractExecuteTransaction(params);
+    if (params.payableAmount) {
+      tx.setPayableAmount(Hbar.from(params.payableAmount, HbarUnit.Tinybar));
+    }
+
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
@@ -259,6 +284,22 @@ export default class HederaBuilder {
     params: z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>,
   ) {
     return this.buildAccountAllowanceApproveTx(params);
+  }
+
+  static deleteNftAllowance(
+    params: z.infer<ReturnType<typeof deleteNftAllowanceParametersNormalised>>,
+  ) {
+    const tx = new AccountAllowanceDeleteTransaction();
+
+    for (const nftId of params.nftWipes) {
+      tx.deleteAllTokenNftAllowances(nftId, params.ownerAccountId);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return tx;
   }
 
   static approveTokenAllowance(
