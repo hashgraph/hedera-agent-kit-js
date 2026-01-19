@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
     client,
     configuration: {
       tools: [],
-      plugins: [coreMiscQueriesPlugin], // Add only one plugin, other tools will be available through the MCP
+      plugins: [coreMiscQueriesPlugin], // only one plugin, other tools will be available through the MCP
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
@@ -44,7 +44,7 @@ async function bootstrap(): Promise<void> {
       hedera: {
         command: 'node',
         args: [
-          '<YOUR PATH TO>/hedera-agent-kit-v3/modelcontextprotocol/dist/index.js',
+          '<YOUR PATH TO>/hedera-agent-kit-js/modelcontextprotocol/dist/index.js', // IMPORTANT: replace it with your actual path to the MCP server JS compiled file
           '--ledger-id=testnet',
         ],
         env: {
@@ -76,12 +76,9 @@ async function bootstrap(): Promise<void> {
   const responseParsingService = new ResponseParserService(hederaAgentToolkit.getTools());
 
   console.log('Hedera Agent CLI Chatbot with Plugin Support — type "exit" to quit');
-  console.log('Available plugin tools:');
-  console.log('- example_greeting_tool: Generate personalized greetings');
   console.log(
-    '- example_hbar_transfer_tool: Transfer HBAR to account 0.0.800 (demonstrates transaction strategy)',
+    "To see what tools are available, ask agent 'What tools are available?' in the CLI.\n",
   );
-  console.log('');
 
   while (true) {
     const { userInput } = await prompts({
