@@ -248,7 +248,10 @@ node dist/index.js
 
 This example demonstrates how to integrate external MCP (Model Context Protocol) servers with the Hedera Agent Kit. The agent combines a single plugin from the local toolkit with tools from a remote MCP server. While this example uses the Hedera MCP server from this repository, you can easily integrate other MCP servers by modifying the configuration.
 
-**Found at:** `typescript/examples/langchain-v1/external-mcp-agent.ts`
+**Found at:**
+- `typescript/examples/langchain-v1/external-mcp-agent.ts`
+- `typescript/examples/ai-sdk/mcp-external-agent.ts`
+
 
 #### Prerequisites
 
@@ -274,6 +277,8 @@ OPENAI_API_KEY=sk-proj-...
 
 #### Running the Example
 
+##### LangChain v1
+
 1. Navigate to the example directory:
 
 ```bash
@@ -288,6 +293,23 @@ npm run langchain:external-mcp-agent
 ```
 
 The agent will start a CLI chatbot that combines the `coreMiscQueriesPlugin` from the local toolkit with tools from the external MCP server, allowing you to interact with the Hedera blockchain in natural language.
+
+##### AI SDK
+
+1. Navigate to the example directory:
+
+```bash
+cd typescript/examples/ai-sdk
+npm install
+```
+
+2. Run the external MCP agent:
+
+```bash
+npm run ai-sdk:mcp-external-agent
+```
+
+The agent will start a CLI chatbot using the AI SDK to interact with the external MCP server.
 
 **Note:** To integrate other types of MCP servers (HTTP, SSE, WebSocket, etc.), modify the `mcpServers` configuration in the example file. See the [LangChain MCP Adapters documentation](https://reference.langchain.com/python/langchain_mcp_adapters/#langchain_mcp_adapters.client) for configuration details.
 

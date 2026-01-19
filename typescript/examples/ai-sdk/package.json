@@ -4,20 +4,25 @@
   "scripts": {
     "test": "echo \"No tests specified for example package\"",
     "ai-sdk:tool-calling-agent": "ts-node tool-calling-agent.ts",
-    "ai-sdk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts"
+    "ai-sdk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts",
+    "ai-sdk:mcp-external-agent": "ts-node mcp-external-agent.ts"
   },
   "dependencies": {
+    "@ai-sdk/mcp": "^1.0.10",
     "@ai-sdk/openai": "^3.0.2",
+    "@modelcontextprotocol/sdk": "1.25.2",
     "ai": "^6.0.5",
     "dotenv": "17.2.3",
     "hedera-agent-kit": "../..",
-    "prompts": "2.4.2"
+    "prompts": "2.4.2",
+    "zod": "^3.23.8"
   },
   "author": "",
   "license": "Apache-2.0",
   "description": "",
   "devDependencies": {
     "@types/prompts": "2.4.9",
+    "json-schema-to-zod": "^2.6.0",
     "ts-node": "10.9.2"
   }
 }
