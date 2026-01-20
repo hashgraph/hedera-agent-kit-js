@@ -29,7 +29,7 @@
     "@walletconnect/universal-provider": "2.21.7",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "hedera-agent-kit": "3.6.0",
+    "hedera-agent-kit": "../..",
     "lucide-react": "0.539.0",
     "next": "15.5.9",
     "next-themes": "0.4.6",
