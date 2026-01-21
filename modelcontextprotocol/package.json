@@ -27,7 +27,7 @@
     "@hashgraph/sdk": "^2.68.0",
     "@modelcontextprotocol/sdk": "1.25.2",
     "colors": "^1.4.0",
-    "hedera-agent-kit": "../typescript",
+    "hedera-agent-kit": "3.7.0",
     "dotenv": "17.2.3"
   },
   "keywords": [
