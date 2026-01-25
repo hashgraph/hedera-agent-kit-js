@@ -51,6 +51,10 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
   Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
+- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
+
+  Github repository: https://github.com/jmgomezl/hak-pyth-plugin
+
 ---
 
 ## Developer Examples

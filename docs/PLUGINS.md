@@ -11,6 +11,10 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
   Github repository: https://github.com/buidler-labs/hak-memejob-plugin
 
+- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
+
+  Github repository: https://github.com/jmgomezl/hak-pyth-plugin
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
