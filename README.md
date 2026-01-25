@@ -51,6 +51,12 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 
   Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
+- [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
+
+  NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
+  Source: https://github.com/jmgomezl/hak-saucerswap-plugin
+  ✅ Tested/endorsed version: hak-saucerswap-plugin==1.0.1
+
 ---
 
 ## Developer Examples
