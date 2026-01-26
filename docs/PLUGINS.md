@@ -7,7 +7,7 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
 ## Available Third Party Plugins
 
-See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](../README.md) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
+See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](https://github.com/hashgraph/hedera-agent-kit-js?tab=readme-ov-file#third-party-plugins) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
 
 ## Plugin Architecture
 
