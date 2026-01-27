@@ -9,6 +9,11 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
 See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](../README.md) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
 
+- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
+
+  Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
+  Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
