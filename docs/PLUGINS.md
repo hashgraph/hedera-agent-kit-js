@@ -15,7 +15,12 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
   NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
   Source: https://github.com/jmgomezl/hak-saucerswap-plugin
-  ✅ Tested/endorsed version: hak-saucerswap-plugin==1.0.1
+  Tested/endorsed version: hak-saucerswap-plugin@1.0.1
+  
+- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
+
+  Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
+  Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
 
 ## Plugin Architecture
 
