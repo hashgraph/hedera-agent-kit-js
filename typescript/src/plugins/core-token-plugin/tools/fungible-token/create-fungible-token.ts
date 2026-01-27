@@ -62,6 +62,7 @@ const createFungibleToken = async (
       client,
       mirrornodeService,
     );
+
     const tx = HederaBuilder.createFungibleToken(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);
