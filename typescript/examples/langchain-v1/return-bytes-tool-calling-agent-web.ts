@@ -70,7 +70,7 @@ async function bootstrap(): Promise<void> {
 
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 
-      // Assuming a single tool call per response but parsedToolData might contain an array of tool calls made since the last agent.invoke
+      // Assuming a single tool call per response, but parsedToolData might contain an array of tool calls made since the last agent.invoke
       const toolCall = parsedToolData[0];
 
       // 1. Handle case when NO tool was called (simple chat)
@@ -84,17 +84,18 @@ async function bootstrap(): Promise<void> {
       // 2. Handle RETURN_BYTES mode
       if (toolCall.parsedData?.raw?.bytes) {
         console.log('Transaction bytes found. Executing...');
-        const bytesObject = toolCall.parsedData.raw.bytes;
-        const realBytes = Buffer.isBuffer(bytesObject)
-          ? bytesObject
-          : Buffer.from(bytesObject.data);
 
-        const tx = Transaction.fromBytes(realBytes);
-        const result = await tx.execute(humanInTheLoopClient);
-        const receipt = await result.getReceipt(humanInTheLoopClient);
+        try {
+          const realBytes = parseTransactionBytes(toolCall.parsedData.raw.bytes);
+          const tx = Transaction.fromBytes(realBytes);
+          const result = await tx.execute(humanInTheLoopClient);
+          const receipt = await result.getReceipt(humanInTheLoopClient);
 
-        console.log('Transaction receipt:', receipt.status.toString());
-        console.log('Transaction ID:', result.transactionId.toString());
+          console.log('Transaction receipt:', receipt.status.toString());
+          console.log('Transaction ID:', result.transactionId.toString());
+        } catch (error) {
+          console.error('Error executing transaction from bytes:', error);
+        }
       }
       // 3. Handle QUERY tool calls
       else {
@@ -119,3 +120,35 @@ bootstrap()
   .then(() => {
     process.exit(0);
   });
+
+/**
+ * Helper to robustly parse transaction bytes from various serialization formats.
+ */
+function parseTransactionBytes(bytesObject: any): Buffer {
+  if (Buffer.isBuffer(bytesObject)) {
+    return bytesObject;
+  }
+
+  // Handle Node.js Buffer serialization: { type: 'Buffer', data: [...] }
+  if (
+    typeof bytesObject === 'object' &&
+    bytesObject !== null &&
+    'data' in bytesObject &&
+    Array.isArray((bytesObject as any).data)
+  ) {
+    return Buffer.from((bytesObject as any).data);
+  }
+
+  // Handle Web/Browser Uint8Array serialization or array-like objects: { "0": 10, "1": 75... }
+  // Object.values guarantees order for integer keys in modern JS environments
+  if (typeof bytesObject === 'object' && bytesObject !== null) {
+    const values = Object.values(bytesObject);
+    // specific check to see if we have an array of number
+    if (values.every(v => typeof v === 'number')) {
+      return Buffer.from(values as number[]);
+    }
+  }
+
+  // Fallback / Error
+  throw new Error(`Unable to parse bytes from object: ${JSON.stringify(bytesObject)}`);
+}

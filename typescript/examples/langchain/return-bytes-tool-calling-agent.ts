@@ -94,23 +94,7 @@ async function bootstrap(): Promise<void> {
       console.log(`AI: ${response?.output ?? response}`);
       const bytes = extractBytesFromAgentResponse(response);
       if (bytes !== undefined) {
-        let realBytes: Buffer;
-        if (Buffer.isBuffer(bytes)) {
-          realBytes = bytes;
-        } else if (
-          typeof bytes === 'object' &&
-          bytes !== null &&
-          'data' in bytes &&
-          Array.isArray((bytes as any).data)
-        ) {
-          // Handle Node.js Buffer serialization: { type: 'Buffer', data: [...] }
-          realBytes = Buffer.from((bytes as any).data);
-        } else {
-          // Handle Web/Browser Uint8Array serialization: { "0": 10, "1": 75... }
-          // Object.values works here because integer keys are traversed in ascending order
-          const values = Object.values(bytes);
-          realBytes = Buffer.from(values as number[]);
-        }
+        const realBytes = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes.data);
         const tx = Transaction.fromBytes(realBytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);
