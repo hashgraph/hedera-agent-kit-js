@@ -8,16 +8,22 @@ import {
   coreAccountQueryPlugin,
   coreTokenQueryPlugin,
   coreConsensusQueryPlugin,
+  coreMiscQueriesPlugin,
+  coreTransactionQueryPlugin,
+  coreEVMQueryPlugin,
 } from '@/plugins';
 
 const CORE_PLUGINS = [
   coreAccountPlugin,
-  coreTokenPlugin,
-  coreConsensusPlugin,
-  coreEVMPlugin,
   coreAccountQueryPlugin,
-  coreTokenQueryPlugin,
+  coreConsensusPlugin,
   coreConsensusQueryPlugin,
+  coreEVMPlugin,
+  coreEVMQueryPlugin,
+  coreMiscQueriesPlugin,
+  coreTokenPlugin,
+  coreTokenQueryPlugin,
+  coreTransactionQueryPlugin,
 ];
 
 export interface Plugin {
