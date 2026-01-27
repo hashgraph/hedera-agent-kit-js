@@ -1,8 +1,4 @@
-import {
-  AgentMode,
-  HederaLangchainToolkit,
-  ResponseParserService,
-} from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit, ResponseParserService } from 'hedera-agent-kit';
 import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -42,7 +38,7 @@ async function bootstrap(): Promise<void> {
 
   // Create the underlying agent
   const agent = createAgent({
-    model: "openai:gpt-4o-mini",
+    model: 'openai:gpt-4o-mini',
     tools: tools,
     systemPrompt:
       'You are a helpful Hedera assistant. You have Query Tools to read from the mirror node (e.g., check balance) and Transaction Tools to create transactions. Your Transaction Tools have two modes: "Return-Bytes" (prepare and return unsigned bytes, the tool calls wont execute the transactions) or "Execute-Transaction" (autonomously execute and return the receipt). Query tools always just return data.',
@@ -90,9 +86,23 @@ async function bootstrap(): Promise<void> {
         console.log('Transaction bytes found. Executing...');
         const bytesObject = toolCall.parsedData.raw.bytes;
 
-        const realBytes = Buffer.isBuffer(bytesObject)
-          ? bytesObject
-          : Buffer.from(bytesObject.data);
+        let realBytes: Buffer;
+        if (Buffer.isBuffer(bytesObject)) {
+          realBytes = bytesObject;
+        } else if (
+          typeof bytesObject === 'object' &&
+          bytesObject !== null &&
+          'data' in bytesObject &&
+          Array.isArray((bytesObject as any).data)
+        ) {
+          // Handle Node.js Buffer serialization: { type: 'Buffer', data: [...] }
+          realBytes = Buffer.from((bytesObject as any).data);
+        } else {
+          // Handle Web/Browser Uint8Array serialization: { "0": 10, "1": 75... }
+          // Object.values works here because integer keys are traversed in ascending order
+          const values = Object.values(bytesObject);
+          realBytes = Buffer.from(values as number[]);
+        }
 
         const tx = Transaction.fromBytes(realBytes);
         const result = await tx.execute(humanInTheLoopClient);
