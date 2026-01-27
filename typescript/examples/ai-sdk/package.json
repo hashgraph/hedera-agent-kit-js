@@ -13,9 +13,9 @@
     "@modelcontextprotocol/sdk": "1.25.2",
     "ai": "^6.0.5",
     "dotenv": "17.2.3",
-    "hedera-agent-kit": "../..",
-    "prompts": "2.4.2",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "hedera-agent-kit": "3.7.0",
+    "prompts": "2.4.2"
   },
   "author": "",
   "license": "Apache-2.0",
