@@ -7,9 +7,7 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
 ## Available Third Party Plugins
 
-- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
-
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](https://github.com/hashgraph/hedera-agent-kit-js?tab=readme-ov-file#third-party-plugins) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
 
 - [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
 
