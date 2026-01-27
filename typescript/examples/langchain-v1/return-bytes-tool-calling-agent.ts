@@ -1,8 +1,4 @@
-import {
-  AgentMode,
-  HederaLangchainToolkit,
-  ResponseParserService,
-} from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit, ResponseParserService } from 'hedera-agent-kit';
 import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -13,7 +9,8 @@ dotenv.config();
 
 async function bootstrap(): Promise<void> {
   const operatorAccountId = process.env.ACCOUNT_ID!;
-  const operatorPrivateKey = PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!);
+  const operatorPrivateKey = PrivateKey.fromStringDer(process.env.PRIVATE_KEY!);
+  // const operatorPrivateKey = PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
 
   // Hedera client setup (Testnet by default)
   const humanInTheLoopClient = Client.forTestnet().setOperator(
@@ -42,7 +39,7 @@ async function bootstrap(): Promise<void> {
 
   // Create the underlying agent
   const agent = createAgent({
-    model: "openai:gpt-4o-mini",
+    model: 'openai:gpt-4o-mini',
     tools: tools,
     systemPrompt:
       'You are a helpful Hedera assistant. You have Query Tools to read from the mirror node (e.g., check balance) and Transaction Tools to create transactions. Your Transaction Tools have two modes: "Return-Bytes" (prepare and return unsigned bytes, the tool calls wont execute the transactions) or "Execute-Transaction" (autonomously execute and return the receipt). Query tools always just return data.',
