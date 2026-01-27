@@ -144,6 +144,19 @@ npm install
 ```bash
 npm run langchain:return-bytes-tool-calling-agent
 ```
+
+#### Web Environment (Robust Byte Parsing)
+If you are running in a web environment or need robust byte parsing (e.g. handling browser-native Uint8Arrays or JSON-serialized Buffers), use the web-specific agent:
+
+**LangChain Classic:**
+```bash
+npm run langchain:return-bytes-tool-calling-agent-web
+```
+
+**LangChain v1:**
+```bash
+npm run langchain:return-bytes-tool-calling-agent-web
+```
 The agent will start a CLI chatbot that you can interact with. You can make requests in natural language, and this demo will demonstrate an app with a workflow that requires a human in the loop to approve actions and execute transactions.
 
 You can modify the `typescript/examples/langchain/return-bytes-tool-calling-agent.ts` file to add define the available tools you would like to use with this agent:

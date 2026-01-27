@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"No tests specified for example package\"",
     "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
+    "langchain:return-bytes-tool-calling-agent-web": "tsx return-bytes-tool-calling-agent-web.ts",
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
