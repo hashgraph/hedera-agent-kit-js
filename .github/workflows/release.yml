@@ -41,26 +41,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure git identity for release bot
-        env:
-          GIT_USER_NAME: ${{ secrets.GIT_USER_NAME }}
-          GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+      - name: Install GnuPG Tools
         run: |
-          git config user.name "${GIT_USER_NAME}"
-          git config user.email "${GIT_USER_EMAIL}"
+          if ! command -v gpg2 >/dev/null 2>&1; then
+            echo "::group::Updating APT Repository Indices"
+            sudo apt update
+            echo "::endgroup::"
+            echo "::group::Installing GnuPG Tools"
+            sudo apt install -y gnupg2
+            echo "::endgroup::"
+          fi
 
       - name: Import GPG key for signed releases
         if: ${{ secrets.GPG_KEY_CONTENTS != '' }}
-        env:
-          GPG_KEY_CONTENTS: ${{ secrets.GPG_KEY_CONTENTS }}
-          GIT_USER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
-        run: |
-          echo "${GPG_KEY_CONTENTS}" | gpg --batch --import
-          KEY_ID="$(gpg --list-secret-keys --keyid-format=long "${GIT_USER_EMAIL}" | awk '/^sec/ { print $2 }' | sed 's#.*/##')"
-          if [ -n "${KEY_ID}" ]; then
-            git config user.signingkey "${KEY_ID}"
-            git config commit.gpgsign true
-          fi
+        uses: step-security/ghaction-import-gpg@69c854a83c7f79463f8bdf46772ab09826c560cd # v6.3.1
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY_CONTENTS }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+          git_committer_name: ${{ secrets.GIT_USER_NAME }}
+          git_committer_email: ${{ secrets.GIT_USER_EMAIL }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
