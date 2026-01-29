@@ -33,7 +33,7 @@ The Hedera Agent Kit is extensible with third party plugins by other projects.
 
 ## Agent Kit Functionality
 
-The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Hedera Plugins & Tools](#hedera-plugins--tools) and [Third Party Plugins](#third-party-plugins) sections of this page
 
 👉 See [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HEDERAPLUGINS.md) for the full catalogue & usage examples for Hedera Tools.
 
@@ -42,36 +42,47 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ---
 
 ### Third Party Plugins
-The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins) and README in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md) 
 
-- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins) and [docs/PLUGINS.md](./docs/PLUGINS.md).
 
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+#### DeFi & Trading
 
-- [Bonzo Plugin](https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin) is a unified SDK to the [**Bonzo**](https://bonzo.finance) protocol, exposing the core actions (`deposit`, `withdraw`, `repay`, `borrow`) for decentralised lending and borrowing on Hedera:
+- **[Official SaucerSwap Plugin](https://www.npmjs.com/package/saucer-swap-plugin)** – Streamlined interface to the [SaucerSwap](https://saucerswap.finance) DEX, exposing V2 protocol actions (`get_swap_quote_v2_tool`, `swap_v2_tool`).
+  - **NPM:** [saucer-swap-plugin](https://www.npmjs.com/package/saucer-swap-plugin)
+  - **GitHub:** _To be added_
+  - **Endorsed version:** `saucer-swap-plugin@0.1.0`
 
-  Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
+- **[SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin)** – Community interface to [SaucerSwap](https://saucerswap.finance) with comprehensive actions for swaps, liquidity, and farming (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`).
+  - **NPM:** [hak-saucerswap-plugin](https://www.npmjs.com/package/hak-saucerswap-plugin)
+  - **GitHub:** [jmgomezl/hak-saucerswap-plugin](https://github.com/jmgomezl/hak-saucerswap-plugin)
+  - **Endorsed version:** `hak-saucerswap-plugin@1.0.1`
 
-- [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
+- **[Bonzo Plugin](https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin)** – Unified SDK for the [Bonzo Finance](https://bonzo.finance) protocol, enabling decentralized lending and borrowing (`deposit`, `withdraw`, `repay`, `borrow`).
+  - **NPM:** [@bonzofinancelabs/hak-bonzo-plugin](https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin)
+  - **GitHub:** [Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
-  NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
-  Source: https://github.com/jmgomezl/hak-saucerswap-plugin
-  Tested/endorsed version: hak-saucerswap-plugin@1.0.1
+- **[Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin)** – Interface to the [memejob](https://memejob.fun/) protocol for meme token interactions (`create`, `buy`, `sell`).
+  - **NPM:** [@buidlerlabs/hak-memejob-plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin)
+  - **GitHub:** [buidler-labs/hak-memejob-plugin](https://github.com/buidler-labs/hak-memejob-plugin)
 
-- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
+#### Price Feeds & Market Data
 
-  Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
-  Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
+- **[Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin)** – Access [Pyth Network](https://www.pyth.network/) price feeds via the Hermes API, with tools to list feeds and fetch latest prices.
+  - **NPM:** [hak-pyth-plugin](https://www.npmjs.com/package/hak-pyth-plugin)
+  - **GitHub:** [jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin)
+  - **Endorsed version:** `hak-pyth-plugin@0.1.1`
 
-- [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
+- **[Chainlink Price Feed Plugin](https://www.npmjs.com/package/chainlink-pricefeed-plugin)** – Access [Chainlink](https://docs.chain.link/data-feeds/price-feeds) price feeds for aggregated data from multiple sources (`get price feed` for ETH, BTC, HBAR, LINK, USDC, UST, DAI).
+  - **NPM:** [chainlink-pricefeed-plugin](https://www.npmjs.com/package/chainlink-pricefeed-plugin)
+  - **GitHub:** [henrytongv/chainlink-price-plugin-js](https://github.com/henrytongv/chainlink-price-plugin-js)
+  - **Endorsed version:** `chainlink-pricefeed-plugin@1.0.4`
 
-  Github repository: [https://github.com/henrytongv/coincap-hedera-plugin](https://github.com/henrytongv/coincap-hedera-plugin). Tested/endorsed version of plugin: coincap-hedera-plugin@1.0.4
+- **[CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin)** – Access [CoinCap API](https://www.coincap.io) for cryptocurrency market data, including HBAR price in USD (`get HBAR price in USD`).
+  - **NPM:** [coincap-hedera-plugin](https://www.npmjs.com/package/coincap-hedera-plugin)
+  - **GitHub:** [henrytongv/coincap-hedera-plugin](https://github.com/henrytongv/coincap-hedera-plugin)
+  - **Endorsed version:** `coincap-hedera-plugin@1.0.4`
 
-- [Chainlink price feed Plugin](https://www.npmjs.com/package/chainlink-pricefeed-plugin) provides access to the [**Chainlink price feeds**](https://docs.chain.link/data-feeds/price-feeds) to get data aggregated from many data sources. It exposes the action (`get price feed`) that allows you to get the current price for ETH, BTC, HBAR, LINK, USDC, UST or DAI.
-
-  Github repository: [https://github.com/henrytongv/chainlink-price-plugin-js](https://github.com/henrytongv/chainlink-price-plugin-js). Tested/endorsed version of plugin: chainlink-pricefeed-plugin@1.0.4
-  
-_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
+_[Contribute your own plugin](./docs/PLUGINS.md)_
 ---
 
 ## Developer Examples
