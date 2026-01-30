@@ -1,5 +1,4 @@
 import { AccountId, Hbar } from '@hashgraph/sdk';
-import BigNumber from 'bignumber.js';
 import Long from 'long';
 
 /**
@@ -7,7 +6,7 @@ import Long from 'long';
  */
 export type TransferHbarInput = {
   accountId: AccountId | string;
-  amount: number | string | Long | BigNumber | Hbar;
+  amount: number | string | Long | Hbar;
 };
 
 /**

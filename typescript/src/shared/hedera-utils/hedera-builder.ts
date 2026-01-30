@@ -77,16 +77,11 @@ export default class HederaBuilder {
     const tx = new TokenCreateTransaction(params);
     return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
-  static transferHbar(
-    params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>,
-  ) {
+  static transferHbar(params: z.infer<ReturnType<typeof transferHbarParametersNormalised>>) {
     const tx = new TransferTransaction();
 
     for (const transfer of params.hbarTransfers) {
-      tx.addHbarTransfer(
-        AccountId.fromString(transfer.accountId),
-        transfer.amount,
-      );
+      tx.addHbarTransfer(transfer.accountId, transfer.amount);
     }
 
     if (params.transactionMemo) {
@@ -102,18 +97,14 @@ export default class HederaBuilder {
     const tx = new TransferTransaction();
 
     for (const transfer of params.transfers) {
-      tx.addApprovedNftTransfer(
-        transfer.nftId,
-        params.sourceAccountId,
-        transfer.receiver,
-      );
+      tx.addApprovedNftTransfer(transfer.nftId, params.sourceAccountId, transfer.receiver);
     }
 
     if (params.transactionMemo) {
       tx.setTransactionMemo(params.transactionMemo);
     }
 
-    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
+    return tx;
   }
 
   static transferNonFungibleToken(
@@ -139,15 +130,12 @@ export default class HederaBuilder {
 
     // Add normal HBAR transfers
     for (const transfer of params.hbarTransfers) {
-      tx.addHbarTransfer(
-        AccountId.fromString(transfer.accountId),
-        transfer.amount,
-      );
+      tx.addHbarTransfer(transfer.accountId, transfer.amount);
     }
 
     // Add approved (allowance-based) HBAR transfer
     tx.addApprovedHbarTransfer(
-      AccountId.fromString(params.hbarApprovedTransfer.ownerAccountId),
+      params.hbarApprovedTransfer.ownerAccountId,
       params.hbarApprovedTransfer.amount,
     );
 
@@ -155,8 +143,9 @@ export default class HederaBuilder {
       tx.setTransactionMemo(params.transactionMemo);
     }
 
-    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
+    return tx;
   }
+
   static airdropFungibleToken(
     params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>,
   ) {
@@ -165,7 +154,7 @@ export default class HederaBuilder {
     for (const transfer of params.tokenTransfers) {
       tx.addTokenTransfer(
         TokenId.fromString(transfer.tokenId),
-        AccountId.fromString(transfer.accountId),
+        transfer.accountId,
         transfer.amount,
       );
     }
@@ -174,7 +163,7 @@ export default class HederaBuilder {
       tx.setTransactionMemo(params.transactionMemo);
     }
 
-    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
+    return tx;
   }
 
   static transferFungibleTokenWithAllowance(
@@ -206,10 +195,8 @@ export default class HederaBuilder {
     return new TokenUpdateTransaction(params);
   }
 
-  static createTopic(
-    params: z.infer<ReturnType<typeof createTopicParametersNormalised>>,
-  ) {
-    const { transactionMemo, schedulingParams, ...topicParams } = params;
+  static createTopic(params: z.infer<ReturnType<typeof createTopicParametersNormalised>>) {
+    const { transactionMemo, ...topicParams } = params;
 
     const tx = new TopicCreateTransaction(topicParams);
 
@@ -217,7 +204,7 @@ export default class HederaBuilder {
       tx.setTransactionMemo(transactionMemo);
     }
 
-    return HederaBuilder.maybeWrapInSchedule(tx, schedulingParams);
+    return tx;
   }
   static submitTopicMessage(
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,
@@ -297,21 +284,10 @@ export default class HederaBuilder {
   static deleteScheduleTransaction(
     params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
   ) {
-    const { transactionMemo, ...scheduleParams } = params;
-
-    const tx = new ScheduleDeleteTransaction(scheduleParams);
-
-    if (transactionMemo) {
-      tx.setTransactionMemo(transactionMemo);
-    }
-
-    return tx;
+    return new ScheduleDeleteTransaction(params);
   }
 
-
-  static associateToken(
-    params: z.infer<ReturnType<typeof associateTokenParametersNormalised>>,
-  ) {
+  static associateToken(params: z.infer<ReturnType<typeof associateTokenParametersNormalised>>) {
     return new TokenAssociateTransaction({
       accountId: AccountId.fromString(params.accountId),
       tokenIds: params.tokenIds.map(t => TokenId.fromString(t)),
@@ -326,7 +302,7 @@ export default class HederaBuilder {
       >
     >,
   ) {
-    const { transactionMemo, schedulingParams, ...allowanceParams } = params;
+    const { transactionMemo, ...allowanceParams } = params;
 
     const tx = new AccountAllowanceApproveTransaction(allowanceParams);
 
@@ -334,9 +310,8 @@ export default class HederaBuilder {
       tx.setTransactionMemo(transactionMemo);
     }
 
-    return HederaBuilder.maybeWrapInSchedule(tx, schedulingParams);
+    return tx;
   }
-
 
   static approveHbarAllowance(
     params: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>>,
@@ -369,7 +344,7 @@ export default class HederaBuilder {
   static approveTokenAllowance(
     params: z.infer<ReturnType<typeof approveTokenAllowanceParametersNormalised>>,
   ) {
-    const { transactionMemo, schedulingParams, ...allowanceParams } = params;
+    const { transactionMemo, ...allowanceParams } = params;
 
     const tx = new AccountAllowanceApproveTransaction(allowanceParams);
 
@@ -377,9 +352,8 @@ export default class HederaBuilder {
       tx.setTransactionMemo(transactionMemo);
     }
 
-    return HederaBuilder.maybeWrapInSchedule(tx, schedulingParams);
+    return tx;
   }
-
 
   static maybeWrapInSchedule(
     tx: Transaction,
