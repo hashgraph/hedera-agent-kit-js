@@ -53,6 +53,7 @@ class HederaAIToolkit {
       },
     };
   }
+
   getTools(): { [key: string]: Tool } {
     return this.tools;
   }
