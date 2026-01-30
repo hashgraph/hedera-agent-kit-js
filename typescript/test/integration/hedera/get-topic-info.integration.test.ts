@@ -7,6 +7,7 @@ import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
+import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 
 describe('Get Topic Info Query Integration Tests', () => {
   let operatorClient: Client;
@@ -24,7 +25,10 @@ describe('Get Topic Info Query Integration Tests', () => {
     // Operator creates executor account
     const executorKey = PrivateKey.generateED25519();
     executorAccountId = await operatorWrapper
-      .createAccount({ key: executorKey.publicKey, initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL) })
+      .createAccount({
+        key: executorKey.publicKey,
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      })
       .then(resp => resp.accountId!);
 
     executorClient = getCustomClient(executorAccountId, executorKey);
@@ -86,13 +90,13 @@ describe('Get Topic Info Query Integration Tests', () => {
   });
 
   afterAll(async () => {
+    // Delete an executor account and transfer remaining balance back to operator
+    await returnHbarsAndDeleteAccount(
+      executorWrapper,
+      executorClient.operatorAccountId!,
+      operatorClient.operatorAccountId!,
+    );
     if (executorWrapper && operatorClient) {
-      // Delete an executor account and transfer remaining balance back to operator
-      await executorWrapper.deleteAccount({
-        accountId: executorClient.operatorAccountId!,
-        transferAccountId: operatorClient.operatorAccountId!,
-      });
-
       executorClient.close();
       operatorClient.close();
     }

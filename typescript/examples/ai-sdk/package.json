@@ -7,10 +7,10 @@
     "ai-sdk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@ai-sdk/openai": "1.3.24",
-    "ai": "4.3.19",
+    "@ai-sdk/openai": "^3.0.2",
+    "ai": "^6.0.5",
     "dotenv": "17.2.3",
-    "hedera-agent-kit": "3.5.2",
+    "hedera-agent-kit": "3.7.0",
     "prompts": "2.4.2"
   },
   "author": "",

@@ -45,6 +45,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .createAccount({
         key: executorKey.publicKey,
         initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        accountMemo: 'executor account for Mint Non-Fungible Token Integration Tests',
       })
       .then(resp => resp.accountId!);
 

@@ -5,7 +5,7 @@ This document lists the USD fees for Hedera operations used in the test wrapper 
 ## Crypto Service
 
 | Operation               | USD ($) |
-|-------------------------|---------|
+| ----------------------- | ------- |
 | CryptoCreate            | $0.05   |
 | CryptoTransfer          | $0.0001 |
 | CryptoDelete            | $0.005  |
@@ -16,7 +16,7 @@ This document lists the USD fees for Hedera operations used in the test wrapper 
 ## Consensus Service
 
 | Operation              | USD ($) |
-|------------------------|---------|
+| ---------------------- | ------- |
 | ConsensusCreateTopic   | $0.01   |
 | ConsensusDeleteTopic   | $0.005  |
 | ConsensusSubmitMessage | $0.0001 |
@@ -25,7 +25,7 @@ This document lists the USD fees for Hedera operations used in the test wrapper 
 ## Token Service
 
 | Operation                           | USD ($) |
-|-------------------------------------|---------|
+| ----------------------------------- | ------- |
 | TokenAirdrop (no prior association) | $0.10   |
 | TokenAssociate                      | $0.05   |
 | TokenCreate                         | $1.00   |
@@ -39,7 +39,7 @@ This document lists the USD fees for Hedera operations used in the test wrapper 
 ## Smart Contract Service
 
 | Operation         | USD ($) |
-|-------------------|---------|
+| ----------------- | ------- |
 | ContractCreate    | $1.00   |
 | ContractCall      | $0.00   |
 | ContractCallLocal | $0.001  |
@@ -48,7 +48,7 @@ This document lists the USD fees for Hedera operations used in the test wrapper 
 ## Miscellaneous
 
 | Operation            | USD ($) |
-|----------------------|---------|
+| -------------------- | ------- |
 | TransactionGetRecord | $0.0001 |
 
 ---

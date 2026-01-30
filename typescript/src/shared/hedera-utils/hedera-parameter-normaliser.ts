@@ -11,6 +11,8 @@ import {
   createFungibleTokenParametersNormalised,
   createNonFungibleTokenParameters,
   createNonFungibleTokenParametersNormalised,
+  deleteNftAllowanceParameters,
+  deleteNftAllowanceParametersNormalised,
   dissociateTokenParameters,
   dissociateTokenParametersNormalised,
   mintFungibleTokenParameters,
@@ -19,6 +21,8 @@ import {
   mintNonFungibleTokenParametersNormalised,
   transferNonFungibleTokenWithAllowanceParameters,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
+  transferNonFungibleTokenParameters,
+  transferNonFungibleTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParameters,
   transferFungibleTokenWithAllowanceParametersNormalised,
   updateTokenParameters,
@@ -419,6 +423,36 @@ export default class HederaParameterNormaliser {
     } as z.infer<ReturnType<typeof approveNftAllowanceParametersNormalised>>;
   }
 
+  static normaliseDeleteNftAllowance(
+    params: z.infer<ReturnType<typeof deleteNftAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ): z.infer<ReturnType<typeof deleteNftAllowanceParametersNormalised>> {
+    const parsedParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> =
+      this.parseParamsWithSchema(params, deleteNftAllowanceParameters, context);
+
+    const ownerAccountId = AccountResolver.resolveAccount(
+      parsedParams.ownerAccountId,
+      context,
+      client,
+    );
+
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    if (!parsedParams.serialNumbers || parsedParams.serialNumbers.length === 0) {
+      throw new Error('serial_numbers must be provided');
+    }
+
+    // Convert serial numbers to NftId array
+    const nftWipes = parsedParams.serialNumbers.map(serial => new NftId(tokenId, serial));
+
+    return {
+      nftWipes,
+      ownerAccountId: AccountId.fromString(ownerAccountId),
+      transactionMemo: parsedParams.transactionMemo,
+    };
+  }
+
   static normaliseTransferNonFungibleTokenWithAllowance(
     params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>>,
     context: Context,
@@ -445,6 +479,44 @@ export default class HederaParameterNormaliser {
       sourceAccountId: AccountId.fromString(parsedParams.sourceAccountId),
       transactionMemo: parsedParams.transactionMemo,
       transfers,
+    };
+  }
+
+  static async normaliseTransferNonFungibleToken(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof transferNonFungibleTokenParametersNormalised>>> {
+    // Validate input using schema
+    const parsedParams: z.infer<ReturnType<typeof transferNonFungibleTokenParameters>> =
+      this.parseParamsWithSchema(params, transferNonFungibleTokenParameters, context);
+
+    // Resolve sender account (defaults to operator)
+    const senderAccountId = AccountResolver.getDefaultAccount(context, client);
+    if (!senderAccountId) {
+      throw new Error('Could not determine sender account ID');
+    }
+
+    // Convert tokenId to SDK TokenId
+    const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    // Map recipients to normalized NFT transfers
+    const transfers = parsedParams.recipients.map(recipient => ({
+      nftId: new NftId(tokenId, Number(recipient.serialNumber)),
+      receiver: AccountId.fromString(recipient.recipientId),
+    }));
+
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      senderAccountId: AccountId.fromString(senderAccountId),
+      transactionMemo: parsedParams.transactionMemo,
+      transfers,
+      schedulingParams,
     };
   }
 
