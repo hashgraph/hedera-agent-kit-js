@@ -42,9 +42,11 @@
   "author": "Hashgraph",
   "license": "Apache-2.0",
   "dependencies": {
+    "@ai-sdk/mcp": "^1.0.15",
     "@elizaos/core": "1.7.0",
     "@hashgraph/sdk": "2.79.0",
     "@langchain/core": "1.1.11",
+    "@langchain/mcp-adapters": "^1.1.2",
     "@langchain/openai": "1.2.1",
     "@modelcontextprotocol/sdk": "1.25.2",
     "ai": "6.0.5",
