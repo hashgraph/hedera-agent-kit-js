@@ -4,9 +4,11 @@ import { ToolDiscovery } from '@/shared/tool-discovery';
 import type { Tool, LanguageModelMiddleware } from 'ai';
 import { Client } from '@hashgraph/sdk';
 import HederaAgentKitTool from './tool';
+import { loadMultipleMCPTools } from './hedera-mcps';
 
 class HederaAIToolkit {
   private _hedera: HederaAgentAPI;
+  private _configuration: Configuration;
 
   tools: { [key: string]: Tool };
 
@@ -25,6 +27,18 @@ class HederaAIToolkit {
         tool.parameters,
       );
     });
+    this._configuration = configuration;
+  }
+
+  /**
+   * Asynchronously loads tools from configured MCP servers.
+   * This allows for explicit loading of external tools independent of the core HAK tools.
+   */
+  async getMcpTools(): Promise<Record<string, Tool>> {
+    const enabledMcps = this._configuration.mcpServers || [];
+    if (enabledMcps.length === 0) return {};
+
+    return await loadMultipleMCPTools(enabledMcps);
   }
 
   middleware(): LanguageModelMiddleware {

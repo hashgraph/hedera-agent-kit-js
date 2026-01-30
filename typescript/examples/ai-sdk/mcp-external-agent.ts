@@ -93,7 +93,7 @@ async function bootstrap(): Promise<void> {
 
     try {
       const response = await generateText({
-        model: openai('gpt-4o'),
+        model: openai('gpt-4o-mini'),
         system:
           'You are a helpful assistant. Always summarize the result of any tool actions you take in a human-readable way.',
         messages: conversationHistory,

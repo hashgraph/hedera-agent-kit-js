@@ -27,4 +27,13 @@ export type Configuration = {
   //external plugins to load
   plugins?: Plugin[];
   context?: Context;
+  // this is a list of preconfigured MCP servers to fetch tools from
+  mcpServers?: HederaMCPServer[];
 };
+
+export enum HederaMCPServer {
+  // HEDERION_MCP_TESTNET = 'hederion-mcp-testnet',
+  HEDERION_MCP_MAINNET = 'hederion-mcp-mainnet',
+  // HGRAPH_MCP_TESTNET = 'hgraph-mcp-testnet',
+  // HGRAPH_MCP_MAINNET = 'hgraph-mcp-mainnet',
+}

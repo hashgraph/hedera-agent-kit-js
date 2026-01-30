@@ -65,6 +65,14 @@ Run the external MCP agent:
 npm run langchain:external-mcp-agent
 ```
 
+### Preconfigured MCP Client Agent
+
+This agent uses a preconfigured MCP client to connect to Hedera network:
+
+```bash
+npm run langchain:preconfigured-mcp-client-agent
+```
+
 ## What This Example Does
 
 This example demonstrates how to integrate external MCP (Model Context Protocol) servers with the Hedera Agent Kit. It creates an agent that combines:
