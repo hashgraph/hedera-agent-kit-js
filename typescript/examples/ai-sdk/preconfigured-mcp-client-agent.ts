@@ -1,4 +1,9 @@
-import { AgentMode, HederaAIToolkit, HederaMCPServer } from 'hedera-agent-kit';
+import {
+  AgentMode,
+  HederaAIToolkit,
+  HederaMCPServer,
+  coreMiscQueriesPlugin,
+} from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -18,7 +23,7 @@ async function bootstrap(): Promise<void> {
     client,
     configuration: {
       tools: [],
-      plugins: [], //Load all plugins
+      plugins: [coreMiscQueriesPlugin], //Load all plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
       },

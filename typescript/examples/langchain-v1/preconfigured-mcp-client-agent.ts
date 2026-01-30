@@ -31,7 +31,7 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
-      mcpServers: [HederaMCPServer.HGRAPH_MCP_MAINNET] // the the testnet MCP server is not available yet
+      mcpServers: [HederaMCPServer.HEDERION_MCP_MAINNET], // the the testnet MCP server is not available yet
     },
   });
 

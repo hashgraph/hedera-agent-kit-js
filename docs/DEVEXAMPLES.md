@@ -50,6 +50,7 @@ Try out one or more of the example agents:
 * **Option D -** [Example MCP Server](#option-d-try-out-the-mcp-server)
 * **Option E -** [Example External MCP Agent](#option-e-try-out-the-external-mcp-agent)
 * **Option F -** [Example ElizaOS Agent](#option-f-try-out-the-hedera-agent-kit-with-elizaos)
+* **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->

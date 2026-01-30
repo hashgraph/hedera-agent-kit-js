@@ -31,8 +31,11 @@ const mcpTools = await toolkit.getMcpTools();
 
 You can find complete working examples of how to use preconfigured MCP clients in the following files:
 
-- **LangChain**: [`typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts`](../typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts)
+- **LangChain v1**: [`typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts`](../typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts)
 - **AI SDK**: [`typescript/examples/ai-sdk/preconfigured-mcp-client-agent.ts`](../typescript/examples/ai-sdk/preconfigured-mcp-client-agent.ts)
+
+> [!NOTE]
+> MCP tool support is only available for LangChain v1 and Vercel AI SDK. Legacy LangChain (Classic) is not supported.
 
 In these examples, notice that `getMcpTools()` matches the pattern shown above. This explicit fetching ensures that external tools are strictly loaded only when requested, preventing initialization race conditions.
 
