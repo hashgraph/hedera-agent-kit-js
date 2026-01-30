@@ -46,3 +46,10 @@ Demonstrates how to use custom plugins.
 ```bash
 npm run ai-sdk:plugin-tool-calling-agent
 ```
+
+### External MCP Agent
+Connects to an external MCP server to perform actions.
+
+```bash
+npm run ai-sdk:mcp-external-agent
+```

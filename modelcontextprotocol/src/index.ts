@@ -6,7 +6,7 @@ const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { LedgerId, Client } from "@hashgraph/sdk";
+import { LedgerId, Client, PrivateKey } from "@hashgraph/sdk";
 import {
   AgentMode,
   coreAccountPlugin,
@@ -137,7 +137,9 @@ export async function main() {
 
   // Set operator from environment variables if they exist
   const operatorId = process.env.HEDERA_OPERATOR_ID;
-  const operatorKey = process.env.HEDERA_OPERATOR_KEY;
+  const operatorKey = PrivateKey.fromStringDer(
+    process.env.HEDERA_OPERATOR_KEY!,
+  );
 
   if (operatorId && operatorKey) {
     try {
