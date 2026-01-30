@@ -335,3 +335,34 @@ import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos';
 1. Clone the [Hedera ElizaOS Plugin Repository](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
 2. Install ElizaOS CLI
 3. Follow the [Hedera ElizaOS Plugin Docs](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
+### Option G: Try out the Preconfigured MCP Client Agent
+
+This example demonstrates how to use the Hedera Agent Kit with preconfigured MCP servers (like Hederion or Hgraph) to access advanced tools without manual server setup.
+
+**Found at:**
+- `typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts`
+- `typescript/examples/ai-sdk/preconfigured-mcp-client-agent.ts`
+
+#### Prerequisites
+
+1. Configure your environment variables as described in the "Configure" section above.
+
+#### Running the Example
+
+##### LangChain v1
+
+```bash
+cd typescript/examples/langchain-v1
+npm install
+npm run langchain:preconfigured-mcp-client-agent
+```
+
+##### AI SDK
+
+```bash
+cd typescript/examples/ai-sdk
+npm install
+npm run ai-sdk:preconfigured-mcp-client-agent
+```
+
+These agents connect to the configured MCP servers (defined in your code) and allow you to interact with the provided tools using natural language.
