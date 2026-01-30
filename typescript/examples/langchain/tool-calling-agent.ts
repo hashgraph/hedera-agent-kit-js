@@ -14,6 +14,14 @@ async function bootstrap(): Promise<void> {
   const llm = new ChatOpenAI({
     model: 'gpt-4o-mini',
   });
+  // or install `npm i @langchain/anthropic` and use Claude 3.5
+  /*
+   const llm = new ChatAnthropic({
+     model: 'claude-3-5-sonnet-20241022',
+     temperature: 0,
+     apiKey: process.env.ANTHROPIC_API_KEY,
+   });
+   */
 
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(

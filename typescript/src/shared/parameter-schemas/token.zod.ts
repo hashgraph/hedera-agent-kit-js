@@ -130,6 +130,7 @@ export const airdropFungibleTokenParameters = (_context: Context = {}) =>
       .array(AirdropRecipientSchema)
       .min(1)
       .describe('Array of recipient objects, each with accountId and amount.'),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
   });
 
 export const airdropFungibleTokenParametersNormalised = () =>
@@ -137,6 +138,7 @@ export const airdropFungibleTokenParametersNormalised = () =>
     tokenTransfers: z
       .custom<TokenTransferMinimalParams[]>()
       .describe('Array of TokenTransfer objects constructed from the original recipients.'),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
   });
 
 export const mintFungibleTokenParameters = (_context: Context = {}) =>
