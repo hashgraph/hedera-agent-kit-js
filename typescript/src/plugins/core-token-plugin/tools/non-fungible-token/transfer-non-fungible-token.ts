@@ -47,6 +47,7 @@ const transferNonFungibleToken = async (
     const normalisedParams = await HederaParameterNormaliser.normaliseTransferNonFungibleToken(
       params,
       context,
+
       client,
     );
 

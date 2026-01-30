@@ -119,6 +119,7 @@ const updateToken = async (
       context,
       client,
     );
+
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
 
