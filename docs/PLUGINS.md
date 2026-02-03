@@ -7,9 +7,18 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
 ## Available Third Party Plugins
 
-- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](https://github.com/hashgraph/hedera-agent-kit-js?tab=readme-ov-file#third-party-plugins) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
 
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
+- [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
+
+  NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
+  Source: https://github.com/jmgomezl/hak-saucerswap-plugin
+  Tested/endorsed version: hak-saucerswap-plugin@1.0.1
+  
+- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
+
+  Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
+  Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
 
 ## Plugin Architecture
 
