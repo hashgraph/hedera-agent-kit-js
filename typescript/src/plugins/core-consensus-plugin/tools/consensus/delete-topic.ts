@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -27,41 +27,54 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Topic with id ${response.topicId?.toString()} deleted successfully. Transaction id ${response.transactionId.toString()}`;
 };
 
-const deleteTopic = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof deleteTopicParameters>>,
-) => {
-  try {
+export const DELETE_TOPIC_TOOL = 'delete_topic_tool';
+
+export class DeleteTopicTool extends BaseTool {
+  method = DELETE_TOPIC_TOOL;
+  name = 'Delete Topic';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = deleteTopicPrompt(context);
+    this.parameters = deleteTopicParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof deleteTopicParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService: IHederaMirrornodeService = getMirrornodeService(
       context.mirrornodeService!,
       client.ledgerId!,
     );
-    const normalisedParams = HederaParameterNormaliser.normaliseDeleteTopic(
+    return HederaParameterNormaliser.normaliseDeleteTopic(
       params,
       context,
       client,
       mirrornodeService,
     );
-    const tx = HederaBuilder.deleteTopic(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.deleteTopic(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to delete the topic';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[delete_topic_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const DELETE_TOPIC_TOOL = 'delete_topic_tool';
-
-const tool = (context: Context): Tool => ({
-  method: DELETE_TOPIC_TOOL,
-  name: 'Delete Topic',
-  description: deleteTopicPrompt(context),
-  parameters: deleteTopicParameters(context),
-  execute: deleteTopic,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new DeleteTopicTool(context);
 
 export default tool;

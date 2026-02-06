@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status, TransactionRecordQuery } from '@hashgraph/sdk';
 import {
   ExecuteStrategyResult,
@@ -43,14 +43,28 @@ Transaction ID: ${response.transactionId}
 Schedule ID: ${response.scheduleId.toString()}`
     : `ERC721 token created successfully at address ${erc721Address ?? 'unknown'}`;
 
-const createERC721 = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof createERC721Parameters>>,
-) => {
-  try {
+export const CREATE_ERC721_TOOL = 'create_erc721_tool';
+
+export class CreateErc721Tool extends BaseTool {
+  method = CREATE_ERC721_TOOL;
+  name = 'Create ERC721 Token';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = createERC721Prompt(context);
+    this.parameters = createERC721Parameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof createERC721Parameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const factoryAddress = getERC721FactoryAddress(client.ledgerId!);
-    const txParams = await HederaParameterNormaliser.normaliseCreateERC721Params(
+    return await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,
       factoryAddress,
       ERC721_FACTORY_ABI,
@@ -58,9 +72,14 @@ const createERC721 = async (
       context,
       client,
     );
+  }
 
-    const tx = HederaBuilder.executeTransaction(txParams);
-    const result = await handleTransaction(tx, client, context);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.executeTransaction(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    const result = await handleTransaction(transaction, client, context);
 
     if (context.mode === AgentMode.RETURN_BYTES) return result;
 
@@ -69,7 +88,9 @@ const createERC721 = async (
     const humanMessage = postProcess(erc721Address, raw);
 
     return { ...result, erc721Address, humanMessage };
-  } catch (error) {
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const message =
       'Failed to create ERC721 token' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_erc721_tool]', message);
@@ -78,17 +99,8 @@ const createERC721 = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const CREATE_ERC721_TOOL = 'create_erc721_tool';
-
-const tool = (context: Context): Tool => ({
-  method: CREATE_ERC721_TOOL,
-  name: 'Create ERC721 Token',
-  description: createERC721Prompt(context),
-  parameters: createERC721Parameters(context),
-  execute: createERC721,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new CreateErc721Tool(context);
 
 export default tool;

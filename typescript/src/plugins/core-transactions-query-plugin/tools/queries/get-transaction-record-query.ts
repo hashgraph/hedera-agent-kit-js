@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { Client } from '@hashgraph/sdk';
+import { Client, Status } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TransactionDetailsResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
@@ -64,44 +64,58 @@ Entity ID: ${tx.entity_id}${transfersInfo}`;
   return results.join('\n\n' + '='.repeat(50) + '\n\n');
 };
 
-export const getTransactionRecordQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof transactionRecordQueryParameters>>,
-) => {
-  try {
-    const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = HederaParameterNormaliser.normaliseGetTransactionRecordParams(
-      params,
-      context,
-    );
+export const GET_TRANSACTION_RECORD_QUERY_TOOL = 'get_transaction_record_query_tool';
 
+export class GetTransactionRecordQueryTool extends BaseTool {
+  method = GET_TRANSACTION_RECORD_QUERY_TOOL;
+  name = 'Get Transaction Record Query';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getTransactionRecordQueryPrompt(context);
+    this.parameters = transactionRecordQueryParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof transactionRecordQueryParameters>>,
+    context: Context,
+    _client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseGetTransactionRecordParams(params, context);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const transactionRecord = await mirrornodeService.getTransactionRecord(
       normalisedParams.transactionId,
       normalisedParams.nonce,
     );
 
     return {
-      raw: { transactionId: params.transactionId, transactionRecord: transactionRecord },
-      humanMessage: postProcess(transactionRecord, params.transactionId),
+      raw: { transactionId: normalisedParams.transactionId, transactionRecord: transactionRecord },
+      humanMessage: postProcess(transactionRecord, normalisedParams.transactionId),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get transaction record';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_transaction_record_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const GET_TRANSACTION_RECORD_QUERY_TOOL = 'get_transaction_record_query_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_TRANSACTION_RECORD_QUERY_TOOL,
-  name: 'Get Transaction Record Query',
-  description: getTransactionRecordQueryPrompt(context),
-  parameters: transactionRecordQueryParameters(context),
-  execute: getTransactionRecordQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetTransactionRecordQueryTool(context);
 
 export default tool;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, PublicKey, Status } from '@hashgraph/sdk';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -108,18 +108,30 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Token successfully updated. Transaction ID: ${response.transactionId}`;
 };
 
-const updateToken = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof updateTokenParameters>>,
-) => {
-  try {
-    const normalisedParams = await HederaParameterNormaliser.normaliseUpdateToken(
-      params,
-      context,
-      client,
-    );
+export const UPDATE_TOKEN_TOOL = 'update_token_tool';
 
+export class UpdateTokenTool extends BaseTool {
+  method = UPDATE_TOKEN_TOOL;
+  name = 'Update Token';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = updateTokenPrompt(context);
+    this.parameters = updateTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof updateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseUpdateToken(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
 
@@ -128,7 +140,17 @@ const updateToken = async (
     const tx = HederaBuilder.updateToken(normalisedParams);
 
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to update token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[update_token_tool]', message);
@@ -137,17 +159,8 @@ const updateToken = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const UPDATE_TOKEN_TOOL = 'update_token_tool';
-
-const tool = (context: Context): Tool => ({
-  method: UPDATE_TOKEN_TOOL,
-  name: 'Update Token',
-  description: updateTokenPrompt(context),
-  parameters: updateTokenParameters(context),
-  execute: updateToken,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new UpdateTokenTool(context);
 
 export default tool;

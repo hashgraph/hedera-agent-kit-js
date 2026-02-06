@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -37,37 +37,50 @@ const postProcess = (response: RawTransactionResponse) => {
   return `NFT allowance(s) deleted successfully. Transaction ID: ${response.transactionId}`;
 };
 
-const deleteNftAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof deleteNftAllowanceParameters>>,
-) => {
-  try {
-    const normalisedParams = HederaParameterNormaliser.normaliseDeleteNftAllowance(
-      params,
-      context,
-      client,
-    );
-    const tx = HederaBuilder.deleteNftAllowance(normalisedParams);
+export const DELETE_NFT_ALLOWANCE_TOOL = 'delete_non_fungible_token_allowance_tool';
 
+export class DeleteNftAllowanceTool extends BaseTool {
+  method = DELETE_NFT_ALLOWANCE_TOOL;
+  name = 'Delete Non Fungible Token Allowance';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = deleteNftAllowancePrompt(context);
+    this.parameters = deleteNftAllowanceParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof deleteNftAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseDeleteNftAllowance(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const tx = HederaBuilder.deleteNftAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to delete NFT allowance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[delete_non_fungible_token_allowance_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const DELETE_NFT_ALLOWANCE_TOOL = 'delete_non_fungible_token_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: DELETE_NFT_ALLOWANCE_TOOL,
-  name: 'Delete Non Fungible Token Allowance',
-  description: deleteNftAllowancePrompt(context),
-  parameters: deleteNftAllowanceParameters(context),
-  execute: deleteNftAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new DeleteNftAllowanceTool(context);
 
 export default tool;

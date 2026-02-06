@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { Client } from '@hashgraph/sdk';
-import { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TopicInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { getTopicInfoParameters } from '@/shared/parameter-schemas/consensus.zod';
@@ -55,39 +55,62 @@ const postProcess = (topic: TopicInfo) => {
 `;
 };
 
-export const getTopicInfoQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof getTopicInfoParameters>>,
-) => {
-  try {
+export const GET_TOPIC_INFO_QUERY_TOOL = 'get_topic_info_query_tool';
+
+export class GetTopicInfoQueryTool extends BaseTool {
+  method = GET_TOPIC_INFO_QUERY_TOOL;
+  name = 'Get Topic Info';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getTopicInfoQueryPrompt(context);
+    this.parameters = getTopicInfoParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof getTopicInfoParameters>>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params; // no params normalization is needed
+  }
+
+  async coreAction(
+    normalisedParams: z.infer<ReturnType<typeof getTopicInfoParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const topicInfo: TopicInfo = {
-      ...(await mirrornodeService.getTopicInfo(params.topicId)),
-      topic_id: params.topicId,
+      ...(await mirrornodeService.getTopicInfo(normalisedParams.topicId)),
+      topic_id: normalisedParams.topicId,
     };
 
     return {
-      raw: { topicId: params.topicId, topicInfo },
+      raw: { topicId: normalisedParams.topicId, topicInfo },
       humanMessage: postProcess(topicInfo),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null; // Not applicable for query tools
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get topic info';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_topic_info_query_tool]', message);
     return { raw: { error: message }, humanMessage: message };
   }
-};
+}
 
-export const GET_TOPIC_INFO_QUERY_TOOL = 'get_topic_info_query_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_TOPIC_INFO_QUERY_TOOL,
-  name: 'Get Topic Info',
-  description: getTopicInfoQueryPrompt(context),
-  parameters: getTopicInfoParameters(context),
-  execute: getTopicInfoQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetTopicInfoQueryTool(context);
 
 export default tool;

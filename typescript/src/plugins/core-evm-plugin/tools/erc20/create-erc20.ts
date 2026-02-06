@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status, TransactionRecordQuery } from '@hashgraph/sdk';
 import {
   ExecuteStrategyResult,
@@ -43,14 +43,28 @@ Transaction ID: ${response.transactionId}
 Schedule ID: ${response.scheduleId.toString()}`
     : `ERC20 token created successfully at address ${erc20Address ?? 'unknown'}`;
 
-const createERC20 = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof createERC20Parameters>>,
-) => {
-  try {
+export const CREATE_ERC20_TOOL = 'create_erc20_tool';
+
+export class CreateErc20Tool extends BaseTool {
+  method = CREATE_ERC20_TOOL;
+  name = 'Create ERC20 Token';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = createERC20Prompt(context);
+    this.parameters = createERC20Parameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof createERC20Parameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const factoryAddress = getERC20FactoryAddress(client.ledgerId!);
-    const txParams = await HederaParameterNormaliser.normaliseCreateERC20Params(
+    return await HederaParameterNormaliser.normaliseCreateERC20Params(
       params,
       factoryAddress,
       ERC20_FACTORY_ABI,
@@ -58,9 +72,14 @@ const createERC20 = async (
       context,
       client,
     );
+  }
 
-    const tx = HederaBuilder.executeTransaction(txParams);
-    const result = await handleTransaction(tx, client, context);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.executeTransaction(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    const result = await handleTransaction(transaction, client, context);
 
     if (context.mode === AgentMode.RETURN_BYTES) return result;
 
@@ -69,7 +88,9 @@ const createERC20 = async (
     const humanMessage = postProcess(erc20Address, raw);
 
     return { ...result, erc20Address, humanMessage };
-  } catch (error) {
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const message =
       'Failed to create ERC20 token' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_erc20_tool]', message);
@@ -78,17 +99,8 @@ const createERC20 = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const CREATE_ERC20_TOOL = 'create_erc20_tool';
-
-const tool = (context: Context): Tool => ({
-  method: CREATE_ERC20_TOOL,
-  name: 'Create ERC20 Token',
-  description: createERC20Prompt(context),
-  parameters: createERC20Parameters(context),
-  execute: createERC20,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new CreateErc20Tool(context);
 
 export default tool;

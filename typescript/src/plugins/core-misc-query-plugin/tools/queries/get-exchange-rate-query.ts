@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { Client } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { ExchangeRateResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { exchangeRateQueryParameters } from '@/shared/parameter-schemas/core-misc.zod';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 export const getExchangeRatePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -46,19 +47,53 @@ const postProcess = (rates: ExchangeRateResponse) => {
   Expires at ${new Date(next_rate.expiration_time * 1000).toISOString()})`;
 };
 
-export const getExchangeRateQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof exchangeRateQueryParameters>>,
-) => {
-  try {
+export const GET_EXCHANGE_RATE_TOOL = 'get_exchange_rate_tool';
+
+export class GetExchangeRateQueryTool extends BaseTool {
+  method = GET_EXCHANGE_RATE_TOOL;
+  name = 'Get Exchange Rate';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getExchangeRatePrompt(context);
+    this.parameters = exchangeRateQueryParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof exchangeRateQueryParameters>>,
+    context: Context,
+    _client: Client,
+  ) {
+    return HederaParameterNormaliser.parseParamsWithSchema(
+      params,
+      exchangeRateQueryParameters,
+      context,
+    );
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const rates: ExchangeRateResponse = await mirrornodeService.getExchangeRate(params.timestamp);
+    const rates: ExchangeRateResponse = await mirrornodeService.getExchangeRate(
+      normalisedParams.timestamp,
+    );
     return {
       raw: rates,
       humanMessage: postProcess(rates),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null; // Not applicable for query tools
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     console.error('[GetExchangeRate] Error getting exchange rate', error);
     const message = error instanceof Error ? error.message : 'Failed to get exchange rate';
 
@@ -67,17 +102,8 @@ export const getExchangeRateQuery = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const GET_EXCHANGE_RATE_TOOL = 'get_exchange_rate_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_EXCHANGE_RATE_TOOL,
-  name: 'Get Exchange Rate',
-  description: getExchangeRatePrompt(context),
-  parameters: exchangeRateQueryParameters(context),
-  execute: getExchangeRateQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetExchangeRateQueryTool(context);
 
 export default tool;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -38,23 +38,49 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Fungible token allowance(s) approved successfully. Transaction ID: ${response.transactionId}`;
 };
 
-const approveTokenAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
-) => {
-  try {
+export const APPROVE_TOKEN_ALLOWANCE_TOOL = 'approve_token_allowance_tool';
+
+export class ApproveTokenAllowanceTool extends BaseTool {
+  method = APPROVE_TOKEN_ALLOWANCE_TOOL;
+  name = 'Approve Token Allowance';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = approveTokenAllowancePrompt(context);
+    this.parameters = approveTokenAllowanceParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseApproveTokenAllowance(
+    return HederaParameterNormaliser.normaliseApproveTokenAllowance(
       params,
       context,
       client,
       mirrornodeService,
     );
+  }
 
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.approveTokenAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to approve token allowance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[approve_token_allowance_tool]', message);
@@ -63,17 +89,8 @@ const approveTokenAllowance = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const APPROVE_TOKEN_ALLOWANCE_TOOL = 'approve_token_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: APPROVE_TOKEN_ALLOWANCE_TOOL,
-  name: 'Approve Token Allowance',
-  description: approveTokenAllowancePrompt(context),
-  parameters: approveTokenAllowanceParameters(context),
-  execute: approveTokenAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new ApproveTokenAllowanceTool(context);
 
 export default tool;

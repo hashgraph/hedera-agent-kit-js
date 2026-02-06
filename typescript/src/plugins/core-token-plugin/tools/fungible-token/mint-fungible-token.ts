@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -38,39 +38,56 @@ Schedule ID: ${response.scheduleId.toString()}`;
 Transaction ID: ${response.transactionId.toString()}`;
 };
 
-const mintFungibleToken = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
-) => {
-  try {
+export const MINT_FUNGIBLE_TOKEN_TOOL = 'mint_fungible_token_tool';
+
+export class MintFungibleTokenTool extends BaseTool {
+  method = MINT_FUNGIBLE_TOKEN_TOOL;
+  name = 'Mint Fungible Token';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = mintFungibleTokenPrompt(context);
+    this.parameters = mintFungibleTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof mintFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseMintFungibleTokenParams(
+    return HederaParameterNormaliser.normaliseMintFungibleTokenParams(
       params,
       context,
       client,
       mirrornodeService,
     );
-    const tx = HederaBuilder.mintFungibleToken(normalisedParams);
+  }
 
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const tx = HederaBuilder.mintFungibleToken(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to mint fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[mint_fungible_token_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const MINT_FUNGIBLE_TOKEN_TOOL = 'mint_fungible_token_tool';
-
-const tool = (context: Context): Tool => ({
-  method: MINT_FUNGIBLE_TOKEN_TOOL,
-  name: 'Mint Fungible Token',
-  description: mintFungibleTokenPrompt(context),
-  parameters: mintFungibleTokenParameters(context),
-  execute: mintFungibleToken,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new MintFungibleTokenTool(context);
 
 export default tool;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -33,35 +33,54 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Non-fungible tokens successfully transferred with allowance. Transaction ID: ${response.transactionId}`;
 };
 
-const transferNonFungibleTokenWithAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>>,
-) => {
-  try {
-    const normalisedParams =
-      HederaParameterNormaliser.normaliseTransferNonFungibleTokenWithAllowance(params, context);
+export const TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
+  'transfer_non_fungible_token_with_allowance_tool';
 
+export class TransferNonFungibleTokenWithAllowanceTool extends BaseTool {
+  method = TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
+  name = 'Transfer Non Fungible Token with Allowance';
+  description: string;
+  parameters: z.ZodObject<any, any>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = transferNonFungibleTokenWithAllowancePrompt(context);
+    this.parameters = transferNonFungibleTokenWithAllowanceParameters(context).innerType();
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>>,
+    context: Context,
+    _client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseTransferNonFungibleTokenWithAllowance(
+      params,
+      context,
+    );
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.transferNonFungibleTokenWithAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to transfer non-fungible token with allowance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_non_fungible_token_with_allowance_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
-  'transfer_non_fungible_token_with_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
-  name: 'Transfer Non Fungible Token with Allowance',
-  description: transferNonFungibleTokenWithAllowancePrompt(context),
-  parameters: transferNonFungibleTokenWithAllowanceParameters(context).innerType(),
-  execute: transferNonFungibleTokenWithAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new TransferNonFungibleTokenWithAllowanceTool(context);
 
 export default tool;

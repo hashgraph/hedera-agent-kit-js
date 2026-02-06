@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, Status } from '@hashgraph/sdk';
 import toolFactory, {
   DELETE_TOPIC_TOOL,
+  DeleteTopicTool,
 } from '@/plugins/core-consensus-plugin/tools/consensus/delete-topic';
 
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
@@ -35,7 +36,7 @@ vi.mock('@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils', () => ({
 
 const makeClient = () => Client.forNetwork({});
 
-describe('delete-topic tool (unit)', () => {
+describe('DeleteTopicTool', () => {
   const context: any = { accountId: '0.0.1001' };
   const params = { topicId: '0.0.5005' } as any;
 
@@ -53,7 +54,7 @@ describe('delete-topic tool (unit)', () => {
   });
 
   it('executes happy path and returns formatted human message', async () => {
-    const tool = toolFactory(context);
+    const tool = new DeleteTopicTool(context);
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params);
@@ -81,7 +82,7 @@ describe('delete-topic tool (unit)', () => {
   });
 
   it('returns error response object when an Error is thrown', async () => {
-    const tool = toolFactory(context);
+    const tool = new DeleteTopicTool(context);
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
@@ -97,7 +98,7 @@ describe('delete-topic tool (unit)', () => {
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
-    const tool = toolFactory(context);
+    const tool = new DeleteTopicTool(context);
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
