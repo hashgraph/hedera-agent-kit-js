@@ -1,15 +1,19 @@
-import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
+import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
 import { Hbar } from '@hashgraph/sdk';
 
-export class MaxHbarTransferPolicy implements Policy {
+export class MaxHbarTransferPolicy extends BasePolicy {
   name = 'Max HBAR Transfer';
   description = 'Limits the maximum HBAR amount that can be transferred';
   relevantTools = ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool']; //FIXME: those tools do not support policies yet
-  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
-  constructor(private maxAmount: number) { }
+  constructor(private maxAmount: number) {
+    super();
+  }
 
-  shouldBlock(validationParams: PolicyValidationParams): boolean {
+  validatePostParamsNormalization(
+    _context: Context,
+    validationParams: PostParamsNormalizationParams,
+  ): boolean {
     // 1. Check transfer_hbar and transfer_hbar_with_allowance
     // Both use hbarTransfers array in normalised params (for transfer_hbar it includes source debit)
     const params = validationParams.normalisedParams;

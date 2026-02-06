@@ -1,31 +1,43 @@
-export enum ToolExecutionPoint {
+import { Context } from './configuration';
+
+export enum ToolExecutionStep {
   PreToolExecution = 'PreToolExecution',
   PostParamsNormalization = 'PostParamsNormalization',
   PostCoreAction = 'PostCoreAction',
   PostSecondaryAction = 'PostSecondaryAction',
 }
 
-export interface PolicyValidationParams<TParams = any, TNormalisedParams = any> {
-  /**
-   * The raw parameters passed to the tool.
-   */
+export interface PreToolExecutionParams<TParams = any> {
+  context: Context;
   rawParams: TParams;
-
-  /**
-   * The normalised parameters after validation (available in PostParamsNormalization and later).
-   */
-  normalisedParams?: TNormalisedParams;
-
-  /**
-   * The result of the action/transaction creation (available in PostCoreAction and later).
-   */
-  coreActionResult?: any;
-
-  /**
-   * The result of the core action or secondary action if that was called (available in PostSecondaryAction).
-   */
-  toolResult?: any;
 }
+
+export interface PostParamsNormalizationParams<TParams = any, TNormalisedParams = any> {
+  context: Context;
+  rawParams: TParams;
+  normalisedParams: TNormalisedParams;
+}
+
+export interface PostCoreActionParams<TParams = any, TNormalisedParams = any> {
+  context: Context;
+  rawParams: TParams;
+  normalisedParams: TNormalisedParams;
+  coreActionResult: any;
+}
+
+export interface PostSecondaryActionParams<TParams = any, TNormalisedParams = any> {
+  context: Context;
+  rawParams: TParams;
+  normalisedParams: TNormalisedParams;
+  coreActionResult: any;
+  toolResult: any;
+}
+
+export type AnyHookParams =
+  | PreToolExecutionParams
+  | PostParamsNormalizationParams
+  | PostCoreActionParams
+  | PostSecondaryActionParams;
 
 export interface Policy {
   /**
@@ -44,46 +56,144 @@ export interface Policy {
   relevantTools: string[];
 
   /**
-   * List of execution points this policy applies to.
-   * If not provided, it defaults to PostParamsNormalization for backward compatibility.
+   * Validate at PreToolExecution point.
+   * @param context - The execution context.
+   * @param params - The validation parameters.
+   * @returns true if policy blocks the action, false otherwise.
    */
-  affectedPoints?: ToolExecutionPoint[];
+  validatePreToolExecution(
+    context: Context,
+    params: PreToolExecutionParams,
+  ): boolean | Promise<boolean>;
 
   /**
-   * Returns true if the action should be blocked.
-   * @param validationParams - The validation parameters object containing context-specific data.
-   * @returns boolean or Promise<boolean> indicating if the action should be blocked.
+   * Validate at PostParamsNormalization point.
+   * @param context - The execution context.
+   * @param params - The validation parameters.
+   * @returns true if policy blocks the action, false otherwise.
    */
-  shouldBlock: (validationParams: PolicyValidationParams) => boolean | Promise<boolean>;
+  validatePostParamsNormalization(
+    context: Context,
+    params: PostParamsNormalizationParams,
+  ): boolean | Promise<boolean>;
+
+  /**
+   * Validate at PostCoreAction point.
+   * @param context - The execution context.
+   * @param params - The validation parameters.
+   * @returns true if policy blocks the action, false otherwise.
+   */
+  validatePostCoreAction(
+    context: Context,
+    params: PostCoreActionParams,
+  ): boolean | Promise<boolean>;
+
+  /**
+   * Validate at PostSecondaryAction point.
+   * @param context - The execution context.
+   * @param params - The validation parameters.
+   * @returns true if policy blocks the action, false otherwise.
+   */
+  validatePostSecondaryAction(
+    context: Context,
+    params: PostSecondaryActionParams,
+  ): boolean | Promise<boolean>;
+
+  /**
+   * Enforce the policy at a specific execution point.
+   * Checks if the policy applies to the given tool and hook point, then validates.
+   * @param context - The execution context.
+   * @param toolName - The name of the tool being executed.
+   * @param hookPoint - The execution point where the policy is being enforced.
+   * @param params - The validation parameters object to check.
+   * @returns true if policy blocks the action, false otherwise.
+   */
+  enforce(
+    context: Context,
+    toolName: string,
+    hookPoint: ToolExecutionStep,
+    params: AnyHookParams,
+  ): Promise<boolean>;
 }
 
 /**
- * Helper function to enforce policies.
- * Throws an error if any policy blocks the action.
- *
- * @param policies - The list of policies to enforce.
- * @param toolName - The name of the tool being executed.
- * @param validationParams - The validation parameters object to check.
- * @param point - The current execution point.
+ * Base implementation of Policy interface.
  */
-export async function enforcePolicies(
-  policies: Policy[],
-  toolName: string,
-  validationParams: PolicyValidationParams,
-  point: ToolExecutionPoint,
-): Promise<void> {
-  for (const policy of policies) {
-    if (policy.relevantTools.includes(toolName)) {
-      // Default to PostParamsNormalization if not specified
-      const affectedPoints = policy.affectedPoints || [ToolExecutionPoint.PostParamsNormalization];
+export abstract class BasePolicy implements Policy {
+  abstract name: string;
+  abstract description?: string;
+  abstract relevantTools: string[];
 
-      if (affectedPoints.includes(point)) {
-        const shouldBlock = await policy.shouldBlock(validationParams);
-        if (shouldBlock) {
-          const reason = policy.description ? ` (${policy.description})` : '';
-          throw new Error(`Action blocked by policy: ${policy.name}${reason}`);
-        }
-      }
+  /**
+   * Default implementation - no validation at PreToolExecution.
+   * Override in derived classes to implement custom logic.
+   */
+  validatePreToolExecution(
+    _context: Context,
+    _params: PreToolExecutionParams,
+  ): boolean | Promise<boolean> {
+    return false;
+  }
+
+  /**
+   * Default implementation - no validation at PostParamsNormalization.
+   * Override in derived classes to implement custom logic.
+   */
+  validatePostParamsNormalization(
+    _context: Context,
+    _params: PostParamsNormalizationParams,
+  ): boolean | Promise<boolean> {
+    return false;
+  }
+
+  /**
+   * Default implementation - no validation at PostCoreAction.
+   * Override in derived classes to implement custom logic.
+   */
+  validatePostCoreAction(
+    _context: Context,
+    _params: PostCoreActionParams,
+  ): boolean | Promise<boolean> {
+    return false;
+  }
+
+  /**
+   * Default implementation - no validation at PostSecondaryAction.
+   * Override in derived classes to implement custom logic.
+   */
+  validatePostSecondaryAction(
+    _context: Context,
+    _params: PostSecondaryActionParams,
+  ): boolean | Promise<boolean> {
+    return false;
+  }
+
+  async enforce(
+    context: Context,
+    toolName: string,
+    hookPoint: ToolExecutionStep,
+    params: AnyHookParams,
+  ): Promise<boolean> {
+    // Check if the policy applies to this tool
+    if (!this.relevantTools.includes(toolName)) {
+      return false;
+    }
+
+    // Map hook point to validation method
+    switch (hookPoint) {
+      case ToolExecutionStep.PreToolExecution:
+        return await this.validatePreToolExecution(context, params as PreToolExecutionParams);
+      case ToolExecutionStep.PostParamsNormalization:
+        return await this.validatePostParamsNormalization(
+          context,
+          params as PostParamsNormalizationParams,
+        );
+      case ToolExecutionStep.PostCoreAction:
+        return await this.validatePostCoreAction(context, params as PostCoreActionParams);
+      case ToolExecutionStep.PostSecondaryAction:
+        return await this.validatePostSecondaryAction(context, params as PostSecondaryActionParams);
+      default:
+        return false;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
+import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
 import { AccountId, TokenId } from '@hashgraph/sdk';
 import { z } from 'zod';
 
@@ -16,21 +16,24 @@ const HasTokenId = z
   })
   .passthrough();
 
-export class ImmutabilityPolicy implements Policy {
+export class ImmutabilityPolicy extends BasePolicy {
   name = 'Immutability Policy';
   description = 'Prevents modification or deletion of specific Accounts and Tokens';
   relevantTools = ['update_account_tool', 'delete_account_tool', 'update_token_tool']; //FIXME: those tools do not support policies yet
-  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   private immutableAccounts: Set<string> = new Set();
   private immutableTokens: Set<string> = new Set();
 
   constructor(config: { accounts?: string[]; tokens?: string[] }) {
+    super();
     if (config.accounts) config.accounts.forEach(id => this.immutableAccounts.add(id));
     if (config.tokens) config.tokens.forEach(id => this.immutableTokens.add(id));
   }
 
-  shouldBlock(validationParams: PolicyValidationParams): boolean {
+  validatePostParamsNormalization(
+    _context: Context,
+    validationParams: PostParamsNormalizationParams,
+  ): boolean {
     const params = validationParams.normalisedParams;
     if (!params) return false;
 

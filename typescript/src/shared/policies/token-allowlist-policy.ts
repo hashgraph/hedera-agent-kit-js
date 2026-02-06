@@ -1,7 +1,7 @@
-import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
+import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
 import { TokenId, NftId } from '@hashgraph/sdk';
 
-export class TokenAllowlistPolicy implements Policy {
+export class TokenAllowlistPolicy extends BasePolicy {
   name = 'Token Allowlist';
   description = 'Only allows interactions with specific Token IDs';
   relevantTools = [
@@ -19,16 +19,19 @@ export class TokenAllowlistPolicy implements Policy {
     'update_token_tool',
     'airdrop_fungible_token_tool',
   ]; //FIXME: those tools do not support policies yet
-  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
   /* Set of allowed token IDs (string format) */
   private allowedTokens: Set<string>;
 
   constructor(allowedTokens: string[]) {
+    super();
     this.allowedTokens = new Set(allowedTokens);
   }
 
-  shouldBlock(validationParams: PolicyValidationParams): boolean {
+  validatePostParamsNormalization(
+    _context: Context,
+    validationParams: PostParamsNormalizationParams,
+  ): boolean {
     const params = validationParams.normalisedParams;
     if (!params) return false;
 

@@ -1,6 +1,6 @@
-import { Policy, ToolExecutionPoint, PolicyValidationParams } from '@/shared';
+import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
 
-export class RequiredMemoPolicy implements Policy {
+export class RequiredMemoPolicy extends BasePolicy {
   name = 'Required Memo';
   description = 'Ensures that every transaction includes a non-empty memo';
   relevantTools = [
@@ -16,9 +16,11 @@ export class RequiredMemoPolicy implements Policy {
     // 'approve_nft_allowance_tool',
     // 'approve_token_allowance_tool',
   ]; //FIXME: those tools do not support policies yet
-  affectedPoints = [ToolExecutionPoint.PostParamsNormalization];
 
-  shouldBlock(validationParams: PolicyValidationParams): boolean {
+  validatePostParamsNormalization(
+    _context: Context,
+    validationParams: PostParamsNormalizationParams,
+  ): boolean {
     // Check if transactionMemo is present and non-empty
     const params = validationParams.normalisedParams;
     if (!params) return false;

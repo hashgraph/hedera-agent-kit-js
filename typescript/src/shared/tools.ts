@@ -2,7 +2,14 @@ import { z } from 'zod';
 import { Client } from '@hashgraph/sdk';
 import { Context } from './configuration';
 
-import { enforcePolicies, ToolExecutionPoint } from './policy';
+import {
+  ToolExecutionStep,
+  PreToolExecutionParams,
+  PostParamsNormalizationParams,
+  PostCoreActionParams,
+  PostSecondaryActionParams,
+  AnyHookParams,
+} from './policy';
 
 export interface Tool {
   method: string;
@@ -24,19 +31,24 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   async execute(client: Client, context: Context, params: TParams): Promise<any> {
     try {
       // 1. PreToolExecutionHook
-      await this.preToolExecutionHook(context, params);
+      await this.preToolExecutionHook({ context, rawParams: params });
 
       // 2. ParamsNormalization
       const normalisedParams = await this.normalizeParams(params, context, client);
 
       // 3. PostParamsNormalizationHook
-      await this.postParamsNormalizationHook(context, params, normalisedParams);
+      await this.postParamsNormalizationHook({ context, rawParams: params, normalisedParams });
 
       // 4. Core Action (Core Tool Logic)
       const coreActionResult = await this.coreAction(normalisedParams, context, client); // transactions will be created here
 
       // 5. PostCoreActionHook
-      await this.postCoreActionHook(context, params, normalisedParams, coreActionResult);
+      await this.postCoreActionHook({
+        context,
+        rawParams: params,
+        normalisedParams,
+        coreActionResult,
+      });
 
       // 6. Secondary Action (Optional)
       let result = coreActionResult;
@@ -45,59 +57,33 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
       }
 
       // 7. PostToolExecutionHook
-      return await this.postToolExecutionHook(
-        result,
-        params,
+      return await this.postToolExecutionHook({
+        context,
+        rawParams: params,
         normalisedParams,
         coreActionResult,
-        context,
-      );
+        toolResult: result,
+      });
     } catch (error) {
       return this.handleError(error, context);
     }
   }
 
   // Hooks
-  async preToolExecutionHook(context: Context, params: TParams): Promise<void> {
-    if (context.policies) {
-      await enforcePolicies(
-        context.policies,
-        this.method,
-        { rawParams: params },
-        ToolExecutionPoint.PreToolExecution,
-      );
-    }
+  async preToolExecutionHook(params: PreToolExecutionParams<TParams>): Promise<void> {
+    await this.executeHook(params.context, ToolExecutionStep.PreToolExecution, params);
   }
 
   async postParamsNormalizationHook(
-    context: Context,
-    params: TParams,
-    normalisedParams: TNormalisedParams,
+    params: PostParamsNormalizationParams<TParams, TNormalisedParams>,
   ): Promise<void> {
-    if (context.policies) {
-      await enforcePolicies(
-        context.policies,
-        this.method,
-        { rawParams: params, normalisedParams },
-        ToolExecutionPoint.PostParamsNormalization,
-      );
-    }
+    await this.executeHook(params.context, ToolExecutionStep.PostParamsNormalization, params);
   }
 
   async postCoreActionHook(
-    context: Context,
-    params: TParams,
-    normalisedParams: TNormalisedParams,
-    coreActionResult: any,
+    params: PostCoreActionParams<TParams, TNormalisedParams>,
   ): Promise<void> {
-    if (context.policies) {
-      await enforcePolicies(
-        context.policies,
-        this.method,
-        { rawParams: params, normalisedParams, coreActionResult },
-        ToolExecutionPoint.PostCoreAction,
-      );
-    }
+    await this.executeHook(params.context, ToolExecutionStep.PostCoreAction, params);
   }
 
   /*
@@ -108,26 +94,34 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   }
 
   async postToolExecutionHook(
-    toolResult: any,
-    params: TParams,
-    normalisedParams: TNormalisedParams,
-    coreActionResult: any,
-    context: Context,
+    params: PostSecondaryActionParams<TParams, TNormalisedParams>,
   ): Promise<any> {
-    if (context.policies) {
-      await enforcePolicies(
-        context.policies,
-        this.method,
-        {
-          rawParams: params,
-          normalisedParams,
-          coreActionResult,
-          toolResult,
-        },
-        ToolExecutionPoint.PostSecondaryAction,
-      );
+    await this.executeHook(params.context, ToolExecutionStep.PostSecondaryAction, params);
+    return params.toolResult;
+  }
+
+  /**
+   * Generic hook execution method that enforces policies.
+   * @param context - The execution context.
+   * @param hookPoint - The execution point.
+   * @param params - The validation parameters.
+   */
+  private async executeHook(
+    context: Context,
+    hookPoint: ToolExecutionStep,
+    params: AnyHookParams,
+  ): Promise<void> {
+    if (!context.policies) {
+      return;
     }
-    return toolResult;
+
+    for (const policy of context.policies) {
+      const shouldBlock = await policy.enforce(context, this.method, hookPoint, params);
+      if (shouldBlock) {
+        const reason = policy.description ? ` (${policy.description})` : '';
+        throw new Error(`Action blocked by policy: ${policy.name}${reason}`);
+      }
+    }
   }
 
   async handleError(error: unknown, _context: Context): Promise<any> {
