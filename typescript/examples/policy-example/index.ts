@@ -4,6 +4,10 @@ import {
   coreTokenPluginToolNames,
   HederaLangchainToolkit,
   RequiredMemoPolicy,
+  MaxHbarTransferPolicy,
+  NoInfiniteSupplyPolicy,
+  ImmutabilityPolicy,
+  TokenAllowlistPolicy,
   ResponseParserService,
 } from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
@@ -29,32 +33,60 @@ async function bootstrap(): Promise<void> {
     APPROVE_HBAR_ALLOWANCE_TOOL,
     TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
     UPDATE_ACCOUNT_TOOL,
+    DELETE_ACCOUNT_TOOL,
   } = coreAccountPluginToolNames;
-  const { CREATE_FUNGIBLE_TOKEN_TOOL, UPDATE_TOKEN_TOOL } = coreTokenPluginToolNames;
+  const {
+    CREATE_FUNGIBLE_TOKEN_TOOL,
+    CREATE_NON_FUNGIBLE_TOKEN_TOOL,
+    UPDATE_TOKEN_TOOL,
+    TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+    MINT_FUNGIBLE_TOKEN_TOOL,
+    ASSOCIATE_TOKEN_TOOL,
+  } = coreTokenPluginToolNames;
+
+  // Example token IDs for the token allowlist policy
+  const allowedTokenIds = ['0.0.123456', '0.0.789012'];
 
   // Prepare Hedera toolkit with strict policies
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
       tools: [
-        // Core tools relevant to policy usage
+        // Core account tools
         TRANSFER_HBAR_TOOL,
         APPROVE_HBAR_ALLOWANCE_TOOL,
         TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
         UPDATE_ACCOUNT_TOOL,
+        DELETE_ACCOUNT_TOOL,
+        // Core token tools
         CREATE_FUNGIBLE_TOKEN_TOOL,
+        CREATE_NON_FUNGIBLE_TOKEN_TOOL,
         UPDATE_TOKEN_TOOL,
+        TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+        MINT_FUNGIBLE_TOKEN_TOOL,
+        ASSOCIATE_TOKEN_TOOL,
       ],
       plugins: [],
       context: {
         mode: AgentMode.AUTONOMOUS,
         policies: [
-          new RequiredMemoPolicy(), // FIXME: currently only works for transfer_hbar_tool
-          // new MaxHbarTransferPolicy(5), // Limit 5 HBAR
-          // new NoInfiniteSupplyPolicy(),
-          // new ImmutabilityPolicy({
-          //   accounts: [process.env.ACCOUNT_ID!], // Make the operator account immutable
-          // }),
+          // 1. RequiredMemoPolicy - Ensures all transactions have a memo
+          new RequiredMemoPolicy(),
+
+          // 2. MaxHbarTransferPolicy - Limits HBAR transfers to a maximum amount
+          new MaxHbarTransferPolicy(5), // Limit 5 HBAR per transfer
+
+          // 3. NoInfiniteSupplyPolicy - Prevents creating tokens with infinite supply
+          new NoInfiniteSupplyPolicy(),
+
+          // 4. ImmutabilityPolicy - Prevents modifying specified accounts/tokens
+          new ImmutabilityPolicy({
+            accounts: [process.env.ACCOUNT_ID!], // Make the operator account immutable
+            tokens: [], // Add token IDs to make them immutable
+          }),
+
+          // 5. TokenAllowlistPolicy - Only allows interactions with specified tokens
+          new TokenAllowlistPolicy(allowedTokenIds),
         ],
       },
     },
@@ -77,18 +109,24 @@ async function bootstrap(): Promise<void> {
 
   const responseParsingService = new ResponseParserService(hederaAgentToolkit.getTools());
 
-  console.log('Hedera Policy Agent Demo');
-  console.log(
-    'policies: RequiredMemo, MaxHbarTransfer(5), NoInfiniteSupply, Immutability(Operator)',
-  );
+  console.log('==========================================================');
+  console.log('              Hedera Policy Agent Demo');
+  console.log('==========================================================');
+  console.log('\nActive Policies:');
+  console.log('  1. RequiredMemoPolicy    - All transactions must have a memo');
+  console.log('  2. MaxHbarTransferPolicy - Max 5 HBAR per transfer');
+  console.log('  3. NoInfiniteSupplyPolicy - No tokens with infinite supply');
+  console.log(`  4. ImmutabilityPolicy    - Account ${process.env.ACCOUNT_ID} is protected`);
+  console.log(`  5. TokenAllowlistPolicy  - Only tokens: ${allowedTokenIds.join(', ')}`);
+  console.log('\n----------------------------------------------------------');
   console.log('Try asking the agent to:');
-  console.log('1. "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)');
-  console.log('2. "Transfer 1 HBAR to 0.0.12345 with memo "Test"" (Should succeed)');
-  // console.log('2. "Transfer 10 HBAR to 0.0.12345 with memo Test" (Should fail due to max amount)');
-  // console.log('3. "Transfer 1 HBAR to 0.0.12345 with memo Valid" (Should succeed)');
-  // console.log('4. "Create a token with infinite supply" (Should fail)');
-  // console.log('5. "Update my account memo" (Should fail due to immutability)');
-  console.log('---------------------------------------------------------');
+  console.log('  - "Transfer 1 HBAR to 0.0.12345" (Fails: no memo)');
+  console.log('  - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Succeeds)');
+  console.log('  - "Transfer 10 HBAR to 0.0.12345 with memo Test" (Fails: exceeds limit)');
+  console.log('  - "Create a token with infinite supply" (Fails: infinite not allowed)');
+  console.log('  - "Update my account memo" (Fails: account is immutable)');
+  console.log('  - "Transfer token 0.0.999999 to 0.0.12345" (Fails: token not in allowlist)');
+  console.log('----------------------------------------------------------\n');
 
   while (true) {
     const { userInput } = await prompts({
