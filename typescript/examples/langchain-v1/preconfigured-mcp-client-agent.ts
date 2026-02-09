@@ -20,6 +20,7 @@ async function bootstrap(): Promise<void> {
   const client = Client.forTestnet().setOperator(
     process.env.ACCOUNT_ID!,
     PrivateKey.fromStringDer(process.env.PRIVATE_KEY!),
+    // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
 
   // Prepare Hedera toolkit with core tools AND custom plugin
@@ -31,7 +32,10 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
-      mcpServers: [HederaMCPServer.HEDERION_MCP_MAINNET], // the the testnet MCP server is not available yet
+      mcpServers: [
+        HederaMCPServer.HEDERION_MCP_MAINNET,
+        HederaMCPServer.HGRAPH_MCP_MAINNET, // requires HGRAPH_API_KEY env var
+      ], // only mainnet servers are available
     },
   });
 
@@ -40,9 +44,6 @@ async function bootstrap(): Promise<void> {
 
   // Fetch tools from a toolkit
   const hakTools: StructuredToolInterface[] = hederaAgentToolkit.getTools();
-
-  console.log(`Loaded ${hakTools.length} Hedera Agent Kit tools.`);
-  console.log(`Loaded ${mcpTools.length} MCP tools.`);
 
   const llm = new ChatOpenAI({
     model: 'gpt-4o-mini',
@@ -82,6 +83,8 @@ async function bootstrap(): Promise<void> {
         { configurable: { thread_id: '1' } },
       );
 
+      console.log(JSON.stringify(response, null, 2));
+
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 
       // Assuming a single tool call per response, but parsedToolData might contain an array of tool calls made since the last agent.invoke
@@ -97,7 +100,7 @@ async function bootstrap(): Promise<void> {
         console.log(
           `\nAI: ${response.messages[response.messages.length - 1].content ?? JSON.stringify(response)}`,
         ); // <- agent response text generated based on the tool call response
-        // MCPs response formats may differ from HAK Tools!
+        // MCPs response format differs from HAK Tools
         // console.log('\n--- Tool Data ---');
         // console.log('Direct tool response:', toolCall.parsedData.humanMessage); // <- you can use this string for a direct tool human-readable response.
         // console.log('Full tool response object:', JSON.stringify(toolCall.parsedData, null, 2)); // <- you can use this object for convenient tool response extraction

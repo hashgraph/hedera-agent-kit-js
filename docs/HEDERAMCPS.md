@@ -45,7 +45,6 @@ In these examples, notice that `getMcpTools()` matches the pattern shown above. 
 Hederion provides a powerful suite of tools for interacting with the Hedera network, including advanced transaction handling and data querying.
 
 - **Mainnet**: `HederaMCPServer.HEDERION_MCP_MAINNET`
-- **Testnet**: `HederaMCPServer.HEDERION_MCP_TESTNET` (Currently unavailable)
 
 **Site**: [hederion.com](https://hederion.com)
 
@@ -54,7 +53,11 @@ Hederion provides a powerful suite of tools for interacting with the Hedera netw
 ### Hgraph
 Hgraph offers comprehensive indexing and query capabilities for Hedera data.
 
-- **Mainnet**: `HederaMCPServer.HGRAPH_MCP_MAINNET`
-- **Testnet**: `HederaMCPServer.HGRAPH_MCP_TESTNET`
+- **Mainnet**: `HederaMCPServer.HGRAPH_MCP_MAINNET` (Requires `HGRAPH_API_KEY`)
+
+**Setup**:
+To use the Hgraph MCP server, you need an API key.
+1. Get your key: [docs.hgraph.com/mcp-server/setup-claude](https://docs.hgraph.com/mcp-server/setup-claude)
+2. Set `HGRAPH_API_KEY` in your environment variables.
 
 **Documentation**: [docs.hgraph.com/category/hgraph-mcp-server](https://docs.hgraph.com/category/hgraph-mcp-server)

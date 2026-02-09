@@ -92,7 +92,7 @@ Open `external-mcp-agent.ts` and update the `args` array with the **absolute pat
 args: [
   '<YOUR PATH TO>/hedera-agent-kit-v3/modelcontextprotocol/dist/index.js',
   '--ledger-id=testnet',
-],
+]
 ```
 
 ---
@@ -117,6 +117,17 @@ This agent uses a preconfigured MCP client to connect to Hedera network:
 
 ```bash
 npm run langchain:preconfigured-mcp-client-agent
+```
+
+#### Hgraph MCP Server Configuration
+
+To use the **Hgraph MCP Server** (`HederaMCPServer.HGRAPH_MCP_MAINNET`), you must obtain an API key:
+
+1. Visit [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) to learn how to obtain your `HGRAPH_API_KEY`.
+2. Add the key to your `.env` file:
+
+```env
+HGRAPH_API_KEY=your_api_key_here
 ```
 
 ## What This Example Does

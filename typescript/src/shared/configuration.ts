@@ -32,8 +32,6 @@ export type Configuration = {
 };
 
 export enum HederaMCPServer {
-  // HEDERION_MCP_TESTNET = 'hederion-mcp-testnet',
   HEDERION_MCP_MAINNET = 'hederion-mcp-mainnet',
-  // HGRAPH_MCP_TESTNET = 'hgraph-mcp-testnet',
-  // HGRAPH_MCP_MAINNET = 'hgraph-mcp-mainnet',
+  HGRAPH_MCP_MAINNET = 'hgraph-mcp-mainnet',
 }

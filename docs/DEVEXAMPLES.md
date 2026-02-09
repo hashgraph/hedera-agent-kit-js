@@ -379,3 +379,6 @@ npm run ai-sdk:preconfigured-mcp-client-agent
 ```
 
 These agents connect to the configured MCP servers (defined in your code) and allow you to interact with the provided tools using natural language.
+
+> [!NOTE]
+> If using `HederaMCPServer.HGRAPH_MCP_MAINNET`, ensure you have set the `HGRAPH_API_KEY` in your `.env` file. See [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) for details.
