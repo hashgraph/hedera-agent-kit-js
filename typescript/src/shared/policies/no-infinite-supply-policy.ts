@@ -1,10 +1,10 @@
-import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
+import { Policy, PostParamsNormalizationParams, Context } from '@/shared';
 import { TokenSupplyType } from '@hashgraph/sdk';
 
-export class NoInfiniteSupplyPolicy extends BasePolicy {
+export class NoInfiniteSupplyPolicy extends Policy {
   name = 'No Infinite Supply Policy';
   description = 'Prevents the creation of tokens with Infinite supply type';
-  relevantTools = ['create_fungible_token_tool', 'create_non_fungible_token_tool']; //FIXME: those tools do not support policies yet
+  relevantTools = ['create_fungible_token_tool', 'create_non_fungible_token_tool'];
 
   validatePostParamsNormalization(
     _context: Context,

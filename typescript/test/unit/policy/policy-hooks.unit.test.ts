@@ -1,12 +1,17 @@
 import { describe, expect, test, vi } from 'vitest';
 import { BaseTool } from '@/shared/tools';
-import {
-  ToolExecutionStep,
-  BasePolicy,
-} from '@/shared/policy';
+import { Policy } from '@/shared/policy';
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
 import { Client } from '@hashgraph/sdk';
+
+// Enum for testing to specify which hook point should block
+enum BlockAt {
+  PreToolExecution = 'PreToolExecution',
+  PostParamsNormalization = 'PostParamsNormalization',
+  PostCoreAction = 'PostCoreAction',
+  PostSecondaryAction = 'PostSecondaryAction',
+}
 
 // Mock Tool
 class MockTool extends BaseTool {
@@ -27,8 +32,8 @@ class MockTool extends BaseTool {
 }
 
 // Mock Policy
-class MockPolicy extends BasePolicy {
-  description = "Test policy";
+class MockPolicy extends Policy {
+  description = 'Test policy';
   name = 'Test Policy';
   relevantTools = ['mock_tool'];
   // Spies for validation methods
@@ -37,15 +42,15 @@ class MockPolicy extends BasePolicy {
   validatePostCoreAction = vi.fn().mockReturnValue(false);
   validatePostSecondaryAction = vi.fn().mockReturnValue(false);
 
-  constructor(shouldBlockAt?: ToolExecutionStep) {
+  constructor(shouldBlockAt?: BlockAt) {
     super();
-    if (shouldBlockAt === ToolExecutionStep.PreToolExecution) {
+    if (shouldBlockAt === BlockAt.PreToolExecution) {
       this.validatePreToolExecution.mockReturnValue(true);
-    } else if (shouldBlockAt === ToolExecutionStep.PostParamsNormalization) {
+    } else if (shouldBlockAt === BlockAt.PostParamsNormalization) {
       this.validatePostParamsNormalization.mockReturnValue(true);
-    } else if (shouldBlockAt === ToolExecutionStep.PostCoreAction) {
+    } else if (shouldBlockAt === BlockAt.PostCoreAction) {
       this.validatePostCoreAction.mockReturnValue(true);
-    } else if (shouldBlockAt === ToolExecutionStep.PostSecondaryAction) {
+    } else if (shouldBlockAt === BlockAt.PostSecondaryAction) {
       this.validatePostSecondaryAction.mockReturnValue(true);
     }
   }
@@ -55,9 +60,9 @@ describe('Policy Hooks', () => {
   const client = {} as Client; // Mock client
 
   test('executes policies at PreToolExecution point', async () => {
-    const policy = new MockPolicy(ToolExecutionStep.PreToolExecution);
-    const context: Context = { policies: [policy] };
-    const tool = new MockTool(); // BaseTool doesn't take context in constructor anymore
+    const policy = new MockPolicy(BlockAt.PreToolExecution);
+    const context: Context = { hooks: [policy] };
+    const tool = new MockTool();
 
     const result = await tool.execute(client, context, { foo: 'bar' });
     expect(result.raw.error).toContain('Action blocked by policy: Test Policy');
@@ -68,13 +73,13 @@ describe('Policy Hooks', () => {
       expect.objectContaining({
         context,
         rawParams: { foo: 'bar' },
-      })
+      }),
     );
   });
 
   test('executes policies at PostParamsNormalization point', async () => {
-    const policy = new MockPolicy(ToolExecutionStep.PostParamsNormalization);
-    const context: Context = { policies: [policy] };
+    const policy = new MockPolicy(BlockAt.PostParamsNormalization);
+    const context: Context = { hooks: [policy] };
     const tool = new MockTool();
 
     const result = await tool.execute(client, context, { foo: 'bar' });
@@ -86,13 +91,13 @@ describe('Policy Hooks', () => {
         context,
         rawParams: { foo: 'bar' },
         normalisedParams: { foo: 'bar', normalized: true },
-      })
+      }),
     );
   });
 
   test('executes policies at PostCoreAction point', async () => {
-    const policy = new MockPolicy(ToolExecutionStep.PostCoreAction);
-    const context: Context = { policies: [policy] };
+    const policy = new MockPolicy(BlockAt.PostCoreAction);
+    const context: Context = { hooks: [policy] };
     const tool = new MockTool();
 
     const result = await tool.execute(client, context, { foo: 'bar' });
@@ -105,13 +110,13 @@ describe('Policy Hooks', () => {
         rawParams: { foo: 'bar' },
         normalisedParams: { foo: 'bar', normalized: true },
         coreActionResult: { foo: 'bar', normalized: true, action: 'done' },
-      })
+      }),
     );
   });
 
   test('executes policies at PostSecondaryAction point', async () => {
-    const policy = new MockPolicy(ToolExecutionStep.PostSecondaryAction);
-    const context: Context = { policies: [policy] };
+    const policy = new MockPolicy(BlockAt.PostSecondaryAction);
+    const context: Context = { hooks: [policy] };
     const tool = new MockTool();
 
     const result = await tool.execute(client, context, { foo: 'bar' });
@@ -125,13 +130,13 @@ describe('Policy Hooks', () => {
         normalisedParams: { foo: 'bar', normalized: true },
         coreActionResult: { foo: 'bar', normalized: true, action: 'done' },
         toolResult: { foo: 'bar', normalized: true, action: 'done', submit: 'done' },
-      })
+      }),
     );
   });
 
   test('does not block if policy returns false', async () => {
     const policy = new MockPolicy(); // No blocking
-    const context: Context = { policies: [policy] };
+    const context: Context = { hooks: [policy] };
     const tool = new MockTool();
 
     const result = await tool.execute(client, context, { foo: 'bar' });

@@ -1,4 +1,4 @@
-import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
+import { Policy, PostParamsNormalizationParams, Context } from '@/shared';
 import { AccountId, TokenId } from '@hashgraph/sdk';
 import { z } from 'zod';
 
@@ -16,10 +16,10 @@ const HasTokenId = z
   })
   .passthrough();
 
-export class ImmutabilityPolicy extends BasePolicy {
+export class ImmutabilityPolicy extends Policy {
   name = 'Immutability Policy';
   description = 'Prevents modification or deletion of specific Accounts and Tokens';
-  relevantTools = ['update_account_tool', 'delete_account_tool', 'update_token_tool']; //FIXME: those tools do not support policies yet
+  relevantTools = ['update_account_tool', 'delete_account_tool', 'update_token_tool'];
 
   private immutableAccounts: Set<string> = new Set();
   private immutableTokens: Set<string> = new Set();

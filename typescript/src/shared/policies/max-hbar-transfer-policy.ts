@@ -1,10 +1,10 @@
-import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
+import { Policy, PostParamsNormalizationParams, Context } from '@/shared';
 import { Hbar } from '@hashgraph/sdk';
 
-export class MaxHbarTransferPolicy extends BasePolicy {
+export class MaxHbarTransferPolicy extends Policy {
   name = 'Max HBAR Transfer';
   description = 'Limits the maximum HBAR amount that can be transferred';
-  relevantTools = ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool']; //FIXME: those tools do not support policies yet
+  relevantTools = ['transfer_hbar_tool', 'transfer_hbar_with_allowance_tool'];
 
   constructor(private maxAmount: number) {
     super();

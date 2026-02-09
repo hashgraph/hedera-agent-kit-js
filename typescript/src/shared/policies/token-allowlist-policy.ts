@@ -1,7 +1,7 @@
-import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
+import { Policy, PostParamsNormalizationParams, Context } from '@/shared';
 import { TokenId, NftId } from '@hashgraph/sdk';
 
-export class TokenAllowlistPolicy extends BasePolicy {
+export class TokenAllowlistPolicy extends Policy {
   name = 'Token Allowlist';
   description = 'Only allows interactions with specific Token IDs';
   relevantTools = [
@@ -18,7 +18,7 @@ export class TokenAllowlistPolicy extends BasePolicy {
     'delete_token_allowance_tool',
     'update_token_tool',
     'airdrop_fungible_token_tool',
-  ]; //FIXME: those tools do not support policies yet
+  ];
 
   /* Set of allowed token IDs (string format) */
   private allowedTokens: Set<string>;

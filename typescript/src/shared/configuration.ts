@@ -1,6 +1,6 @@
 import { IHederaMirrornodeService } from './hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { Plugin } from './plugin';
-import { Policy } from './policy';
+import { Hook } from './hook';
 
 export enum AgentMode {
   AUTONOMOUS = 'autonomous',
@@ -21,8 +21,8 @@ export type Context = {
   // Mirrornode config
   mirrornodeService?: IHederaMirrornodeService;
 
-  // Policies to enforce
-  policies?: Policy[];
+  // Hooks to execute at various tool lifecycle points (includes policies)
+  hooks?: Hook[];
 };
 
 export type Configuration = {

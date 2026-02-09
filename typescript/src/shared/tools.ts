@@ -3,13 +3,12 @@ import { Client } from '@hashgraph/sdk';
 import { Context } from './configuration';
 
 import {
-  ToolExecutionStep,
   PreToolExecutionParams,
   PostParamsNormalizationParams,
   PostCoreActionParams,
   PostSecondaryActionParams,
-  AnyHookParams,
-} from './policy';
+  Hook,
+} from './hook';
 
 export interface Tool {
   method: string;
@@ -71,24 +70,30 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
 
   // Hooks
   async preToolExecutionHook(params: PreToolExecutionParams<TParams>): Promise<void> {
-    await this.executeHook(params.context, ToolExecutionStep.PreToolExecution, params);
+    await this.executeHooks(params.context, async (h) =>
+      h.preToolExecutionHook(params.context, params),
+    );
   }
 
   async postParamsNormalizationHook(
     params: PostParamsNormalizationParams<TParams, TNormalisedParams>,
   ): Promise<void> {
-    await this.executeHook(params.context, ToolExecutionStep.PostParamsNormalization, params);
+    await this.executeHooks(params.context, async (h) =>
+      h.postParamsNormalizationHook(params.context, params),
+    );
   }
 
   async postCoreActionHook(
     params: PostCoreActionParams<TParams, TNormalisedParams>,
   ): Promise<void> {
-    await this.executeHook(params.context, ToolExecutionStep.PostCoreAction, params);
+    await this.executeHooks(params.context, async (h) =>
+      h.postCoreActionHook(params.context, params),
+    );
   }
 
   /*
     Default implementation always returns true. Override in derived classes to implement custom logic.
-   */
+  */
   async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
     return true;
   }
@@ -96,31 +101,31 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   async postToolExecutionHook(
     params: PostSecondaryActionParams<TParams, TNormalisedParams>,
   ): Promise<any> {
-    await this.executeHook(params.context, ToolExecutionStep.PostSecondaryAction, params);
+    await this.executeHooks(params.context, async (h) =>
+      h.postSecondaryActionHook(params.context, params),
+    );
     return params.toolResult;
   }
 
   /**
-   * Generic hook execution method that enforces policies.
+   * Generic hook execution method that executes hooks on all registered hooks.
+   * Hook-agnostic: just awaits the hook executor without caring about the result.
    * @param context - The execution context.
-   * @param hookPoint - The execution point.
-   * @param params - The validation parameters.
+   * @param hookExecutor - The hook function to execute on each hook.
    */
-  private async executeHook(
+  protected async executeHooks(
     context: Context,
-    hookPoint: ToolExecutionStep,
-    params: AnyHookParams,
+    hookExecutor: (hook: Hook) => Promise<any>,
   ): Promise<void> {
-    if (!context.policies) {
+    if (!context.hooks) {
       return;
     }
 
-    for (const policy of context.policies) {
-      const shouldBlock = await policy.enforce(context, this.method, hookPoint, params);
-      if (shouldBlock) {
-        const reason = policy.description ? ` (${policy.description})` : '';
-        throw new Error(`Action blocked by policy: ${policy.name}${reason}`);
+    for (const hook of context.hooks) {
+      if (!hook.relevantTools.includes(this.method)) {
+        continue;
       }
+      await hookExecutor(hook);
     }
   }
 

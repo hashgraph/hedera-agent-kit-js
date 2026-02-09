@@ -1,6 +1,6 @@
-import { BasePolicy, PostParamsNormalizationParams, Context } from '@/shared';
+import { Policy, PostParamsNormalizationParams, Context } from '@/shared';
 
-export class RequiredMemoPolicy extends BasePolicy {
+export class RequiredMemoPolicy extends Policy {
   name = 'Required Memo';
   description = 'Ensures that every transaction includes a non-empty memo';
   relevantTools = [
@@ -15,7 +15,7 @@ export class RequiredMemoPolicy extends BasePolicy {
     // 'approve_hbar_allowance_tool',
     // 'approve_nft_allowance_tool',
     // 'approve_token_allowance_tool',
-  ]; //FIXME: those tools do not support policies yet
+  ];
 
   validatePostParamsNormalization(
     _context: Context,
