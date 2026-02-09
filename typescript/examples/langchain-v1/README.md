@@ -92,7 +92,7 @@ Open `external-mcp-agent.ts` and update the `args` array with the **absolute pat
 args: [
   '<YOUR PATH TO>/hedera-agent-kit-v3/modelcontextprotocol/dist/index.js',
   '--ledger-id=testnet',
-],
+]
 ```
 
 ---
@@ -111,39 +111,44 @@ Run the external MCP agent:
 npm run langchain:external-mcp-agent
 ```
 
----
+### Preconfigured MCP Client Agent
 
-### What This Example Does
+This agent uses a preconfigured MCP client to connect to Hedera network:
 
-This example shows how to integrate **external MCP (Model Context Protocol) servers** with the Hedera Agent Kit.
+```bash
+npm run langchain:preconfigured-mcp-client-agent
+```
 
-The agent combines:
+#### Hgraph MCP Server Configuration
 
-* **A single local plugin** (`coreMiscQueriesPlugin`) from the Hedera toolkit
-* **Additional tools** exposed by a remote MCP server
+To use the **Hgraph MCP Server** (`HederaMCPServer.HGRAPH_MCP_MAINNET`), you must obtain an API key:
 
-The Hedera MCP server included in this repository is used as a reference implementation, but you can integrate other MCP servers by modifying the `mcpServers` configuration.
+1. Visit [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) to learn how to obtain your `HGRAPH_API_KEY`.
+2. Add the key to your `.env` file:
 
-#### Integrating Other MCP Servers
+```env
+HGRAPH_API_KEY=your_api_key_here
+```
 
-To connect to different MCP server transports (HTTP, SSE, WebSocket, etc.), update the `mcpServers` configuration in `external-mcp-agent.ts`.
+## What This Example Does
 
-For more details, see the [LangChain MCP Adapters documentation](https://reference.langchain.com/python/langchain_mcp_adapters/#langchain_mcp_adapters.client).
+This example demonstrates how to integrate external MCP (Model Context Protocol) servers with the Hedera Agent Kit. It creates an agent that combines:
+- **A single plugin** (`coreMiscQueriesPlugin`) from the local Hedera toolkit
+- **Additional tools** from a remote MCP server
 
----
+The Hedera MCP server from this repository is used as an example, but you can easily integrate other MCP servers by modifying the `mcpServers` configuration.
 
-### Capabilities
+### Integrating Other MCP Servers
 
-With the combined toolset, the agent can perform a wide range of Hedera blockchain operations, including:
+To connect to different types of MCP servers (HTTP, SSE, WebSocket, etc.), update the `mcpServers` configuration in `external-mcp-agent.ts`. See the [LangChain MCP Adapters documentation](https://reference.langchain.com/python/langchain_mcp_adapters/#langchain_mcp_adapters.client) for details on configuring different MCP connection types.
 
-* Querying account balances
-* Creating fungible and non-fungible tokens
-* Submitting messages to topics
-* Transferring HBAR
-* And more
-
----
+The combined agent can perform various Hedera blockchain operations such as:
+- Querying account balances
+- Creating fungible and non-fungible tokens
+- Submitting messages to topics
+- Transferring HBAR
+- And more...
 
 ## Reference
 
-For additional examples and patterns, see the [Developer Examples documentation](../../../docs/DEVEXAMPLES.md).
+For more developer examples, see the [Developer Examples documentation](../../../docs/DEVEXAMPLES.md).

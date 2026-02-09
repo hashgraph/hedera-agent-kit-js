@@ -1,8 +1,8 @@
-import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import {
   AgentMode,
   coreMiscQueriesPlugin,
   HederaLangchainToolkit,
+  HederaMCPServer,
   ResponseParserService,
 } from 'hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
@@ -32,24 +32,15 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
-    },
-  });
-
-  // create an MCP client with a use of @langchain/mcp-adapters
-  const mcpClient = new MultiServerMCPClient({
-    throwOnLoadError: true,
-    prefixToolNameWithServerName: false,
-    useStandardContentBlocks: true,
-    mcpServers: {
-      'hederion-mcp': {
-        type: 'http',
-        url: 'https://hederion.com/mcp',
-      },
+      mcpServers: [
+        HederaMCPServer.HEDERION_MCP_MAINNET,
+        HederaMCPServer.HGRAPH_MCP_MAINNET, // requires HGRAPH_API_KEY env var
+      ], // only mainnet servers are available
     },
   });
 
   // Fetch all tools from the external MCP
-  const mcpTools: StructuredToolInterface[] = await mcpClient.getTools();
+  const mcpTools: StructuredToolInterface[] = await hederaAgentToolkit.getMcpTools();
 
   // Fetch tools from a toolkit
   const hakTools: StructuredToolInterface[] = hederaAgentToolkit.getTools();
@@ -92,6 +83,8 @@ async function bootstrap(): Promise<void> {
         { configurable: { thread_id: '1' } },
       );
 
+      console.log(JSON.stringify(response, null, 2));
+
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 
       // Assuming a single tool call per response, but parsedToolData might contain an array of tool calls made since the last agent.invoke
@@ -107,7 +100,7 @@ async function bootstrap(): Promise<void> {
         console.log(
           `\nAI: ${response.messages[response.messages.length - 1].content ?? JSON.stringify(response)}`,
         ); // <- agent response text generated based on the tool call response
-        // HEDERION response format differs from HAK Tools
+        // MCPs response format differs from HAK Tools
         // console.log('\n--- Tool Data ---');
         // console.log('Direct tool response:', toolCall.parsedData.humanMessage); // <- you can use this string for a direct tool human-readable response.
         // console.log('Full tool response object:', JSON.stringify(toolCall.parsedData, null, 2)); // <- you can use this object for convenient tool response extraction

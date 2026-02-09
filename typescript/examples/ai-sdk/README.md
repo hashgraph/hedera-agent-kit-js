@@ -53,3 +53,10 @@ Connects to an external MCP server to perform actions.
 ```bash
 npm run ai-sdk:mcp-external-agent
 ```
+
+### Preconfigured MCP Agent
+Connects to a preconfigured MCP server (like Hederion) to perform actions.
+
+```bash
+npm run ai-sdk:preconfigured-mcp-client-agent
+```

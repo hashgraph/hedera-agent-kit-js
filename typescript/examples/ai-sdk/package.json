@@ -5,7 +5,8 @@
     "test": "echo \"No tests specified for example package\"",
     "ai-sdk:tool-calling-agent": "ts-node tool-calling-agent.ts",
     "ai-sdk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts",
-    "ai-sdk:mcp-external-agent": "ts-node mcp-external-agent.ts"
+    "ai-sdk:mcp-external-agent": "ts-node mcp-external-agent.ts",
+    "ai-sdk:preconfigured-mcp-client-agent": "ts-node preconfigured-mcp-client-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/mcp": "^1.0.10",
