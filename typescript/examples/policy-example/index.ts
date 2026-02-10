@@ -69,7 +69,7 @@ async function bootstrap(): Promise<void> {
       plugins: [],
       context: {
         mode: AgentMode.AUTONOMOUS,
-        policies: [
+        hooks: [
           // 1. RequiredMemoPolicy - Ensures all transactions have a memo
           new RequiredMemoPolicy(),
 

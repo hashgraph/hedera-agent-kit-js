@@ -30,7 +30,7 @@ export class ImmutabilityPolicy extends Policy {
     if (config.tokens) config.tokens.forEach(id => this.immutableTokens.add(id));
   }
 
-  validatePostParamsNormalization(
+  protected shouldBlockPostParamsNormalization(
     _context: Context,
     validationParams: PostParamsNormalizationParams,
   ): boolean {

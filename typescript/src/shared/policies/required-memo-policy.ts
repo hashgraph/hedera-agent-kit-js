@@ -17,7 +17,7 @@ export class RequiredMemoPolicy extends Policy {
     // 'approve_token_allowance_tool',
   ];
 
-  validatePostParamsNormalization(
+  protected shouldBlockPostParamsNormalization(
     _context: Context,
     validationParams: PostParamsNormalizationParams,
   ): boolean {

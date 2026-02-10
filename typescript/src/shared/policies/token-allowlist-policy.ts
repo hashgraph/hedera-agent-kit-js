@@ -28,7 +28,7 @@ export class TokenAllowlistPolicy extends Policy {
     this.allowedTokens = new Set(allowedTokens);
   }
 
-  validatePostParamsNormalization(
+  protected shouldBlockPostParamsNormalization(
     _context: Context,
     validationParams: PostParamsNormalizationParams,
   ): boolean {

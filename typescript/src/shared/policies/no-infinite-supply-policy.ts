@@ -6,7 +6,7 @@ export class NoInfiniteSupplyPolicy extends Policy {
   description = 'Prevents the creation of tokens with Infinite supply type';
   relevantTools = ['create_fungible_token_tool', 'create_non_fungible_token_tool'];
 
-  validatePostParamsNormalization(
+  protected shouldBlockPostParamsNormalization(
     _context: Context,
     validationParams: PostParamsNormalizationParams,
   ): boolean {

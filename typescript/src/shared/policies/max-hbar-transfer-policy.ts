@@ -10,7 +10,7 @@ export class MaxHbarTransferPolicy extends Policy {
     super();
   }
 
-  validatePostParamsNormalization(
+  protected shouldBlockPostParamsNormalization(
     _context: Context,
     validationParams: PostParamsNormalizationParams,
   ): boolean {

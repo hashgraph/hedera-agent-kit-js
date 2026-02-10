@@ -7,8 +7,8 @@ import {
   PostParamsNormalizationParams,
   PostCoreActionParams,
   PostSecondaryActionParams,
-  Hook,
-} from './hook';
+  AbstractHook,
+} from './abstract-hook';
 
 export interface Tool {
   method: string;
@@ -70,24 +70,24 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
 
   // Hooks
   async preToolExecutionHook(params: PreToolExecutionParams<TParams>): Promise<void> {
-    await this.executeHooks(params.context, async (h) =>
-      h.preToolExecutionHook(params.context, params),
+    await this.executeHooks(params.context, async (h, m) =>
+      h.preToolExecutionHook(params.context, params, m),
     );
   }
 
   async postParamsNormalizationHook(
     params: PostParamsNormalizationParams<TParams, TNormalisedParams>,
   ): Promise<void> {
-    await this.executeHooks(params.context, async (h) =>
-      h.postParamsNormalizationHook(params.context, params),
+    await this.executeHooks(params.context, async (h, m) =>
+      h.postParamsNormalizationHook(params.context, params, m),
     );
   }
 
   async postCoreActionHook(
     params: PostCoreActionParams<TParams, TNormalisedParams>,
   ): Promise<void> {
-    await this.executeHooks(params.context, async (h) =>
-      h.postCoreActionHook(params.context, params),
+    await this.executeHooks(params.context, async (h, m) =>
+      h.postCoreActionHook(params.context, params, m),
     );
   }
 
@@ -101,8 +101,8 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   async postToolExecutionHook(
     params: PostSecondaryActionParams<TParams, TNormalisedParams>,
   ): Promise<any> {
-    await this.executeHooks(params.context, async (h) =>
-      h.postSecondaryActionHook(params.context, params),
+    await this.executeHooks(params.context, async (h, m) =>
+      h.postSecondaryActionHook(params.context, params, m),
     );
     return params.toolResult;
   }
@@ -115,17 +115,14 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
    */
   protected async executeHooks(
     context: Context,
-    hookExecutor: (hook: Hook) => Promise<any>,
+    hookExecutor: (hook: AbstractHook, method: string) => Promise<any>,
   ): Promise<void> {
     if (!context.hooks) {
       return;
     }
 
     for (const hook of context.hooks) {
-      if (!hook.relevantTools.includes(this.method)) {
-        continue;
-      }
-      await hookExecutor(hook);
+      await hookExecutor(hook, this.method);
     }
   }
 

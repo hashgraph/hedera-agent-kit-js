@@ -49,6 +49,7 @@ Try out one or more of the example agents:
 * **Option C -** [Example Return Bytes Agent](#option-c-try-the-human-in-the-loop-chat-agent)
 * **Option D -** [Example MCP Server](#option-d-try-out-the-mcp-server)
 * **Option E -** [Example ElizaOS Agent](#option-e-try-out-the-hedera-agent-kit-with-elizaos)
+* **Option F -** [Example Policy Agent](#option-f-run-the-policy-agent-example)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -264,3 +265,34 @@ import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos';
 1. Clone the [Hedera ElizaOS Plugin Repository](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
 2. Install ElizaOS CLI
 3. Follow the [Hedera ElizaOS Plugin Docs](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
+
+### Option F: Run the Policy Agent Example
+
+The Policy Agent example demonstrates how to use the strict policy enforcement system in the Hedera Agent Kit. This agent is configured with several active policies (like `RequiredMemoPolicy` and `MaxHbarTransferPolicy`) that intercept and validate tool usage before execution.
+
+For a deep dive into how policies work, see [docs/POLICIES.md](../docs/POLICIES.md).
+
+#### Usage
+
+1. Go to the example directory:
+```bash
+cd typescript/examples/policy-example
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file (copy from `.env.example`) and add your `ACCOUNT_ID`, `PRIVATE_KEY`, and `OPENAI_API_KEY`.
+
+4. Run the example:
+```bash
+npm start
+```
+
+5. Interact with the agent. Try commands that trigger policy violations, such as:
+    - "Transfer 100 HBAR to 0.0.12345" (Should fail due to max limit)
+    - "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)
+    - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Should succeed)
+

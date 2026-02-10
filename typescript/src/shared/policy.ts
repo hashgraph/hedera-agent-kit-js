@@ -1,25 +1,25 @@
 import { Context } from './configuration';
 import {
-  Hook,
+  AbstractHook,
   PreToolExecutionParams,
   PostParamsNormalizationParams,
   PostCoreActionParams,
   PostSecondaryActionParams,
-} from './hook';
+} from './abstract-hook';
 
 /**
  * Policy extends Hook and throws errors when validation fails.
  */
-export abstract class Policy extends Hook {
-  abstract name: string;
-  abstract description?: string;
-  abstract relevantTools: string[];
+export abstract class Policy extends AbstractHook {
+  public abstract name: string;
+  public abstract description?: string;
+  public abstract relevantTools: string[];
 
   /**
    * Default implementation - no validation at PreToolExecution.
    * Override in derived classes to implement custom logic.
    */
-  validatePreToolExecution(
+  protected shouldBlockPreToolExecution(
     _context: Context,
     _params: PreToolExecutionParams,
   ): boolean | Promise<boolean> {
@@ -30,7 +30,7 @@ export abstract class Policy extends Hook {
    * Default implementation - no validation at PostParamsNormalization.
    * Override in derived classes to implement custom logic.
    */
-  validatePostParamsNormalization(
+  protected shouldBlockPostParamsNormalization(
     _context: Context,
     _params: PostParamsNormalizationParams,
   ): boolean | Promise<boolean> {
@@ -41,7 +41,7 @@ export abstract class Policy extends Hook {
    * Default implementation - no validation at PostCoreAction.
    * Override in derived classes to implement custom logic.
    */
-  validatePostCoreAction(
+  protected shouldBlockPostCoreAction(
     _context: Context,
     _params: PostCoreActionParams,
   ): boolean | Promise<boolean> {
@@ -52,7 +52,7 @@ export abstract class Policy extends Hook {
    * Default implementation - no validation at PostSecondaryAction.
    * Override in derived classes to implement custom logic.
    */
-  validatePostSecondaryAction(
+  protected shouldBlockPostSecondaryAction(
     _context: Context,
     _params: PostSecondaryActionParams,
   ): boolean | Promise<boolean> {
@@ -60,8 +60,14 @@ export abstract class Policy extends Hook {
   }
 
   // Hook implementations that throw when validation fails
-  async preToolExecutionHook(context: Context, params: PreToolExecutionParams): Promise<void> {
-    const shouldBlock = await this.validatePreToolExecution(context, params);
+  /** @internal */
+  public async preToolExecutionHook(
+    context: Context,
+    params: PreToolExecutionParams,
+    method: string,
+  ): Promise<void> {
+    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    const shouldBlock = await this.shouldBlockPreToolExecution(context, params);
     if (shouldBlock) {
       throw new Error(
         `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -69,11 +75,14 @@ export abstract class Policy extends Hook {
     }
   }
 
-  async postParamsNormalizationHook(
+  /** @internal */
+  public async postParamsNormalizationHook(
     context: Context,
     params: PostParamsNormalizationParams,
+    method: string,
   ): Promise<void> {
-    const shouldBlock = await this.validatePostParamsNormalization(context, params);
+    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params);
     if (shouldBlock) {
       throw new Error(
         `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -81,8 +90,14 @@ export abstract class Policy extends Hook {
     }
   }
 
-  async postCoreActionHook(context: Context, params: PostCoreActionParams): Promise<void> {
-    const shouldBlock = await this.validatePostCoreAction(context, params);
+  /** @internal */
+  public async postCoreActionHook(
+    context: Context,
+    params: PostCoreActionParams,
+    method: string,
+  ): Promise<void> {
+    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    const shouldBlock = await this.shouldBlockPostCoreAction(context, params);
     if (shouldBlock) {
       throw new Error(
         `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -90,11 +105,14 @@ export abstract class Policy extends Hook {
     }
   }
 
-  async postSecondaryActionHook(
+  /** @internal */
+  public async postSecondaryActionHook(
     context: Context,
     params: PostSecondaryActionParams,
+    method: string,
   ): Promise<void> {
-    const shouldBlock = await this.validatePostSecondaryAction(context, params);
+    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params);
     if (shouldBlock) {
       throw new Error(
         `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -102,13 +120,3 @@ export abstract class Policy extends Hook {
     }
   }
 }
-
-// Re-export hook types for convenience
-export {
-  Hook,
-  PreToolExecutionParams,
-  PostParamsNormalizationParams,
-  PostCoreActionParams,
-  PostSecondaryActionParams,
-  AnyHookParams,
-} from './hook';
