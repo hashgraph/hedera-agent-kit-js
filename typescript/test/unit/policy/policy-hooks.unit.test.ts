@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { BaseTool } from '@/shared/tools';
-import { Policy } from '@/shared/policy';
-import { Context } from '@/shared/configuration';
+import { BaseTool } from '@/shared';
+import { Policy } from '@/shared';
+import { Context } from '@/shared';
 import { z } from 'zod';
 import { Client } from '@hashgraph/sdk';
 
@@ -53,6 +53,22 @@ class MockPolicy extends Policy {
     } else if (shouldBlockAt === BlockAt.PostSecondaryAction) {
       this.validatePostSecondaryAction.mockReturnValue(true);
     }
+  }
+
+  protected shouldBlockPreToolExecution(context: Context, params: any): boolean {
+    return this.validatePreToolExecution(context, params);
+  }
+
+  protected shouldBlockPostParamsNormalization(context: Context, params: any): boolean {
+    return this.validatePostParamsNormalization(context, params);
+  }
+
+  protected shouldBlockPostCoreAction(context: Context, params: any): boolean {
+    return this.validatePostCoreAction(context, params);
+  }
+
+  protected shouldBlockPostSecondaryAction(context: Context, params: any): boolean {
+    return this.validatePostSecondaryAction(context, params);
   }
 }
 

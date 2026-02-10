@@ -12,7 +12,7 @@ const HasAccountId = z
 
 const HasTokenId = z
   .object({
-    tokenId: z.instanceof(TokenId),
+    tokenId: z.union([z.string(), z.instanceof(TokenId)]),
   })
   .passthrough();
 
