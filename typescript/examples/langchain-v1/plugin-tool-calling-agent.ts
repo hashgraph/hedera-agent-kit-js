@@ -27,7 +27,8 @@ async function bootstrap(): Promise<void> {
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
     process.env.ACCOUNT_ID!,
-    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!),
+    PrivateKey.fromStringDer(process.env.PRIVATE_KEY!),
+    // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
 
   // all the available tools
@@ -133,11 +134,11 @@ async function bootstrap(): Promise<void> {
     model: 'gpt-4o-mini',
   });
 
-
   const agent = createAgent({
     model: llm,
     tools: tools,
-    systemPrompt: 'You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools',
+    systemPrompt:
+      'You are a helpful assistant with access to Hedera blockchain tools and custom plugin tools',
     checkpointer: new MemorySaver(),
   });
 
