@@ -54,7 +54,7 @@ export class CreateNonFungibleTokenTool extends BaseTool {
   method = CREATE_NON_FUNGIBLE_TOKEN_TOOL;
   name = 'Create Non-Fungible Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof createNonFungibleTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

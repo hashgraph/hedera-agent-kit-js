@@ -70,7 +70,7 @@ export class GetContractInfoQueryTool extends BaseTool {
   method = GET_CONTRACT_INFO_QUERY_TOOL;
   name = 'Get Contract Info';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof contractInfoQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

@@ -49,7 +49,7 @@ export class TransferErc20Tool extends BaseTool {
   method = TRANSFER_ERC20_TOOL;
   name = 'Transfer ERC20';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof transferERC20Parameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

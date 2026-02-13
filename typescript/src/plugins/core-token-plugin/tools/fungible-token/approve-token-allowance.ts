@@ -44,7 +44,7 @@ export class ApproveTokenAllowanceTool extends BaseTool {
   method = APPROVE_TOKEN_ALLOWANCE_TOOL;
   name = 'Approve Token Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof approveTokenAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

@@ -75,7 +75,7 @@ export class GetTokenInfoQueryTool extends BaseTool {
   method = GET_TOKEN_INFO_QUERY_TOOL;
   name = 'Get Token Info';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof tokenInfoQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

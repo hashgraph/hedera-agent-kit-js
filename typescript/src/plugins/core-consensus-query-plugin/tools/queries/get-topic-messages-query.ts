@@ -73,7 +73,7 @@ export class GetTopicMessagesQueryTool extends BaseTool {
   method = GET_TOPIC_MESSAGES_QUERY_TOOL;
   name = 'Get Topic Messages';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof topicMessagesQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

@@ -53,7 +53,7 @@ export class MintErc721Tool extends BaseTool {
   method = MINT_ERC721_TOOL;
   name = 'Mint ERC721';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof mintERC721Parameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

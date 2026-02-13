@@ -44,7 +44,7 @@ export class MintFungibleTokenTool extends BaseTool {
   method = MINT_FUNGIBLE_TOKEN_TOOL;
   name = 'Mint Fungible Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof mintFungibleTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

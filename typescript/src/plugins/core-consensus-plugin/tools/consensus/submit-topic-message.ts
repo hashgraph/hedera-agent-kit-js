@@ -34,7 +34,7 @@ export class SubmitTopicMessageTool extends BaseTool {
   method = SUBMIT_TOPIC_MESSAGE_TOOL;
   name = 'Submit Topic Message';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof submitTopicMessageParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

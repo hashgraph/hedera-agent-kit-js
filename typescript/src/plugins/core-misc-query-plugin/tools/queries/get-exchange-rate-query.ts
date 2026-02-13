@@ -53,7 +53,7 @@ export class GetExchangeRateQueryTool extends BaseTool {
   method = GET_EXCHANGE_RATE_TOOL;
   name = 'Get Exchange Rate';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof exchangeRateQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

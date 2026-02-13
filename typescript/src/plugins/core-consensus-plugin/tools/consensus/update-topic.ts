@@ -100,7 +100,7 @@ export class UpdateTopicTool extends BaseTool {
   method = UPDATE_TOPIC_TOOL;
   name = 'Update Topic';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof updateTopicParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

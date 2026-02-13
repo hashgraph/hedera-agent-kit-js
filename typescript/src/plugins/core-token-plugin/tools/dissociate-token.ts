@@ -42,7 +42,7 @@ export class DissociateTokenTool extends BaseTool {
   method = DISSOCIATE_TOKEN_TOOL;
   name = 'Dissociate Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof dissociateTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

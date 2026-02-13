@@ -41,7 +41,7 @@ export class AssociateTokenTool extends BaseTool {
   method = ASSOCIATE_TOKEN_TOOL;
   name = 'Associate Token(s)';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof associateTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

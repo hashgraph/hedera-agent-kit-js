@@ -43,7 +43,7 @@ export class MintNonFungibleTokenTool extends BaseTool {
   method = MINT_NON_FUNGIBLE_TOKEN_TOOL;
   name = 'Mint Non-Fungible Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof mintNonFungibleTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

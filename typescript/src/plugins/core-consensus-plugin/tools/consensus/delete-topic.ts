@@ -33,7 +33,7 @@ export class DeleteTopicTool extends BaseTool {
   method = DELETE_TOPIC_TOOL;
   name = 'Delete Topic';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof deleteTopicParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

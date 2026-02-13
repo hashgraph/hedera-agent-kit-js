@@ -48,7 +48,7 @@ export class UpdateAccountTool extends BaseTool {
   method = UPDATE_ACCOUNT_TOOL;
   name = 'Update Account';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof updateAccountParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

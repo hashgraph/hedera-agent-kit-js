@@ -52,7 +52,7 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTool {
   method = TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
   name = 'Transfer Fungible Token with Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof transferFungibleTokenWithAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

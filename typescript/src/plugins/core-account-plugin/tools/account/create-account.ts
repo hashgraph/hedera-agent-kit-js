@@ -44,7 +44,7 @@ export class CreateAccountTool extends BaseTool {
   method = CREATE_ACCOUNT_TOOL;
   name = 'Create Account';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof createAccountParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

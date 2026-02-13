@@ -35,7 +35,7 @@ export class CreateTopicTool extends BaseTool {
   method = CREATE_TOPIC_TOOL;
   name = 'Create Topic';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof createTopicParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

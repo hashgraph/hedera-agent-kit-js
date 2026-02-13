@@ -50,7 +50,7 @@ export class TransferHbarTool extends BaseTool {
   method = TRANSFER_HBAR_TOOL;
   name = 'Transfer HBAR';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof transferHbarParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

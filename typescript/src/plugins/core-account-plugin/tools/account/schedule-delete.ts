@@ -33,7 +33,7 @@ export class ScheduleDeleteTool extends BaseTool {
   method = SCHEDULE_DELETE_TOOL;
   name = 'Delete Scheduled Transaction';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof scheduleDeleteTransactionParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

@@ -55,7 +55,7 @@ export class TransferErc721Tool extends BaseTool {
   method = TRANSFER_ERC721_TOOL;
   name = 'Transfer ERC721';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof transferERC721Parameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

@@ -38,7 +38,7 @@ export class TransferHbarWithAllowanceTool extends BaseTool {
   method = TRANSFER_HBAR_WITH_ALLOWANCE_TOOL;
   name = 'Transfer HBAR with allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof transferHbarWithAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

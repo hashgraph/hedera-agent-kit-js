@@ -40,7 +40,7 @@ export class TransferNonFungibleTokenWithAllowanceTool extends BaseTool {
   method = TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
   name = 'Transfer Non Fungible Token with Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>["innerType"]>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

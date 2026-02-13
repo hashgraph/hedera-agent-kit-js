@@ -43,7 +43,7 @@ export class DeleteHbarAllowanceTool extends BaseTool {
   method = DELETE_HBAR_ALLOWANCE_TOOL;
   name = 'Delete HBAR Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof deleteHbarAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

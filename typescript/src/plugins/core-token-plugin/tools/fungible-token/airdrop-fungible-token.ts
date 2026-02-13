@@ -46,7 +46,7 @@ export class AirdropFungibleTokenTool extends BaseTool {
   method = AIRDROP_FUNGIBLE_TOKEN_TOOL;
   name = 'Airdrop Fungible Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof airdropFungibleTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

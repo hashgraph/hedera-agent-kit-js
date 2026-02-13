@@ -49,7 +49,7 @@ export class CreateErc721Tool extends BaseTool {
   method = CREATE_ERC721_TOOL;
   name = 'Create ERC721 Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof createERC721Parameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

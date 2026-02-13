@@ -37,7 +37,7 @@ export class DeleteAccountTool extends BaseTool {
   method = DELETE_ACCOUNT_TOOL;
   name = 'Delete Account';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof deleteAccountParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

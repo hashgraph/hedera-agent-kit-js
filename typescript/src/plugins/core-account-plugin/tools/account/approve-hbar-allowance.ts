@@ -41,7 +41,7 @@ export class ApproveHbarAllowanceTool extends BaseTool {
   method = APPROVE_HBAR_ALLOWANCE_TOOL;
   name = 'Approve HBAR Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof approveHbarAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

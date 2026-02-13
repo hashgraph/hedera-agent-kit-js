@@ -49,7 +49,7 @@ export class CreateErc20Tool extends BaseTool {
   method = CREATE_ERC20_TOOL;
   name = 'Create ERC20 Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof createERC20Parameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

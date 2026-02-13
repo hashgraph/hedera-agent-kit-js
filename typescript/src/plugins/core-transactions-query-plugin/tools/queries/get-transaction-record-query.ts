@@ -70,7 +70,7 @@ export class GetTransactionRecordQueryTool extends BaseTool {
   method = GET_TRANSACTION_RECORD_QUERY_TOOL;
   name = 'Get Transaction Record Query';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof transactionRecordQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

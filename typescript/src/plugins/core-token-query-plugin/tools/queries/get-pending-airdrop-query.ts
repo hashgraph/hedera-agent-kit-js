@@ -99,7 +99,7 @@ export class GetPendingAirdropQueryTool extends BaseTool {
   method = GET_PENDING_AIRDROP_TOOL;
   name = 'Get Pending Airdrops';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof pendingAirdropQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

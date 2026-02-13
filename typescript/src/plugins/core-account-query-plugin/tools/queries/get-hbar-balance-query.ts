@@ -36,7 +36,7 @@ export class GetHbarBalanceQueryTool extends BaseTool {
   method = GET_HBAR_BALANCE_QUERY_TOOL;
   name = 'Get HBAR Balance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof accountBalanceQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

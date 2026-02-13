@@ -33,7 +33,7 @@ export class SignScheduleTransactionTool extends BaseTool {
   method = SIGN_SCHEDULE_TRANSACTION_TOOL;
   name = 'Sign Scheduled Transaction';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof signScheduleTransactionParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

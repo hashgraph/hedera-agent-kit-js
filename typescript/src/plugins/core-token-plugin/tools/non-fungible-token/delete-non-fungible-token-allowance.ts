@@ -43,7 +43,7 @@ export class DeleteNftAllowanceTool extends BaseTool {
   method = DELETE_NFT_ALLOWANCE_TOOL;
   name = 'Delete Non Fungible Token Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof deleteNftAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

@@ -114,7 +114,7 @@ export class UpdateTokenTool extends BaseTool {
   method = UPDATE_TOKEN_TOOL;
   name = 'Update Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof updateTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

@@ -52,7 +52,7 @@ export class GetAccountTokenBalancesQueryTool extends BaseTool {
   method = GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL;
   name = 'Get Account Token Balances';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof accountTokenBalancesQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

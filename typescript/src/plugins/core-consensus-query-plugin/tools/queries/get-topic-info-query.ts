@@ -61,7 +61,7 @@ export class GetTopicInfoQueryTool extends BaseTool {
   method = GET_TOPIC_INFO_QUERY_TOOL;
   name = 'Get Topic Info';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof getTopicInfoParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

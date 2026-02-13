@@ -43,7 +43,7 @@ export class DeleteTokenAllowanceTool extends BaseTool {
   method = DELETE_TOKEN_ALLOWANCE_TOOL;
   name = 'Delete Token Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof deleteTokenAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

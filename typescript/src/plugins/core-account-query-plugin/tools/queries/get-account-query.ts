@@ -37,7 +37,7 @@ export class GetAccountQueryTool extends BaseTool {
   method = GET_ACCOUNT_QUERY_TOOL;
   name = 'Get Account Query';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof accountQueryParameters>;
   outputParser = untypedQueryOutputParser;
 
   constructor(context: Context) {

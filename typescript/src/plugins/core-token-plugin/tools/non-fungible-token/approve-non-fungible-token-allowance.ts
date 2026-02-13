@@ -43,7 +43,7 @@ export class ApproveNftAllowanceTool extends BaseTool {
   method = APPROVE_NFT_ALLOWANCE_TOOL;
   name = 'Approve NFT Allowance';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<ReturnType<typeof approveNftAllowanceParameters>["innerType"]>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

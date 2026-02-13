@@ -55,7 +55,7 @@ export class CreateFungibleTokenTool extends BaseTool {
   method = CREATE_FUNGIBLE_TOKEN_TOOL;
   name = 'Create Fungible Token';
   description: string;
-  parameters: z.ZodObject<any, any>;
+  parameters: ReturnType<typeof createFungibleTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {
