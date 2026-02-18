@@ -117,7 +117,7 @@ describe('Transfer NFT With Allowance E2E Tests', () => {
   afterAll(async () => {
     try {
       await returnHbarsAndDeleteAccount(
-        ownerWrapper,
+        spenderWrapper,
         spenderAccountId,
         operatorClient.operatorAccountId!,
       );
