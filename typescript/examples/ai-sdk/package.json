@@ -9,13 +9,13 @@
     "ai-sdk:preconfigured-mcp-client-agent": "ts-node preconfigured-mcp-client-agent.ts"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "^1.0.10",
-    "@ai-sdk/openai": "^3.0.2",
-    "@modelcontextprotocol/sdk": "1.25.2",
-    "ai": "^6.0.5",
+    "@ai-sdk/mcp": "^1.0.21",
+    "@ai-sdk/openai": "^3.0.29",
+    "@modelcontextprotocol/sdk": "1.26.0",
+    "ai": "^6.0.86",
     "dotenv": "17.2.3",
     "zod": "^3.23.8",
-    "hedera-agent-kit": "3.7.0",
+    "hedera-agent-kit": "../..",
     "prompts": "2.4.2"
   },
   "author": "",
