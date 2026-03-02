@@ -12,7 +12,7 @@ describe('MaxRecipientsPolicy E2E Tests', () => {
   });
 
   it('should block the agent if it tries to send HBAR to more than allowed recipients', async () => {
-    // Set limit to 1
+    // Set the limit to 1
     const policy = new MaxRecipientsPolicy(1);
 
     const testSetup = await createLangchainTestSetup(
@@ -40,7 +40,7 @@ describe('MaxRecipientsPolicy E2E Tests', () => {
     const parsedResponse = testSetup.responseParser.parseNewToolMessages(result);
 
     expect(parsedResponse.length).toBeGreaterThan(0);
-    // Check if any tool call was blocked by the policy
+    // Check if the policy blocked any tool call
     const policyError = parsedResponse.find(
       tool =>
         tool.parsedData.raw.error &&
