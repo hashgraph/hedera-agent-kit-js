@@ -70,7 +70,7 @@ export abstract class Policy extends AbstractHook {
     const shouldBlock = await this.shouldBlockPreToolExecution(context, params);
     if (shouldBlock) {
       throw new Error(
-        `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
+        `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
       );
     }
   }
@@ -85,7 +85,7 @@ export abstract class Policy extends AbstractHook {
     const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params);
     if (shouldBlock) {
       throw new Error(
-        `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
+        `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
       );
     }
   }
@@ -100,7 +100,7 @@ export abstract class Policy extends AbstractHook {
     const shouldBlock = await this.shouldBlockPostCoreAction(context, params);
     if (shouldBlock) {
       throw new Error(
-        `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
+        `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
       );
     }
   }
@@ -115,7 +115,7 @@ export abstract class Policy extends AbstractHook {
     const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params);
     if (shouldBlock) {
       throw new Error(
-        `Action blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
+        `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
       );
     }
   }

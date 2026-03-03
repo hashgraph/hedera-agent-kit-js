@@ -1,4 +1,4 @@
-import { AgentMode } from '@/shared';
+import { AgentMode, AbstractHook } from '@/shared';
 import type { Plugin } from '@/shared/plugin';
 import { LLMProvider, type LlmOptions } from './llm-factory';
 import {
@@ -55,6 +55,7 @@ export interface LangchainTestOptions {
   tools: string[];
   plugins: Plugin[];
   agentMode: AgentMode;
+  hooks?: AbstractHook[];
 }
 
 const {
