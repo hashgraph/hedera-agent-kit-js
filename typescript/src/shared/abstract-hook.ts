@@ -1,5 +1,17 @@
 import type { Context } from './configuration';
 
+/**
+ * Error class for hooks that should break the entire agent execution,
+ * not just the current tool. Thrown errors of this type will propagate
+ * past BaseTool.execute()'s try/catch.
+ */
+export class HookExecInterruptError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'HookExecInterruptError';
+  }
+}
+
 export interface PreToolExecutionParams<TParams = any> {
   context: Context;
   rawParams: TParams;

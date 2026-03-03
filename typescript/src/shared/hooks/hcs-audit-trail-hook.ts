@@ -1,8 +1,15 @@
-import { AbstractHook, PostSecondaryActionParams } from '@/shared';
+import { AbstractHook, HookExecInterruptError, PostSecondaryActionParams } from '@/shared';
 import { AgentMode, Context } from '@/shared';
 import { RawTransactionResponse } from '@/shared';
 import { Client, TopicMessageSubmitTransaction } from '@hashgraph/sdk';
 
+
+/**
+ * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.
+ * 
+ * @warning If a paid topic (HIP-991: https://hips.hedera.com/hip/hip-991) is provided,
+ * it could potentially drain the provided logging client's funds due to message submission fees.
+ */
 export class HcsAuditTrailHook extends AbstractHook {
   relevantTools: string[];
   name: string;
@@ -30,9 +37,11 @@ export class HcsAuditTrailHook extends AbstractHook {
     // HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS.
     if (context.mode === AgentMode.RETURN_BYTES) {
       console.log(
-        'Agent mode is RETURN_BYTES, skipping audit trail hook. HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS.',
+        'Agent mode is RETURN_BYTES, stopping the agent execution. HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS.',
       );
-      return;
+      throw new HookExecInterruptError(
+        'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution.',
+      );
     }
 
     // HcsAuditTrailHook requires the logging client to be provided.

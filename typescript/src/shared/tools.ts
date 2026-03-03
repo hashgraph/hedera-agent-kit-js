@@ -8,6 +8,7 @@ import {
   PostCoreActionParams,
   PostSecondaryActionParams,
   AbstractHook,
+  HookExecInterruptError,
 } from './abstract-hook';
 
 export interface Tool {
@@ -64,6 +65,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         toolResult: result,
       });
     } catch (error) {
+      if (error instanceof HookExecInterruptError) throw error;
       return this.handleError(error, context);
     }
   }

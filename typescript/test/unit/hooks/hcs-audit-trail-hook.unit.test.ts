@@ -71,11 +71,8 @@ describe('HcsAuditTrailHook Unit Tests', () => {
   it('should not log if mode is RETURN_BYTES', async () => {
     const context = { mode: AgentMode.RETURN_BYTES };
     const params = { normalisedParams: {} } as PostSecondaryActionParams;
-    const postMessageSpy = vi.spyOn(hook, 'postMessageToHcsTopic');
 
-    await hook.postToolExecutionHook(context, params, 'test_tool');
-
-    expect(postMessageSpy).not.toHaveBeenCalled();
+    await expect(hook.postToolExecutionHook(context, params, 'test_tool')).rejects.toThrow();
   });
 
   it('should not log if loggingClient is missing', async () => {

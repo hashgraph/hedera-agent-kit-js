@@ -38,7 +38,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
     expect(result.raw.transactionId).toBeDefined();
   });
 
-  it('should skip logging in RETURN_BYTES mode', async () => {
+  it('should stop execution in RETURN_BYTES mode', async () => {
     const hook = new HcsAuditTrailHook([TRANSFER_HBAR_TOOL], topicId, operatorClient);
     const context: Context = {
       mode: AgentMode.RETURN_BYTES,
@@ -51,8 +51,6 @@ describe('HcsAuditTrailHook Integration Tests', () => {
       transfers: [{ accountId: operatorClient.operatorAccountId!.toString(), amount: 0.0001 }],
     };
 
-    const result = await tool.execute(operatorClient, context, params);
-
-    expect(result.bytes).toBeDefined();
+    await expect(tool.execute(operatorClient, context, params)).rejects.toThrow();
   });
 });
