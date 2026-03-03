@@ -1,4 +1,4 @@
-import { Policy, Context, PreToolExecutionParams } from '@/shared';
+import { Policy, Context, PostParamsNormalizationParams } from '@/shared';
 
 const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
 const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
@@ -29,24 +29,45 @@ export class MaxRecipientsPolicy extends Policy {
         this.relevantTools = [...this.relevantTools, ...additionalTools];
     }
 
-    protected shouldBlockPreToolExecution(
+    protected shouldBlockPostParamsNormalization(
         _context: Context,
-        params: PreToolExecutionParams,
+        params: PostParamsNormalizationParams,
     ): boolean {
         try {
-            const recipients = params.rawParams.recipients || params.rawParams.transfers;
+            const { normalisedParams } = params;
+            const transferList =
+                normalisedParams.hbarTransfers ||
+                normalisedParams.tokenTransfers ||
+                normalisedParams.transfers;
 
-            if (!recipients) {
+            if (!transferList) {
                 throw new Error(
-                    `Field 'recipients' or 'transfers' is not defined in tool parameters. This policy might be incorrectly applied to tool: ${params.context.mode}`,
+                    `Field 'hbarTransfers', 'tokenTransfers' or 'transfers' is not defined in normalised parameters. This policy might be incorrectly applied to tool: ${params.context.mode}`,
                 );
             }
 
-            const count = Array.isArray(recipients) ? recipients.length : 0;
+            if (!Array.isArray(transferList)) {
+                return false;
+            }
 
-            if (count > this.maxRecipients) {
+            // NFT transfers have no 'amount' field — every entry is a recipient.
+            // Fungible / HBAR transfers include the sender with a negative amount,
+            // so we only count entries with a positive amount as recipients.
+            // Amount can be an Hbar object, Long, or plain number depending on the normalizer.
+            const recipientCount = transferList.filter(
+                (entry: any) => {
+                    if (!('amount' in entry)) return true; // NFT — no amount means it's a recipient
+                    const amt = entry.amount;
+                    if (amt != null && typeof amt === 'object' && typeof amt.isNegative === 'function') {
+                        return !amt.isNegative() && !amt.isZero?.();
+                    }
+                    return Number(amt) > 0;
+                },
+            ).length;
+
+            if (recipientCount > this.maxRecipients) {
                 console.log(
-                    `MaxRecipientsPolicy: tool call rejected - expected max ${this.maxRecipients} recipients, got ${count}`,
+                    `MaxRecipientsPolicy: tool call rejected - expected max ${this.maxRecipients} recipients, got ${recipientCount}`,
                 );
                 return true;
             }
