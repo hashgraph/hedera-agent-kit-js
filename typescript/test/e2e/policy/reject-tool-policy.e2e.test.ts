@@ -4,9 +4,11 @@ import {
     createLangchainTestSetup,
     getOperatorClientForTests,
 } from '../../utils';
-import { RejectToolPolicy } from '@/shared';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
-const GET_HBAR_BALANCE_QUERY_TOOL = 'get_hbar_balance_query_tool';
+import { RejectToolPolicy } from '@/shared';
+import { coreAccountQueryPluginToolNames } from '@/plugins';
+
+const { GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
 describe('RejectToolPolicy E2E Tests', () => {
     let operatorClient: Client;
