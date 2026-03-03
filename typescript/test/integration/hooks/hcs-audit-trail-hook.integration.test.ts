@@ -51,6 +51,8 @@ describe('HcsAuditTrailHook Integration Tests', () => {
       transfers: [{ accountId: operatorClient.operatorAccountId!.toString(), amount: 0.0001 }],
     };
 
-    await expect(tool.execute(operatorClient, context, params)).rejects.toThrow();
+    const result = await tool.execute(operatorClient, context, params);
+    expect(result.raw.error).toContain('Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS');
   });
 });
+
