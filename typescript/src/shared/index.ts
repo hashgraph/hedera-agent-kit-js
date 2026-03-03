@@ -13,3 +13,4 @@ export * from './policy';
 export * from './abstract-hook';
 export * from './policies/max-recipients-policy';
 export * from './policies/reject-tool-policy';
+export * from './hooks/hcs-audit-trail-hook';
