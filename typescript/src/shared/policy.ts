@@ -106,7 +106,7 @@ export abstract class Policy extends AbstractHook {
   }
 
   /** @internal */
-  public async postSecondaryActionHook(
+  public async postToolExecutionHook(
     context: Context,
     params: PostSecondaryActionParams,
     method: string,

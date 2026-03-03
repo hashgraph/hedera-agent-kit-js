@@ -102,7 +102,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     params: PostSecondaryActionParams<TParams, TNormalisedParams>,
   ): Promise<any> {
     await this.executeHooks(params.context, async (h, m) =>
-      h.postSecondaryActionHook(params.context, params, m),
+      h.postToolExecutionHook(params.context, params, m),
     );
     return params.toolResult;
   }

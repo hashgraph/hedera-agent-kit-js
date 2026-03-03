@@ -59,7 +59,7 @@ export abstract class AbstractHook {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
 
-  public async postSecondaryActionHook(
+  public async postToolExecutionHook(
     _context: Context,
     _params: PostSecondaryActionParams,
     method: string,
