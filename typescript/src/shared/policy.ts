@@ -6,6 +6,7 @@ import {
   PostCoreActionParams,
   PostSecondaryActionParams,
 } from './abstract-hook';
+import { Client } from '@hashgraph/sdk';
 
 /**
  * Policy extends Hook and throws errors when validation fails.
@@ -22,6 +23,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPreToolExecution(
     _context: Context,
     _params: PreToolExecutionParams,
+    _client: Client,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -33,6 +35,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPostParamsNormalization(
     _context: Context,
     _params: PostParamsNormalizationParams,
+    _client: Client,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -44,6 +47,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPostCoreAction(
     _context: Context,
     _params: PostCoreActionParams,
+    _client: Client,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -55,6 +59,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPostSecondaryAction(
     _context: Context,
     _params: PostSecondaryActionParams,
+    _client: Client,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -65,9 +70,10 @@ export abstract class Policy extends AbstractHook {
     context: Context,
     params: PreToolExecutionParams,
     method: string,
+    client: Client,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPreToolExecution(context, params);
+    const shouldBlock = await this.shouldBlockPreToolExecution(context, params, client);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -80,9 +86,10 @@ export abstract class Policy extends AbstractHook {
     context: Context,
     params: PostParamsNormalizationParams,
     method: string,
+    client: Client,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params);
+    const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params, client);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -95,9 +102,10 @@ export abstract class Policy extends AbstractHook {
     context: Context,
     params: PostCoreActionParams,
     method: string,
+    client: Client,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostCoreAction(context, params);
+    const shouldBlock = await this.shouldBlockPostCoreAction(context, params, client);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -106,13 +114,14 @@ export abstract class Policy extends AbstractHook {
   }
 
   /** @internal */
-  public async postSecondaryActionHook(
+  public async postToolExecutionHook(
     context: Context,
     params: PostSecondaryActionParams,
     method: string,
+    client: Client,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params);
+    const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params, client);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
