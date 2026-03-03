@@ -38,13 +38,13 @@ export class HcsAuditTrailHook extends AbstractHook {
     // HcsAuditTrailHook requires the logging client to be provided.
     if (!this.loggingClient) return; // the audit trail hook is not supported if no client for handling the communication with HCS was provided. There is no entity that will pay for the transactions
 
-    const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(params.normalisedParams)}.\n
-    Transaction ID: ${(params.toolResult.raw as RawTransactionResponse).transactionId ?? 'N/A (query action)'}\n
-    Transaction Status: ${(params.toolResult.raw as RawTransactionResponse).status ?? 'N/A (query action)'}\n
-    Token ID: ${(params.toolResult.raw as RawTransactionResponse).tokenId ?? 'N/A'}\n
-    Topic ID: ${(params.toolResult.raw as RawTransactionResponse).topicId ?? 'N/A '}\n
-    Schedule ID: ${(params.toolResult.raw as RawTransactionResponse).scheduleId ?? 'N/A'}\n
-    Account ID: ${(params.toolResult.raw as RawTransactionResponse).accountId ?? 'N/A'}\n
+    const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(params.normalisedParams)}.
+    Transaction ID: ${(params.toolResult.raw as RawTransactionResponse).transactionId ?? 'N/A (query action)'}
+    Transaction Status: ${(params.toolResult.raw as RawTransactionResponse).status ?? 'N/A (query action)'}
+    Token ID: ${(params.toolResult.raw as RawTransactionResponse).tokenId ?? 'N/A'}
+    Topic ID: ${(params.toolResult.raw as RawTransactionResponse).topicId ?? 'N/A '}
+    Schedule ID: ${(params.toolResult.raw as RawTransactionResponse).scheduleId ?? 'N/A'}
+    Account ID: ${(params.toolResult.raw as RawTransactionResponse).accountId ?? 'N/A'}
     `;
     await this.postMessageToHcsTopic(logMessage);
   }
