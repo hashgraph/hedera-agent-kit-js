@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Client, Status } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { AccountResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
@@ -31,35 +31,55 @@ EVM address: ${account.evmAddress},
 `;
 };
 
-export const getAccountQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof accountQueryParameters>>,
-) => {
-  try {
+export const GET_ACCOUNT_QUERY_TOOL = 'get_account_query_tool';
+
+export class GetAccountQueryTool extends BaseTool {
+  method = GET_ACCOUNT_QUERY_TOOL;
+  name = 'Get Account Query';
+  description: string;
+  parameters: ReturnType<typeof accountQueryParameters>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getAccountQueryPrompt(context);
+    this.parameters = accountQueryParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof accountQueryParameters>>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params;
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const account = await mirrornodeService.getAccount(params.accountId);
+    const account = await mirrornodeService.getAccount(normalisedParams.accountId);
     return {
-      raw: { accountId: params.accountId, account: account },
+      raw: { accountId: normalisedParams.accountId, account: account },
       humanMessage: postProcess(account),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_request: any, _client: Client, _context: Context): Promise<any> {
+    // No secondary action for queries
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get account query';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_account_query_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const GET_ACCOUNT_QUERY_TOOL = 'get_account_query_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_ACCOUNT_QUERY_TOOL,
-  name: 'Get Account Query',
-  description: getAccountQueryPrompt(context),
-  parameters: accountQueryParameters(context),
-  execute: getAccountQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetAccountQueryTool(context);
 
 export default tool;

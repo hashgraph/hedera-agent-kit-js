@@ -51,6 +51,7 @@ Try out one or more of the example agents:
 * **Option E -** [Example External MCP Agent](#option-e-try-out-the-external-mcp-agent)
 * **Option F -** [Example ElizaOS Agent](#option-f-try-out-the-hedera-agent-kit-with-elizaos)
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
+* **Option H -** [Example Policy Agent](#option-h-run-the-policy-agent-example)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -382,3 +383,34 @@ These agents connect to the configured MCP servers (defined in your code) and al
 
 > [!NOTE]
 > If using `HederaMCPServer.HGRAPH_MCP_MAINNET`, ensure you have set the `HGRAPH_API_KEY` in your `.env` file. See [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) for details.
+
+### Option H: Run the Policy Agent Example
+
+The Policy Agent example demonstrates how to use the strict policy enforcement system in the Hedera Agent Kit. This agent is configured with several active policies (like `RequiredMemoPolicy` and `MaxHbarTransferPolicy`) that intercept and validate tool usage before execution.
+
+For a deep dive into how policies work, see [docs/POLICIES.md](../docs/POLICIES.md).
+
+#### Usage
+
+1. Go to the example directory:
+```bash
+cd typescript/examples/policy-example
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file (copy from `.env.example`) and add your `ACCOUNT_ID`, `PRIVATE_KEY`, and `OPENAI_API_KEY`.
+
+4. Run the example:
+```bash
+npm start
+```
+
+5. Interact with the agent. Try commands that trigger policy violations, such as:
+    - "Transfer 100 HBAR to 0.0.12345" (Should fail due to max limit)
+    - "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)
+    - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Should succeed)
+

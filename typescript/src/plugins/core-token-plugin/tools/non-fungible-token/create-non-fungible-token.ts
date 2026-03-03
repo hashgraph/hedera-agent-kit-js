@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -48,39 +48,56 @@ Transaction ID: ${response.transactionId.toString()}
 Token ID: ${tokenIdStr}`;
 };
 
-const createNonFungibleToken = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>>,
-) => {
-  try {
+export const CREATE_NON_FUNGIBLE_TOKEN_TOOL = 'create_non_fungible_token_tool';
+
+export class CreateNonFungibleTokenTool extends BaseTool {
+  method = CREATE_NON_FUNGIBLE_TOKEN_TOOL;
+  name = 'Create Non-Fungible Token';
+  description: string;
+  parameters: ReturnType<typeof createNonFungibleTokenParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = createNonFungibleTokenPrompt(context);
+    this.parameters = createNonFungibleTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
+    return HederaParameterNormaliser.normaliseCreateNonFungibleTokenParams(
       params,
       context,
       client,
       mirrornodeService,
     );
-    const tx = HederaBuilder.createNonFungibleToken(normalisedParams);
+  }
 
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const tx = HederaBuilder.createNonFungibleToken(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to create non-fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_non_fungible_token_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const CREATE_NON_FUNGIBLE_TOKEN_TOOL = 'create_non_fungible_token_tool';
-
-const tool = (context: Context): Tool => ({
-  method: CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-  name: 'Create Non-Fungible Token',
-  description: createNonFungibleTokenPrompt(context),
-  parameters: createNonFungibleTokenParameters(context),
-  execute: createNonFungibleToken,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new CreateNonFungibleTokenTool(context);
 
 export default tool;

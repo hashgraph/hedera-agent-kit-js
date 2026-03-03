@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -35,36 +35,45 @@ const postProcess = (response: RawTransactionResponse) => {
   return `HBAR allowance approved successfully. Transaction ID: ${response.transactionId}`;
 };
 
-const approveHbarAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
-) => {
-  try {
-    const normalisedParams = HederaParameterNormaliser.normaliseApproveHbarAllowance(
-      params,
-      context,
-      client,
-    );
-    const tx = HederaBuilder.approveHbarAllowance(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
+
+export class ApproveHbarAllowanceTool extends BaseTool {
+  method = APPROVE_HBAR_ALLOWANCE_TOOL;
+  name = 'Approve HBAR Allowance';
+  description: string;
+  parameters: ReturnType<typeof approveHbarAllowanceParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = approveHbarAllowancePrompt(context);
+    this.parameters = approveHbarAllowanceParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseApproveHbarAllowance(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.approveHbarAllowance(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to approve hbar allowance.';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[approve_hbar_allowance_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: APPROVE_HBAR_ALLOWANCE_TOOL,
-  name: 'Approve HBAR Allowance',
-  description: approveHbarAllowancePrompt(context),
-  parameters: approveHbarAllowanceParameters(context),
-  execute: approveHbarAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new ApproveHbarAllowanceTool(context);
 
 export default tool;
