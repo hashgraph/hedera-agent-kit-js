@@ -3,10 +3,9 @@ import { AgentMode, Context } from '@/shared';
 import { RawTransactionResponse } from '@/shared';
 import { Client, TopicMessageSubmitTransaction } from '@hashgraph/sdk';
 
-
 /**
  * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.
- * 
+ *
  * @warning If a paid topic (HIP-991: https://hips.hedera.com/hip/hip-991) is provided,
  * it could potentially drain the provided logging client's funds due to message submission fees.
  */
@@ -31,7 +30,6 @@ export class HcsAuditTrailHook extends AbstractHook {
     context: Context,
     _params: PreToolExecutionParams,
     method: string,
-    _client: Client,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
@@ -50,7 +48,6 @@ export class HcsAuditTrailHook extends AbstractHook {
     _context: Context,
     params: PostSecondaryActionParams,
     method: string,
-    client: Client,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
@@ -61,7 +58,7 @@ export class HcsAuditTrailHook extends AbstractHook {
       console.log(
         `HcsAuditTrailHook: No logging specific client provided. Using the agent's operator account client.`,
       );
-      targetClient = client;
+      targetClient = params.client;
     }
 
     const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(params.normalisedParams)}.
