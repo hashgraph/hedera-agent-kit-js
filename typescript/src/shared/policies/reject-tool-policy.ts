@@ -1,5 +1,4 @@
 import { Policy, Context, PreToolExecutionParams } from '@/shared';
-import { Client } from '@hashgraph/sdk';
 
 export class RejectToolPolicy extends Policy {
   name = 'Reject Tool Call';
@@ -18,7 +17,6 @@ export class RejectToolPolicy extends Policy {
   protected shouldBlockPreToolExecution(
     _context: Context,
     _params: PreToolExecutionParams,
-    _client: Client,
   ): boolean {
     console.log('RejectToolPolicy: tool call rejected - tool not allowed');
     return true;

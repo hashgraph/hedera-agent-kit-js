@@ -44,7 +44,6 @@ export abstract class AbstractHook {
     _context: Context,
     _params: PreToolExecutionParams,
     method: string,
-    _client: Client,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
@@ -53,7 +52,6 @@ export abstract class AbstractHook {
     _context: Context,
     _params: PostParamsNormalizationParams,
     method: string,
-    _client: Client,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
@@ -62,7 +60,6 @@ export abstract class AbstractHook {
     _context: Context,
     _params: PostCoreActionParams,
     method: string,
-    _client: Client,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
@@ -71,7 +68,6 @@ export abstract class AbstractHook {
     _context: Context,
     _params: PostSecondaryActionParams,
     method: string,
-    _client: Client,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
