@@ -65,7 +65,7 @@ const tool = (context: Context): Tool => ({
   method: APPROVE_NFT_ALLOWANCE_TOOL,
   name: 'Approve NFT Allowance',
   description: approveNftAllowancePrompt(context),
-  parameters: approveNftAllowanceParameters(context).innerType(),
+  parameters: approveNftAllowanceParameters(context),
   execute: approveNftAllowance,
   outputParser: transactionToolOutputParser,
 });

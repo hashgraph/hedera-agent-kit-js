@@ -46,6 +46,7 @@
   "dependencies": {
     "@ai-sdk/mcp": "1.0.21",
     "@elizaos/core": "1.7.2",
+    "@google/adk": "0.4.0",
     "@hashgraph/sdk": "2.80.0",
     "@langchain/core": "1.1.24",
     "@langchain/mcp-adapters": "1.1.3",
