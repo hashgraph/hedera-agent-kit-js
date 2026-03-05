@@ -398,7 +398,6 @@ This example demonstrates how to use the Hedera Agent Kit with [Google's Agent D
 ACCOUNT_ID=0.0.xxxxx
 PRIVATE_KEY=302e...
 GEMINI_API_KEY=your-gemini-api-key
-GOOGLE_API_KEY=your-gemini-api-key
 ```
 
 #### Running the Example
@@ -422,3 +421,5 @@ npm run adk:plugin-tool-calling-agent
 npx adk web
 ```
 This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
+
+> **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.

@@ -46,11 +46,24 @@ GEMINI_API_KEY=your-gemini-api-key
 
 ### Plugin Tool Calling Agent
 
-An interactive CLI chatbot that uses plugins for tool discovery and execution on the Hedera network.
+An interactive CLI chatbot that uses plugins for tool discovery and execution on the Hedera network. 
+> **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
 
 ```bash
 npm run adk:plugin-tool-calling-agent
 ```
+
+## Running the ADK CLI Runner
+
+The ADK provides a built-in CLI runner for executing agents.
+
+To run the agent defined in `agent.ts` through the ADK CLI:
+
+```bash
+npx adk run agent.ts
+```
+
+For more details on the ADK CLI runner, see the [ADK documentation](https://google.github.io/adk-docs/runtime/command-line/).
 
 ---
 
