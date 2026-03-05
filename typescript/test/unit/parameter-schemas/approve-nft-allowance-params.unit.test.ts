@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { Client } from '@hashgraph/sdk';
 
 const schema = approveNftAllowanceParameters();
 
@@ -15,36 +17,46 @@ describe('approveNftAllowanceParameters schema (allSerials feature)', () => {
     expect(res.success).toBe(true);
   });
 
-  it('fails when allSerials=true and serialNumbers provided', () => {
+  it('schema accepts allSerials=true with serialNumbers (validation moved to normaliser)', () => {
     const input = {
       spenderAccountId: '0.0.2002',
       tokenId: '0.0.7777',
       allSerials: true,
       serialNumbers: [1, 2],
     } as any;
+    // Schema no longer validates allSerials/serialNumbers mutual exclusivity
+    // That validation is now in the normaliser
     const res = schema.safeParse(input);
-    expect(res.success).toBe(false);
-    if (!res.success) {
-      const msg = JSON.stringify(res.error.format());
-      expect(msg).toMatch(/allSerials=true/i);
-      expect(msg).toMatch(/serialNumbers/i);
-    }
+    expect(res.success).toBe(true);
   });
 
-  it('fails when allSerials is omitted/false and serialNumbers is empty or omitted', () => {
+  it('normaliser throws when allSerials=true and serialNumbers provided', () => {
+    const input = {
+      spenderAccountId: '0.0.2002',
+      tokenId: '0.0.7777',
+      allSerials: true,
+      serialNumbers: [1, 2],
+    };
+    const mockClient = {} as Client;
+    const context = { accountId: '0.0.1001' };
+    expect(() =>
+      HederaParameterNormaliser.normaliseApproveNftAllowance(input, context, mockClient),
+    ).toThrow(/allSerials=true/i);
+  });
+
+  it('normaliser throws when allSerials is false/omitted and serialNumbers is empty or omitted', () => {
     const cases = [
       { spenderAccountId: '0.0.2002', tokenId: '0.0.7777', serialNumbers: [] },
       { spenderAccountId: '0.0.2002', tokenId: '0.0.7777' },
       { spenderAccountId: '0.0.2002', tokenId: '0.0.7777', allSerials: false },
     ];
+    const mockClient = {} as Client;
+    const context = { accountId: '0.0.1001' };
 
     for (const input of cases) {
-      const res = schema.safeParse(input as any);
-      expect(res.success).toBe(false);
-      if (!res.success) {
-        const msg = JSON.stringify(res.error.format());
-        expect(msg).toMatch(/serialNumbers must contain at least one serial/i);
-      }
+      expect(() =>
+        HederaParameterNormaliser.normaliseApproveNftAllowance(input as any, context, mockClient),
+      ).toThrow(/serialNumbers must contain at least one serial/i);
     }
   });
 
