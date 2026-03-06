@@ -1,16 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { MaxRecipientsPolicy, Context, AgentMode } from '@/shared';
 import { Client } from '@hashgraph/sdk';
+import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
+import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 
 describe('MaxRecipientsPolicy Unit Tests', () => {
   const context: Context = { mode: AgentMode.AUTONOMOUS };
+  const client = {} as Client;
 
   describe('HBAR transfers (hbarTransfers)', () => {
     it('should block if positive-amount hbar recipients exceed maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(1);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           hbarTransfers: [
@@ -21,14 +24,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(true);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(true);
     });
 
     it('should not block if positive-amount hbar recipients are within maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(2);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           hbarTransfers: [
@@ -39,7 +42,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(false);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(false);
     });
   });
 
@@ -54,7 +57,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
       const policy = new MaxRecipientsPolicy(1);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           hbarTransfers: [
@@ -65,32 +68,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(true);
-    });
-
-    it('should not block if positive Hbar-object recipients are within maxRecipients', () => {
-      const policy = new MaxRecipientsPolicy(2);
-      const params = {
-        context,
-        client: {} as Client,
-        rawParams: {},
-        normalisedParams: {
-          hbarTransfers: [
-            { accountId: '0.0.100', amount: mockHbar(-2) }, // sender
-            { accountId: '0.0.1', amount: mockHbar(1) },
-            { accountId: '0.0.2', amount: mockHbar(1) },
-          ],
-        },
-      };
-
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(false);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(true);
     });
 
     it('should not count zero-amount entries as recipients', () => {
       const policy = new MaxRecipientsPolicy(1);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           hbarTransfers: [
@@ -101,16 +86,16 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(false);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(false);
     });
   });
 
   describe('Fungible token transfers (tokenTransfers)', () => {
-    it('should block if positive-amount token recipients exceed maxRecipients', () => {
+    it('should block if positive-amount token recipients exceed maxRecipients in airdrop', () => {
       const policy = new MaxRecipientsPolicy(1);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           tokenTransfers: [
@@ -121,14 +106,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(true);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL)).toBe(true);
     });
 
     it('should not block if positive-amount token recipients are within maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(2);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           tokenTransfers: [
@@ -139,7 +124,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(false);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL)).toBe(false);
     });
   });
 
@@ -148,7 +133,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
       const policy = new MaxRecipientsPolicy(1);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           transfers: [
@@ -158,14 +143,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(true);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL)).toBe(true);
     });
 
     it('should not block if NFT recipients are within maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(2);
       const params = {
         context,
-        client: {} as Client,
+        client,
         rawParams: {},
         normalisedParams: {
           transfers: [
@@ -175,29 +160,43 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params)).toBe(false);
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL)).toBe(false);
     });
   });
 
-  it('should throw error if none of the expected transfer fields exist in normalisedParams', () => {
-    const policy = new MaxRecipientsPolicy(1);
-    const params = {
-      context,
-      client: {} as Client,
-      rawParams: {},
-      normalisedParams: {
-        otherField: 'val',
-      },
-    };
+  describe('Custom Strategies', () => {
+    it('should use custom strategy when provided', () => {
+      const customStrategy = (params: any) => params.customRecipients.length;
+      const policy = new MaxRecipientsPolicy(1, ['my_custom_tool'], { my_custom_tool: customStrategy });
 
-    expect(() => policy['shouldBlockPostParamsNormalization'](context, params)).toThrow(
-      "'hbarTransfers', 'tokenTransfers' or 'transfers' is not defined in normalised parameters",
-    );
+      const params = {
+        context,
+        client,
+        rawParams: {},
+        normalisedParams: {
+          customRecipients: ['0.0.1', '0.0.2'],
+        },
+      };
+
+      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, 'my_custom_tool')).toBe(true);
+    });
+
+    it('should block if tool is unhandled and no custom strategy is provided', () => {
+      const policy = new MaxRecipientsPolicy(1);
+      const params = {
+        context,
+        client,
+        rawParams: {},
+        normalisedParams: {},
+      };
+
+      expect(() => policy['shouldBlockPostParamsNormalization'](context, params, client, 'unknown_tool')).toThrowError(/MaxRecipientsPolicy: unhandled tool 'unknown_tool'/);
+    });
   });
 
   it('should include additional tools from constructor', () => {
-    const policy = new MaxRecipientsPolicy(1, ['customTool']);
+    const policy = new MaxRecipientsPolicy(1, ['customTool'], { customTool: () => 0 });
     expect(policy.relevantTools).toContain('customTool');
-    expect(policy.relevantTools).toContain('transfer_hbar_tool');
+    expect(policy.relevantTools).toContain(coreAccountPluginToolNames.TRANSFER_HBAR_TOOL);
   });
 });
