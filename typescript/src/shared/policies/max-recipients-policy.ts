@@ -1,23 +1,17 @@
 import { Policy, Context, PostParamsNormalizationParams } from '@/shared';
-
-const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
-const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
-const AIRDROP_FUNGIBLE_TOKEN_TOOL = 'airdrop_fungible_token_tool';
-const TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL = 'transfer_fungible_token_with_allowance_tool';
-const TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
-    'transfer_non_fungible_token_with_allowance_tool';
-const TRANSFER_NON_FUNGIBLE_TOKEN_TOOL = 'transfer_non_fungible_token_tool';
+import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
+import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 
 export class MaxRecipientsPolicy extends Policy {
     name = 'Max Recipients Policy';
     description = '';
     relevantTools: string[] = [
-        TRANSFER_HBAR_TOOL,
-        TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
-        AIRDROP_FUNGIBLE_TOKEN_TOOL,
-        TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
-        TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
-        TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+        coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
+        coreAccountPluginToolNames.TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+        coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
+        coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+        coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
+        coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
     ];
 
     private maxRecipients: number;
