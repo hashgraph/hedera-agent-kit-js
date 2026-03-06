@@ -11,5 +11,6 @@ export { default as HederaBuilder } from './hedera-utils/hedera-builder';
 export { contractExecuteTransactionParametersNormalised } from './parameter-schemas/evm.zod';
 export * from './policy';
 export * from './abstract-hook';
+export * from './policies/max-recipients-policy';
 export * from './policies/reject-tool-policy';
 export * from './hooks/hcs-audit-trail-hook';
