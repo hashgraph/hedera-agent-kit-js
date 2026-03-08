@@ -40,13 +40,13 @@ export class TransferNonFungibleTokenWithAllowanceTool extends BaseTool {
   method = TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
   name = 'Transfer Non Fungible Token with Allowance';
   description: string;
-  parameters: ReturnType<ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>["innerType"]>;
+  parameters: ReturnType<typeof transferNonFungibleTokenWithAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {
     super();
     this.description = transferNonFungibleTokenWithAllowancePrompt(context);
-    this.parameters = transferNonFungibleTokenWithAllowanceParameters(context).innerType();
+    this.parameters = transferNonFungibleTokenWithAllowanceParameters(context);
   }
 
   async normalizeParams(

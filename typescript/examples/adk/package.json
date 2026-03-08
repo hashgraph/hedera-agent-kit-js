@@ -1,0 +1,22 @@
+{
+    "name": "hedera-agent-toolkit-examples-adk",
+    "version": "1.0.0",
+    "scripts": {
+        "test": "echo \"No tests specified for example package\"",
+        "adk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts"
+    },
+    "dependencies": {
+        "@google/adk": "^0.4.0",
+        "@google/adk-devtools": "^0.4.0",
+        "dotenv": "^17.2.3",
+        "hedera-agent-kit": "../..",
+        "prompts": "2.4.2"
+    },
+    "author": "",
+    "license": "Apache-2.0",
+    "description": "",
+    "devDependencies": {
+        "@types/prompts": "2.4.9",
+        "ts-node": "10.9.2"
+    }
+}

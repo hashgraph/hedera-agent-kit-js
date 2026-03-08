@@ -470,6 +470,14 @@ export default class HederaParameterNormaliser {
     const tokenId = TokenId.fromString(parsedParams.tokenId);
 
     // Map recipients to normalized NFT transfers
+    const seenSerials = new Set<number>();
+    for (const { serialNumber } of parsedParams.recipients) {
+      if (seenSerials.has(serialNumber)) {
+        throw new Error(`Duplicate serial number: ${serialNumber}`);
+      }
+      seenSerials.add(serialNumber);
+    }
+
     const transfers = parsedParams.recipients.map(recipient => ({
       nftId: new NftId(tokenId, Number(recipient.serialNumber)),
       receiver: AccountId.fromString(recipient.recipientId),
@@ -499,6 +507,15 @@ export default class HederaParameterNormaliser {
 
     // Convert tokenId to SDK TokenId
     const tokenId = TokenId.fromString(parsedParams.tokenId);
+
+    // Validate no duplicate serial numbers
+    const seenSerials = new Set<number>();
+    for (const { serialNumber } of parsedParams.recipients) {
+      if (seenSerials.has(serialNumber)) {
+        throw new Error(`Duplicate serial number: ${serialNumber}`);
+      }
+      seenSerials.add(serialNumber);
+    }
 
     // Map recipients to normalized NFT transfers
     const transfers = parsedParams.recipients.map(recipient => ({
