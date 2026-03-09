@@ -28,6 +28,11 @@ const postProcess = (account: AccountResponse) => {
 Balance: ${account.balance.balance.toString()}
 Public Key: ${account.accountPublicKey},
 EVM address: ${account.evmAddress},
+Ethereum nonce: ${account.ethereumNonce},
+Created timestamp: ${account.createdTimestamp},
+Memo: ${account.memo},
+Max automatic token associations: ${account.maxAutomaticTokenAssociations},
+Deleted: ${account.deleted},
 `;
 };
 

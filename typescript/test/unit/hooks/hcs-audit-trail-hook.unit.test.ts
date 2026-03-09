@@ -99,7 +99,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const hookWithoutClient = new HcsAuditTrailHook(relevantTools, topicId);
     const postMessageSpy = vi
       .spyOn(hookWithoutClient, 'postMessageToHcsTopic')
-      .mockImplementation(async () => {});
+      .mockImplementation(async () => { });
 
     await hookWithoutClient.postToolExecutionHook(context, params, 'test_tool', operatorClient);
 
@@ -135,7 +135,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     expect(mockInstance.setMessage).toHaveBeenCalledWith(
       expect.stringContaining('Agent executed tool test_tool'),
     );
-    expect(mockInstance.setMessage).toHaveBeenCalledWith(expect.stringContaining('"amount":100'));
+    expect(mockInstance.setMessage).toHaveBeenCalledWith(expect.stringContaining('"amount": 100'));
     // execute should be called with hook's provided logging client, not the operatorClient
     expect(mockInstance.execute).toHaveBeenCalledWith(mockClient);
   });

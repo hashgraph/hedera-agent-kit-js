@@ -299,6 +299,17 @@ Returns comprehensive account information for a given Hedera account.
 |-------------|----------|----------|--------------------------|
 | `accountId` | `string` | ✅        | The account ID to query. |
 
+#### Returned Information
+
+- Account balance
+- Public key
+- EVM address
+- Ethereum nonce
+- Created timestamp
+- Account memo
+- Max automatic token associations
+- Deleted status
+
 #### Example Prompts
 
 ```

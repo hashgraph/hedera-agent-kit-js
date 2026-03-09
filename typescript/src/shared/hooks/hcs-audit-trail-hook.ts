@@ -3,10 +3,9 @@ import { AgentMode, Context } from '@/shared';
 import { RawTransactionResponse } from '@/shared';
 import { Client, TopicMessageSubmitTransaction } from '@hashgraph/sdk';
 
-
 /**
  * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.
- * 
+ *
  * @warning If a paid topic (HIP-991: https://hips.hedera.com/hip/hip-991) is provided,
  * it could potentially drain the provided logging client's funds due to message submission fees.
  */
@@ -64,7 +63,46 @@ export class HcsAuditTrailHook extends AbstractHook {
       targetClient = client;
     }
 
-    const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(params.normalisedParams)}.
+    const fieldsToCastToString = [
+      'accountId',
+      'adminKey',
+      'autoRenewAccountId',
+      'contractId',
+      'expirationTime',
+      'feeScheduleKey',
+      'freezeKey',
+      'fromAddress',
+      'functionParameters',
+      'key',
+      'kycKey',
+      'metadataKey',
+      'nftId',
+      'nodeAccountId',
+      'ownerAccountId',
+      'pauseKey',
+      'payerAccountID',
+      'receiver',
+      'recipientAddress',
+      'recipientId',
+      'scheduleId',
+      'senderAccountId',
+      'sourceAccountId',
+      'spenderAccountId',
+      'stakedAccountId',
+      'submitKey',
+      'supplyKey',
+      'toAddress',
+      'tokenId',
+      'topicId',
+      'transferAccountId',
+      'treasuryAccountId',
+      'wipeKey',
+    ];
+
+    // Create a clean copy for logging to avoid mutating the original
+    const loggableParams = this.stringifyRecursive({ ...params.normalisedParams }, fieldsToCastToString);
+
+    const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(loggableParams, null, 2)}.
     Transaction ID: ${(params.toolResult.raw as RawTransactionResponse).transactionId ?? 'N/A (query action)'}
     Transaction Status: ${(params.toolResult.raw as RawTransactionResponse).status ?? 'N/A (query action)'}
     Token ID: ${(params.toolResult.raw as RawTransactionResponse).tokenId ?? 'N/A'}
@@ -73,6 +111,35 @@ export class HcsAuditTrailHook extends AbstractHook {
     Account ID: ${(params.toolResult.raw as RawTransactionResponse).accountId ?? 'N/A'}
     `;
     await this.postMessageToHcsTopic(logMessage, targetClient);
+  }
+
+  private stringifyRecursive(obj: any, _fieldsToCastToString: string[]): any {
+    // Handle primitives and null
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.stringifyRecursive(item, _fieldsToCastToString));
+    }
+
+    // Handle Uint8Array/Buffer - convert to hex string
+    if (obj instanceof Uint8Array) {
+      return `0x${Buffer.from(obj).toString('hex')}`;
+    }
+
+    // Handle SDK objects (AccountId, PublicKey, etc.) - they have custom toString methods
+    if (obj.constructor?.name !== 'Object' && typeof obj.toString === 'function') {
+      return obj.toString();
+    }
+
+    // Handle plain objects - recurse into properties
+    const result: any = {};
+    for (const key in obj) {
+      result[key] = this.stringifyRecursive(obj[key], _fieldsToCastToString);
+    }
+    return result;
   }
 
   async postMessageToHcsTopic(message: string, client: Client) {

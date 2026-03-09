@@ -75,7 +75,6 @@ describe('HcsAuditTrailHook E2E Tests', () => {
     const lastMessage64 =
       mirrorNodeMessages.messages[mirrorNodeMessages.messages.length - 1].message;
     const lastMessage = Buffer.from(lastMessage64, 'base64').toString('utf-8');
-    console.log(lastMessage);
 
     expect(lastMessage).toContain(`Agent executed tool ${TRANSFER_HBAR_TOOL}`);
     expect(lastMessage).toContain(recipientId);
