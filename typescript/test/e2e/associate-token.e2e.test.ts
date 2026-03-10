@@ -118,7 +118,7 @@ describe('Associate Token E2E Tests', () => {
       await wait(MIRROR_NODE_WAITING_TIME);
 
       const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
-      const associated = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0; // presence implies associated
+      const associated = balances.tokens.some(t => t.token_id === tokenIdFT1.toString()); // presence implies associated
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully associated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
@@ -170,8 +170,8 @@ describe('Associate Token E2E Tests', () => {
       await wait(MIRROR_NODE_WAITING_TIME);
 
       const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
-      const associatedFirst = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0;
-      const associatedSecond = (balances.tokens?.get(tokenIdFT2) ?? 0) >= 0;
+      const associatedFirst = balances.tokens.some(t => t.token_id === tokenIdFT1.toString());
+      const associatedSecond = balances.tokens.some(t => t.token_id === tokenIdFT2.toString());
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully associated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
