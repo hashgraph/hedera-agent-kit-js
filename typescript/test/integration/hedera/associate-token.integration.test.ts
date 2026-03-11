@@ -109,7 +109,7 @@ describe('Associate Token Integration Tests', () => {
     const balances = await executorWrapper.getAccountBalances(
       executorClient.operatorAccountId!.toString(),
     );
-    const associated = (balances.tokens?.get(tokenIdFT) ?? 0) >= 0;
+    const associated = balances.tokens.some(t => t.token_id === tokenIdFT.toString());
 
     expect(result).toBeDefined();
     expect(result.raw.status).toBe('SUCCESS');
@@ -164,8 +164,8 @@ describe('Associate Token Integration Tests', () => {
     const balances = await executorWrapper.getAccountBalances(
       executorClient.operatorAccountId!.toString(),
     );
-    const associatedFirst = (balances.tokens?.get(tokenIdFT1) ?? 0) >= 0;
-    const associatedSecond = (balances.tokens?.get(tokenIdFT2) ?? 0) >= 0;
+    const associatedFirst = balances.tokens.some(t => t.token_id === tokenIdFT1.toString());
+    const associatedSecond = balances.tokens.some(t => t.token_id === tokenIdFT2.toString());
 
     expect(result).toBeDefined();
     expect(result.raw.status).toBe('SUCCESS');
