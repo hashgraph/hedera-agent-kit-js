@@ -62,16 +62,16 @@ describe('HcsAuditTrailHook Unit Tests', () => {
   it('should not log or throw if method is not relevant', async () => {
     const operatorClient = {} as Client;
     const context = { mode: AgentMode.RETURN_BYTES };
-    const preParams = {} as PreToolExecutionParams;
+    const preParams = { client: operatorClient } as PreToolExecutionParams;
     const postParams = { normalisedParams: {} } as PostSecondaryActionParams;
 
     const postMessageSpy = vi.spyOn(hook, 'postMessageToHcsTopic');
 
     // Neither pre- nor post-hook should throw or log for a non-relevant tool
     await expect(
-      hook.preToolExecutionHook(context, preParams, 'other_tool', operatorClient),
+      hook.preToolExecutionHook(context, preParams, 'other_tool'),
     ).resolves.toBeUndefined();
-    await hook.postToolExecutionHook(context, postParams, 'other_tool', operatorClient);
+    await hook.postToolExecutionHook(context, postParams, 'other_tool');
 
     expect(postMessageSpy).not.toHaveBeenCalled();
   });
@@ -79,11 +79,9 @@ describe('HcsAuditTrailHook Unit Tests', () => {
   it('should throw if mode is RETURN_BYTES in preToolExecutionHook', async () => {
     const operatorClient = {} as Client;
     const context = { mode: AgentMode.RETURN_BYTES };
-    const params = {} as PreToolExecutionParams;
+    const params = { client: operatorClient } as PreToolExecutionParams;
 
-    await expect(
-      hook.preToolExecutionHook(context, params, 'test_tool', operatorClient),
-    ).rejects.toThrow(
+    await expect(hook.preToolExecutionHook(context, params, 'test_tool')).rejects.toThrow(
       'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
     );
   });
@@ -94,6 +92,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const params = {
       normalisedParams: { amount: 100 },
       toolResult: { raw: {} as RawTransactionResponse },
+      client: operatorClient,
     } as PostSecondaryActionParams;
 
     const hookWithoutClient = new HcsAuditTrailHook(relevantTools, topicId);
@@ -101,7 +100,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
       .spyOn(hookWithoutClient, 'postMessageToHcsTopic')
       .mockImplementation(async () => {});
 
-    await hookWithoutClient.postToolExecutionHook(context, params, 'test_tool', operatorClient);
+    await hookWithoutClient.postToolExecutionHook(context, params, 'test_tool');
 
     expect(postMessageSpy).toHaveBeenCalledTimes(1);
     expect(postMessageSpy).toHaveBeenCalledWith(
@@ -115,6 +114,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const context = { mode: AgentMode.AUTONOMOUS };
     const params = {
       normalisedParams: { amount: 100 },
+      client: operatorClient,
       toolResult: {
         raw: {
           transactionId: '0.0.1@123',
@@ -124,7 +124,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
       },
     } as PostSecondaryActionParams;
 
-    await hook.postToolExecutionHook(context, params, 'test_tool', operatorClient);
+    await hook.postToolExecutionHook(context, params, 'test_tool');
 
     const TopicMessageSubmitTransactionMock = sdk.TopicMessageSubmitTransaction as any;
     expect(TopicMessageSubmitTransactionMock).toHaveBeenCalled();
