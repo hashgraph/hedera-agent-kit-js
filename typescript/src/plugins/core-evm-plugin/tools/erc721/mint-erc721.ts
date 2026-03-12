@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { AgentMode, type Context } from '@/shared/configuration';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -47,15 +47,28 @@ Schedule ID: ${response.scheduleId.toString()}`
     : `ERC721 token minted successfully.
     Transaction ID: ${response.transactionId}`;
 
-const mintERC721 = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof mintERC721Parameters>>,
-) => {
-  try {
-    const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
+export const MINT_ERC721_TOOL = 'mint_erc721_tool';
 
-    const normalisedParams = await HederaParameterNormaliser.normaliseMintERC721Params(
+export class MintErc721Tool extends BaseTool {
+  method = MINT_ERC721_TOOL;
+  name = 'Mint ERC721';
+  description: string;
+  parameters: ReturnType<typeof mintERC721Parameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = mintERC721Prompt(context);
+    this.parameters = mintERC721Parameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof mintERC721Parameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
+    return await HederaParameterNormaliser.normaliseMintERC721Params(
       params,
       ERC721_MINT_FUNCTION_ABI,
       ERC721_MINT_FUNCTION_NAME,
@@ -63,26 +76,27 @@ const mintERC721 = async (
       mirrorNode,
       client,
     );
-    const tx = HederaBuilder.executeTransaction(normalisedParams);
+  }
 
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.executeTransaction(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    if (context.mode === AgentMode.RETURN_BYTES) {
+      return await handleTransaction(transaction, client, context);
+    }
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to mint ERC721';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[mint_erc721_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const MINT_ERC721_TOOL = 'mint_erc721_tool';
-
-const tool = (context: Context): Tool => ({
-  method: MINT_ERC721_TOOL,
-  name: 'Mint ERC721',
-  description: mintERC721Prompt(context),
-  parameters: mintERC721Parameters(context),
-  execute: mintERC721,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new MintErc721Tool(context);
 
 export default tool;
