@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MaxRecipientsPolicy, Context, AgentMode } from '@/shared';
-import { Client } from '@hashgraph/sdk';
+import { Client, Hbar } from '@hashgraph/sdk';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 
@@ -24,7 +24,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(true);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
+        ),
+      ).toBe(true);
     });
 
     it('should not block if positive-amount hbar recipients are within maxRecipients', () => {
@@ -42,16 +49,19 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(false);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
+        ),
+      ).toBe(false);
     });
   });
 
   describe('HBAR transfers with SDK objects (Hbar/Long amounts)', () => {
     // Simulates Hbar/Long objects that have isNegative() and isZero() methods
-    const mockHbar = (val: number) => ({
-      isNegative: () => val < 0,
-      isZero: () => val === 0,
-    });
 
     it('should block if positive Hbar-object recipients exceed maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(1);
@@ -61,14 +71,21 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         rawParams: {},
         normalisedParams: {
           hbarTransfers: [
-            { accountId: '0.0.100', amount: mockHbar(-2) }, // sender
-            { accountId: '0.0.1', amount: mockHbar(1) },
-            { accountId: '0.0.2', amount: mockHbar(1) },
+            { accountId: '0.0.100', amount: Hbar.fromTinybars(-2) }, // sender
+            { accountId: '0.0.1', amount: Hbar.fromTinybars(1) },
+            { accountId: '0.0.2', amount: Hbar.fromTinybars(1) },
           ],
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(true);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
+        ),
+      ).toBe(true);
     });
 
     it('should not count zero-amount entries as recipients', () => {
@@ -79,14 +96,21 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         rawParams: {},
         normalisedParams: {
           hbarTransfers: [
-            { accountId: '0.0.100', amount: mockHbar(-1) }, // sender
-            { accountId: '0.0.1', amount: mockHbar(1) }, // recipient
-            { accountId: '0.0.2', amount: mockHbar(0) }, // zero — not a recipient
+            { accountId: '0.0.100', amount: Hbar.fromTinybars(-1) }, // sender
+            { accountId: '0.0.1', amount: Hbar.fromTinybars(1) }, // recipient
+            { accountId: '0.0.2', amount: Hbar.fromTinybars(0) }, // zero — not a recipient
           ],
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreAccountPluginToolNames.TRANSFER_HBAR_TOOL)).toBe(false);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
+        ),
+      ).toBe(false);
     });
   });
 
@@ -106,7 +130,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL)).toBe(true);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
+        ),
+      ).toBe(true);
     });
 
     it('should not block if positive-amount token recipients are within maxRecipients', () => {
@@ -124,7 +155,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL)).toBe(false);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
+        ),
+      ).toBe(false);
     });
   });
 
@@ -143,7 +181,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL)).toBe(true);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+        ),
+      ).toBe(true);
     });
 
     it('should not block if NFT recipients are within maxRecipients', () => {
@@ -160,14 +205,23 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL)).toBe(false);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params,
+          client,
+          coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+        ),
+      ).toBe(false);
     });
   });
 
   describe('Custom Strategies', () => {
     it('should use custom strategy when provided', () => {
       const customStrategy = (params: any) => params.customRecipients.length;
-      const policy = new MaxRecipientsPolicy(1, ['my_custom_tool'], { my_custom_tool: customStrategy });
+      const policy = new MaxRecipientsPolicy(1, ['my_custom_tool'], {
+        my_custom_tool: customStrategy,
+      });
 
       const params = {
         context,
@@ -178,7 +232,9 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](context, params, client, 'my_custom_tool')).toBe(true);
+      expect(
+        policy['shouldBlockPostParamsNormalization'](context, params, client, 'my_custom_tool'),
+      ).toBe(true);
     });
 
     it('should block if tool is unhandled and no custom strategy is provided', () => {
@@ -190,7 +246,14 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         normalisedParams: {},
       };
 
-      expect(() => policy['shouldBlockPostParamsNormalization'](context, params, client, 'unknown_tool')).toThrowError(/MaxRecipientsPolicy: unhandled tool 'unknown_tool'/);
+      expect(() =>
+        policy['shouldBlockPostParamsNormalization'](
+          context,
+          params as any,
+          client,
+          'unknown_tool',
+        ),
+      ).toThrowError(/MaxRecipientsPolicy: unhandled tool 'unknown_tool'/i);
     });
   });
 
