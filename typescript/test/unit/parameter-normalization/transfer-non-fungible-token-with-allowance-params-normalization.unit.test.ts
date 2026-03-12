@@ -85,7 +85,7 @@ describe('HederaParameterNormaliser.normaliseTransferNonFungibleTokenWithAllowan
       for (const p of invalids) {
         expect(() =>
           HederaParameterNormaliser.normaliseTransferNonFungibleTokenWithAllowance(p, mockContext),
-        ).toThrow(/Number must be greater than 0/i);
+        ).toThrow(/Number must be greater than or equal to 1/i);
       }
     });
   });

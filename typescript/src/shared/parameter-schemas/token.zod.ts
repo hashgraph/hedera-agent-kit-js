@@ -337,47 +337,26 @@ export const dissociateTokenParametersNormalised = (_context: Context = {}) =>
     accountId: z.instanceof(AccountId),
   });
 
-// Approve NFT Allowance
 export const approveNftAllowanceParameters = (_context: Context = {}) =>
-  z
-    .object({
-      ownerAccountId: z
-        .string()
-        .optional()
-        .describe('Owner account ID (defaults to operator account ID if omitted)'),
-      spenderAccountId: z.string().describe('Spender account ID'),
-      tokenId: z.string().describe('The NFT token ID'),
-      allSerials: z
-        .boolean()
-        .optional()
-        .describe(
-          'If true, approve allowance for all current and future serials of the NFT collection. If true, do not provide serialNumbers.',
-        ),
-      serialNumbers: z
-        .array(z.number().int().nonnegative())
-        .optional()
-        .describe('Array of NFT serial numbers to approve. Required if allSerials is not true.'),
-      transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
-    })
-    .superRefine((val, ctx) => {
-      const all = !!val.allSerials;
-      const serials = val.serialNumbers ?? [];
-      if (all && serials.length > 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            'When approving for all serials (allSerials=true), serialNumbers must not be provided.',
-          path: ['serialNumbers'],
-        });
-      }
-      if (!all && serials.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'serialNumbers must contain at least one serial when allSerials is not true.',
-          path: ['serialNumbers'],
-        });
-      }
-    });
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    spenderAccountId: z.string().describe('Spender account ID'),
+    tokenId: z.string().describe('The NFT token ID'),
+    allSerials: z
+      .boolean()
+      .optional()
+      .describe(
+        'If true, approve allowance for all current and future serials of the NFT collection. If true, do not provide serialNumbers.',
+      ),
+    serialNumbers: z
+      .array(z.number().int().nonnegative())
+      .optional()
+      .describe('Array of NFT serial numbers to approve. Required if allSerials is not true.'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
 
 export const approveNftAllowanceParametersNormalised = (_context: Context = {}) =>
   z.object({
@@ -394,7 +373,7 @@ export const deleteNftAllowanceParameters = (_context: Context = {}) =>
       .describe('Owner account ID (defaults to operator account ID if omitted)'),
     tokenId: z.string().describe('The NFT token ID'),
     serialNumbers: z
-      .array(z.number().int().positive())
+      .array(z.number().int().min(1))
       .min(1)
       .describe('Array of NFT serial numbers to remove allowance for.'),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
@@ -408,38 +387,23 @@ export const deleteNftAllowanceParametersNormalised = (_context: Context = {}) =
   });
 
 export const transferNonFungibleTokenWithAllowanceParameters = (_context: Context) =>
-  z
-    .object({
-      sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
-      tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
-      recipients: z
-        .array(
-          z.object({
-            recipientId: z.string().describe('Account ID of the recipient'),
-            serialNumber: z.number().positive().describe('Serial number of the NFT to transfer'),
-          }),
-        )
-        .min(1)
-        .describe('Array of recipient and NFT serial number pairs to transfer'),
-      transactionMemo: z
-        .string()
-        .optional()
-        .describe('Optional memo to include with the transaction'),
-    })
-    .superRefine((val, ctx) => {
-      // Optional custom validation logic
-      const seenSerials = new Set<number>();
-      for (const { serialNumber } of val.recipients) {
-        if (seenSerials.has(serialNumber)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Duplicate serial number: ${serialNumber}`,
-            path: ['recipients'],
-          });
-        }
-        seenSerials.add(serialNumber);
-      }
-    });
+  z.object({
+    sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
+    tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
+    recipients: z
+      .array(
+        z.object({
+          recipientId: z.string().describe('Account ID of the recipient'),
+          serialNumber: z.number().int().min(1).describe('Serial number of the NFT to transfer'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient and NFT serial number pairs to transfer'),
+    transactionMemo: z
+      .string()
+      .optional()
+      .describe('Optional memo to include with the transaction'),
+  });
 
 export const transferNonFungibleTokenWithAllowanceParametersNormalised = (_context: Context) =>
   z.object({
@@ -453,7 +417,6 @@ export const transferNonFungibleTokenWithAllowanceParametersNormalised = (_conte
     ),
   });
 
-// Transfer NFT (normal transfer - sender is the operator)
 export const transferNonFungibleTokenParameters = (_context: Context) =>
   optionalScheduledTransactionParams(_context)
     .extend({
@@ -462,7 +425,7 @@ export const transferNonFungibleTokenParameters = (_context: Context) =>
         .array(
           z.object({
             recipientId: z.string().describe('Account ID of the recipient'),
-            serialNumber: z.number().positive().describe('Serial number of the NFT to transfer'),
+            serialNumber: z.number().int().min(1).describe('Serial number of the NFT to transfer'),
           }),
         )
         .min(1)
@@ -471,19 +434,6 @@ export const transferNonFungibleTokenParameters = (_context: Context) =>
         .string()
         .optional()
         .describe('Optional memo to include with the transaction'),
-    })
-    .superRefine((val, ctx) => {
-      const seenSerials = new Set<number>();
-      for (const { serialNumber } of val.recipients) {
-        if (seenSerials.has(serialNumber)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Duplicate serial number: ${serialNumber}`,
-            path: ['recipients'],
-          });
-        }
-        seenSerials.add(serialNumber);
-      }
     });
 
 export const transferNonFungibleTokenParametersNormalised = (_context: Context) =>

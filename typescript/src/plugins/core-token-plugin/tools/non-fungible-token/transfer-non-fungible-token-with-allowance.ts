@@ -59,7 +59,7 @@ const tool = (context: Context): Tool => ({
   method: TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
   name: 'Transfer Non Fungible Token with Allowance',
   description: transferNonFungibleTokenWithAllowancePrompt(context),
-  parameters: transferNonFungibleTokenWithAllowanceParameters(context).innerType(),
+  parameters: transferNonFungibleTokenWithAllowanceParameters(context),
   execute: transferNonFungibleTokenWithAllowance,
   outputParser: transactionToolOutputParser,
 });
