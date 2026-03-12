@@ -1,5 +1,4 @@
 import {
-  AccountBalanceQuery,
   AccountId,
   AccountInfoQuery,
   Client,
@@ -239,11 +238,6 @@ class HederaOperationsWrapper {
   }
 
   // READ-ONLY QUERIES
-  async getAccountBalances(accountId: string) {
-    const query = new AccountBalanceQuery().setAccountId(AccountId.fromString(accountId));
-    return await query.execute(this.client);
-  }
-
   async getAccountInfo(accountId: string) {
     const query = new AccountInfoQuery().setAccountId(AccountId.fromString(accountId));
     return await query.execute(this.client);
@@ -267,24 +261,25 @@ class HederaOperationsWrapper {
   async getAccountTokenBalances(
     accountId: string,
   ): Promise<Array<{ tokenId: string; balance: number; decimals: number }>> {
-    const accountTokenBalances = await this.getAccountBalances(accountId);
-    const balances: Array<{ tokenId: string; balance: number; decimals: number }> = [];
-    for (const [tId, balance] of accountTokenBalances.tokens ?? []) {
-      const decimals = accountTokenBalances.tokenDecimals?.get(tId) ?? 0;
-      balances.push({ tokenId: tId.toString(), balance, decimals });
-    }
-    return balances;
+    const accountBalance = await this.getAccountBalances(accountId);
+    return accountBalance.tokens.map(token => ({
+      tokenId: token.token_id,
+      balance: token.balance,
+      decimals: token.decimals,
+    }));
   }
 
   async getAccountTokenBalance(
     accountId: string,
     tokenId: string,
   ): Promise<{ tokenId: string; balance: number; decimals: number }> {
-    const accountTokenBalances = await this.getAccountBalances(accountId);
-    const tokenIdObj = TokenId.fromString(tokenId);
-    const balance = accountTokenBalances.tokens?.get(tokenIdObj) ?? 0;
-    const decimals = accountTokenBalances.tokenDecimals?.get(tokenIdObj) ?? 0;
-    return { tokenId: tokenIdObj.toString(), balance, decimals };
+    const accountBalance = await this.getAccountBalances(accountId);
+    const token = accountBalance.tokens.find(t => t.token_id === tokenId);
+    return {
+      tokenId,
+      balance: token ? token.balance : 0,
+      decimals: token ? token.decimals : 0,
+    };
   }
 
   async getAccountTokenBalanceFromMirrornode(
@@ -445,6 +440,11 @@ class HederaOperationsWrapper {
 
   async getScheduledTransactionDetails(scheduledTxId: string) {
     return await this.mirrornode.getScheduledTransactionDetails(scheduledTxId);
+  }
+
+  async getAccountBalances(accountId: string) {
+    const accountResponse = await this.mirrornode.getAccount(accountId);
+    return accountResponse.balance;
   }
 }
 
