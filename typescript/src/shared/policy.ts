@@ -22,6 +22,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPreToolExecution(
     _context: Context,
     _params: PreToolExecutionParams,
+    _method: string,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -33,6 +34,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPostParamsNormalization(
     _context: Context,
     _params: PostParamsNormalizationParams,
+    _method: string,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -44,6 +46,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPostCoreAction(
     _context: Context,
     _params: PostCoreActionParams,
+    _method: string,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -55,6 +58,7 @@ export abstract class Policy extends AbstractHook {
   protected shouldBlockPostSecondaryAction(
     _context: Context,
     _params: PostSecondaryActionParams,
+    _method: string,
   ): boolean | Promise<boolean> {
     return false;
   }
@@ -67,7 +71,7 @@ export abstract class Policy extends AbstractHook {
     method: string,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPreToolExecution(context, params);
+    const shouldBlock = await this.shouldBlockPreToolExecution(context, params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -82,7 +86,7 @@ export abstract class Policy extends AbstractHook {
     method: string,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params);
+    const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -97,7 +101,7 @@ export abstract class Policy extends AbstractHook {
     method: string,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostCoreAction(context, params);
+    const shouldBlock = await this.shouldBlockPostCoreAction(context, params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -112,7 +116,7 @@ export abstract class Policy extends AbstractHook {
     method: string,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params);
+    const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
