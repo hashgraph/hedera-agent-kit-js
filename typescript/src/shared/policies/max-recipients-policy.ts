@@ -1,5 +1,4 @@
 import { Policy, Context, PostParamsNormalizationParams } from '@/shared';
-import { Client } from '@hashgraph/sdk';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 import z from 'zod';
@@ -49,7 +48,6 @@ export class MaxRecipientsPolicy extends Policy {
   protected shouldBlockPostParamsNormalization(
     _context: Context,
     allParams: PostParamsNormalizationParams,
-    _client: Client,
     method: string,
   ): boolean {
     const params = allParams.normalisedParams;
