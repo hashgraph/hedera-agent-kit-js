@@ -6,7 +6,7 @@ import {
   HederaOperationsWrapper,
   type LangchainTestSetup,
 } from '../../utils';
-import { HcsAuditTrailHook } from '@/shared/hooks/hcs-audit-trail-hook';
+import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
 import { TRANSFER_HBAR_TOOL } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { wait } from '../../utils/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';

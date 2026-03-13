@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Context, AgentMode } from '@/shared';
-import { HcsAuditTrailHook } from '@/shared/hooks/hcs-audit-trail-hook';
+import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
 import { getOperatorClientForTests } from '../../utils';
 import { Client, TopicCreateTransaction } from '@hashgraph/sdk';
 import getTransferHbarTool, {

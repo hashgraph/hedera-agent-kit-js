@@ -1,6 +1,6 @@
-import { AbstractHook, PostSecondaryActionParams, PreToolExecutionParams } from '@/shared';
-import { AgentMode, Context } from '@/shared';
-import { RawTransactionResponse } from '@/shared';
+import { AbstractHook, PostSecondaryActionParams, PreToolExecutionParams } from './abstract-hook';
+import { AgentMode, Context } from '@/shared/configuration';
+import { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { Client, TopicMessageSubmitTransaction } from '@hashgraph/sdk';
 
 /**

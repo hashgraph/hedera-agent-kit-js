@@ -1,5 +1,5 @@
 import { Client } from '@hashgraph/sdk';
-import type { Context } from './configuration';
+import type { Context } from '@/shared/configuration';
 
 export interface PreToolExecutionParams<TParams = any> {
   context: Context;
