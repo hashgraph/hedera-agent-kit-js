@@ -5,7 +5,7 @@ import {
   PostParamsNormalizationParams,
   PostCoreActionParams,
   PostSecondaryActionParams,
-} from './abstract-hook';
+} from '@/hooks/abstract-hook';
 
 /**
  * Policy extends Hook and throws errors when validation fails.

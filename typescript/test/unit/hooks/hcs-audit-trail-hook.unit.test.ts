@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { HcsAuditTrailHook } from '@/shared/hooks/hcs-audit-trail-hook';
+import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
 import { AgentMode } from '@/shared/configuration';
-import type { PostSecondaryActionParams, PreToolExecutionParams } from '@/shared/abstract-hook';
+import type { PostSecondaryActionParams, PreToolExecutionParams } from '@/hooks/abstract-hook';
 import type { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import * as sdk from '@hashgraph/sdk';
 import { Client } from '@hashgraph/sdk';
