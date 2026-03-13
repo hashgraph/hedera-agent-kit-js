@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { MaxRecipientsPolicy, Context, AgentMode } from '@/shared';
+import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
+import { Context, AgentMode } from '@/shared';
 import { getOperatorClientForTests } from '../../utils';
 import { Client } from '@hashgraph/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { MaxRecipientsPolicy, Context, AgentMode } from '@/shared';
+import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
+import { Context, AgentMode } from '@/shared';
 import { Client, Hbar } from '@hashgraph/sdk';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';

@@ -8,7 +8,7 @@ import {
   PostCoreActionParams,
   PostSecondaryActionParams,
   AbstractHook,
-} from './abstract-hook';
+} from './hook';
 
 export interface Tool {
   method: string;

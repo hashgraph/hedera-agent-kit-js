@@ -12,7 +12,7 @@ import {
 import {
   transferHbarParametersNormalised,
   transferHbarWithAllowanceParametersNormalised,
-} from '../parameter-schemas/account.zod';
+} from '@/shared/parameter-schemas/account.zod';
 
 export class MaxRecipientsPolicy extends Policy {
   readonly name = 'Max Recipients Policy';

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { RejectToolPolicy, Context, AgentMode } from '@/shared';
+import { RejectToolPolicy } from '@/policies/reject-tool-policy';
+import { Context, AgentMode } from '@/shared';
 import { getOperatorClientForTests } from '../../utils';
 import { Client } from '@hashgraph/sdk';
 import getHbarBalanceTool from '@/plugins/core-account-query-plugin/tools/queries/get-hbar-balance-query';
