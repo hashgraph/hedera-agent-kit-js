@@ -11,14 +11,14 @@
         "deploy:all": "npm run deploy:mainnet & npm run deploy:testnet & npm run deploy:previewnet & wait"
     },
     "devDependencies": {
-        "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+        "@nomicfoundation/hardhat-toolbox": "^7.0.0",
         "@typescript-eslint/eslint-plugin": "^8.37.0",
         "@typescript-eslint/parser": "^8.37.0",
         "dotenv": "^16.6.1",
         "eslint": "^9.31.0",
         "eslint-config-prettier": "^10.1.5",
         "eslint-plugin-prettier": "^5.5.1",
-        "hardhat": "^2.26.1",
+        "hardhat": "^3.1.12",
         "prettier": "^3.6.2",
         "prettier-plugin-solidity": "^1.4.2"
     },
