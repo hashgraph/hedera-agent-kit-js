@@ -29,7 +29,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
       ).toBe(true);
@@ -54,7 +53,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
       ).toBe(false);
@@ -83,7 +81,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
       ).toBe(true);
@@ -108,7 +105,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
       ).toBe(false);
@@ -135,7 +131,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
         ),
       ).toBe(true);
@@ -160,7 +155,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
         ),
       ).toBe(false);
@@ -186,7 +180,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
         ),
       ).toBe(true);
@@ -210,7 +203,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params,
-          client,
           coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
         ),
       ).toBe(false);
@@ -234,7 +226,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
       };
 
       expect(
-        policy['shouldBlockPostParamsNormalization'](context, params, client, 'my_custom_tool'),
+        policy['shouldBlockPostParamsNormalization'](context, params, 'my_custom_tool'),
       ).toBe(true);
     });
 
@@ -251,7 +243,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         policy['shouldBlockPostParamsNormalization'](
           context,
           params as any,
-          client,
           'unknown_tool',
         ),
       ).toThrowError(/MaxRecipientsPolicy: unhandled tool 'unknown_tool'/i);
