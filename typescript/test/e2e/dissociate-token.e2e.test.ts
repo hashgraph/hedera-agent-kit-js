@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, beforeAll, describe, expect, it } from 'vitest';
 import { AccountId, Client, PrivateKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
 import {
@@ -13,6 +13,8 @@ import { returnHbarsAndDeleteAccount } from '../utils/teardown/account-teardown'
 import { itWithRetry } from '../utils/retry-util';
 import { UsdToHbarService } from '../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
+import { wait } from '../utils/general-util';
+import { MIRROR_NODE_WAITING_TIME } from '../utils/test-constants';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;
@@ -40,6 +42,15 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
+  });
+
+  afterAll(async () => {
+    if (operatorClient) {
+      operatorClient.close();
+    }
+  });
+
+  beforeEach(async () => {
     const operatorWrapper = new HederaOperationsWrapper(operatorClient);
 
     // Executor account
@@ -92,7 +103,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       .then(resp => resp.tokenId!);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     // Delete executor and token creator accounts
     if (executorClient && operatorClient) {
       await returnHbarsAndDeleteAccount(
@@ -106,7 +117,6 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         operatorClient.operatorAccountId!,
       );
       executorClient.close();
-      operatorClient.close();
       tokenCreatorClient.close();
     }
   });
@@ -118,6 +128,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         accountId: executorAccountId.toString(),
         tokenId: tokenIdFT.toString(),
       });
+      await wait(MIRROR_NODE_WAITING_TIME);
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
       );
@@ -137,6 +148,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('successfully dissociated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
+      await wait(MIRROR_NODE_WAITING_TIME);
+
       const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
       );
@@ -155,6 +168,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         accountId: executorAccountId.toString(),
         tokenId: tokenIdFT2.toString(),
       });
+
+      await wait(MIRROR_NODE_WAITING_TIME);
 
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
@@ -176,6 +191,8 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('successfully dissociated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
+      await wait(MIRROR_NODE_WAITING_TIME);
+
       const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
       );
@@ -188,9 +205,11 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     'should fail dissociating not associated token',
     itWithRetry(async () => {
       // check if the account is not associate with the token
+      await wait(MIRROR_NODE_WAITING_TIME);
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executorAccountId.toString(),
       );
+
       expect(tokenBalancesBefore.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
 
       const queryResult = await agent.invoke({

@@ -7,14 +7,18 @@
   "scripts": {
     "test": "echo \"No tests specified for example package\"",
     "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
-    "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
+    "langchain:return-bytes-tool-calling-agent-web": "tsx return-bytes-tool-calling-agent-web.ts",
+    "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
+    "langchain:external-mcp-agent": "tsx external-mcp-agent.ts",
+    "langchain:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "2.79.0",
-    "hedera-agent-kit": "3.7.0",
-    "@langchain/core": "1.1.11",
-    "langchain": "1.2.6",
+    "@hashgraph/sdk": "2.80.0",
+    "hedera-agent-kit": "3.8.1",
+    "@langchain/core": "1.1.24",
+    "@langchain/mcp-adapters": "^1.1.3",
     "dotenv": "17.2.3",
+    "langchain": "1.2.24",
     "prompts": "2.4.2"
   },
   "devDependencies": {
