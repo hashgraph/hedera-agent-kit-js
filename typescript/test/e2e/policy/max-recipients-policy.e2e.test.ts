@@ -1,7 +1,7 @@
 import { beforeAll, describe, it, expect } from 'vitest';
 import { Client } from '@hashgraph/sdk';
 import { createLangchainTestSetup, getOperatorClientForTests } from '../../utils';
-import { MaxRecipientsPolicy } from '@/shared';
+import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
 
 describe('MaxRecipientsPolicy E2E Tests', () => {

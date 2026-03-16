@@ -1,4 +1,4 @@
-import { RejectToolPolicy } from '@/shared';
+import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { describe, it, expect } from 'vitest';
 import { Policy } from '@/shared';
 import { Client } from '@hashgraph/sdk';

@@ -1,6 +1,6 @@
 import { IHederaMirrornodeService } from './hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { Plugin } from './plugin';
-import { AbstractHook } from './abstract-hook';
+import { AbstractHook } from './hook';
 
 export enum AgentMode {
   AUTONOMOUS = 'autonomous',

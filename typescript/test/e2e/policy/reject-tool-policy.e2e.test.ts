@@ -5,7 +5,7 @@ import {
     getOperatorClientForTests,
 } from '../../utils';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
-import { RejectToolPolicy } from '@/shared';
+import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { coreAccountQueryPluginToolNames } from '@/plugins';
 
 const { GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
