@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -27,32 +27,45 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Scheduled transaction successfully deleted. Transaction ID: ${response.transactionId}`;
 };
 
-const scheduleDelete = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
-) => {
-  try {
-    const tx = HederaBuilder.deleteScheduleTransaction(params);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
-  } catch (error) {
+export const SCHEDULE_DELETE_TOOL = 'schedule_delete_tool';
+
+export class ScheduleDeleteTool extends BaseTool {
+  method = SCHEDULE_DELETE_TOOL;
+  name = 'Delete Scheduled Transaction';
+  description: string;
+  parameters: ReturnType<typeof scheduleDeleteTransactionParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = scheduleDeletePrompt(context);
+    this.parameters = scheduleDeleteTransactionParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof scheduleDeleteTransactionParameters>>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params;
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.deleteScheduleTransaction(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to delete scheduled transaction';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[schedule_delete_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const SCHEDULE_DELETE_TOOL = 'schedule_delete_tool';
-
-const tool = (context: Context): Tool => ({
-  method: SCHEDULE_DELETE_TOOL,
-  name: 'Delete Scheduled Transaction',
-  description: scheduleDeletePrompt(context),
-  parameters: scheduleDeleteTransactionParameters(context),
-  execute: scheduleDelete,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new ScheduleDeleteTool(context);
 
 export default tool;

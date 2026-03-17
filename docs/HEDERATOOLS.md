@@ -299,6 +299,17 @@ Returns comprehensive account information for a given Hedera account.
 |-------------|----------|----------|--------------------------|
 | `accountId` | `string` | ✅        | The account ID to query. |
 
+#### Returned Information
+
+- Account balance
+- Public key
+- EVM address
+- Ethereum nonce
+- Created timestamp
+- Account memo
+- Max automatic token associations
+- Deleted status
+
 #### Example Prompts
 
 ```
@@ -1129,3 +1140,43 @@ Get the current HBAR exchange rate
 What is the HBAR to USD rate?
 Get exchange rate at timestamp 1726000000
 ```
+
+---
+
+## Standard Policies
+
+The Hedera Agent Kit includes standard policies to enforce safety rules on agent actions. These policies can be configured in the `Context`.
+
+### MaxHbarTransferPolicy
+Limits the maximum amount of HBAR that can be transferred in a single transaction.
+
+**Relevant Tools:**
+- `TRANSFER_HBAR_TOOL`
+- `TRANSFER_HBAR_WITH_ALLOWANCE_TOOL`
+
+### TokenAllowlistPolicy
+Restricts the agent to only interact with a specific set of Token IDs.
+
+**Relevant Tools:**
+- Most Token Tools (`TRANSFER_NON_FUNGIBLE_TOKEN_TOOL`, `MINT_FUNGIBLE_TOKEN_TOOL`, etc.)
+
+### RequiredMemoPolicy
+Ensures that every transaction (where applicable) includes a non-empty memo.
+
+**Relevant Tools:**
+- `TRANSFER_HBAR_TOOL`, `CREATE_ACCOUNT_TOOL`, `CREATE_TOPIC_TOOL`, and many others.
+
+### ImmutabilityPolicy
+Prevents modification or deletion of specific Accounts and Tokens.
+
+**Relevant Tools:**
+- `UPDATE_ACCOUNT_TOOL`
+- `DELETE_ACCOUNT_TOOL`
+- `UPDATE_TOKEN_TOOL`
+
+### NoInfiniteSupplyPolicy
+Prevents the creation of tokens with Infinite supply type.
+
+**Relevant Tools:**
+- `CREATE_FUNGIBLE_TOKEN_TOOL`
+- `CREATE_NON_FUNGIBLE_TOKEN_TOOL`

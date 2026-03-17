@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -32,37 +32,45 @@ const postProcess = (response: RawTransactionResponse) => {
   return `HBAR successfully transferred with allowance. Transaction ID: ${response.transactionId}`;
 };
 
-const transferHbarWithAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof transferHbarWithAllowanceParameters>>,
-) => {
-  try {
-    const normalisedParams = HederaParameterNormaliser.normaliseTransferHbarWithAllowance(
-      params,
-      context,
-      client,
-    );
+export const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
 
-    const tx = HederaBuilder.transferHbarWithAllowance(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+export class TransferHbarWithAllowanceTool extends BaseTool {
+  method = TRANSFER_HBAR_WITH_ALLOWANCE_TOOL;
+  name = 'Transfer HBAR with allowance';
+  description: string;
+  parameters: ReturnType<typeof transferHbarWithAllowanceParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = transferHbarWithAllowancePrompt(context);
+    this.parameters = transferHbarWithAllowanceParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof transferHbarWithAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseTransferHbarWithAllowance(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.transferHbarWithAllowance(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to transfer HBAR with allowance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_hbar_with_allowance_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
-  name: 'Transfer HBAR with allowance',
-  description: transferHbarWithAllowancePrompt(context),
-  parameters: transferHbarWithAllowanceParameters(context),
-  execute: transferHbarWithAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new TransferHbarWithAllowanceTool(context);
 
 export default tool;
