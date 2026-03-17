@@ -70,7 +70,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
     // Spy on the private submission method to capture the message
     const postMessageSpy = vi
       .spyOn(hook as any, 'postMessageToHcsTopic')
-      .mockImplementation(async () => { });
+      .mockImplementation(async () => {});
 
     const context: Context = { mode: AgentMode.AUTONOMOUS };
     const params = {
@@ -101,7 +101,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
       },
     } as any;
 
-    await hook.postToolExecutionHook(context, params, TRANSFER_HBAR_TOOL, operatorClient);
+    await hook.postToolExecutionHook(context, params, TRANSFER_HBAR_TOOL);
 
     expect(postMessageSpy).toHaveBeenCalled();
     const message = postMessageSpy.mock.calls[0][0] as string;

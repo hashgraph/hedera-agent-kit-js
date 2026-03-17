@@ -81,9 +81,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const context = { mode: AgentMode.RETURN_BYTES };
     const params = { client: operatorClient } as PreToolExecutionParams;
 
-    await expect(
-      hook.preToolExecutionHook(context, params, 'test_tool'),
-    ).rejects.toThrow(
+    await expect(hook.preToolExecutionHook(context, params, 'test_tool')).rejects.toThrow(
       'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
     );
   });
@@ -100,7 +98,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const hookWithoutClient = new HcsAuditTrailHook(relevantTools, topicId);
     const postMessageSpy = vi
       .spyOn(hookWithoutClient, 'postMessageToHcsTopic')
-      .mockImplementation(async () => { });
+      .mockImplementation(async () => {});
 
     await hookWithoutClient.postToolExecutionHook(context, params, 'test_tool');
 
