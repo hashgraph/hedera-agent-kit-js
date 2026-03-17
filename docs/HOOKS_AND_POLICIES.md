@@ -224,12 +224,12 @@ Every tool in the kit follows a standardized 7-stage lifecycle. The execution lo
 Each hook receives specialized parameter objects and the **`method`** name (string) representing the tool being
 executed. This allows hooks to target specific tools or apply general logic.
 
-| Hook Stage                      | Available Data (via params object)                                                     | Additional Parameters | Use Case                                     |
-|:--------------------------------|:---------------------------------------------------------------------------------------|:----------------------|:---------------------------------------------|
-| `preToolExecutionHook`          | `context`, `rawParams`, `client`                                                       | `method`, `client`    | Early validation, logging initial state      |
-| `postParamsNormalizationHook`   | `context`, `rawParams`, `normalisedParams`, `client`                                   | `method`, `client`    | Parameter-based policies, data enrichment    |
-| `postCoreActionHook`            | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `client`               | `method`, `client`    | Inspect/modify transaction before submission |
-| `postToolExecutionHook`         | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method`, `client`    | Final logging, audit trails, cleanup         |
+| Hook Stage                      | Params Object Contains                                                                 | Method Parameter | Use Case                                     |
+|:--------------------------------|:---------------------------------------------------------------------------------------|:-----------------|:---------------------------------------------|
+| `preToolExecutionHook`          | `context`, `rawParams`, `client`                                                       | `method: string` | Early validation, logging initial state      |
+| `postParamsNormalizationHook`   | `context`, `rawParams`, `normalisedParams`, `client`                                   | `method: string` | Parameter-based policies, data enrichment    |
+| `postCoreActionHook`            | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `client`               | `method: string` | Inspect/modify transaction before submission |
+| `postToolExecutionHook`         | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method: string` | Final logging, audit trails, cleanup         |
 
 > [!TIP]
 > Use the `method` parameter to filter execution and apply **Type Guards** for safe parameter access.
@@ -421,7 +421,6 @@ const policy = new MaxRecipientsPolicy(
 
 ```typescript
 import { AbstractHook, Context, PreToolExecutionParams, PostParamsNormalizationParams, PostCoreActionParams, PostSecondaryActionParams } from '@/shared';
-import { Client } from '@hashgraph/sdk';
 
 export class MyCustomHook extends AbstractHook {
   name = 'My Custom Hook';
@@ -430,42 +429,46 @@ export class MyCustomHook extends AbstractHook {
 
   // Implement any of the 4 hook methods you need:
 
-  async preToolExecutionHook(context: Context, params: PreToolExecutionParams, method: string, client: Client) {
+  async preToolExecutionHook(context: Context, params: PreToolExecutionParams, method: string) {
     // Early in the lifecycle - before parameter normalization
     if (!this.relevantTools.includes(method)) return;
 
-    // Access client via parameter or params object
-    const hederaClient = client; // or params.client (both are the same)
+    // Access client from params object
+    const client = params.client;
+    const rawParams = params.rawParams;
 
     // Your logic here
   }
 
-  async postParamsNormalizationHook(context: Context, params: PostParamsNormalizationParams, method: string, client: Client) {
+  async postParamsNormalizationHook(context: Context, params: PostParamsNormalizationParams, method: string) {
     // After parameters are validated and cleaned
     if (!this.relevantTools.includes(method)) return;
 
-    // Access normalized parameters
+    // Access normalized parameters and client
     const normalizedParams = params.normalisedParams;
+    const client = params.client;
 
     // Your logic here
   }
 
-  async postCoreActionHook(context: Context, params: PostCoreActionParams, method: string, client: Client) {
+  async postCoreActionHook(context: Context, params: PostCoreActionParams, method: string) {
     // After main logic (e.g., transaction created but not submitted)
     if (!this.relevantTools.includes(method)) return;
 
-    // Access the core action result (e.g., the transaction object)
+    // Access the core action result and client
     const txResult = params.coreActionResult;
+    const client = params.client;
 
     // Your logic here
   }
 
-  async postToolExecutionHook(context: Context, params: PostSecondaryActionParams, method: string, client: Client) {
+  async postToolExecutionHook(context: Context, params: PostSecondaryActionParams, method: string) {
     // After everything completes
     if (!this.relevantTools.includes(method)) return;
 
-    // Access the final tool result
+    // Access the final tool result and client
     const finalResult = params.toolResult;
+    const client = params.client;
 
     // Your logic here
   }
