@@ -52,7 +52,7 @@ Try out one or more of the example agents:
 * **Option F -** [Example ElizaOS Agent](#option-f-try-out-the-hedera-agent-kit-with-elizaos)
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
 * **Option H -** [Example Google ADK Agent](#option-h-try-out-the-google-adk-agent)
-* **Option I -** [Example Policy Agent](#option-i-run-the-policy-agent-example)
+* **Option I -** [Example Audit Hook Agent](#option-i-try-out-the-audit-hook-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -425,33 +425,60 @@ This will start a local web server (by default at `http://localhost:8000`) where
 
 > **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
 
-### Option I: Run the Policy Agent Example
+### Option I: Try out the Audit Hook Agent
 
-The Policy Agent example demonstrates how to use the strict policy enforcement system in the Hedera Agent Kit. This agent is configured with several active policies (like `RequiredMemoPolicy` and `MaxHbarTransferPolicy`) that intercept and validate tool usage before execution.
+This example demonstrates how to use the HcsAuditTrailHook to create an immutable audit trail of agent actions on the Hedera Consensus Service (HCS). Every tool execution is logged to an HCS topic, providing a transparent and tamper-proof record.
 
-For a deep dive into how policies work, see [docs/POLICIES.md](../docs/POLICIES.md).
+**Found at:**
+- `typescript/examples/adk/audit-hook-agent.ts`
 
-#### Usage
+For a deep dive into how hooks and policies work, see [docs/HOOKS_AND_POLICIES.md](../docs/HOOKS_AND_POLICIES.md).
 
-1. Go to the example directory:
-```bash
-cd typescript/examples/policy-example
+#### Prerequisites
+
+1. **Create an HCS Topic**: You must create an HCS topic before running this example. You can do this:
+   - Using the [Hedera Portal](https://portal.hedera.com/)
+   - Using the Hedera SDK
+   - Using another Hedera Agent Kit agent
+
+2. **Configure Environment**: Set up your `.env` file in `typescript/examples/adk/`:
+
+```env
+ACCOUNT_ID=0.0.xxxxx
+PRIVATE_KEY=302e...
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
-2. Install dependencies:
+3. **Update Topic ID**: In `audit-hook-agent.ts`, replace `'0.0.???'` with your actual HCS topic ID:
+
+```typescript
+const topicId = '0.0.12345'; // Your HCS topic ID
+```
+
+#### Running the Example
+
+1. Navigate to the example directory:
+
 ```bash
+cd typescript/examples/adk
 npm install
 ```
 
-3. Create a `.env` file (copy from `.env.example`) and add your `ACCOUNT_ID`, `PRIVATE_KEY`, and `OPENAI_API_KEY`.
+2. Run the audit hook agent:
 
-4. Run the example:
 ```bash
-npm start
+npm run adk:audit-hook-agent
 ```
 
-5. Interact with the agent. Try commands that trigger policy violations, such as:
-    - "Transfer 100 HBAR to 0.0.12345" (Should fail due to max limit)
-    - "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)
-    - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Should succeed)
+3. Interact with the agent. Try commands like:
+   - "Get my account balance"
+   - "Create a new account"
+   - "Update my account memo to 'Audited Account'"
 
+All tool executions will be logged to the specified HCS topic. You can view the messages using:
+- [HashScan](https://hashscan.io/) (search for your topic ID)
+- [Hedera Portal](https://portal.hedera.com/)
+- The Hedera SDK's topic message query tools
+
+> [!NOTE]
+> The HcsAuditTrailHook only works in `AgentMode.AUTONOMOUS`. If a paid topic (HIP-991) is used, message submission fees will apply.

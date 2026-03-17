@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "scripts": {
         "test": "echo \"No tests specified for example package\"",
-        "adk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts"
+        "adk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts",
+        "adk:audit-hook-agent": "ts-node audit-hook-agent.ts"
     },
     "dependencies": {
         "@google/adk": "^0.4.0",
