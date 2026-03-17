@@ -9,12 +9,10 @@ describe('RejectToolPolicy', async () => {
     const policy = new RejectToolPolicy(relevantTools);
     const context = {} as any; // mock context
     const client = {} as Client; // mock client;
-    const params = {} as any;
+    const params = { client } as any;
     const method = 'toolA';
 
-    await expect(
-      (policy as Policy).preToolExecutionHook(context, params, method, client),
-    ).rejects.toThrow(
+    await expect((policy as Policy).preToolExecutionHook(context, params, method)).rejects.toThrow(
       new RegExp(`Action ${method} blocked by policy: Reject Tool Call ( \\(.+\\))?`),
     );
   });
@@ -24,11 +22,11 @@ describe('RejectToolPolicy', async () => {
     const policy = new RejectToolPolicy(relevantTools);
     const context = {} as any; // mock context
     const client = {} as Client; // mock client;
-    const params = {} as any;
+    const params = { client } as any;
     const method = 'toolC'; // not in relevant tools
 
     await expect(
-      (policy as Policy).preToolExecutionHook(context, params, method, client),
+      (policy as Policy).preToolExecutionHook(context, params, method),
     ).resolves.toBeUndefined();
   });
 });
