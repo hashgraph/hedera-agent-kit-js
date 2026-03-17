@@ -81,7 +81,9 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const context = { mode: AgentMode.RETURN_BYTES };
     const params = { client: operatorClient } as PreToolExecutionParams;
 
-    await expect(hook.preToolExecutionHook(context, params, 'test_tool')).rejects.toThrow(
+    await expect(
+      hook.preToolExecutionHook(context, params, 'test_tool'),
+    ).rejects.toThrow(
       'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
     );
   });
@@ -98,7 +100,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const hookWithoutClient = new HcsAuditTrailHook(relevantTools, topicId);
     const postMessageSpy = vi
       .spyOn(hookWithoutClient, 'postMessageToHcsTopic')
-      .mockImplementation(async () => {});
+      .mockImplementation(async () => { });
 
     await hookWithoutClient.postToolExecutionHook(context, params, 'test_tool');
 
@@ -135,7 +137,7 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     expect(mockInstance.setMessage).toHaveBeenCalledWith(
       expect.stringContaining('Agent executed tool test_tool'),
     );
-    expect(mockInstance.setMessage).toHaveBeenCalledWith(expect.stringContaining('"amount":100'));
+    expect(mockInstance.setMessage).toHaveBeenCalledWith(expect.stringContaining('"amount": 100'));
     // execute should be called with hook's provided logging client, not the operatorClient
     expect(mockInstance.execute).toHaveBeenCalledWith(mockClient);
   });

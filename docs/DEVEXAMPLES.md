@@ -51,8 +51,8 @@ Try out one or more of the example agents:
 * **Option E -** [Example External MCP Agent](#option-e-try-out-the-external-mcp-agent)
 * **Option F -** [Example ElizaOS Agent](#option-f-try-out-the-hedera-agent-kit-with-elizaos)
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
-* **Option H -** [Example Policy Agent](#option-h-run-the-policy-agent-example)
-* **Option I -** [Example Google ADK Agent](#option-h-try-out-the-google-adk-agent)
+* **Option H -** [Example Google ADK Agent](#option-h-try-out-the-google-adk-agent)
+* **Option I -** [Example Policy Agent](#option-i-run-the-policy-agent-example)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -382,41 +382,9 @@ npm run ai-sdk:preconfigured-mcp-client-agent
 
 These agents connect to the configured MCP servers (defined in your code) and allow you to interact with the provided tools using natural language.
 
-> [!NOTE]
 > If using `HederaMCPServer.HGRAPH_MCP_MAINNET`, ensure you have set the `HGRAPH_API_KEY` in your `.env` file. See [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) for details.
 
-### Option H: Run the Policy Agent Example
-
-The Policy Agent example demonstrates how to use the strict policy enforcement system in the Hedera Agent Kit. This agent is configured with several active policies (like `RequiredMemoPolicy` and `MaxHbarTransferPolicy`) that intercept and validate tool usage before execution.
-
-For a deep dive into how policies work, see [docs/POLICIES.md](../docs/POLICIES.md).
-
-#### Usage
-
-1. Go to the example directory:
-```bash
-cd typescript/examples/policy-example
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create a `.env` file (copy from `.env.example`) and add your `ACCOUNT_ID`, `PRIVATE_KEY`, and `OPENAI_API_KEY`.
-
-4. Run the example:
-```bash
-npm start
-```
-
-5. Interact with the agent. Try commands that trigger policy violations, such as:
-    - "Transfer 100 HBAR to 0.0.12345" (Should fail due to max limit)
-    - "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)
-    - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Should succeed)
-
-
-### Option I: Try out the Google ADK Agent
+### Option H: Try out the Google ADK Agent
 
 This example demonstrates how to use the Hedera Agent Kit with [Google's Agent Development Kit (ADK)](https://google.github.io/adk-docs/get-started/). It includes a plugin tool calling agent and supports the ADK Web GUI for interactive testing.
 
@@ -456,3 +424,34 @@ npx adk web
 This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
 
 > **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
+
+### Option I: Run the Policy Agent Example
+
+The Policy Agent example demonstrates how to use the strict policy enforcement system in the Hedera Agent Kit. This agent is configured with several active policies (like `RequiredMemoPolicy` and `MaxHbarTransferPolicy`) that intercept and validate tool usage before execution.
+
+For a deep dive into how policies work, see [docs/POLICIES.md](../docs/POLICIES.md).
+
+#### Usage
+
+1. Go to the example directory:
+```bash
+cd typescript/examples/policy-example
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file (copy from `.env.example`) and add your `ACCOUNT_ID`, `PRIVATE_KEY`, and `OPENAI_API_KEY`.
+
+4. Run the example:
+```bash
+npm start
+```
+
+5. Interact with the agent. Try commands that trigger policy violations, such as:
+    - "Transfer 100 HBAR to 0.0.12345" (Should fail due to max limit)
+    - "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)
+    - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Should succeed)
+

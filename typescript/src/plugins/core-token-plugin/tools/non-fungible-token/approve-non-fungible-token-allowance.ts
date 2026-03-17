@@ -43,7 +43,7 @@ export class ApproveNftAllowanceTool extends BaseTool {
   method = APPROVE_NFT_ALLOWANCE_TOOL;
   name = 'Approve NFT Allowance';
   description: string;
-  parameters: ReturnType<typeof approveNftAllowanceParameters>;
+  parameters:  ReturnType<typeof approveNftAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {
