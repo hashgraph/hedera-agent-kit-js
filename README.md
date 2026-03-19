@@ -88,6 +88,8 @@ The Hedera Agent Kit provides a flexible and powerful system for putting limits 
 
 For more information on hooks and policies, see the [Hooks and Policies documentation](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md).
 
+Try out an example [Audit Hook Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-try-out-the-audit-hook-agent) to see how hooks and policies work in practice.
+
 ---
 
 ## Developer Examples
