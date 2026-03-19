@@ -80,7 +80,7 @@ The Hedera Agent Kit provides a flexible and powerful system for putting limits 
 
 **Features**
 * Hooks and policies can be called when parameters are passed, after parameter normalization, before tool execution when a transaction has been formed, and after tool execution when a transaction has been signed and submitted.
-* Users can create their own hooks and policies on any available Hedera Agent Kit tool.
+* Users can create their own hooks and policies on any available Hedera Agent Kit tool, simply fork this repo and create your own hooks and policies in the `typescript/src/hooks` and `typescript/src/policies` directories.
 * We have provided examples:
   * A hook to [log actions to an HCS topic](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#1-hcsaudittrailhook-hook), creating an easy to track audit trail. 
   * A policy that [sets the maximum number of recipients](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#2-maxrecipientspolicy-policy) in a transfer or airdrop.
