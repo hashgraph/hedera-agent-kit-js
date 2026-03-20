@@ -17,6 +17,10 @@ import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
 function extractAccountId(agentResult: any, responseParsingService: ResponseParserService): string {
   const parsedResponse = responseParsingService.parseNewToolMessages(agentResult);
 
+  if (!parsedResponse || parsedResponse.length === 0) {
+    throw new Error('No tool messages found in agent result');
+  }
+
   if (!parsedResponse[0].parsedData.raw?.accountId) {
     throw new Error('No raw.accountId found in observation');
   }
