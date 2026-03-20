@@ -26,7 +26,7 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
 }));
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
-    getContextSnippet: vi.fn(() => 'CTX'),
+    getContextSnippet: vi.fn(() => ''),
     getAccountParameterDescription: vi.fn(() => 'publicKey (string): Account public key'),
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
     getScheduledTransactionParamsDescription: vi.fn(
@@ -63,7 +63,7 @@ describe('create-account tool (unit)', () => {
     expect(tool.name).toBe('Create Account');
     expect(typeof tool.description).toBe('string');
     expect(tool.description).toContain(
-      'This tool will create a new Hedera account with a passed public key. If not passed, the tool will use operators public key.',
+      "This tool will create a new Hedera account with a passed public key. If not passed, the tool will use operator's public key.",
     );
     expect(tool.parameters).toBeTruthy();
   });
