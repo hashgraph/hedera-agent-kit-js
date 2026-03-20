@@ -24,8 +24,8 @@ This tool will transfer HBAR to an account.
 
 Parameters:
 - transfers (array of objects, required): List of HBAR transfers. Each object should contain:
-  - accountId (string): Recipient account ID
-  - amount (number): Amount of HBAR to transfer
+  - accountId (string, required): Recipient account ID
+  - amount (number, required): Amount of HBAR to transfer
 - ${sourceAccountDesc}
 - transactionMemo (string, optional): Optional memo for the transfer HBAR transaction
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}

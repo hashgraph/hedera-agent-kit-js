@@ -21,8 +21,8 @@ Parameters:
 - sourceAccountId (string, required): The token owner (allowance granter)
 - tokenId (string, required): The NFT token ID to transfer (e.g. "0.0.12345")
 - recipients (array, required): List of objects specifying recipients and serial numbers
-  - recipientId (string): Account to transfer to
-  - serialNumber (string): NFT serial number to transfer
+  - recipientId (string, required): Account to transfer to
+  - serialNumber (string, required): NFT serial number to transfer
 - transactionMemo (string, optional): Optional memo for the transaction
 
 ${usageInstructions}

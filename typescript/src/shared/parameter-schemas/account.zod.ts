@@ -13,8 +13,8 @@ export const transferHbarParameters = (context: Context = {}) =>
     transfers: z
       .array(
         z.object({
-          accountId: z.string().describe('Recipient account ID'),
-          amount: z.number().describe('Amount of HBAR to transfer'),
+          accountId: z.string().describe('Recipient account ID (Required)'),
+          amount: z.number().describe('Amount of HBAR to transfer (Required)'),
         }),
       )
       .describe('Array of HBAR transfers')
@@ -185,12 +185,12 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
     tokenApprovals: z
       .array(
         z.object({
-          tokenId: z.string().describe('Token ID'),
+          tokenId: z.string().describe('Token ID (Required)'),
           amount: z
             .number()
             .nonnegative()
             .describe(
-              'Amount of tokens to approve (must be positive, can be float or int) Given in display units, the tool will handle parsing',
+              'Amount of tokens to approve (must be positive, can be float or int) Given in display units, the tool will handle parsing. (Required)',
             ),
         }),
       )

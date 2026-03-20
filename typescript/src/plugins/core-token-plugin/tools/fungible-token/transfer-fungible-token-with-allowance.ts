@@ -23,8 +23,8 @@ Parameters:
 - tokenId (string, required): The token ID to transfer (e.g. "0.0.12345")
 - sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
 - transfers (array of objects, required): List of token transfers. Each object should contain:
-  - accountId (string): Recipient account ID
-  - amount (number): Amount of tokens to transfer in display unit
+  - accountId (string, required): Recipient account ID
+  - amount (number, required): Amount of tokens to transfer in display unit
 - transactionMemo (string, optional): Optional memo for the transaction
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
