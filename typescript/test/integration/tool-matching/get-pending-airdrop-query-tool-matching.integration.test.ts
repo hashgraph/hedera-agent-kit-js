@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { ReactAgent } from 'langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { HederaLangchainToolkit } from '@/langchain';
-import { coreTokenQueryPluginToolNames } from 'hedera-agent-kit';
+import { coreTokenQueryPluginToolNames } from '@hashgraph/hedera-agent-kit';
 import { itWithRetry } from '../../utils/retry-util';
 
 const { GET_PENDING_AIRDROP_TOOL } = coreTokenQueryPluginToolNames;

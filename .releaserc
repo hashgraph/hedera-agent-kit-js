@@ -1,0 +1,64 @@
+{
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "verifyReleaseCmd": "echo ${nextRelease.version} > VERSION",
+        "prepareCmd": "cd typescript && npm version ${nextRelease.version} --no-git-tag-version"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "typescript/package.json",
+          "typescript/package-lock.json"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\nSigned-off-by: Hedera Eng Automation <eng-automation@hashgraph.com>"
+      }
+    ],
+    "@semantic-release/github"
+  ],
+  "branches":[
+    {
+      "name": "main"
+    },
+    {
+      "name": "release/([0-9]+).([0-9]+)",
+      "channel": "${name.replace(/release\\//g, '').split('.')[0]}.${name.replace(/release\\//g, '').split('.')[1]}.x",
+      "range": "${name.replace(/release\\//g, '').split('.')[0]}.${name.replace(/release\\//g, '').split('.')[1]}.x"
+    },
+    {
+      "name": "alpha/*",
+      "prerelease": "alpha",
+      "channel": "alpha"
+    },
+    {
+      "name": "ci/*",
+      "prerelease": "alpha",
+      "channel": "alpha"
+    },
+    {
+      "name": "beta/*",
+      "prerelease": "beta",
+      "channel": "beta"
+    },
+    {
+      "name": "rc/*",
+      "prerelease": "rc",
+      "channel": "rc"
+    }
+  ]
+}

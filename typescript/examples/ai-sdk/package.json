@@ -15,7 +15,7 @@
     "ai": "^6.0.86",
     "dotenv": "17.2.3",
     "zod": "^3.23.8",
-    "hedera-agent-kit": "3.8.1",
+    "@hashgraph/hedera-agent-kit": "3.8.1",
     "prompts": "2.4.2"
   },
   "author": "",

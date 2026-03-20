@@ -1,4 +1,4 @@
-import { AgentMode, HederaLangchainToolkit, ResponseParserService } from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit, ResponseParserService } from '@hashgraph/hedera-agent-kit';
 import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';

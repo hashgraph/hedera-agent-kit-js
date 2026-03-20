@@ -1,6 +1,6 @@
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import { LlmAgent } from '@google/adk';
-import { AgentMode, HederaADKToolkit } from 'hedera-agent-kit';
+import { AgentMode, HederaADKToolkit } from '@hashgraph/hedera-agent-kit';
 import * as dotenv from 'dotenv';
 
 dotenv.config();

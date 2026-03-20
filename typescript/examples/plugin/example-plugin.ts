@@ -6,7 +6,7 @@ import {
   handleTransaction,
   PromptGenerator,
   AccountResolver,
-} from 'hedera-agent-kit';
+} from '@hashgraph/hedera-agent-kit';
 import { Client, TransferTransaction, Hbar, AccountId } from '@hashgraph/sdk';
 import { transactionToolOutputParser } from '../../src';
 

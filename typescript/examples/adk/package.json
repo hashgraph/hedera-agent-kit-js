@@ -9,7 +9,7 @@
         "@google/adk": "^0.4.0",
         "@google/adk-devtools": "^0.4.0",
         "dotenv": "^17.2.3",
-        "hedera-agent-kit": "../..",
+        "@hashgraph/hedera-agent-kit": "../..",
         "prompts": "2.4.2"
     },
     "author": "",

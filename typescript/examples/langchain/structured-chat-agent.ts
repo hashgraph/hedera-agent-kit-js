@@ -1,4 +1,4 @@
-import { AgentMode, HederaLangchainToolkit } from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { AgentExecutor, createStructuredChatAgent } from '@langchain/classic/agents';
 import { BufferMemory } from '@langchain/classic/memory';

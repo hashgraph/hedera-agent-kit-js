@@ -11,7 +11,7 @@ import {
   coreTokenQueryPluginToolNames,
   coreTransactionQueryPluginToolNames,
   HederaLangchainToolkit,
-} from 'hedera-agent-kit';
+} from '@hashgraph/hedera-agent-kit';
 import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
 import { BufferMemory } from '@langchain/classic/memory';
 import { Client, PrivateKey } from '@hashgraph/sdk';
