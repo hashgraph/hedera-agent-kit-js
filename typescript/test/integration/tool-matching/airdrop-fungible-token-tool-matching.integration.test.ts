@@ -28,7 +28,8 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should match airdrop tool with minimal params', async () => {
-      const input = 'Airdrop 10 HTS tokens 0.0.1234 from 0.0.1001 to 0.0.2002';
+      const input =
+        'Airdrop 10 HTS tokens with id 0.0.1234 from account 0.0.1001 to account 0.0.2002';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -113,6 +114,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
           .mockReset()
           .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
         await agent.invoke({ messages: [{ role: 'user', content: variation.input }] });
+
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           AIRDROP_FUNGIBLE_TOKEN_TOOL,

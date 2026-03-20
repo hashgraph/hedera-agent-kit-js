@@ -32,6 +32,8 @@ Parameters:
 - ${treasuryAccountDesc}
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
+For tool call only tokenName and tokenSymbol are optional and if not provided, the tool will use the default values.
+
 ${usageInstructions}
 `;
 };

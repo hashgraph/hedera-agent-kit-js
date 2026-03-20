@@ -68,6 +68,7 @@ export class PromptGenerator {
   static getParameterUsageInstructions(): string {
     return `
 Important:
+- Do not request or ask for parameters that are optional and were not provided by the user. Tool can be called without any parameters if all are optional.
 - Only include optional parameters if explicitly provided by the user
 - Do not generate placeholder values for optional fields
 - Leave optional parameters undefined if not specified by the user
@@ -77,7 +78,7 @@ Important:
   }
 
   static getScheduledTransactionParamsDescription(context: Context): string {
-    return `schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately.
+    return `schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately. 
 
 **Fields that apply to the *schedule entity*, not the inner transaction:**
 

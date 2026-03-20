@@ -20,12 +20,14 @@ This tool will transfer non-fungible tokens (NFTs) using an existing **token all
 Parameters:
 - sourceAccountId (string, required): The token owner (allowance granter)
 - tokenId (string, required): The NFT token ID to transfer (e.g. "0.0.12345")
-- recipients (array, required): List of objects specifying recipients and serial numbers
+- recipients (array, required): List of objects specifying recipients and serial numbers - accepts multiple transfers at once
   - recipientId (string, required): Account to transfer to
   - serialNumber (string, required): NFT serial number to transfer
 - transactionMemo (string, optional): Optional memo for the transaction
 
 ${usageInstructions}
+
+If multiple recipients are specified, the tool will create a single transaction for all transfers - they should be defined in recipients array.
 `;
 };
 

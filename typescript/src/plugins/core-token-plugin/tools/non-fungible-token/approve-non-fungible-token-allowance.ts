@@ -27,9 +27,11 @@ Parameters:
 - spenderAccountId (string, required): Spender account ID
 - tokenId (string, required): The NFT token ID (e.g., 0.0.xxxxx)
 - allSerials (boolean, optional): If true, approves allowance for all current and future serials of the NFT. When true, do not provide serialNumbers.
-- serialNumbers (number[], conditionally required): Array of NFT serial numbers to approve. Required when allSerials is not true.
+- serialNumbers (number[], conditionally required): Array of NFT serial numbers to approve - accepts multiple serial numbers at once. Required when allSerials is not true.
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
+
+If multiple serial numbers are provided, they should all be included in a single tool call as a list of serial numbers.
 `;
 };
 
