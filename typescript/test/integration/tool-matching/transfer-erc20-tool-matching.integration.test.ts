@@ -52,7 +52,8 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
     });
 
     it('should match command with Hedera addresses', async () => {
-      const input = 'Send 50 tokens from ERC20 contract 0.0.1234 to account 0.0.5678';
+      const input =
+        'Send 50 tokens from ERC20 contract with id 0.0.1234 to account with id0.0.5678';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
