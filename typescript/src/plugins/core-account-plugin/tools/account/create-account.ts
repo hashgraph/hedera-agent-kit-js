@@ -23,7 +23,7 @@ IMPORTANT: All parameters are optional. If the user does not explicitly provide 
 
 Parameters:
 - publicKey (string, optional): Public key to use for the account. If not provided, the tool will use the operator's public key.
-- accountMemo (string, optional): Optional memo for the account
+- accountMemo (string, optional): Optional memo for the account. Max 100 chars. Length will be validated in tool call.
 - initialBalance (number, optional, default 0): Initial HBAR to fund the account
 - maxAutomaticTokenAssociations (number, optional, default -1): -1 means unlimited
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
