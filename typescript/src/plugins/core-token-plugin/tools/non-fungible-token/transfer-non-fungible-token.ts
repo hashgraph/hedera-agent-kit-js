@@ -15,7 +15,7 @@ const transferNonFungibleTokenPrompt = (context: Context = {}) => {
 
   return `
 ${contextSnippet}
-This tool will transfer non-fungible tokens (NFTs) from the operator's account to specified recipients.
+This tool will transfer HTS non-fungible tokens (NFTs) from the operator's account to specified recipients.
 
 Parameters:
 - tokenId (string, required): The NFT token ID to transfer (e.g. "0.0.12345")

@@ -20,7 +20,7 @@ describe('Create Account Integration Tests', () => {
     const executorAccountKey = PrivateKey.generateED25519();
     const executorAccountId = await operatorWrapper
       .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
         key: executorAccountKey.publicKey,
       })
       .then(resp => resp.accountId!);
@@ -82,7 +82,7 @@ describe('Create Account Integration Tests', () => {
       const newAccountId = result.raw.accountId!.toString();
 
       const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
-      expect(balance.toNumber()).toBeGreaterThanOrEqual(UsdToHbarService.usdToHbar(0.1) * 1e8);
+      expect(balance.toNumber()).toBeCloseTo(UsdToHbarService.usdToHbar(0.1) * 1e8);
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe('Integration test account');

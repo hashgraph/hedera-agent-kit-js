@@ -17,7 +17,7 @@ const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a fungible token using an existing **token allowance**.
+This tool will transfer a HTS fungible token using an existing **token allowance**.
 
 Parameters:
 - tokenId (string, required): The token ID to transfer (e.g. "0.0.12345")

@@ -36,9 +36,11 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
         .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      await agent.invoke({
+      const resp = await agent.invoke({
         messages: [{ role: 'user', content: input }],
       });
+
+      console.log(JSON.stringify(resp, null, 2));
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
@@ -51,9 +53,9 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
       );
     });
 
-    it('should match command with Hedera addresses', async () => {
+    it(' should match command with Hedera addresses', async () => {
       const input =
-        'Send 50 tokens from ERC20 contract with id 0.0.1234 to account with id0.0.5678';
+        'Transfer 50 tokens from ERC20 contract with id 0.0.1234 to account with id 0.0.5678';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi

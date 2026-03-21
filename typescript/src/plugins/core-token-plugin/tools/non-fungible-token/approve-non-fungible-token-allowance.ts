@@ -20,7 +20,7 @@ const approveNftAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool approves an NFT allowance from the owner to the spender for specific NFT serial numbers of a token, or for all serials in the NFT collection.
+This tool approves an HTS NFT allowance from the owner to the spender for specific NFT serial numbers of a token, or for all serials in the NFT collection.
 
 Parameters:
 - ${ownerAccountDesc}

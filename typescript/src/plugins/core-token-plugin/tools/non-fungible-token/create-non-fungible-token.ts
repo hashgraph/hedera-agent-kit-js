@@ -21,7 +21,7 @@ const createNonFungibleTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool creates a non-fungible token (NFT) on Hedera.
+This tool creates a HTS non-fungible token (NFT) on Hedera.
 
 Parameters:
 - tokenName (str, required): Name of the token

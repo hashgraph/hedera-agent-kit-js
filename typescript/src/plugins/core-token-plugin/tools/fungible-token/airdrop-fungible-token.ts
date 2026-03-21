@@ -21,7 +21,7 @@ const airdropFungibleTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will airdrop a fungible token on Hedera.
+This tool will airdrop a HTS fungible token on Hedera.
 
 Parameters:
 - tokenId (str, required): The id of the token

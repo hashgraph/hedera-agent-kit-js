@@ -15,7 +15,7 @@ const transferNonFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
 
   return `
 ${contextSnippet}
-This tool will transfer non-fungible tokens (NFTs) using an existing **token allowance**.
+This tool will transfer HTS non-fungible tokens (NFTs) using an existing **token allowance**.
 
 Parameters:
 - sourceAccountId (string, required): The token owner (allowance granter)
