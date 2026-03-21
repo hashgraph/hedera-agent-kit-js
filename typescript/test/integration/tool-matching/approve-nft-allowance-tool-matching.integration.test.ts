@@ -104,6 +104,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
       for (const v of variations) {
         const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
         await agent.invoke({ messages: [{ role: 'user', content: v.input }] });
+
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           APPROVE_NFT_ALLOWANCE_TOOL,

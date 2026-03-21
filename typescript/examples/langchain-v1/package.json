@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "2.80.0",
-    "@hashgraph/hedera-agent-kit": "3.8.1",
+    "hedera-agent-kit": "../..",
     "@langchain/core": "1.1.24",
     "@langchain/mcp-adapters": "^1.1.3",
     "dotenv": "17.2.3",

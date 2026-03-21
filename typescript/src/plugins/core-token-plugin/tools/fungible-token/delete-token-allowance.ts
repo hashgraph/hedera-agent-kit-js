@@ -20,7 +20,7 @@ const deleteTokenAllowancePrompt = (context: Context = {}) => {
 
   return `
 ${contextSnippet}
-This tool deletes token allowance(s) from the owner to the spender.
+This tool deletes HTS token allowance(s) from the owner to the spender.
 
 Parameters:
 - ${ownerAccountDesc}

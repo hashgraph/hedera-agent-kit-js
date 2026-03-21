@@ -28,7 +28,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should match mint fungible token tool with minimal params', async () => {
-      const input = 'Mint 10 of token 0.0.12345';
+      const input = 'Mint 10 of HTS token 0.0.12345';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -52,7 +52,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
 
     it('should extract scheduling parameters when provided', async () => {
       const input =
-        'Schedule mint 10 of token 0.0.12345. Make it expire tomorrow and wait for its expiration time with executing it.';
+        'Schedule mint 10 of HTS token 0.0.12345. Make it expire tomorrow and wait for its expiration time with executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -83,15 +83,15 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
     it('should parse natural language variations of minting', async () => {
       const variations = [
         {
-          input: 'Mint 100 tokens of 0.0.56789',
+          input: 'Mint 100 HTS tokens of 0.0.56789',
           expected: { tokenId: '0.0.56789', amount: 100 },
         },
         {
-          input: 'Add 50 supply to fungible token 0.0.22222',
+          input: 'Add 50 supply to fungible HTS token 0.0.22222',
           expected: { tokenId: '0.0.22222', amount: 50 },
         },
         {
-          input: 'Increase supply of token 0.0.99999 by 200',
+          input: 'Increase supply of HTS token 0.0.99999 by 200',
           expected: { tokenId: '0.0.99999', amount: 200 },
         },
       ];

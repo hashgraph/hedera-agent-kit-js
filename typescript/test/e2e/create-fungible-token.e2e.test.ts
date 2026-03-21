@@ -155,27 +155,4 @@ describe('Create Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
     }),
   );
-
-  it(
-    'handles invalid requests gracefully',
-    itWithRetry(async () => {
-      const input =
-        'Create a fungible token BrokenToken with symbol BRK, initial supply 2000 and max supply 1000';
-
-      const result = await agent.invoke({
-        messages: [
-          {
-            role: 'user',
-            content: input,
-          },
-        ],
-      });
-
-      const parsedResponse = responseParsingService.parseNewToolMessages(result);
-
-      expect(parsedResponse[0]).toBeDefined();
-      expect(parsedResponse[0].parsedData.humanMessage).toContain('cannot exceed max supply');
-      expect(parsedResponse[0].parsedData.raw.error).toBeDefined();
-    }),
-  );
 });

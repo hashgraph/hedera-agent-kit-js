@@ -17,7 +17,7 @@ const dissociateTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will airdrop a fungible token on Hedera.
+This tool will airdrop a HTS fungible token on Hedera.
 
 Parameters:
 - tokenIds (array of strings, required): A list of Hedera token IDs to dissociate from the account. Example: ["0.0.1234", "0.0.5678"]

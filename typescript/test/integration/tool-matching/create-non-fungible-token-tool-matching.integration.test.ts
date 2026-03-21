@@ -189,7 +189,8 @@ describe('Create Non-Fungible Token Tool Matching Integration Tests', () => {
     });
 
     it('should match with finite supply type parameter', async () => {
-      const input = 'Create an NFT FiniteCollection with symbol FIN and finite supply';
+      const input =
+        'Create an NFT with name FiniteCollection with symbol FIN and finite supply of 100';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi

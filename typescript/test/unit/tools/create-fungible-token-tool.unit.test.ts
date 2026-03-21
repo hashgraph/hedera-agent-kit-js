@@ -104,7 +104,7 @@ describe('create-token tool (unit)', () => {
     expect(tool.method).toBe(CREATE_FUNGIBLE_TOKEN_TOOL);
     expect(tool.name).toBe('Create Fungible Token');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('This tool creates a fungible token on Hedera.');
+    expect(tool.description).toContain('This tool creates a HTS fungible token on Hedera.');
     expect(tool.parameters).toBeTruthy();
   });
 

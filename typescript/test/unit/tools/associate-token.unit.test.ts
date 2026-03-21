@@ -74,7 +74,7 @@ describe('associate-token tool (unit)', () => {
     expect(tool.method).toBe(ASSOCIATE_TOKEN_TOOL);
     expect(tool.name).toBe('Associate Token(s)');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('associate one or more tokens');
+    expect(tool.description).toContain('associate one or more HTS tokens');
     expect(tool.parameters).toBeTruthy();
   });
 

@@ -112,11 +112,12 @@ describe('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
     it('should handle slight natural language variations', async () => {
       const variations = [
         {
-          input: 'Mint NFT 0.0.7007 with metadata ipfs://abc123',
+          input: 'Mint two HTS (not erc20) NFT 0.0.7007 with metadata ipfs://abc123',
           expected: { tokenId: '0.0.7007', uris: ['ipfs://abc123'] },
         },
         {
-          input: 'Mint NFTs 0.0.8008 with metadata URIs ipfs://meta1 and ipfs://meta2',
+          input:
+            'Mint two HTS (not erc20) NFTs 0.0.8008 with metadata URIs ipfs://meta1 and ipfs://meta2.',
           expected: { tokenId: '0.0.8008', uris: ['ipfs://meta1', 'ipfs://meta2'] },
         },
       ];
