@@ -21,8 +21,8 @@ This tool will transfer HBAR using an existing allowance.
 Parameters:
 - sourceAccountId (string, required): Account ID of the HBAR owner (the allowance granter)
 - transfers (array of objects, required): List of HBAR transfers. Each object should contain:
-  - accountId (string): Recipient account ID
-  - amount (number): Amount of HBAR to transfer
+  - accountId (string, required): Recipient account ID
+  - amount (number, required): Amount of HBAR to transfer
 - transactionMemo (string, optional): Optional memo for the transfer HBAR with allowance transaction
 ${usageInstructions}
 `;

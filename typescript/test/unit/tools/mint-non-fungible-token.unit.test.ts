@@ -74,7 +74,7 @@ describe('mint-non-fungible-token tool (unit)', () => {
     expect(tool.method).toBe(MINT_NON_FUNGIBLE_TOKEN_TOOL);
     expect(tool.name).toBe('Mint Non-Fungible Token');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('mint NFTs with its unique metadata');
+    expect(tool.description).toContain('mint HTS NFTs with its unique metadata');
     expect(tool.parameters).toBeTruthy();
   });
 

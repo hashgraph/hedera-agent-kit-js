@@ -15,17 +15,18 @@ const transferNonFungibleTokenPrompt = (context: Context = {}) => {
 
   return `
 ${contextSnippet}
-This tool will transfer non-fungible tokens (NFTs) from the operator's account to specified recipients.
+This tool will transfer HTS non-fungible tokens (NFTs) from the operator's account to specified recipients.
 
 Parameters:
 - tokenId (string, required): The NFT token ID to transfer (e.g. "0.0.12345")
-- recipients (array, required): List of objects specifying recipients and serial numbers
-  - recipientId (string): Account to transfer to
-  - serialNumber (number): NFT serial number to transfer
+- recipients (array, required): List of objects specifying recipients and serial numbers - accepts multiple transfers at once
+  - recipientId (string, required): Account to transfer to
+  - serialNumber (number, required): NFT serial number to transfer
 - transactionMemo (string, optional): Optional memo for the transaction
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
+If multiple recipients are specified, the tool will create a single transaction for all transfers - they should be defined in recipients array.
 `;
 };
 

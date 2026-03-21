@@ -20,7 +20,7 @@ const deleteNftAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool deletes NFT allowance(s) from the owner. Removing an allowance for a serial number means clearing the currently approved spender.
+This tool deletes HTS NFT allowance(s) from the owner. Removing an allowance for a serial number means clearing the currently approved spender.
 
 Parameters:
 - ${ownerAccountDesc}

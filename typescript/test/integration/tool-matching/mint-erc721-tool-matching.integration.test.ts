@@ -50,7 +50,7 @@ describe('Mint ERC721 Tool Matching Integration Tests', () => {
     });
 
     it('should match mint ERC721 command with Hedera address', async () => {
-      const input = 'Mint an NFT from contract 0.0.1234 to 0.0.5678';
+      const input = 'Mint an NFT (ERC721) from contract 0.0.1234 to 0.0.5678';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -104,7 +104,7 @@ describe('Mint ERC721 Tool Matching Integration Tests', () => {
           },
         },
         {
-          input: 'Create NFT (ERC-721) token from contract 0.0.3333 to 0.0.4444',
+          input: 'Mint NFT (ERC-721) token from contract 0.0.3333 to 0.0.4444',
           expected: { contractId: '0.0.3333', toAddress: '0.0.4444' },
         },
       ];

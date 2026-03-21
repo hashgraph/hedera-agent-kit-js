@@ -99,7 +99,9 @@ describe('create-non-fungible-token tool (unit)', () => {
     expect(tool.method).toBe(CREATE_NON_FUNGIBLE_TOKEN_TOOL);
     expect(tool.name).toBe('Create Non-Fungible Token');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('This tool creates a non-fungible token (NFT) on Hedera.');
+    expect(tool.description).toContain(
+      'This tool creates a HTS non-fungible token (NFT) on Hedera.',
+    );
     expect(tool.parameters).toBeTruthy();
   });
 

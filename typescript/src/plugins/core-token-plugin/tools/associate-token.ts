@@ -20,7 +20,7 @@ const associateTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will associate one or more tokens with a Hedera account.
+This tool will associate one or more HTS tokens with a Hedera account.
 
 Parameters:
 ${accountToAssociate}

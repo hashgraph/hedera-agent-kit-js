@@ -28,7 +28,8 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
 
   describe('Tool Matching and Parameter Extraction', () => {
     it('should match airdrop tool with minimal params', async () => {
-      const input = 'Airdrop 10 HTS tokens 0.0.1234 from 0.0.1001 to 0.0.2002';
+      const input =
+        'Please make a HTS token airdrop. I want to airdrop 10 tokens with id 0.0.1234 from account 0.0.1001 to account 0.0.2002';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -57,7 +58,8 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
     });
 
     it('should support multiple recipients', async () => {
-      const input = 'Airdrop 5 of token 0.0.9999 from 0.0.1111 to 0.0.2222 and 0.0.3333';
+      const input =
+        'Airdrop 5 of token 0.0.9999 from 0.0.1111 to 0.0.2222 and 5 of token 0.0.9999 0.0.3333. Do it in one transaction.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -93,7 +95,8 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
           },
         },
         {
-          input: 'Airdrop 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500',
+          input:
+            'Airdrop 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500. Do it in one transaction.',
           expected: {
             tokenId: '0.0.7777',
             sourceAccountId: '0.0.1500',
@@ -113,6 +116,7 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
           .mockReset()
           .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
         await agent.invoke({ messages: [{ role: 'user', content: variation.input }] });
+
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           AIRDROP_FUNGIBLE_TOKEN_TOOL,

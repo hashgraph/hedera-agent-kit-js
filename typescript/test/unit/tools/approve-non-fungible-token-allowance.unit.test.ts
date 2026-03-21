@@ -50,7 +50,7 @@ describe('approve-nft-allowance tool (unit)', () => {
     expect(tool.method).toBe(APPROVE_NFT_ALLOWANCE_TOOL);
     expect(tool.name).toBe('Approve NFT Allowance');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('approves an NFT allowance');
+    expect(tool.description).toContain('approves an HTS NFT allowance');
     expect(tool.parameters).toBeTruthy();
   });
 

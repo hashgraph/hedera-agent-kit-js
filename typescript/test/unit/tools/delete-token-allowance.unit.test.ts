@@ -66,7 +66,7 @@ describe('delete-token-allowance tool (unit)', () => {
     expect(tool.method).toBe(DELETE_TOKEN_ALLOWANCE_TOOL);
     expect(tool.name).toBe('Delete Token Allowance');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('deletes token allowance');
+    expect(tool.description).toContain('deletes HTS token allowance');
     expect(tool.parameters).toBeTruthy();
   });
 
