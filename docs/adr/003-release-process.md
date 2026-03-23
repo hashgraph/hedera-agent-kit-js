@@ -1,7 +1,8 @@
 # ADR 003: NPM Release Process
 
-- **Status:** Proposed
+- **Status:** Implemented
 - **Date:** 2025-01-27
+- **Updated:** 2026-03-20
 
 ## Context
 
@@ -130,6 +131,14 @@ jobs:
 ```
 
 ##### Release Workflow
+
+The actual release workflow (`.github/workflows/release.yml`) uses a multi-job pipeline:
+
+1. **Test gates**: `unit-tests` → `integration-tests` → `e2e-tests` (reusable workflows)
+2. **`prepare-release`**: Runs `semantic-release --dry-run` to detect the next version, outputs `version` and `need-release`
+3. **`create-github-release`**: Runs semantic-release for real (creates tag, GitHub release, commits version bump), builds the package, packs a tarball, and uploads it as an artifact. Release commits are GPG-signed.
+4. **`publish-npm-package`**: Downloads the tarball artifact and publishes to npm with `--access=public --provenance` using OIDC trusted publishing (`id-token: write`). Skipped during dry runs.
+
 ```yaml
 name: Release
 on:
@@ -137,54 +146,33 @@ on:
     inputs:
       dry_run:
         description: 'Dry run (no actual release)'
-        required: false
-        default: 'false'
+        required: true
+        default: true
         type: boolean
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-          
-      - name: Install dependencies
-        run: |
-          cd typescript
-          npm ci
-          
-      - name: Run all tests with multiple LLMs
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          cd typescript
-          npm run test:unit
-          npm run test:integration
-          npm run test:tool-calling -- --llm=all
-          npm run test:e2e -- --llm=all
-          
-      - name: Build package
-        run: |
-          cd typescript
-          npm run build
-          
-      - name: Release
-        if: ${{ github.event.inputs.dry_run == 'false' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd typescript
-          npx semantic-release
+  unit-tests:
+    uses: ./.github/workflows/run-unit-tests.yml
+
+  integration-tests:
+    needs: [ unit-tests ]
+    uses: ./.github/workflows/run-integration-tests.yml
+
+  e2e-tests:
+    needs: [ integration-tests ]
+    uses: ./.github/workflows/run-e2e-tests.yml
+
+  prepare-release:
+    needs: [ e2e-tests ]
+    # Runs semantic-release --dry-run, outputs version and need-release
+
+  create-github-release:
+    needs: [ prepare-release ]
+    # Runs semantic-release, builds, packs tarball, uploads artifact
+
+  publish-npm-package:
+    needs: [ create-github-release, prepare-release ]
+    # Downloads artifact, publishes with npm publish --provenance
 ```
 
 ##### Branch Testing Workflow
@@ -218,37 +206,46 @@ jobs:
 1. **Verify Conditions**: Check if release should proceed
 2. **Get Last Release**: Analyze Git tags to find the last release
 3. **Analyze Commits**: Determine release type based on commit messages
-4. **Verify Release**: Ensure release conformity
+4. **Verify Release**: Write VERSION file via `@semantic-release/exec`
 5. **Generate Notes**: Create release notes from commits
 6. **Create Git Tag**: Tag the new release version
-7. **Prepare**: Prepare the release artifacts
-8. **Publish**: Publish to NPM registry
-9. **Notify**: Notify about new releases
+7. **Prepare**: Bump version in `typescript/package.json` via `@semantic-release/exec`
+8. **Commit**: Commit updated package.json via `@semantic-release/git`
+9. **GitHub Release**: Create GitHub release via `@semantic-release/github`
+
+NPM publishing is handled in a separate workflow job using OIDC trusted publishing.
 
 #### Semantic-Release Configuration
 ```json
 {
   "branches": ["main"],
   "plugins": [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
-    "@semantic-release/npm",
-    "@semantic-release/git",
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
+    ["@semantic-release/exec", {
+      "verifyReleaseCmd": "echo ${nextRelease.version} > VERSION",
+      "prepareCmd": "cd typescript && npm version ${nextRelease.version} --no-git-tag-version"
+    }],
+    ["@semantic-release/git", {
+      "assets": ["typescript/package.json", "typescript/package-lock.json"],
+      "message": "chore(release): ${nextRelease.version} [skip ci]"
+    }],
     "@semantic-release/github"
   ]
 }
 ```
 
+Note: semantic-release runs from the repository root (not from `typescript/`). The `@semantic-release/exec` plugin writes a `VERSION` file used to pass the version between workflow jobs, and bumps `typescript/package.json`. Publishing to NPM is handled separately via OIDC trusted publishing rather than `@semantic-release/npm`.
+
 ### 4. Package Structure
 
-#### TypeScript SDK Package (`hedera-agent-kit`)
+#### TypeScript SDK Package (`@hashgraph/hedera-agent-kit`)
 - **Location**: `typescript/`
 - **Entry Points**: ESM and CJS builds via tsup
 - **Files**: Distribution files only (`dist/**/*`)
 - **Dependencies**: All runtime dependencies
 - **Dev Dependencies**: Build and test tools
-- **Package Name**: `hedera-agent-kit`
+- **Package Name**: `@hashgraph/hedera-agent-kit`
 
 ### 5. Release Channels
 
@@ -361,7 +358,7 @@ jobs:
 - **Mitigation**: Automated changelog generation, clear migration guides
 
 #### Risk: NPM Publishing Issues
-- **Mitigation**: Multiple NPM accounts, proper token management, rollback procedures
+- **Mitigation**: OIDC trusted publishing (no token rotation needed), rollback procedures, artifact-based publish separates build from publish
 
 #### Risk: Git Tag Conflicts
 - **Mitigation**: Unique versioning strategy, proper branch protection rules

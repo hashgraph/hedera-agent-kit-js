@@ -10,7 +10,7 @@ The Hedera Agent Kit provides easy access to MCP servers hosted by affiliated ec
 These servers are preconfigured in the `HederaMCPServer` enum and can be loaded directly into your agent configuration:
 
 ```typescript
-import { HederaMCPServer } from 'hedera-agent-kit';
+import { HederaMCPServer } from '@hashgraph/hedera-agent-kit';
 
 const toolkit = new HederaLangchainToolkit({
   configuration: {

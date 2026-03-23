@@ -135,8 +135,6 @@ jobs:
     name: Github / Release
     if: ${{ needs.prepare-release.outputs.need-release == 'true' }}
     runs-on: hedera-agent-linux-medium
-    environment:
-      name: release
     needs:
       - prepare-release
     outputs:
@@ -249,8 +247,6 @@ jobs:
     name: Publish NPM Package
     if: ${{ needs.prepare-release.outputs.need-release == 'true' && inputs.dry_run != true }}
     runs-on: ubuntu-latest
-    environment:
-      name: release
     permissions:
       id-token: write
       contents: read

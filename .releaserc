@@ -31,34 +31,5 @@
     ],
     "@semantic-release/github"
   ],
-  "branches":[
-    {
-      "name": "main"
-    },
-    {
-      "name": "release/([0-9]+).([0-9]+)",
-      "channel": "${name.replace(/release\\//g, '').split('.')[0]}.${name.replace(/release\\//g, '').split('.')[1]}.x",
-      "range": "${name.replace(/release\\//g, '').split('.')[0]}.${name.replace(/release\\//g, '').split('.')[1]}.x"
-    },
-    {
-      "name": "alpha/*",
-      "prerelease": "alpha",
-      "channel": "alpha"
-    },
-    {
-      "name": "ci/*",
-      "prerelease": "alpha",
-      "channel": "alpha"
-    },
-    {
-      "name": "beta/*",
-      "prerelease": "beta",
-      "channel": "beta"
-    },
-    {
-      "name": "rc/*",
-      "prerelease": "rc",
-      "channel": "rc"
-    }
-  ]
+  "branches": ["main"]
 }
