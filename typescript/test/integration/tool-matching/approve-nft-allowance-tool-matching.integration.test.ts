@@ -199,7 +199,7 @@ describe('Approve NFT Allowance Tool Matching Integration Tests', () => {
 
       expect(tool).toBeDefined();
       expect(tool!.name).toBe('approve_nft_allowance_tool');
-      expect(tool!.description).toContain('approves an NFT allowance');
+      expect(tool!.description).toContain('This tool approves an HTS NFT allowance from the owner');
     });
   });
 });

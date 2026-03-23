@@ -138,7 +138,7 @@ describe('Delete NFT Allowance Tool Matching Integration Tests', () => {
 
       expect(tool).toBeDefined();
       expect(tool!.name).toBe('delete_non_fungible_token_allowance_tool');
-      expect(tool!.description).toContain('deletes NFT allowance');
+      expect(tool!.description).toContain('This tool deletes HTS NFT allowance(s)');
     });
   });
 });

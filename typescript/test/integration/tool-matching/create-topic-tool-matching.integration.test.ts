@@ -27,7 +27,7 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Matching and Parameter Extraction', () => {
-    it('should match create topic tool with default params', async () => {
+    it.skip('should match create topic tool with default params', async () => {
       const input = 'Create a new topic';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -44,7 +44,7 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
       expect(spy).toHaveBeenCalledWith(CREATE_TOPIC_TOOL, expect.objectContaining({}));
     });
 
-    it('should match create topic tool with memo and submit key', async () => {
+    it.skip('should match create topic tool with memo and submit key', async () => {
       const input = 'Create a topic with memo "Payments" and set submit key';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -67,7 +67,7 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
       );
     });
 
-    it('should handle various natural language variations', async () => {
+    it.skip('should handle various natural language variations', async () => {
       const variations = [
         { input: 'Open a new consensus topic', expected: {} },
         { input: 'Create topic with memo "My memo"', expected: { topicMemo: 'My memo' } },
@@ -99,7 +99,7 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Available', () => {
-    it('should have create topic tool available', () => {
+    it.skip('should have create topic tool available', () => {
       const tools = toolkit.getTools();
       const createTopic = tools.find(tool => tool.name === 'create_topic_tool');
 
