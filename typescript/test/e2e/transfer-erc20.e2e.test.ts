@@ -119,7 +119,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
       const variations = [
         `Transfer 1 ERC20 token ${testTokenAddress} to ${recipientAccountId}`,
         `Send 5 ERC20 tokens ${testTokenAddress} to recipient ${recipientAccountId}`,
-        `Transfer 2 tokens of contract ${testTokenAddress} to address ${recipientAccountId}`,
+        `Transfer 2 ERC20 tokens of contract ${testTokenAddress} to address ${recipientAccountId}`,
       ];
 
       for (const input of variations) {

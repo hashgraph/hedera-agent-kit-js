@@ -27,7 +27,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
   });
 
   describe.skip('Tool Matching and Parameter Extraction', () => {
-    it('should match sign schedule transaction tool for simple sign request', async () => {
+    it.skip('should match sign schedule transaction tool for simple sign request', async () => {
       const input = 'Sign the scheduled transaction with ID 0.0.123456';
 
       // Get the Hedera Agent Kit API from the toolkit
@@ -50,7 +50,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should match sign schedule transaction tool with different wording', async () => {
+    it.skip('should match sign schedule transaction tool with different wording', async () => {
       const input = 'Please sign scheduled transaction 0.0.789012';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -96,7 +96,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should match sign schedule transaction tool with "execute" wording', async () => {
+    it.skip('should match sign schedule transaction tool with "execute" wording', async () => {
       const input = 'Execute the scheduled transaction with ID 0.0.901234';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -118,7 +118,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should match sign schedule transaction tool with "authorize" wording', async () => {
+    it.skip('should match sign schedule transaction tool with "authorize" wording', async () => {
       const input = 'Authorize scheduled transaction 0.0.567890';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -140,7 +140,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should match sign schedule transaction tool with "confirm" wording', async () => {
+    it.skip('should match sign schedule transaction tool with "confirm" wording', async () => {
       const input = 'Confirm the scheduled transaction 0.0.111222';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -162,7 +162,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should handle various natural language variations', async () => {
+    it.skip('should handle various natural language variations', async () => {
       const variations = [
         {
           input: 'Please sign the scheduled transaction with ID 0.0.333444',
@@ -197,7 +197,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       }
     });
 
-    it('should extract correct parameters for complex sign request', async () => {
+    it.skip('should extract correct parameters for complex sign request', async () => {
       const input =
         'Please sign the scheduled transaction with ID 0.0.123456789 as soon as possible';
 
@@ -220,7 +220,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should extract correct parameters for not straightforward user input', async () => {
+    it.skip('should extract correct parameters for not straightforward user input', async () => {
       const input = 'I need to sign scheduled transaction 0.0.987654321 for approval';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -242,7 +242,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
       );
     });
 
-    it('should handle schedule ID with different formats', async () => {
+    it.skip('should handle schedule ID with different formats', async () => {
       const input = 'Sign scheduled transaction 0.0.123';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -266,7 +266,7 @@ describe.skip('Sign Schedule Transaction Tool Matching Integration Tests', () =>
   });
 
   describe.skip('Tool Available', () => {
-    it('should have sign schedule transaction tool available', () => {
+    it.skip('should have sign schedule transaction tool available', () => {
       const tools = toolkit.getTools();
       const signScheduleTransactionTool = tools.find(
         tool => tool.name === 'sign_schedule_transaction_tool',

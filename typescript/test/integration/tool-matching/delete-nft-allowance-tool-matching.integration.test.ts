@@ -36,7 +36,10 @@ describe('Delete NFT Allowance Tool Matching Integration Tests', () => {
       const input = 'Delete NFT allowance for token 0.0.5005 serial 1 from owner 0.0.6006';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -57,7 +60,10 @@ describe('Delete NFT Allowance Tool Matching Integration Tests', () => {
       const input = 'Delete NFT allowance for token 0.0.1111 serials 2 and 3';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -96,7 +102,10 @@ describe('Delete NFT Allowance Tool Matching Integration Tests', () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
 
       for (const v of variations) {
-        const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
+        const spy = vi
+          .spyOn(hederaAPI, 'run')
+          .mockReset()
+          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
         await agent.invoke({ messages: [{ role: 'user', content: v.input }] });
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
@@ -112,7 +121,10 @@ describe('Delete NFT Allowance Tool Matching Integration Tests', () => {
         'Delete NFT allowance for token 0.0.7777 serial 5 from owner 0.0.8888 with memo "revoke access"';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -138,7 +150,7 @@ describe('Delete NFT Allowance Tool Matching Integration Tests', () => {
 
       expect(tool).toBeDefined();
       expect(tool!.name).toBe('delete_non_fungible_token_allowance_tool');
-      expect(tool!.description).toContain('deletes NFT allowance');
+      expect(tool!.description).toContain('This tool deletes HTS NFT allowance(s)');
     });
   });
 });

@@ -107,7 +107,7 @@ describe('Delete Token Allowance Tool Matching Integration Tests', () => {
 
       expect(tool).toBeDefined();
       expect(tool!.name).toBe('delete_token_allowance_tool');
-      expect(tool!.description).toContain('deletes token allowance');
+      expect(tool!.description).toContain('This tool deletes HTS token allowance(s)');
     });
   });
 });
