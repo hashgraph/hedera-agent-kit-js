@@ -1,4 +1,4 @@
-name: AI Lab Feedback
+name: Agent Lab Feedback Form
 description: Share feedback, report bugs, or request features for the AI Lab
 title: "[AI LAB] - "
 labels: ["AI Lab"]
@@ -10,6 +10,15 @@ body:
         Thanks for taking the time to share feedback on the AI Lab.
 
         [Join the Hedera Discord Server](https://discord.gg/DNx3r3CW)
+        
+  - type: input
+  id: contact-username
+  attributes:
+    label: Contact Info
+    description: Your GitHub or Discord username for follow-up
+    placeholder: "@username"
+  validations:
+    required: false
 
   - type: textarea
     id: feedback
@@ -44,19 +53,11 @@ body:
       required: false
 
   - type: textarea
-    id: links-resources
+    id: links-resources-screenshot
     attributes:
       label: Relevant links or resources
-      description: Optional. Include any links that help us reproduce or understand the issue.
-      placeholder: "Links to docs, repos, PRs, logs, or related issues..."
+      description: Optional. Include any links that help us reproduce or understand the issue. g-and-drop screenshots into this box (or paste them) to upload.
+      placeholder: "Screenshots or links to docs, repos, PRs, logs, or related issues..."
     validations:
       required: false
 
-  - type: textarea
-    id: screenshots
-    attributes:
-      label: Screenshots
-      description: Optional. Drag-and-drop screenshots into this box (or paste them) to upload.
-      placeholder: "Attach screenshots here."
-    validations:
-      required: false
