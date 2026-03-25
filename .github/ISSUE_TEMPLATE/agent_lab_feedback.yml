@@ -10,13 +10,13 @@ body:
         Thanks for taking the time to share feedback on the AI Lab.
         
   - type: input
-  id: contact-username
-  attributes:
-    label: Contact Info
-    description: Your GitHub or Discord username for follow-up
-    placeholder: "@username"
-  validations:
-    required: false
+    id: contact-username
+    attributes:
+      label: Contact Info
+      description: Your GitHub or Discord username for follow-up
+      placeholder: "@username"
+    validations:
+      required: false
 
   - type: textarea
     id: feedback
