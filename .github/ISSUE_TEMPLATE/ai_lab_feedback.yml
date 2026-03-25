@@ -1,0 +1,62 @@
+name: AI Lab Feedback
+description: Share feedback, report bugs, or request features for the AI Lab
+title: "[AI LAB] - "
+labels: ["AI Lab"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share feedback on the AI Lab.
+
+        [Join the Hedera Discord Server](https://discord.gg/DNx3r3CW)
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Describe your feedback, bug, or feature request
+      description: Please include as much detail as you can.
+      placeholder: "Describe what you ran into, what you liked/disliked, or what you want to see improved..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: feedback-type
+    attributes:
+      label: What type of feedback is this?
+      options:
+        - label: General Feedback
+        - label: Bug or Suggestion
+        - label: Feature Request
+        - label: Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: What you expected vs what you experienced
+      description: Optional. If this is a bug or unexpected behavior, tell us what you expected and what happened instead.
+      placeholder: |
+        Expected:
+        Actual:
+    validations:
+      required: false
+
+  - type: textarea
+    id: links-resources
+    attributes:
+      label: Relevant links or resources
+      description: Optional. Include any links that help us reproduce or understand the issue.
+      placeholder: "Links to docs, repos, PRs, logs, or related issues..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Optional. Drag-and-drop screenshots into this box (or paste them) to upload.
+      placeholder: "Attach screenshots here."
+    validations:
+      required: false
