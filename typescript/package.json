@@ -1,6 +1,6 @@
 {
-  "name": "hedera-agent-kit",
-  "version": "3.8.2",
+  "name": "@hashgraph/hedera-agent-kit",
+  "version": "3.8.2-rc.1",
   "description": "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like.",
   "main": "./dist/cjs/index.js",
   "types": "./dist/cjs/index.d.ts",
@@ -89,18 +89,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hashgraph/hedera-agent-kit-js.git"
-  },
-  "release": {
-    "branches": [
-      "main"
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      "@semantic-release/npm",
-      "@semantic-release/git",
-      "@semantic-release/github"
-    ]
   }
 }
