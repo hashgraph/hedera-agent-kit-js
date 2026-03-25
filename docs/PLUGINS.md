@@ -19,7 +19,7 @@ See this list of available third party plugins for the Hedera Agent Kit Python S
 
   Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
   Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
-  
+
 
 ## Plugin Architecture
 
