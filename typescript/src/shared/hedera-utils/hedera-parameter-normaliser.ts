@@ -705,6 +705,7 @@ export default class HederaParameterNormaliser {
 
     return {
       tokenTransfers,
+      transactionMemo: parsedParams.transactionMemo,
     };
   }
 
