@@ -174,7 +174,7 @@ describe('Transfer NFT E2E Tests', () => {
   });
 
   it('should schedule an NFT transfer via natural language', async () => {
-    const input = `Schedule a transfer of NFT ${nftTokenId} serial 4 to ${recipientAccountId.toString()}`;
+    const input = `Schedule a transfer of HTS NFT with token ID: ${nftTokenId}, serial: 4 to account ${recipientAccountId.toString()}`;
 
     const transferResult = await agent.invoke({
       messages: [

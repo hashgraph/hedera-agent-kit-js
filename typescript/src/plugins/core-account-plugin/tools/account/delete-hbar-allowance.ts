@@ -28,7 +28,7 @@ Parameters:
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
 
-Example: "Delete HBAR allowance from 0.0.123 to 0.0.456". Spender account ID is 0.0.456 and the owner account ID is 0.0.789.
+Example: "Delete HBAR allowance from 0.0.123 to 0.0.456". Spender account ID is 0.0.456 and the owner account ID is 0.0.123.
 Example 2: "Delete HBAR allowance for 0.0.123". Spender account ID is 0.0.123 and the owner account ID was not specified.
 `;
 };

@@ -26,7 +26,7 @@ describe.skip('Dissociate Token Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Matching and Parameter Extraction', () => {
-    it('should match dissociate token tool with a single tokenId', async () => {
+    it.skip('should match dissociate token tool with a single tokenId', async () => {
       const input = 'Dissociate token 0.0.12345 from my account';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -46,7 +46,7 @@ describe.skip('Dissociate Token Tool Matching Integration Tests', () => {
       );
     });
 
-    it('should match dissociate token tool with multiple tokenIds and explicit accountId', async () => {
+    it.skip('should match dissociate token tool with multiple tokenIds and explicit accountId', async () => {
       const input = 'Dissociate tokens 0.0.1111 and 0.0.2222 from account 0.0.3333';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -69,7 +69,7 @@ describe.skip('Dissociate Token Tool Matching Integration Tests', () => {
       );
     });
 
-    it('should handle natural language variations', async () => {
+    it.skip('should handle natural language variations', async () => {
       const variations = [
         { input: 'Remove token 0.0.42 from my account', expected: { tokenIds: ['0.0.42'] } },
         {
@@ -99,7 +99,7 @@ describe.skip('Dissociate Token Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Available', () => {
-    it('should have dissociate token tool available in the toolkit', () => {
+    it.skip('should have dissociate token tool available in the toolkit', () => {
       const tools = toolkit.getTools();
       const dissociateTool = tools.find(tool => tool.name === DISSOCIATE_TOKEN_TOOL);
 
