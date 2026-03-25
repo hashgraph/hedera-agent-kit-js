@@ -1,13 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hcs2RegistryBuilder } from '@/hooks/hol-audit-trail-hook/hol/hcs2-registry-builder';
-import { HCS2_REGISTRY_TYPE } from '@/hooks/hol-audit-trail-hook/hol/constants';
 
-const mockCreateTopic = vi.fn((params: any) => ({ ...params }));
 const mockSubmitTopicMessage = vi.fn((params: any) => ({ ...params }));
 
 vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
   default: {
-    createTopic: (...args: any[]) => mockCreateTopic(...args),
     submitTopicMessage: (...args: any[]) => mockSubmitTopicMessage(...args),
   },
 }));
@@ -15,71 +12,6 @@ vi.mock('@/shared/hedera-utils/hedera-builder', () => ({
 describe('Hcs2RegistryBuilder', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  describe('createRegistry', () => {
-    it('should create a topic with hcs-2 protocol memo', () => {
-      const result = Hcs2RegistryBuilder.createRegistry({
-        autoRenewAccountId: '0.0.12345',
-        submitKey: 'mock-key' as any,
-      });
-
-      expect(result.topicMemo).toContain('hcs-2');
-    });
-
-    it('should default registryType to INDEXED (0)', () => {
-      const result = Hcs2RegistryBuilder.createRegistry({
-        autoRenewAccountId: '0.0.12345',
-        submitKey: 'mock-key' as any,
-      });
-
-      expect(result.topicMemo).toBe('hcs-2:0:0');
-    });
-
-    it('should default ttl to 0', () => {
-      const result = Hcs2RegistryBuilder.createRegistry({
-        autoRenewAccountId: '0.0.12345',
-        submitKey: 'mock-key' as any,
-      });
-
-      expect(result.topicMemo).toMatch(/:0$/);
-    });
-
-    it('should use NON_INDEXED registry type when specified', () => {
-      const result = Hcs2RegistryBuilder.createRegistry({
-        autoRenewAccountId: '0.0.12345',
-        submitKey: 'mock-key' as any,
-        registryType: HCS2_REGISTRY_TYPE.NON_INDEXED,
-      });
-
-      expect(result.topicMemo).toBe('hcs-2:1:0');
-    });
-
-    it('should use custom TTL when specified', () => {
-      const result = Hcs2RegistryBuilder.createRegistry({
-        autoRenewAccountId: '0.0.12345',
-        submitKey: 'mock-key' as any,
-        ttl: 3600,
-      });
-
-      expect(result.topicMemo).toBe('hcs-2:0:3600');
-    });
-
-    it('should call HederaBuilder.createTopic once with correct params', () => {
-      Hcs2RegistryBuilder.createRegistry({
-        autoRenewAccountId: '0.0.12345',
-        submitKey: 'mock-key' as any,
-        ttl: 3600,
-      });
-
-      expect(mockCreateTopic).toHaveBeenCalledOnce();
-      expect(mockCreateTopic).toHaveBeenCalledWith({
-        topicMemo: 'hcs-2:0:3600',
-        autoRenewAccountId: '0.0.12345',
-        isSubmitKey: false,
-        submitKey: 'mock-key',
-      });
-    });
   });
 
   describe('registerEntry', () => {

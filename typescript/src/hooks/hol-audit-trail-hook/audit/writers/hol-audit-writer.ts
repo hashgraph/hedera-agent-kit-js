@@ -2,7 +2,6 @@ import { Client } from '@hashgraph/sdk';
 
 import { Hcs1FileBuilder } from '@/hooks/hol-audit-trail-hook/hol/hcs1-file-builder';
 import { Hcs2RegistryBuilder } from '@/hooks/hol-audit-trail-hook/hol/hcs2-registry-builder';
-import { HCS2_REGISTRY_TYPE } from '@/hooks/hol-audit-trail-hook/hol/constants';
 import type { AuditEntry } from '@/hooks/hol-audit-trail-hook/audit/audit-entry';
 import type { SessionAwareWriter } from '@/hooks/hol-audit-trail-hook/audit/writers/types';
 
@@ -16,23 +15,6 @@ export class HolAuditWriter implements SessionAwareWriter {
 
   setSessionId(sessionId: string): void {
     this.sessionId = sessionId;
-  }
-
-  async initialize(): Promise<string> {
-    const tx = Hcs2RegistryBuilder.createRegistry({
-      autoRenewAccountId: this.client.operatorAccountId!.toString(),
-      submitKey: this.client.operatorPublicKey!,
-      registryType: HCS2_REGISTRY_TYPE.INDEXED,
-      ttl: 0,
-    });
-
-    const response = await tx.execute(this.client);
-    const receipt = await response.getReceipt(this.client);
-    if (!receipt.topicId) {
-      throw new Error('Failed to create session topic');
-    }
-
-    return receipt.topicId.toString();
   }
 
   async write(entry: AuditEntry): Promise<void> {

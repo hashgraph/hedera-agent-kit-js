@@ -1,16 +1,7 @@
-import { PublicKey } from '@hashgraph/sdk';
-
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
-import { HCS2_PROTOCOL, HCS2_OPERATION, HCS2_REGISTRY_TYPE } from '@/hooks/hol-audit-trail-hook/hol/constants';
+import { HCS2_PROTOCOL, HCS2_OPERATION } from '@/hooks/hol-audit-trail-hook/hol/constants';
 
 type Hcs2Operation = (typeof HCS2_OPERATION)[keyof typeof HCS2_OPERATION];
-
-export type CreateHcs2RegistryParams = {
-  autoRenewAccountId: string;
-  submitKey: PublicKey;
-  registryType?: 0 | 1;
-  ttl?: number;
-};
 
 export type RegisterHcs2EntryParams = {
   registryTopicId: string;
@@ -29,18 +20,6 @@ export type Hcs2Message = {
 };
 
 export class Hcs2RegistryBuilder {
-  static createRegistry(params: CreateHcs2RegistryParams) {
-    const registryType = params.registryType ?? HCS2_REGISTRY_TYPE.INDEXED;
-    const ttl = params.ttl ?? 0;
-
-    return HederaBuilder.createTopic({
-      topicMemo: `${HCS2_PROTOCOL}:${registryType}:${ttl}`,
-      autoRenewAccountId: params.autoRenewAccountId,
-      isSubmitKey: false,
-      submitKey: params.submitKey,
-    });
-  }
-
   static registerEntry(params: RegisterHcs2EntryParams) {
     const message: Hcs2Message = {
       p: HCS2_PROTOCOL,

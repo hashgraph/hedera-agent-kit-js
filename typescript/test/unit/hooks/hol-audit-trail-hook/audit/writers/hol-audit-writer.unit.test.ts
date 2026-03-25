@@ -3,8 +3,6 @@ import { HolAuditWriter } from '@/hooks/hol-audit-trail-hook/audit/writers/hol-a
 import type { AuditEntry } from '@/hooks/hol-audit-trail-hook/audit/audit-entry';
 import type { Client } from '@hashgraph/sdk';
 
-const mockCreateRegistry = vi.fn();
-const mockRegistryExecute = vi.fn();
 const mockCreateFile = vi.fn();
 const mockFileTopicExecute = vi.fn();
 const mockFileMessageExecute = vi.fn();
@@ -13,7 +11,6 @@ const mockRegisterExecute = vi.fn();
 
 vi.mock('@/hooks/hol-audit-trail-hook/hol/hcs2-registry-builder', () => ({
   Hcs2RegistryBuilder: {
-    createRegistry: (...args: any[]) => mockCreateRegistry(...args),
     registerEntry: (...args: any[]) => mockRegisterEntry(...args),
   },
 }));
@@ -44,15 +41,6 @@ describe('HolAuditWriter', () => {
       operatorAccountId: { toString: () => '0.0.12345' },
       operatorPublicKey: 'mock-public-key',
     } as unknown as Client;
-
-    mockCreateRegistry.mockReturnValue({
-      execute: (...args: any[]) => mockRegistryExecute(...args),
-    });
-    mockRegistryExecute.mockResolvedValue({
-      getReceipt: vi.fn().mockResolvedValue({
-        topicId: { toString: () => '0.0.999' },
-      }),
-    });
 
     mockCreateFile.mockReturnValue({
       topicTransaction: {
@@ -85,49 +73,6 @@ describe('HolAuditWriter', () => {
       expect(mockRegisterEntry).toHaveBeenCalledWith(
         expect.objectContaining({ registryTopicId: '0.0.666' }),
       );
-    });
-  });
-
-  describe('initialize', () => {
-    it('should create an HCS-2 INDEXED registry and return its topic ID', async () => {
-      const writer = new HolAuditWriter(mockClient);
-      const sessionId = await writer.initialize();
-
-      expect(sessionId).toBe('0.0.999');
-      expect(mockCreateRegistry).toHaveBeenCalledTimes(1);
-    });
-
-    it('should pass operator account ID and public key to createRegistry', async () => {
-      const writer = new HolAuditWriter(mockClient);
-      await writer.initialize();
-
-      expect(mockCreateRegistry).toHaveBeenCalledWith(
-        expect.objectContaining({
-          autoRenewAccountId: '0.0.12345',
-          submitKey: 'mock-public-key',
-        }),
-      );
-    });
-
-    it('should request INDEXED registry type with TTL 0', async () => {
-      const writer = new HolAuditWriter(mockClient);
-      await writer.initialize();
-
-      expect(mockCreateRegistry).toHaveBeenCalledWith(
-        expect.objectContaining({
-          registryType: 0,
-          ttl: 0,
-        }),
-      );
-    });
-
-    it('should throw when receipt has no topicId', async () => {
-      mockRegistryExecute.mockResolvedValue({
-        getReceipt: vi.fn().mockResolvedValue({ topicId: null }),
-      });
-
-      const writer = new HolAuditWriter(mockClient);
-      await expect(writer.initialize()).rejects.toThrow('Failed to create session topic');
     });
   });
 

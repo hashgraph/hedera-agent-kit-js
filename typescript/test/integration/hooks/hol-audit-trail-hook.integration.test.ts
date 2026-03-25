@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, TopicCreateTransaction } from '@hashgraph/sdk';
 import { brotliDecompressSync } from 'zlib';
 import { randomBytes } from 'crypto';
 
@@ -89,6 +89,13 @@ describe('HolAuditTrailHook Integration Tests', () => {
     }
   });
 
+  async function createSessionTopic(client: Client): Promise<string> {
+    const tx = new TopicCreateTransaction().setTopicMemo('hcs-2:0:0');
+    const response = await tx.execute(client);
+    const receipt = await response.getReceipt(client);
+    return receipt.topicId!.toString();
+  }
+
   function decodeMessage(base64Message: string): string {
     return Buffer.from(base64Message, 'base64').toString('utf-8');
   }
@@ -105,9 +112,10 @@ describe('HolAuditTrailHook Integration Tests', () => {
     return JSON.parse(decompressed.toString('utf-8'));
   }
 
-  it('should create HCS-2 session registry and HCS-1 audit entry for a single write', async () => {
+  it('should write HCS-1 audit entry to provided HCS-2 session registry', async () => {
+    const registryTopicId = await createSessionTopic(executorClient);
     const writer = new HolAuditWriter(executorClient);
-    const session = new AuditSession(writer);
+    const session = new AuditSession(writer, registryTopicId);
 
     const entry = buildAuditEntry({
       tool: TRANSFER_HBAR_TOOL,
@@ -119,10 +127,6 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const sessionTopicId = session.getSessionId();
     expect(sessionTopicId).toBeTruthy();
-
-    // Verify session topic memo is HCS-2 registry format
-    const topicInfo = await executorWrapper.getTopicInfo(sessionTopicId!);
-    expect(topicInfo.topicMemo).toBe('hcs-2:0:0');
 
     // Poll mirror node until the register message appears
     const sessionMessages = await pollTopicMessages(executorWrapper, sessionTopicId!, 1);
@@ -153,9 +157,10 @@ describe('HolAuditTrailHook Integration Tests', () => {
     expect(auditEntry.source).toBe('hedera-agent-kit-js');
   }, 60_000);
 
-  it('should create HCS-2 session registry and register multiple HCS-1 entries under the same session', async () => {
+  it('should register multiple HCS-1 entries under the same session registry', async () => {
+    const registryTopicId = await createSessionTopic(executorClient);
     const writer = new HolAuditWriter(executorClient);
-    const session = new AuditSession(writer);
+    const session = new AuditSession(writer, registryTopicId);
 
     const entry1 = buildAuditEntry({
       tool: TRANSFER_HBAR_TOOL,
@@ -185,9 +190,10 @@ describe('HolAuditTrailHook Integration Tests', () => {
     expect(registerMsg1.t_id).not.toBe(registerMsg2.t_id);
   }, 60_000);
 
-  it('should create HCS-2 session registry and split a large audit entry into multiple HCS-1 chunks', async () => {
+  it('should split a large audit entry into multiple HCS-1 chunks', async () => {
+    const registryTopicId = await createSessionTopic(executorClient);
     const writer = new HolAuditWriter(executorClient);
-    const session = new AuditSession(writer);
+    const session = new AuditSession(writer, registryTopicId);
 
     // Build an entry with high-entropy padding so brotli cannot compress it
     // below the HCS-1 chunk threshold (~1008 chars per chunk in the data URI).
@@ -244,7 +250,7 @@ describe('HolAuditTrailHook Integration Tests', () => {
   }, 60_000);
 
   it('should block tool execution when hook is used in RETURN_BYTES mode', async () => {
-    const hook = new HolAuditTrailHook({ relevantTools: [TRANSFER_HBAR_TOOL] });
+    const hook = new HolAuditTrailHook({ relevantTools: [TRANSFER_HBAR_TOOL], sessionId: '0.0.123' });
     const context: Context = {
       mode: AgentMode.RETURN_BYTES,
       hooks: [hook],
@@ -263,7 +269,7 @@ describe('HolAuditTrailHook Integration Tests', () => {
   });
 
   it('should not trigger hook when executed tool is not in relevantTools list', async () => {
-    const hook = new HolAuditTrailHook({ relevantTools: ['some_other_tool'] });
+    const hook = new HolAuditTrailHook({ relevantTools: ['some_other_tool'], sessionId: '0.0.123' });
     const context: Context = {
       mode: AgentMode.AUTONOMOUS,
       hooks: [hook],
@@ -276,6 +282,6 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const result = await tool.execute(executorClient, context, params);
     expect(result.raw.status).toBe('SUCCESS');
-    expect(hook.getSessionTopicId()).toBeNull();
+    expect(hook.getSessionId()).toBe('0.0.123');
   });
 });

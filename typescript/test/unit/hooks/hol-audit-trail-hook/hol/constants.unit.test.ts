@@ -5,7 +5,6 @@ import {
   HCS1_CHUNK_SIZE,
   HCS2_PROTOCOL,
   HCS2_OPERATION,
-  HCS2_REGISTRY_TYPE,
 } from '@/hooks/hol-audit-trail-hook/hol/constants';
 
 describe('HOL Constants', () => {
@@ -35,13 +34,6 @@ describe('HOL Constants', () => {
         UPDATE: 'update',
         DELETE: 'delete',
         MIGRATE: 'migrate',
-      });
-    });
-
-    it('should define HCS2_REGISTRY_TYPE with INDEXED as 0 and NON_INDEXED as 1', () => {
-      expect(HCS2_REGISTRY_TYPE).toEqual({
-        INDEXED: 0,
-        NON_INDEXED: 1,
       });
     });
   });

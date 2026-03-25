@@ -10,8 +10,3 @@ export const HCS2_OPERATION = {
   DELETE: 'delete',
   MIGRATE: 'migrate',
 } as const;
-
-export const HCS2_REGISTRY_TYPE = {
-  INDEXED: 0,
-  NON_INDEXED: 1,
-} as const;
