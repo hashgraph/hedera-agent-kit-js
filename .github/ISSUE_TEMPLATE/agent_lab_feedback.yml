@@ -1,6 +1,6 @@
 name: Agent Lab Feedback Form
 description: Share feedback, report bugs, or request features for the AI Lab
-title: "[Agent LAB] - "
+title: "[Agent Lab Feedback:] - "
 labels: ["AI Lab"]
 assignees: []
 body:
@@ -8,8 +8,6 @@ body:
     attributes:
       value: |
         Thanks for taking the time to share feedback on the AI Lab.
-
-        [Join the Hedera Discord Server](https://discord.gg/DNx3r3CW)
         
   - type: input
   id: contact-username
