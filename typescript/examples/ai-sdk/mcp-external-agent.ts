@@ -3,7 +3,7 @@ import { generateText, stepCountIs } from 'ai';
 import * as dotenv from 'dotenv';
 import prompts from 'prompts';
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import { HederaAIToolkit, AgentMode, coreMiscQueriesPlugin } from 'hedera-agent-kit';
+import { HederaAIToolkit, AgentMode, coreMiscQueriesPlugin } from '@hashgraph/hedera-agent-kit';
 
 import { experimental_createMCPClient } from '@ai-sdk/mcp';
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Configuration } from 'hedera-agent-kit';
-import { AgentMode, type Context } from 'hedera-agent-kit';
+import type { Configuration } from '@hashgraph/hedera-agent-kit';
+import { AgentMode, type Context } from '@hashgraph/hedera-agent-kit';
 import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
 
 export type AppMode = 'autonomous' | 'human';

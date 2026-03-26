@@ -1,5 +1,5 @@
 {
-  "name": "hedera-agent-kit",
+  "name": "@hashgraph/hedera-agent-kit",
   "version": "3.8.2",
   "description": "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like.",
   "main": "./dist/cjs/index.js",
@@ -61,8 +61,8 @@
   },
   "devDependencies": {
     "@eslint/js": "9.31.0",
-    "@semantic-release/changelog": "github:semantic-release/changelog",
-    "@semantic-release/git": "github:semantic-release/git",
+    "@semantic-release/changelog": "6.0.3",
+    "@semantic-release/git": "10.0.1",
     "@typescript-eslint/eslint-plugin": "8.37.0",
     "@typescript-eslint/parser": "8.37.0",
     "@vitest/coverage-v8": "4.0.16",
@@ -89,18 +89,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hashgraph/hedera-agent-kit-js.git"
-  },
-  "release": {
-    "branches": [
-      "main"
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      "@semantic-release/npm",
-      "@semantic-release/git",
-      "@semantic-release/github"
-    ]
   }
 }

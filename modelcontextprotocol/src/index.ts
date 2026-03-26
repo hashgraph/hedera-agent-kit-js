@@ -16,8 +16,8 @@ import {
   coreTokenPlugin,
   coreTokenPluginToolNames,
   HederaMCPToolkit,
-} from "hedera-agent-kit";
-import type { Configuration, Context } from "hedera-agent-kit";
+} from "@hashgraph/hedera-agent-kit";
+import type { Configuration, Context } from "@hashgraph/hedera-agent-kit";
 
 import * as dotenv from "dotenv";
 

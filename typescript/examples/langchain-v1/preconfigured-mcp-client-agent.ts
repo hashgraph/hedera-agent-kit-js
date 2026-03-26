@@ -4,7 +4,7 @@ import {
   HederaLangchainToolkit,
   HederaMCPServer,
   ResponseParserService,
-} from 'hedera-agent-kit';
+} from '@hashgraph/hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';

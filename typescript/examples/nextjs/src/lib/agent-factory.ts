@@ -5,7 +5,7 @@ import {
   createHederaClient,
   type AgentBootstrap,
 } from '@/lib/agent-config';
-import { HederaLangchainToolkit } from 'hedera-agent-kit';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
 

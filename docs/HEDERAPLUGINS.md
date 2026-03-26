@@ -255,7 +255,7 @@ import {
   coreEVMPlugin,
   coreEVMQueryPlugin,
   coreMiscQueriesPlugin,
-} from 'hedera-agent-kit';
+} from '@hashgraph/hedera-agent-kit';
 ```
 
 You will instantiate the HederaAgentToolkit with your chosen framework, defining the tools and plugins you want to use:

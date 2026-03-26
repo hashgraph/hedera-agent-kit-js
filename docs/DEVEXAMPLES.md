@@ -338,10 +338,10 @@ If you are upgrading to version `3.5.0` or higher, you must update your import p
 
 ```typescript
 // ❌ Deprecated (Will fail in v3.5.0+)
-import { HederaElizaOSToolkit } from 'hedera-agent-kit';
+import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit';
 
 // ✅ Correct
-import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos';
+import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit/elizaos';
 ```
 
 

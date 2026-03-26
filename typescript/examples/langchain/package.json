@@ -16,7 +16,7 @@
     "@langchain/openai": "1.2.7",
     "cheerio": "1.1.2",
     "dotenv": "17.2.3",
-    "hedera-agent-kit": "3.8.1",
+    "@hashgraph/hedera-agent-kit": "../..",
     "prompts": "2.4.2"
   },
   "author": "",

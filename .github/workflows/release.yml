@@ -15,63 +15,19 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write          # required by semantic-release to push tags/CHANGELOG commits
+  contents: write
   id-token: write
   pull-requests: write
+  issues: write
+  checks: write
+  statuses: write
+  actions: read
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   WORKDIR: 'typescript'
 
 jobs:
-  release:
-    name: Release to NPM (semantic-release)
-    runs-on: hedera-agent-linux-medium
-    environment:
-      name: release
-    needs: [ e2e-tests ]
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository (full history)
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: 'typescript/package-lock.json'
-
-      - name: Install dependencies
-        working-directory: ${{ env.WORKDIR }}
-        run: npm ci
-
-      - name: Pack
-        working-directory: ${{ env.WORKDIR }}
-        run: npm pack
-
-      - name: Release (semantic-release)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        working-directory: ${{ env.WORKDIR }}
-        run: npx semantic-release $([ "${{ github.event.inputs.dry_run }}" = "true" ] && echo --dry-run)
-
-      # Optionally upload artifacts (build, test outputs) for observability
-      - name: Upload dist artifact
-        if: ${{ github.event.inputs.dry_run == 'false' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: typescript-dist
-          path: ${{ env.WORKDIR }}/dist
-          if-no-files-found: ignore
-
   unit-tests:
     uses: ./.github/workflows/run-unit-tests.yml
 
@@ -90,3 +46,235 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
+  prepare-release:
+    name: Release / Prepare
+    runs-on: hedera-agent-linux-medium
+    needs: [ e2e-tests ]
+    outputs:
+      version: ${{ steps.set-outputs.outputs.version }}
+      need-release: ${{ steps.set-outputs.outputs.need-release }}
+    steps:
+      - name: Prepare Job
+        uses: pandaswhocode/initialize-github-job@ffb7446339e8e6007b942312ac95457d1a20b6cf # 1.0.4
+        with:
+          checkout: 'true'
+          checkout-ref: '${{ github.ref }}'
+          checkout-token: '${{ secrets.GH_ACCESS_TOKEN }}'
+          setup-node: 'true'
+          node-version: ${{ env.NODE_VERSION }}
+          node-registry: 'https://registry.npmjs.org/'
+
+      - name: Setup JQ
+        uses: dcarbone/install-jq-action@b7ef57d46ece78760b4019dbc4080a1ba2a40b45 # v3.2.0
+        with:
+          version: 1.7
+
+      - name: Install Semantic Release
+        run: |
+          npm install -g semantic-release@25.0.2 @semantic-release/git@10.0.1 @semantic-release/github@12.0.2 @semantic-release/exec@7.1.0
+          npm install -g conventional-changelog-conventionalcommits@9.1.0 @commitlint/cli@18.6.0 @commitlint/config-conventional@18.6.0
+          npm install -g marked-mangle@1.1.6 marked-gfm-heading-id@3.1.2 semantic-release-conventional-commits@3.0.0
+
+      - name: Calculate Next Version
+        id: calculate-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          GIT_AUTHOR_NAME: ${{ secrets.GIT_USER_NAME }}
+          GIT_AUTHOR_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+          GIT_COMMITTER_NAME: ${{ secrets.GIT_USER_NAME }}
+          GIT_COMMITTER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+        run: |
+          PROCEED="true"
+          if [[ "${{ github.event.repository.default_branch }}" == "${{ github.ref_name }}" ]]; then
+            if SEMREL_OUTPUT=$(npx semantic-release --dry-run 2>&1); then
+              if echo "${SEMREL_OUTPUT}" | grep -q "The next release version is"; then
+                echo "::notice file=release.yml::Semantic Release detected a new version"
+              else
+                echo "::notice file=release.yml::Semantic Release detected NO new version"
+                PROCEED="false"
+              fi
+            else
+              echo "::notice file=release.yml::Semantic Release did NOT run successfully"
+              PROCEED="false"
+            fi
+            echo "::group::SemVer output"
+            echo "${SEMREL_OUTPUT}"
+            echo "::endgroup::"
+          else
+            if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+              jq -r '.version' './typescript/package.json' > VERSION
+              PROCEED="true"
+            else
+              PROCEED="false"
+            fi
+          fi
+          echo "need-release=${PROCEED}" >> "${GITHUB_OUTPUT}"
+
+      - name: Extract Version
+        id: set-outputs
+        if: ${{ !cancelled() && always() }}
+        run: |
+          PROCEED="true"
+          OUTVER=""
+          if [[ "${{ steps.calculate-version.outputs.need-release }}" == "true" ]] && [[ -f VERSION ]]; then
+            TRIMMED_VERSION=$(cat VERSION | tr -d '[:space:]')
+            OUTVER="${TRIMMED_VERSION}"
+            echo "version=${TRIMMED_VERSION}"
+          elif [[ "${{ steps.calculate-version.outputs.need-release }}" == "true" ]] && [[ "${{ inputs.dry_run }}" == "true" ]] && [[ ! -f VERSION ]]; then
+            VER=$(jq -r '.version' './typescript/package.json')
+            OUTVER="${VER}"
+            echo "Dry run enabled and VERSION file not found, using package.json version: ${VER}"
+          else
+            PROCEED="false"
+          fi
+          echo "version=${OUTVER}" >> "${GITHUB_OUTPUT}"
+          echo "need-release=${PROCEED}" >> "${GITHUB_OUTPUT}"
+
+  create-github-release:
+    name: Github / Release
+    if: ${{ needs.prepare-release.outputs.need-release == 'true' }}
+    runs-on: hedera-agent-linux-medium
+    needs:
+      - prepare-release
+    outputs:
+      npm-artifact-name: ${{ steps.set-publish-data.outputs.artifact-name }}
+    steps:
+      - name: Prepare Job
+        uses: pandaswhocode/initialize-github-job@ffb7446339e8e6007b942312ac95457d1a20b6cf # 1.0.4
+        with:
+          checkout: 'true'
+          checkout-ref: '${{ github.ref }}'
+          checkout-token: '${{ secrets.GH_ACCESS_TOKEN }}'
+          setup-node: 'true'
+          node-version: ${{ env.NODE_VERSION }}
+          node-registry: 'https://registry.npmjs.org/'
+
+      - name: Install GnuPG Tools
+        run: |
+          if ! command -v gpg2 >/dev/null 2>&1; then
+            echo "::group::Updating APT Repository Indices"
+            sudo apt update
+            echo "::endgroup::"
+            echo "::group::Installing GnuPG Tools"
+            sudo apt install -y gnupg2
+            echo "::endgroup::"
+          fi
+
+      - name: Import GPG key
+        id: gpg_key
+        uses: step-security/ghaction-import-gpg@69c854a83c7f79463f8bdf46772ab09826c560cd # v6.3.1
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY_CONTENTS }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: false
+
+      - name: Setup JQ
+        uses: dcarbone/install-jq-action@b7ef57d46ece78760b4019dbc4080a1ba2a40b45 # v3.2.0
+        with:
+          version: 1.7
+
+      - name: Install Semantic Release
+        run: |
+          npm install -g semantic-release@25.0.2 @semantic-release/git@10.0.1 @semantic-release/github@12.0.2 @semantic-release/exec@7.1.0
+          npm install -g conventional-changelog-conventionalcommits@9.1.0 @commitlint/cli@18.6.0 @commitlint/config-conventional@18.6.0
+          npm install -g marked-mangle@1.1.6 marked-gfm-heading-id@3.1.2 semantic-release-conventional-commits@3.0.0
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKDIR }}
+        run: npm ci
+
+      - name: Publish Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          GIT_AUTHOR_NAME: ${{ secrets.GIT_USER_NAME }}
+          GIT_AUTHOR_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+          GIT_COMMITTER_NAME: ${{ secrets.GIT_USER_NAME }}
+          GIT_COMMITTER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+        if: ${{ !cancelled() && !failure() }}
+        run: |
+          FLAGS=""
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            FLAGS="--dry-run"
+          fi
+          npx semantic-release --no-sign ${FLAGS}
+
+      - name: Update Version for Dry Run
+        if: ${{ inputs.dry_run == true }}
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
+
+      - name: Compile Code
+        working-directory: ${{ env.WORKDIR }}
+        run: npm run build
+
+      - name: Set Publish Data
+        id: set-publish-data
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          VERSION=$(jq -r '.version' './package.json')
+          NPM_PACKAGE_NAME="hashgraph-hedera-agent-kit-${VERSION}.tgz"
+          echo "artifact-name=${NPM_PACKAGE_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Pack Tarball
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          npm pack --pack-destination ./dist
+
+      - name: Verify Package
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          EXPECTED="./dist/${{ steps.set-publish-data.outputs.artifact-name }}"
+          if [[ ! -f "${EXPECTED}" ]]; then
+            echo "::error::Expected package not found: ${EXPECTED}"
+            ls -la ./dist/
+            exit 1
+          fi
+          echo "Package verified: ${EXPECTED} ($(du -h "${EXPECTED}" | cut -f1))"
+
+      - name: Upload NPM Package Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sdk-npm-package
+          path: ${{ env.WORKDIR }}/dist/${{ steps.set-publish-data.outputs.artifact-name }}
+          if-no-files-found: error
+
+  publish-npm-package:
+    name: Publish NPM Package
+    if: ${{ needs.prepare-release.outputs.need-release == 'true' && inputs.dry_run != true }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    needs:
+      - create-github-release
+      - prepare-release
+    steps:
+      - name: Prepare Job
+        uses: pandaswhocode/initialize-github-job@ffb7446339e8e6007b942312ac95457d1a20b6cf # 1.0.4
+        with:
+          checkout: 'true'
+          checkout-ref: '${{ github.ref }}'
+          checkout-token: '${{ secrets.GH_ACCESS_TOKEN }}'
+          setup-node: 'true'
+          node-version: ${{ env.NODE_VERSION }}
+          node-registry: 'https://registry.npmjs.org/'
+
+      - name: Install NPM latest
+        run: npm install -g npm@11.7.0
+
+      - name: Download NPM Package Artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: sdk-npm-package
+
+      - name: Publish NPM Package
+        run: |
+          PACKAGE="${{ needs.create-github-release.outputs.npm-artifact-name }}"
+          echo "::group::Publishing package: ${PACKAGE}"
+          npm publish "${PACKAGE}" --access=public --provenance
+          echo "::endgroup::"
