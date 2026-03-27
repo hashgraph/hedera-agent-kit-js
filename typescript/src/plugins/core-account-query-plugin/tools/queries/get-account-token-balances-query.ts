@@ -3,7 +3,7 @@ import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { Client } from '@hashgraph/sdk';
-import { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenBalancesResponse } from '@/shared/hedera-utils/mirrornode/types';
@@ -46,17 +46,30 @@ The token balances are returned in display units!
 `;
 };
 
-export const getAccountTokenBalancesQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof accountTokenBalancesQueryParameters>>,
-) => {
-  try {
-    const normalisedParams = HederaParameterNormaliser.normaliseAccountTokenBalancesParams(
-      params,
-      context,
-      client,
-    );
+export const GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL = 'get_account_token_balances_query_tool';
+
+export class GetAccountTokenBalancesQueryTool extends BaseTool {
+  method = GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL;
+  name = 'Get Account Token Balances';
+  description: string;
+  parameters: ReturnType<typeof accountTokenBalancesQueryParameters>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getAccountTokenBalancesQueryPrompt(context);
+    this.parameters = accountTokenBalancesQueryParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof accountTokenBalancesQueryParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseAccountTokenBalancesParams(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const tokenBalances = await mirrornodeService.getAccountTokenBalances(
       normalisedParams.accountId,
@@ -66,23 +79,24 @@ export const getAccountTokenBalancesQuery = async (
       raw: { accountId: normalisedParams.accountId, tokenBalances: tokenBalances },
       humanMessage: postProcess(tokenBalances, normalisedParams.accountId),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_request: any, _client: Client, _context: Context): Promise<any> {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get account token balances';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_account_token_balances_query_tool]', message);
     return { raw: { error: message }, humanMessage: message };
   }
-};
+}
 
-export const GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL = 'get_account_token_balances_query_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  name: 'Get Account Token Balances',
-  description: getAccountTokenBalancesQueryPrompt(context),
-  parameters: accountTokenBalancesQueryParameters(context),
-  execute: getAccountTokenBalancesQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetAccountTokenBalancesQueryTool(context);
 
 export default tool;

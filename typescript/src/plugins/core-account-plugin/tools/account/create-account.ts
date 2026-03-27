@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -40,43 +40,51 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Account created successfully.\nTransaction ID: ${response.transactionId}\nNew Account ID: ${accountIdStr}\n}`;
 };
 
-const createAccount = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof createAccountParameters>>,
-) => {
-  try {
-    const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
+export const CREATE_ACCOUNT_TOOL = 'create_account_tool';
 
-    // Normalise params to match AccountCreateTransaction props
-    const normalisedParams = await HederaParameterNormaliser.normaliseCreateAccount(
+export class CreateAccountTool extends BaseTool {
+  method = CREATE_ACCOUNT_TOOL;
+  name = 'Create Account';
+  description: string;
+  parameters: ReturnType<typeof createAccountParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = createAccountPrompt(context);
+    this.parameters = createAccountParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof createAccountParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
+    return await HederaParameterNormaliser.normaliseCreateAccount(
       params,
       context,
       client,
       mirrornodeService,
     );
+  }
 
-    // Build transaction and wrap in SchedulingTransaction if needed
-    const tx = HederaBuilder.createAccount(normalisedParams);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.createAccount(normalisedParams);
+  }
 
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to create account';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_account_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const CREATE_ACCOUNT_TOOL = 'create_account_tool';
-
-const tool = (context: Context): Tool => ({
-  method: CREATE_ACCOUNT_TOOL,
-  name: 'Create Account',
-  description: createAccountPrompt(context),
-  parameters: createAccountParameters(context),
-  execute: createAccount,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new CreateAccountTool(context);
 
 export default tool;

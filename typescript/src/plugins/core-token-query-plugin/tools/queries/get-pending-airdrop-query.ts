@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { Client } from '@hashgraph/sdk';
-import { Tool } from '@/shared/tools';
+import { Client, Status } from '@hashgraph/sdk';
+import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import {
   TokenAirdropsResponse,
@@ -93,13 +93,32 @@ const postProcess = (accountId: string, enrichedAirdrops: EnrichedTokenAirdrop[]
   return `Here are the pending airdrops for account **${accountId}** (total: ${count}):\n\n${detailsStr}`;
 };
 
-export const getPendingAirdropQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof pendingAirdropQueryParameters>>,
-) => {
-  try {
-    const accountId = params.accountId ?? AccountResolver.getDefaultAccount(context, client);
+export const GET_PENDING_AIRDROP_TOOL = 'get_pending_airdrop_tool';
+
+export class GetPendingAirdropQueryTool extends BaseTool {
+  method = GET_PENDING_AIRDROP_TOOL;
+  name = 'Get Pending Airdrops';
+  description: string;
+  parameters: ReturnType<typeof pendingAirdropQueryParameters>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getPendingAirdropQueryPrompt(context);
+    this.parameters = pendingAirdropQueryParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof pendingAirdropQueryParameters>>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params;
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const accountId =
+      normalisedParams.accountId ?? AccountResolver.getDefaultAccount(context, client);
     if (!accountId) throw new Error('Account ID is required and was not provided');
 
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
@@ -122,23 +141,24 @@ export const getPendingAirdropQuery = async (
       raw: { accountId, pendingAirdrops: enrichedResponse },
       humanMessage: postProcess(accountId, enrichedAirdrops),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get pending airdrops';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_pending_airdrop_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const GET_PENDING_AIRDROP_TOOL = 'get_pending_airdrop_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_PENDING_AIRDROP_TOOL,
-  name: 'Get Pending Airdrops',
-  description: getPendingAirdropQueryPrompt(context),
-  parameters: pendingAirdropQueryParameters(context),
-  execute: getPendingAirdropQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetPendingAirdropQueryTool(context);
 
 export default tool;
