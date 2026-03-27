@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import BigNumber from 'bignumber.js';
 import { Client, Status } from '@hashgraph/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
-import { AccountResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { toHbar } from '@/shared/hedera-utils/hbar-conversion-utils';
 
 export const getAccountQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -15,7 +16,7 @@ export const getAccountQueryPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will return the account information for a given Hedera account.
+This tool will return the account information for a given Hedera account. The returned account will contain the balance in HBAR, public key, and EVM address.
 
 Parameters:
 - accountId (str, required): The account ID to query
@@ -23,9 +24,9 @@ ${usageInstructions}
 `;
 };
 
-const postProcess = (account: AccountResponse) => {
+const postProcess = (account: any) => {
   return `Details for ${account.accountId}
-Balance: ${account.balance.balance.toString()}
+Balance: ${account.balance.balance} HBAR
 Public Key: ${account.accountPublicKey},
 EVM address: ${account.evmAddress},
 Ethereum nonce: ${account.ethereumNonce},
@@ -62,9 +63,19 @@ export class GetAccountQueryTool extends BaseTool {
   async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const account = await mirrornodeService.getAccount(normalisedParams.accountId);
+
+    const hbarBalance = toHbar(new BigNumber(account.balance.balance)).toString();
+    const accountWithHbar = {
+      ...account,
+      balance: {
+        ...account.balance,
+        balance: hbarBalance,
+      },
+      hbarBalance,
+    };
     return {
-      raw: { accountId: normalisedParams.accountId, account: account },
-      humanMessage: postProcess(account),
+      raw: { accountId: normalisedParams.accountId, account: accountWithHbar },
+      humanMessage: postProcess(accountWithHbar),
     };
   }
 

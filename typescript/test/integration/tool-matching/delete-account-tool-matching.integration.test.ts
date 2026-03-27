@@ -27,7 +27,7 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Matching and Parameter Extraction', () => {
-    it('should match delete account tool with accountId only', async () => {
+    it.skip('should match delete account tool with accountId only', async () => {
       const input = 'Delete account 0.0.12345';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -47,7 +47,7 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
       );
     });
 
-    it('should match delete account tool with transferAccountId', async () => {
+    it.skip('should match delete account tool with transferAccountId', async () => {
       const input = 'Delete the account 0.0.1111 and transfer funds to 0.0.2222';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -67,7 +67,7 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
       );
     });
 
-    it('should handle various natural language variations', async () => {
+    it.skip('should handle various natural language variations', async () => {
       const variations = [
         { input: 'Close account 0.0.42', expected: { accountId: '0.0.42' } },
         {
@@ -97,7 +97,7 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Available', () => {
-    it('should have delete account tool available', () => {
+    it.skip('should have delete account tool available', () => {
       const tools = toolkit.getTools();
       const deleteAccount = tools.find(tool => tool.name === 'delete_account_tool');
 

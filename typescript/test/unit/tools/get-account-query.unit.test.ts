@@ -3,6 +3,8 @@ import { Client } from '@hashgraph/sdk';
 import toolFactory, {
   GET_ACCOUNT_QUERY_TOOL,
 } from '@/plugins/core-account-query-plugin/tools/queries/get-account-query';
+import { toHbar } from '@/shared/hedera-utils/hbar-conversion-utils';
+import BigNumber from 'bignumber.js';
 
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
@@ -55,9 +57,21 @@ describe('get-account-query tool (unit)', () => {
     const res: any = await tool.execute(client, context, params);
 
     expect(res).toBeDefined();
-    expect(res.raw).toEqual({ accountId: params.accountId, account: fakeAccount });
+
+    const expectedAccountRaw = {
+      ...fakeAccount,
+      balance: {
+        ...fakeAccount.balance,
+        balance: toHbar(new BigNumber(fakeAccount.balance.balance)).toString()
+      },
+      hbarBalance: toHbar(new BigNumber(fakeAccount.balance.balance)).toString()
+    };
+
+    expect(res.raw).toEqual({ accountId: params.accountId, account: expectedAccountRaw });
     expect(res.humanMessage).toContain(`Details for ${fakeAccount.accountId}`);
-    expect(res.humanMessage).toContain(`Balance: ${fakeAccount.balance.balance}`);
+    expect(res.humanMessage).toContain(
+      `Balance: ${toHbar(new BigNumber(fakeAccount.balance.balance)).toString()} HBAR`,
+    );
     expect(res.humanMessage).toContain(`Public Key: ${fakeAccount.accountPublicKey}`);
     expect(res.humanMessage).toContain(`EVM address: ${fakeAccount.evmAddress}`);
     expect(getMirrornodeService).toHaveBeenCalledWith(context.mirrornodeService, client.ledgerId);

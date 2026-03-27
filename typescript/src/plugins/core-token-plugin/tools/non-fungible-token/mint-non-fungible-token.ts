@@ -14,7 +14,7 @@ const mintNonFungibleTokenPrompt = (_context: Context = {}) => {
 
   return `
 
-This tool will mint NFTs with its unique metadata for the class of NFTs (non-fungible tokens) defined by the tokenId on Hedera.
+This tool will mint HTS NFTs with its unique metadata for the class of NFTs (non-fungible tokens) defined by the tokenId on Hedera.
 
 Parameters:
 - tokenId (str, required): The id of the token

@@ -21,18 +21,19 @@ const airdropFungibleTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will airdrop a fungible token on Hedera.
+This tool will airdrop a HTS fungible token on Hedera.
 
 Parameters:
 - tokenId (str, required): The id of the token
 - ${sourceAccountDesc}
-- recipients (array, required): A list of recipient objects, each containing:
-  - accountId (string): The recipient's account ID (e.g., "0.0.1234")
-  - amount (number or string): The amount of tokens to send to that recipient (in display units)
-- transactionMemo (str, optional): Optional memo for the transaction
+- recipients (array, required): A list of recipient objects (can contian a single recipient), each containing:
+  - accountId (string, required): The recipient's account ID (e.g., "0.0.1234")
+  - amount (number or string, required): The amount of tokens to send to that recipient (in display units)
+- transactionMemo (str, optional): Optional memo for the transaction - not required for the tool call.
 ${usageInstructions}
 
 If the user specifies multiple recipients in a single request, include them all in **one tool call** as a list of recipients.
+User might want to airdrop to a single recipient.
 `;
 };
 

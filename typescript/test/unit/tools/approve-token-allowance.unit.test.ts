@@ -78,7 +78,7 @@ describe('approve-token-allowance tool (unit)', () => {
     expect(tool.method).toBe(APPROVE_TOKEN_ALLOWANCE_TOOL);
     expect(tool.name).toBe('Approve Token Allowance');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('approves allowances for one or more fungible tokens');
+    expect(tool.description).toContain('approves allowances for one or more fungible HTS tokens');
     expect(tool.parameters).toBeTruthy();
   });
 

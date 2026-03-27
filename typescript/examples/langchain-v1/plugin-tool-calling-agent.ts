@@ -171,6 +171,9 @@ async function bootstrap(): Promise<void> {
         { configurable: { thread_id: '1' } },
       );
 
+      console.log('--- Agent Response ---');
+      console.log(JSON.stringify(response, null, 2));
+
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 
       // Assuming a single tool call per response but parsedToolData might contain an array of tool calls made since the last agent.invoke

@@ -17,7 +17,7 @@ const mintFungibleTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will mint a given amount (supply) of an existing fungible token on Hedera.
+This tool will mint a given amount (supply) of an existing HTS fungible token on Hedera.
 
 Parameters:
 - tokenId (str, required): The id of the token
