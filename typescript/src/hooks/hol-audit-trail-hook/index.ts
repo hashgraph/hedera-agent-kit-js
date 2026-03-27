@@ -1,6 +1,11 @@
 import z from 'zod';
 
-import { AbstractHook, PostSecondaryActionParams, PreToolExecutionParams, AgentMode, Context } from '@/shared';
+import {
+  AbstractHook,
+  PostSecondaryActionParams,
+  PreToolExecutionParams,
+  AgentMode,
+} from '@/shared';
 import { buildAuditEntry } from '@/hooks/hol-audit-trail-hook/audit/audit-entry';
 import { AuditSession } from '@/hooks/hol-audit-trail-hook/audit/audit-session';
 import { HolAuditWriter } from '@/hooks/hol-audit-trail-hook/audit/writers/hol-audit-writer';
@@ -48,25 +53,17 @@ export class HolAuditTrailHook extends AbstractHook {
     return this.session?.getSessionId() ?? this.sessionId;
   }
 
-  async preToolExecutionHook(
-    context: Context,
-    _params: PreToolExecutionParams,
-    method: string,
-  ): Promise<any> {
+  async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    if (context.mode === AgentMode.RETURN_BYTES) {
+    if (params.context.mode === AgentMode.RETURN_BYTES) {
       throw new Error(
         `Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
       );
     }
   }
 
-  async postToolExecutionHook(
-    _context: Context,
-    params: PostSecondaryActionParams,
-    method: string,
-  ): Promise<any> {
+  async postToolExecutionHook(params: PostSecondaryActionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
     try {

@@ -1,4 +1,4 @@
-import { Policy, Context, PostParamsNormalizationParams } from '@/shared';
+import { Policy, PostParamsNormalizationParams } from '@/shared';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 import z from 'zod';
@@ -46,7 +46,6 @@ export class MaxRecipientsPolicy extends Policy {
   }
 
   protected shouldBlockPostParamsNormalization(
-    _context: Context,
     allParams: PostParamsNormalizationParams,
     method: string,
   ): boolean {

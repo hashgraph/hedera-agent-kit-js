@@ -40,32 +40,22 @@ export abstract class AbstractHook {
   public abstract description?: string;
   public abstract relevantTools: string[];
 
-  public async preToolExecutionHook(
-    _context: Context,
-    _params: PreToolExecutionParams,
-    method: string,
-  ): Promise<any> {
+  public async preToolExecutionHook(_params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
 
   public async postParamsNormalizationHook(
-    _context: Context,
     _params: PostParamsNormalizationParams,
     method: string,
   ): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
 
-  public async postCoreActionHook(
-    _context: Context,
-    _params: PostCoreActionParams,
-    method: string,
-  ): Promise<any> {
+  public async postCoreActionHook(_params: PostCoreActionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
   }
 
   public async postToolExecutionHook(
-    _context: Context,
     _params: PostSecondaryActionParams,
     method: string,
   ): Promise<any> {
