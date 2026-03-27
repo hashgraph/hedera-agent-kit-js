@@ -78,7 +78,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   // Hooks
   async preToolExecutionHook(params: PreToolExecutionParams<TParams>): Promise<void> {
     await this.executeHooks(params.context, async (h, method) =>
-      h.preToolExecutionHook(params.context, params, method),
+      h.preToolExecutionHook(params, method),
     );
   }
 
@@ -86,7 +86,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     params: PostParamsNormalizationParams<TParams, TNormalisedParams>,
   ): Promise<void> {
     await this.executeHooks(params.context, async (h, method) =>
-      h.postParamsNormalizationHook(params.context, params, method),
+      h.postParamsNormalizationHook(params, method),
     );
   }
 
@@ -94,7 +94,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     params: PostCoreActionParams<TParams, TNormalisedParams>,
   ): Promise<void> {
     await this.executeHooks(params.context, async (h, method) =>
-      h.postCoreActionHook(params.context, params, method),
+      h.postCoreActionHook(params, method),
     );
   }
 
@@ -109,7 +109,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     params: PostSecondaryActionParams<TParams, TNormalisedParams>,
   ): Promise<any> {
     await this.executeHooks(params.context, async (h, method) =>
-      h.postToolExecutionHook(params.context, params, method),
+      h.postToolExecutionHook(params, method),
     );
     return params.toolResult;
   }

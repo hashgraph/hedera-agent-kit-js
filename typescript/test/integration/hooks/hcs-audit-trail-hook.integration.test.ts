@@ -75,6 +75,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
     const context: Context = { mode: AgentMode.AUTONOMOUS };
     const params = {
       normalisedParams: {
+        context: context,
         transactionMemo: 'integration stringification',
         schedulingParams: {
           isScheduled: true,
@@ -101,7 +102,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
       },
     } as any;
 
-    await hook.postToolExecutionHook(context, params, TRANSFER_HBAR_TOOL);
+    await hook.postToolExecutionHook(params, TRANSFER_HBAR_TOOL);
 
     expect(postMessageSpy).toHaveBeenCalled();
     const message = postMessageSpy.mock.calls[0][0] as string;

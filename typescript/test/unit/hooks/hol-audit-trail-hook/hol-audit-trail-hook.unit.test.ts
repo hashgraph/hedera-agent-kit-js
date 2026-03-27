@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HolAuditTrailHook } from '@/hooks/hol-audit-trail-hook';
 import { AgentMode } from '@/shared/configuration';
-import { PostSecondaryActionParams, PreToolExecutionParams } from '@/shared/abstract-hook';
 import type { Client } from '@hashgraph/sdk';
+import { PostSecondaryActionParams, PreToolExecutionParams } from '@/shared';
 
 const mockEntryExecute = vi.fn();
 const mockRegisterEntry = vi.fn();
@@ -31,7 +31,9 @@ describe('HolAuditTrailHook', () => {
   let mockClient: Client;
   let hook: HolAuditTrailHook;
 
-  const makePostParams = (overrides?: Partial<PostSecondaryActionParams>): PostSecondaryActionParams =>
+  const makePostParams = (
+    overrides?: Partial<PostSecondaryActionParams>,
+  ): PostSecondaryActionParams =>
     ({
       normalisedParams: { amount: 100 },
       toolResult: {
@@ -57,9 +59,9 @@ describe('HolAuditTrailHook', () => {
       topicTransaction: {
         execute: (...args: any[]) => mockEntryFileTopicExecute(...args),
       },
-      buildMessageTransactions: vi.fn().mockReturnValue([
-        { execute: (...args: any[]) => mockEntryFileMessageExecute(...args) },
-      ]),
+      buildMessageTransactions: vi
+        .fn()
+        .mockReturnValue([{ execute: (...args: any[]) => mockEntryFileMessageExecute(...args) }]),
     });
     mockEntryFileTopicExecute.mockResolvedValue({
       getReceipt: vi.fn().mockResolvedValue({
@@ -93,9 +95,9 @@ describe('HolAuditTrailHook', () => {
   });
 
   it('should throw when sessionId is not a valid Hedera topic ID format', () => {
-    expect(() => new HolAuditTrailHook({ relevantTools: ['test_tool'], sessionId: 'not-a-topic' })).toThrow(
-      /sessionId must be a valid Hedera topic ID/,
-    );
+    expect(
+      () => new HolAuditTrailHook({ relevantTools: ['test_tool'], sessionId: 'not-a-topic' }),
+    ).toThrow(/sessionId must be a valid Hedera topic ID/);
   });
 
   describe('getSessionId', () => {
@@ -105,9 +107,9 @@ describe('HolAuditTrailHook', () => {
 
     it('should return session ID from AuditSession after first tool execution', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       expect(hook.getSessionId()).toBe('0.0.666');
     });
@@ -116,29 +118,25 @@ describe('HolAuditTrailHook', () => {
   describe('preToolExecutionHook', () => {
     it('should return undefined for irrelevant tools', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const params = {} as PreToolExecutionParams;
+      const params = { context } as PreToolExecutionParams;
 
-      const result = await hook.preToolExecutionHook(context, params, 'other_tool');
+      const result = await hook.preToolExecutionHook(params, 'other_tool');
 
       expect(result).toBeUndefined();
     });
 
     it('should not throw when mode is AUTONOMOUS for a relevant tool', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const params = {} as PreToolExecutionParams;
+      const params = { context } as PreToolExecutionParams;
 
-      await expect(
-        hook.preToolExecutionHook(context, params, 'test_tool'),
-      ).resolves.not.toThrow();
+      await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
     });
 
     it('should throw when mode is RETURN_BYTES for a relevant tool', async () => {
       const context = { mode: AgentMode.RETURN_BYTES };
-      const params = {} as PreToolExecutionParams;
+      const params = { context } as PreToolExecutionParams;
 
-      await expect(
-        hook.preToolExecutionHook(context, params, 'test_tool'),
-      ).rejects.toThrow(
+      await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
         'Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
       );
     });
@@ -147,9 +145,9 @@ describe('HolAuditTrailHook', () => {
   describe('postToolExecutionHook', () => {
     it('should return undefined for irrelevant tools without creating session', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      const result = await hook.postToolExecutionHook(context, postParams, 'other_tool');
+      const result = await hook.postToolExecutionHook(postParams, 'other_tool');
 
       expect(result).toBeUndefined();
       expect(mockCreateFile).not.toHaveBeenCalled();
@@ -158,9 +156,9 @@ describe('HolAuditTrailHook', () => {
 
     it('should lazily create HolAuditWriter and AuditSession on first relevant call', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       expect(mockCreateFile).toHaveBeenCalledTimes(1);
       expect(hook.getSessionId()).toBe('0.0.666');
@@ -168,10 +166,10 @@ describe('HolAuditTrailHook', () => {
 
     it('should reuse the same session on subsequent calls', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       // File created twice (once per call)
       expect(mockCreateFile).toHaveBeenCalledTimes(2);
@@ -179,9 +177,9 @@ describe('HolAuditTrailHook', () => {
 
     it('should build audit entry with tool name, normalised params, and result', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       expect(mockCreateFile).toHaveBeenCalledTimes(1);
       const fileArgs = mockCreateFile.mock.calls[0][0];
@@ -198,9 +196,9 @@ describe('HolAuditTrailHook', () => {
 
     it('should write the entry to the session', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       expect(mockEntryFileTopicExecute).toHaveBeenCalledTimes(1);
       expect(mockEntryFileMessageExecute).toHaveBeenCalledTimes(1);
@@ -209,9 +207,9 @@ describe('HolAuditTrailHook', () => {
 
     it('should create an HCS-1 topic with serialized entry content', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       expect(mockCreateFile).toHaveBeenCalledTimes(1);
       const fileArgs = mockCreateFile.mock.calls[0][0];
@@ -221,9 +219,9 @@ describe('HolAuditTrailHook', () => {
 
     it('should register the HCS-1 entry topic in the session registry', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await hook.postToolExecutionHook(context, postParams, 'test_tool');
+      await hook.postToolExecutionHook(postParams, 'test_tool');
 
       expect(mockRegisterEntry).toHaveBeenCalledTimes(1);
       expect(mockRegisterEntry).toHaveBeenCalledWith({
@@ -237,11 +235,9 @@ describe('HolAuditTrailHook', () => {
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const context = { mode: AgentMode.AUTONOMOUS };
-      const postParams = makePostParams();
+      const postParams = makePostParams({ context });
 
-      await expect(
-        hook.postToolExecutionHook(context, postParams, 'test_tool'),
-      ).resolves.not.toThrow();
+      await expect(hook.postToolExecutionHook(postParams, 'test_tool')).resolves.not.toThrow();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('HolAuditTrailHook: Failed to log audit entry'),
@@ -250,6 +246,5 @@ describe('HolAuditTrailHook', () => {
 
       consoleSpy.mockRestore();
     });
-
   });
 });
