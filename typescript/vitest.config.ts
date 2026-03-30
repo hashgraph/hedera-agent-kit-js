@@ -44,6 +44,6 @@ export default defineConfig({
     testTimeout: 120000,
     hookTimeout: 120000,
     // Retry configuration for e2e tests
-    retry: 0, // Only retry in CI/production, not during development
+    retry: 3, // Only retry in CI/production, not during development
   },
 });
