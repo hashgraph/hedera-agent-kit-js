@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -41,39 +41,57 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Token successfully airdropped with transaction id ${response.transactionId.toString()}`;
 };
 
-const airdropFungibleToken = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>>,
-) => {
-  try {
+export const AIRDROP_FUNGIBLE_TOKEN_TOOL = 'airdrop_fungible_token_tool';
+
+export class AirdropFungibleTokenTool extends BaseTool {
+  method = AIRDROP_FUNGIBLE_TOKEN_TOOL;
+  name = 'Airdrop Fungible Token';
+  description: string;
+  parameters: ReturnType<typeof airdropFungibleTokenParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = airdropFungibleTokenPrompt(context);
+    this.parameters = airdropFungibleTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseAirdropFungibleTokenParams(
+    return HederaParameterNormaliser.normaliseAirdropFungibleTokenParams(
       params,
       context,
       client,
       mirrornodeService,
     );
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.airdropFungibleToken(normalisedParams);
     const result = await handleTransaction(tx, client, context, postProcess);
     return result;
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to airdrop fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[airdrop_fungible_token_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-};
+}
 
-export const AIRDROP_FUNGIBLE_TOKEN_TOOL = 'airdrop_fungible_token_tool';
-
-const tool = (context: Context): Tool => ({
-  method: AIRDROP_FUNGIBLE_TOKEN_TOOL,
-  name: 'Airdrop Fungible Token',
-  description: airdropFungibleTokenPrompt(context),
-  parameters: airdropFungibleTokenParameters(context),
-  execute: airdropFungibleToken,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new AirdropFungibleTokenTool(context);
 
 export default tool;

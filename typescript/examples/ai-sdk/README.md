@@ -27,7 +27,11 @@ This directory contains simple examples demonstrating how to use the Hedera Agen
    PRIVATE_KEY=302...
    OPENAI_API_KEY=sk-...
    ```
-   > **Note:** We recommend using a **DER encoded** Private Key (ECDSA or ED_25519) for the Hedera account. You can obtain testnet keys from [Hedera Portal](https://portal.hedera.com/).
+   > **Note:** Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
+   > ```ts
+   > // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+   > ```
+   > You can obtain testnet keys from the [Hedera Portal](https://portal.hedera.com/).
 
 ## Usage
 
@@ -59,4 +63,21 @@ Connects to a preconfigured MCP server (like Hederion) to perform actions.
 
 ```bash
 npm run ai-sdk:preconfigured-mcp-client-agent
+```
+
+### Audit Trail Agent
+Demonstrates how to use the `HcsAuditTrailHook` to audit HBAR transfers and token creation.
+
+```bash
+npm run ai-sdk:audit-trail-agent
+```
+
+> [!IMPORTANT]
+> This agent works only in `mode: AgentMode.AUTONOMOUS`.
+
+### Policy Enforcement Agent
+Demonstrates how to use the `MaxRecipientsPolicy` to restrict transfers.
+
+```bash
+npm run ai-sdk:policy-enforcement-agent
 ```
