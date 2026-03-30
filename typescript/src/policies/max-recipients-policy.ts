@@ -29,6 +29,13 @@ export class MaxRecipientsPolicy extends Policy {
     customStrategies: Record<string, (params: any) => number> = {},
   ) {
     super();
+
+    if (!Number.isInteger(maxRecipients) || maxRecipients <= 0) {
+      throw new Error(
+        `MaxRecipientsPolicy: 'maxRecipients' must be a positive integer. Received: ${maxRecipients}`,
+      );
+    }
+
     this.maxRecipients = maxRecipients;
     this.description = `Limits the maximum number of recipients to ${maxRecipients}`;
     this.customStrategies = customStrategies;

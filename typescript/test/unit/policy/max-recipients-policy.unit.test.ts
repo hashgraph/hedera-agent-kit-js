@@ -9,6 +9,30 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
   const context: Context = { mode: AgentMode.AUTONOMOUS };
   const client = {} as Client;
 
+  describe('Constructor Validation', () => {
+    it('should throw if maxRecipients is not an integer', () => {
+      expect(() => new MaxRecipientsPolicy(1.5)).toThrowError(
+        /MaxRecipientsPolicy: 'maxRecipients' must be a positive integer/i,
+      );
+    });
+
+    it('should throw if maxRecipients is zero', () => {
+      expect(() => new MaxRecipientsPolicy(0)).toThrowError(
+        /MaxRecipientsPolicy: 'maxRecipients' must be a positive integer/i,
+      );
+    });
+
+    it('should throw if maxRecipients is negative', () => {
+      expect(() => new MaxRecipientsPolicy(-1)).toThrowError(
+        /MaxRecipientsPolicy: 'maxRecipients' must be a positive integer/i,
+      );
+    });
+
+    it('should not throw if maxRecipients is a positive integer', () => {
+      expect(() => new MaxRecipientsPolicy(5)).not.toThrow();
+    });
+  });
+
   describe('HBAR transfers (hbarTransfers)', () => {
     it('should block if positive-amount hbar recipients exceed maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(1);
