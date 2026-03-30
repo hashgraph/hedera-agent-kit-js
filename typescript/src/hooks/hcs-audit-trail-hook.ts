@@ -47,59 +47,60 @@ export class HcsAuditTrailHook extends AbstractHook {
   async postToolExecutionHook(params: PostSecondaryActionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    let targetClient = this.loggingClient;
+    try {
+      let targetClient = this.loggingClient;
 
-    // HcsAuditTrailHook will use the agent's operator account client if no logging specific client is provided on hook initialization.
-    if (!targetClient) {
-      console.log(
-        `HcsAuditTrailHook: No logging specific client provided. Using the agent's operator account client.`,
+      // HcsAuditTrailHook will use the agent's operator account client if no logging specific client is provided on hook initialization.
+      if (!targetClient) {
+        console.log(
+          `HcsAuditTrailHook: No logging specific client provided. Using the agent's operator account client.`,
+        );
+        targetClient = params.client;
+      }
+
+      const fieldsToCastToString = [
+        'accountId',
+        'adminKey',
+        'autoRenewAccountId',
+        'contractId',
+        'expirationTime',
+        'feeScheduleKey',
+        'freezeKey',
+        'fromAddress',
+        'functionParameters',
+        'key',
+        'kycKey',
+        'metadataKey',
+        'nftId',
+        'nodeAccountId',
+        'ownerAccountId',
+        'pauseKey',
+        'payerAccountID',
+        'receiver',
+        'recipientAddress',
+        'recipientId',
+        'scheduleId',
+        'senderAccountId',
+        'sourceAccountId',
+        'spenderAccountId',
+        'stakedAccountId',
+        'submitKey',
+        'supplyKey',
+        'toAddress',
+        'tokenId',
+        'topicId',
+        'transferAccountId',
+        'treasuryAccountId',
+        'wipeKey',
+      ];
+
+      // Create a clean copy for logging to avoid mutating the original
+      const loggableParams = this.stringifyRecursive(
+        { ...params.normalisedParams },
+        fieldsToCastToString,
       );
-      targetClient = params.client;
-    }
 
-    const fieldsToCastToString = [
-      'accountId',
-      'adminKey',
-      'autoRenewAccountId',
-      'contractId',
-      'expirationTime',
-      'feeScheduleKey',
-      'freezeKey',
-      'fromAddress',
-      'functionParameters',
-      'key',
-      'kycKey',
-      'metadataKey',
-      'nftId',
-      'nodeAccountId',
-      'ownerAccountId',
-      'pauseKey',
-      'payerAccountID',
-      'receiver',
-      'recipientAddress',
-      'recipientId',
-      'scheduleId',
-      'senderAccountId',
-      'sourceAccountId',
-      'spenderAccountId',
-      'stakedAccountId',
-      'submitKey',
-      'supplyKey',
-      'toAddress',
-      'tokenId',
-      'topicId',
-      'transferAccountId',
-      'treasuryAccountId',
-      'wipeKey',
-    ];
-
-    // Create a clean copy for logging to avoid mutating the original
-    const loggableParams = this.stringifyRecursive(
-      { ...params.normalisedParams },
-      fieldsToCastToString,
-    );
-
-    const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(loggableParams, null, 2)}.
+      const logMessage: string = `Agent executed tool ${method} on with params ${JSON.stringify(loggableParams, null, 2)}.
     Transaction ID: ${(params.toolResult.raw as RawTransactionResponse).transactionId ?? 'N/A (query action)'}
     Transaction Status: ${(params.toolResult.raw as RawTransactionResponse).status ?? 'N/A (query action)'}
     Token ID: ${(params.toolResult.raw as RawTransactionResponse).tokenId ?? 'N/A'}
@@ -107,7 +108,10 @@ export class HcsAuditTrailHook extends AbstractHook {
     Schedule ID: ${(params.toolResult.raw as RawTransactionResponse).scheduleId ?? 'N/A'}
     Account ID: ${(params.toolResult.raw as RawTransactionResponse).accountId ?? 'N/A'}
     `;
-    await this.postMessageToHcsTopic(logMessage, targetClient);
+      await this.postMessageToHcsTopic(logMessage, targetClient);
+    } catch (error) {
+      console.error(`HcsAuditTrailHook: Failed to log audit entry for tool ${method}:`, error);
+    }
   }
 
   private stringifyRecursive(obj: any, _fieldsToCastToString: string[]): any {

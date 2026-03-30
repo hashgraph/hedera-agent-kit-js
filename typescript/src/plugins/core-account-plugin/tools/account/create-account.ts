@@ -34,10 +34,10 @@ ${usageInstructions}
 
 const postProcess = (response: RawTransactionResponse) => {
   if (response.scheduleId) {
-    return `Scheduled transaction created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}\n}`;
+    return `Scheduled transaction created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}\n`;
   }
   const accountIdStr = response.accountId ? response.accountId.toString() : 'unknown';
-  return `Account created successfully.\nTransaction ID: ${response.transactionId}\nNew Account ID: ${accountIdStr}\n}`;
+  return `Account created successfully.\nTransaction ID: ${response.transactionId}\nNew Account ID: ${accountIdStr}\n`;
 };
 
 export const CREATE_ACCOUNT_TOOL = 'create_account_tool';
