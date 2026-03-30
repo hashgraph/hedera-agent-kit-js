@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import toolFactory, {
   UPDATE_TOPIC_TOOL,
+  UpdateTopicTool,
 } from '@/plugins/core-consensus-plugin/tools/consensus/update-topic';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -72,7 +73,7 @@ vi.mock('@/shared', async () => {
 const makeClient = () => Client.forNetwork({});
 
 // ---- TESTS ----
-describe('update-topic tool (unit)', () => {
+describe('UpdateTopicTool', () => {
   const context: any = { accountId: '0.0.2002' };
   const params = {
     topicId: '0.0.4004',
@@ -94,7 +95,7 @@ describe('update-topic tool (unit)', () => {
   });
 
   it('executes happy path and returns formatted human message with tx id', async () => {
-    const tool = toolFactory(context);
+    const tool = new UpdateTopicTool(context);
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
@@ -110,11 +111,11 @@ describe('update-topic tool (unit)', () => {
   });
 
   it('returns error response object when an Error is thrown', async () => {
-    mockedBuilder.updateTopic.mockImplementationOnce(() => {
+    (mockedBuilder.updateTopic as any).mockImplementationOnce(() => {
       throw new Error('kaboom');
     });
 
-    const tool = toolFactory(context);
+    const tool = new UpdateTopicTool(context);
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
@@ -124,11 +125,11 @@ describe('update-topic tool (unit)', () => {
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
-    mockedBuilder.updateTopic.mockImplementationOnce(() => {
+    (mockedBuilder.updateTopic as any).mockImplementationOnce(() => {
       throw 'string failure';
     });
 
-    const tool = toolFactory(context);
+    const tool = new UpdateTopicTool(context);
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
@@ -137,7 +138,7 @@ describe('update-topic tool (unit)', () => {
   });
 
   it('fails if the user public key does not match the topic admin key', async () => {
-    const tool = toolFactory(context);
+    const tool = new UpdateTopicTool(context);
     const client = makeClient();
 
     // Mock AccountResolver to return a different key
@@ -159,7 +160,7 @@ describe('update-topic tool (unit)', () => {
       topicMemo: 'UpdatedTopic',
       submitKey: PrivateKey.generateED25519().publicKey,
     };
-    const tool = toolFactory(context);
+    const tool = new UpdateTopicTool(context);
     const client = makeClient();
 
     // Override the default mock just for this test
