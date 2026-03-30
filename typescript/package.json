@@ -1,6 +1,6 @@
 {
   "name": "hedera-agent-kit",
-  "version": "3.8.1",
+  "version": "3.8.2",
   "description": "Use the Hedera Agent Kit to build agents that can interact with the Hedera network in any framework you like.",
   "main": "./dist/cjs/index.js",
   "types": "./dist/cjs/index.d.ts",
@@ -46,7 +46,6 @@
   "dependencies": {
     "@ai-sdk/mcp": "1.0.21",
     "@elizaos/core": "1.7.2",
-    "@google/adk": "0.4.0",
     "@hashgraph/sdk": "2.80.0",
     "@langchain/core": "1.1.24",
     "@langchain/mcp-adapters": "1.1.3",

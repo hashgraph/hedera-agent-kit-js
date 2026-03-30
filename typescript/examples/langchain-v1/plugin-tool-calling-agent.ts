@@ -27,7 +27,7 @@ async function bootstrap(): Promise<void> {
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
     process.env.ACCOUNT_ID!,
-    PrivateKey.fromStringDer(process.env.PRIVATE_KEY!),
+    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!),
     // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
 
@@ -170,6 +170,9 @@ async function bootstrap(): Promise<void> {
         { messages: [{ role: 'user', content: userInput }] },
         { configurable: { thread_id: '1' } },
       );
+
+      console.log('--- Agent Response ---');
+      console.log(JSON.stringify(response, null, 2));
 
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 

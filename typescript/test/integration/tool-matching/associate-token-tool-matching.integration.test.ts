@@ -92,7 +92,7 @@ describe('Associate Token Tool Matching Integration Tests', () => {
 
       expect(associate).toBeDefined();
       expect(associate!.name).toBe('associate_token_tool');
-      expect(associate!.description).toContain('associate one or more tokens');
+      expect(associate!.description).toContain('This tool will associate one or more HTS tokens ');
     });
   });
 });

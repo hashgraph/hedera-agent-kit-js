@@ -1,4 +1,4 @@
-import { Policy, Context, PreToolExecutionParams } from '@/shared';
+import { Policy, PreToolExecutionParams } from '@/shared';
 
 export class RejectToolPolicy extends Policy {
   name = 'Reject Tool Call';
@@ -14,11 +14,7 @@ export class RejectToolPolicy extends Policy {
    * Override to block execution at PreToolExecution for relevant tools.
    * All relevant tools will be blocked from executing
    */
-  protected shouldBlockPreToolExecution(
-    _context: Context,
-    _params: PreToolExecutionParams,
-    _method: string,
-  ): boolean {
+  protected shouldBlockPreToolExecution(_params: PreToolExecutionParams, _method: string): boolean {
     console.log('RejectToolPolicy: tool call rejected - tool not allowed');
     return true;
   }

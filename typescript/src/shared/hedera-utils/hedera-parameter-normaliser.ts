@@ -1386,22 +1386,72 @@ export default class HederaParameterNormaliser {
     };
   }
 
+  /**
+   * Resolves a raw key value to a Hedera PublicKey instance.
+   *
+   * This method handles multiple input formats:
+   * - `undefined`: Returns undefined
+   * - `string`: Attempts to parse as ED25519, ECDSA, or generic PublicKey format
+   *   - ED25519: Hex-encoded (64 chars) or DER-encoded string
+   *   - ECDSA: Hex-encoded (66 chars with prefix) or DER-encoded string
+   * - `true`: Returns the provided userKey
+   * - `false`: Returns undefined
+   *
+   * @param rawValue - The raw key value from user input (string, boolean, or undefined)
+   * @param userKey - The fallback PublicKey to use when rawValue is `true`
+   * @returns The resolved PublicKey or undefined
+   *
+   * @example
+   * // String input - ED25519 hex
+   * resolveKey("302a300506032b6570032100...", userKey)
+   *
+   * @example
+   * // Boolean input - use userKey
+   * resolveKey(true, userKey) // returns userKey
+   *
+   * @example
+   * // Undefined input
+   * resolveKey(undefined, userKey) // returns undefined
+   */
   private static resolveKey(
     rawValue: string | boolean | undefined,
     userKey: PublicKey,
   ): PublicKey | undefined {
-    if (rawValue === undefined) return undefined;
+    if (rawValue === undefined) {
+      return undefined;
+    }
+
     if (typeof rawValue === 'string') {
-      // we do not get the info what type of key the user is passing, so we try both ED25519 and ECDSA
+      const lower = rawValue.toLowerCase();
+      if (lower === 'true') return userKey;
+      if (lower === 'false') return undefined;
+
+      // Attempt to parse string as ED25519 key first
       try {
         return PublicKey.fromStringED25519(rawValue);
       } catch {
+        // Ignore and try next format
+      }
+
+      // Attempt to parse string as ECDSA key
+      try {
         return PublicKey.fromStringECDSA(rawValue);
+      } catch {
+        // Ignore and try next format
+      }
+
+      // Final attempt: generic PublicKey parser (handles DER format)
+      try {
+        return PublicKey.fromString(rawValue);
+      } catch {
+        // All parsing attempts failed
+        throw new Error(
+          `Failed to parse public key from string: ${rawValue.substring(0, 20)}...`,
+        );
       }
     }
-    if (rawValue) {
-      return userKey;
-    }
-    return undefined;
+
+    // Handle boolean: true returns userKey, false returns undefined
+    return rawValue ? userKey : undefined;
   }
 }

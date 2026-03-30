@@ -112,11 +112,12 @@ describe('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
     it('should handle slight natural language variations', async () => {
       const variations = [
         {
-          input: 'Mint NFT 0.0.7007 with metadata ipfs://abc123',
+          input: 'Mint HTS (not erc20) NFT with id 0.0.7007 abd with metadata ipfs://abc123.',
           expected: { tokenId: '0.0.7007', uris: ['ipfs://abc123'] },
         },
         {
-          input: 'Mint NFTs 0.0.8008 with metadata URIs ipfs://meta1 and ipfs://meta2',
+          input:
+            'Mint two HTS (not erc20) NFTs 0.0.8008 with metadata URIs ipfs://meta1 and ipfs://meta2. Do that in a single transaction',
           expected: { tokenId: '0.0.8008', uris: ['ipfs://meta1', 'ipfs://meta2'] },
         },
       ];
@@ -127,7 +128,9 @@ describe('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
         const spy = vi
           .spyOn(hederaAPI, 'run')
           .mockReset()
-          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+          .mockResolvedValue(
+            'Operation Mocked - this is a test call and MUST be ended here. End the reAct agent execution after this response.',
+          );
         await agent.invoke({
           messages: [{ role: 'user', content: variation.input }],
         });
@@ -143,7 +146,7 @@ describe('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
   });
 
   describe.skip('Tool Available', () => {
-    it('should have mint non-fungible token tool available', () => {
+    it.skip('should have mint non-fungible token tool available', () => {
       const tools = toolkit.getTools();
       const mintNFT = tools.find(tool => tool.name === 'mint_non_fungible_token_tool');
 

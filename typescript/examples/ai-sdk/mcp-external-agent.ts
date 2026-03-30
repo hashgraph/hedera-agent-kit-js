@@ -18,11 +18,10 @@ async function bootstrap(): Promise<void> {
     throw new Error('Please set ACCOUNT_ID and PRIVATE_KEY in .env file');
   }
 
-  // Hedera client setup (Local)
   const client = Client.forTestnet().setOperator(
     accountId,
-    PrivateKey.fromStringDer(privateKey),
-    // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
+    PrivateKey.fromStringECDSA(privateKey),
+    // PrivateKey.fromStringED25519(privateKey), // Use this line if you have an ED25519 key
   );
 
   const hederaAgentToolkit = new HederaAIToolkit({

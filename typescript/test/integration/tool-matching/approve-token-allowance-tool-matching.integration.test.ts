@@ -84,13 +84,15 @@ describe('Approve Token Allowance Tool Matching Integration Tests', () => {
 
     it('matches multiple token allowances', async () => {
       const input =
-        'Approve 1 token of token ID 0.0.1, 2 tokens of token ID 0.0.2, and 3 tokens of token ID 0.0.3 for spender with account id 0.0.4444';
+        'Approve 1 token of token ID 0.0.1, 2 tokens of token ID 0.0.2, and 3 tokens of token ID 0.0.3 for spender with account id 0.0.4444. Transfer them in one transaction.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
         .mockReset()
-        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+        .mockResolvedValue(
+          'Operation Mocked successfully - this is a test tool call and MUST be ended here. End the reAct agent execution after this response.',
+        );
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],
@@ -117,7 +119,9 @@ describe('Approve Token Allowance Tool Matching Integration Tests', () => {
       const tool = tools.find(t => t.name === 'approve_token_allowance_tool');
       expect(tool).toBeDefined();
       expect(tool!.name).toBe('approve_token_allowance_tool');
-      expect(tool!.description).toContain('approves allowances for one or more fungible tokens');
+      expect(tool!.description).toContain(
+        'approves allowances for one or more fungible HTS tokens',
+      );
     });
   });
 });

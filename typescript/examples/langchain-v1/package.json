@@ -10,11 +10,13 @@
     "langchain:return-bytes-tool-calling-agent-web": "tsx return-bytes-tool-calling-agent-web.ts",
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
     "langchain:external-mcp-agent": "tsx external-mcp-agent.ts",
-    "langchain:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts"
+    "langchain:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts",
+    "langchain:policy-enforcement-agent": "tsx policy-enforcement-agent.ts",
+    "langchain:audit-trail-agent": "tsx audit-trail-agent.ts"
   },
   "dependencies": {
     "@hashgraph/sdk": "2.80.0",
-    "hedera-agent-kit": "3.8.1",
+    "hedera-agent-kit": "../..",
     "@langchain/core": "1.1.24",
     "@langchain/mcp-adapters": "^1.1.3",
     "dotenv": "17.2.3",

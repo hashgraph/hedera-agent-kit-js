@@ -187,7 +187,9 @@ export const DEFAULT_LLM_OPTIONS: LlmOptions = {
   model: 'gpt-4o-mini',
 };
 
+// this system prompt is designed to be used in tests to ensure the agent focuses on tool usage and parameter extraction without making up information or deviating from expected tool calls.
+// we want it to try its best with extracting params so it is strongly encouraged to rather call a tool with best matching params than to not call a tool at all.
 export const SYSTEM_PROMPT = `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
-        When a user asks to transfer HBAR, use the transfer_hbar_tool with the correct parameters.
-        Extract the amount and recipient account ID from the user's request.
-        Always use the exact tool name and parameter structure expected.`;
+        Always use the exact tool name and parameter structure expected by it.
+        Always call the best matching tool with best extracted params you can choose from the user input.
+        Do not make up parameters.`;

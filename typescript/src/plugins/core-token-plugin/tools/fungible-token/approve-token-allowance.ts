@@ -21,7 +21,7 @@ const approveTokenAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool approves allowances for one or more fungible tokens from the owner to the spender.
+This tool approves allowances for one or more fungible HTS tokens from the owner to the spender.
 
 Parameters:
 - ${ownerAccountDesc}

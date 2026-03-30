@@ -1,4 +1,3 @@
-import { Context } from './configuration';
 import {
   AbstractHook,
   PreToolExecutionParams,
@@ -20,7 +19,6 @@ export abstract class Policy extends AbstractHook {
    * Override in derived classes to implement custom logic.
    */
   protected shouldBlockPreToolExecution(
-    _context: Context,
     _params: PreToolExecutionParams,
     _method: string,
   ): boolean | Promise<boolean> {
@@ -32,7 +30,6 @@ export abstract class Policy extends AbstractHook {
    * Override in derived classes to implement custom logic.
    */
   protected shouldBlockPostParamsNormalization(
-    _context: Context,
     _params: PostParamsNormalizationParams,
     _method: string,
   ): boolean | Promise<boolean> {
@@ -44,7 +41,6 @@ export abstract class Policy extends AbstractHook {
    * Override in derived classes to implement custom logic.
    */
   protected shouldBlockPostCoreAction(
-    _context: Context,
     _params: PostCoreActionParams,
     _method: string,
   ): boolean | Promise<boolean> {
@@ -56,7 +52,6 @@ export abstract class Policy extends AbstractHook {
    * Override in derived classes to implement custom logic.
    */
   protected shouldBlockPostSecondaryAction(
-    _context: Context,
     _params: PostSecondaryActionParams,
     _method: string,
   ): boolean | Promise<boolean> {
@@ -65,13 +60,9 @@ export abstract class Policy extends AbstractHook {
 
   // Hook implementations that throw when validation fails
   /** @internal */
-  public async preToolExecutionHook(
-    context: Context,
-    params: PreToolExecutionParams,
-    method: string,
-  ): Promise<void> {
+  public async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPreToolExecution(context, params, method);
+    const shouldBlock = await this.shouldBlockPreToolExecution(params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -81,12 +72,11 @@ export abstract class Policy extends AbstractHook {
 
   /** @internal */
   public async postParamsNormalizationHook(
-    context: Context,
     params: PostParamsNormalizationParams,
     method: string,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostParamsNormalization(context, params, method);
+    const shouldBlock = await this.shouldBlockPostParamsNormalization(params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -95,13 +85,9 @@ export abstract class Policy extends AbstractHook {
   }
 
   /** @internal */
-  public async postCoreActionHook(
-    context: Context,
-    params: PostCoreActionParams,
-    method: string,
-  ): Promise<void> {
+  public async postCoreActionHook(params: PostCoreActionParams, method: string): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostCoreAction(context, params, method);
+    const shouldBlock = await this.shouldBlockPostCoreAction(params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,
@@ -111,12 +97,11 @@ export abstract class Policy extends AbstractHook {
 
   /** @internal */
   public async postToolExecutionHook(
-    context: Context,
     params: PostSecondaryActionParams,
     method: string,
   ): Promise<void> {
     if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
-    const shouldBlock = await this.shouldBlockPostSecondaryAction(context, params, method);
+    const shouldBlock = await this.shouldBlockPostSecondaryAction(params, method);
     if (shouldBlock) {
       throw new Error(
         `Action ${method} blocked by policy: ${this.name}${this.description ? ` (${this.description})` : ''}`,

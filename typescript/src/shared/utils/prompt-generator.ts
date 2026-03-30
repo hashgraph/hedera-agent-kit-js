@@ -68,15 +68,17 @@ export class PromptGenerator {
   static getParameterUsageInstructions(): string {
     return `
 Important:
+- Do not request or ask for parameters that are optional and were not provided by the user. Tool can be called without any parameters if all are optional.
 - Only include optional parameters if explicitly provided by the user
 - Do not generate placeholder values for optional fields
 - Leave optional parameters undefined if not specified by the user
+- If a required parameter is not specified by the user, DO NOT guess or generate placeholder values. You must stop and ask the user for the missing required information.
 - Important: If the user mentions multiple recipients or amounts and tool accepts an array, combine all recipients, tokens or similar assets into a single array and make exactly one call to that tool. Do not split the action into multiple tool calls if it's possible to do so.
 `;
   }
 
   static getScheduledTransactionParamsDescription(context: Context): string {
-    return `schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately.
+    return `schedulingParams (object, optional): Parameters for scheduling this transaction instead of executing immediately. 
 
 **Fields that apply to the *schedule entity*, not the inner transaction:**
 

@@ -17,11 +17,13 @@ const createAccountPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will create a new Hedera account with a passed public key. If not passed, the tool will use operators public key.
+This tool will create a new Hedera account with a passed public key. If not passed, the tool will use operator's public key.
+
+IMPORTANT: All parameters are optional. If the user does not explicitly provide optional parameters, proceed immediately using the default values. Do NOT ask the user for optional parameters.
 
 Parameters:
-- publicKey (string, optional): Public key to use for the account. If not provided, the tool will use the operators public key.
-- accountMemo (string, optional): Optional memo for the account
+- publicKey (string, optional): Public key to use for the account. If not provided, the tool will use the operator's public key.
+- accountMemo (string, optional): Optional memo for the account. Max 100 chars. Length will be validated in tool call.
 - initialBalance (number, optional, default 0): Initial HBAR to fund the account
 - maxAutomaticTokenAssociations (number, optional, default -1): -1 means unlimited
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}

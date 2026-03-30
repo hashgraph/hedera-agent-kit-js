@@ -1,5 +1,9 @@
-import { AbstractHook, PostSecondaryActionParams, PreToolExecutionParams } from '@/shared';
-import { AgentMode, Context } from '@/shared';
+import {
+  AbstractHook,
+  AgentMode,
+  PostSecondaryActionParams,
+  PreToolExecutionParams,
+} from '@/shared';
 import { RawTransactionResponse } from '@/shared';
 import { Client, TopicMessageSubmitTransaction } from '@hashgraph/sdk';
 
@@ -26,15 +30,11 @@ export class HcsAuditTrailHook extends AbstractHook {
     this.loggingClient = loggingClient;
   }
 
-  async preToolExecutionHook(
-    context: Context,
-    _params: PreToolExecutionParams,
-    method: string,
-  ): Promise<any> {
+  async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
     // HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS.
-    if (context.mode === AgentMode.RETURN_BYTES) {
+    if (params.context.mode === AgentMode.RETURN_BYTES) {
       console.log(
         `Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
       );
@@ -44,11 +44,7 @@ export class HcsAuditTrailHook extends AbstractHook {
     }
   }
 
-  async postToolExecutionHook(
-    _context: Context,
-    params: PostSecondaryActionParams,
-    method: string,
-  ): Promise<any> {
+  async postToolExecutionHook(params: PostSecondaryActionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
     let targetClient = this.loggingClient;

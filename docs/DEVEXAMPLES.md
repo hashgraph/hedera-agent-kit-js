@@ -39,25 +39,36 @@ ACCOUNT_ID= 0.0.xxxxx
 PRIVATE_KEY= 302e...
 OPENAI_API_KEY= sk-proj-...
 ```
+
+##### About Private Keys
+
+Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+// PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+
 > Create similar .env files for each of the other framework examples
 
 ### 3 – Choose an Example
 Try out one or more of the example agents:
 
 * **Option A -** [Example Tool Calling Agent](#option-a-run-the-example-tool-calling-agent)
-* **Option B -** [Example Structured Chat Agent](#option-b-run-the-structured-chat-agent)
+* **Option B -** [Example Structured Chat Agent](#option-b-run-the-structured-chat-agent-langchain-v03-only)
 * **Option C -** [Example Return Bytes Agent](#option-c-try-the-human-in-the-loop-chat-agent)
 * **Option D -** [Example MCP Server](#option-d-try-out-the-mcp-server)
 * **Option E -** [Example External MCP Agent](#option-e-try-out-the-external-mcp-agent)
 * **Option F -** [Example ElizaOS Agent](#option-f-try-out-the-hedera-agent-kit-with-elizaos)
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
-* **Option H -** [Example Google ADK Agent](#option-h-try-out-the-google-adk-agent)
-* **Option I -** [Example Policy Agent](#option-i-run-the-policy-agent-example)
+* **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
+* **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
 
-### Option A: Run the Example Tool Calling Agent 
+### Option A: Run the Example Tool Calling Agent
 With the tool-calling-agent you can experiment with and call the [available tools](../docs/HEDERAPLUGINS.md) in the Hedera Agent Kit for the operator account (the account you are using in the .env file). This example tool-calling-agent uses GPT 4-o-mini that is a simple template you can use with other LLMs. This agent is intended for use with simple tasks, such as an individual tool call.
 
 #### LangChain Classic
@@ -287,7 +298,7 @@ PRIVATE_KEY=302e...
 OPENAI_API_KEY=sk-proj-...
 ```
 
-**Note about private keys:** The Hedera Agent Kit supports DER-encoded private keys by default (e.g., `302e...`). If you have a hex-encoded key, uncomment the appropriate line in `external-mcp-agent.ts` to use `PrivateKey.fromStringED25519()` instead. Learn more about [Hedera key types](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+**Note about private keys:** The Hedera Agent Kit supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default (e.g., `302e...`). If you have an **ED25519** key, uncomment the appropriate line in `external-mcp-agent.ts` to use `PrivateKey.fromStringED25519()` instead. Learn more about [Hedera key types](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
 
 3. Update the MCP server path in `external-mcp-agent.ts` in the `args` array with the absolute path to your built MCP server.
 
@@ -384,74 +395,61 @@ These agents connect to the configured MCP servers (defined in your code) and al
 
 > If using `HederaMCPServer.HGRAPH_MCP_MAINNET`, ensure you have set the `HGRAPH_API_KEY` in your `.env` file. See [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) for details.
 
-### Option H: Try out the Google ADK Agent
+### Option H: Run the Policy Enforcement Agent
 
-This example demonstrates how to use the Hedera Agent Kit with [Google's Agent Development Kit (ADK)](https://google.github.io/adk-docs/get-started/). It includes a plugin tool calling agent and supports the ADK Web GUI for interactive testing.
+This example demonstrates how to use the **MaxRecipientsPolicy** to enforce rules on transactions. In this case, it restricts any HBAR transfer to a maximum of 2 recipients.
 
 **Found at:**
-- `typescript/examples/adk/`
-
-#### Prerequisites
-
-1. Configure your environment variables in `typescript/examples/adk/.env`. You will need your Hedera credentials and a Google AI API Key (Gemini).
-
-```env
-ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
-GEMINI_API_KEY=your-gemini-api-key
-```
+- `typescript/examples/ai-sdk/policy-enforcement-agent.ts`
+- `typescript/examples/langchain-v1/policy-enforcement-agent.ts`
 
 #### Running the Example
 
-1. Navigate to the example directory:
+##### AI SDK
 
 ```bash
-cd typescript/examples/adk
+cd typescript/examples/ai-sdk
 npm install
+npm run ai-sdk:policy-enforcement-agent
 ```
 
-2. Run the CLI agent:
+##### LangChain v1
 
 ```bash
-npm run adk:plugin-tool-calling-agent
-```
-
-3. Or run the ADK Web GUI:
-
-```bash
-npx adk web
-```
-This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
-
-> **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
-
-### Option I: Run the Policy Agent Example
-
-The Policy Agent example demonstrates how to use the strict policy enforcement system in the Hedera Agent Kit. This agent is configured with several active policies (like `RequiredMemoPolicy` and `MaxHbarTransferPolicy`) that intercept and validate tool usage before execution.
-
-For a deep dive into how policies work, see [docs/POLICIES.md](../docs/POLICIES.md).
-
-#### Usage
-
-1. Go to the example directory:
-```bash
-cd typescript/examples/policy-example
-```
-
-2. Install dependencies:
-```bash
+cd typescript/examples/langchain-v1
 npm install
+npm run langchain:policy-enforcement-agent
 ```
 
-3. Create a `.env` file (copy from `.env.example`) and add your `ACCOUNT_ID`, `PRIVATE_KEY`, and `OPENAI_API_KEY`.
+---
 
-4. Run the example:
+### Option I: Run the Audit Trail Agent
+
+This example demonstrates how to use the **HcsAuditTrailHook** to automatically audit specific actions (like HBAR transfers or token creation) by submitting audit logs to a Hedera Consensus Service (HCS) topic.
+
+**Found at:**
+- `typescript/examples/ai-sdk/audit-trail-agent.ts`
+- `typescript/examples/langchain-v1/audit-trail-agent.ts`
+
+> [!IMPORTANT]
+> This agent works only in `mode: AgentMode.AUTONOMOUS`.
+
+#### Running the Example
+
+##### AI SDK
+
 ```bash
-npm start
+cd typescript/examples/ai-sdk
+npm install
+npm run ai-sdk:audit-trail-agent
 ```
 
-5. Interact with the agent. Try commands that trigger policy violations, such as:
-    - "Transfer 100 HBAR to 0.0.12345" (Should fail due to max limit)
-    - "Transfer 1 HBAR to 0.0.12345" (Should fail due to missing memo)
-    - "Transfer 1 HBAR to 0.0.12345 with memo Test" (Should succeed)
+##### LangChain v1
 
+```bash
+cd typescript/examples/langchain-v1
+npm install
+npm run langchain:audit-trail-agent
+```
+
+---

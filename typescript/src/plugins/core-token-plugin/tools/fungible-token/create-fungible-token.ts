@@ -21,7 +21,7 @@ const createFungibleTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool creates a fungible token on Hedera.
+This tool creates a HTS fungible token on Hedera.
 
 Parameters:
 - tokenName (str, required): The name of the token

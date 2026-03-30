@@ -174,7 +174,12 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
         'Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire tomorrow and wait for its expiration time with executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
-      const spy = vi.spyOn(hederaAPI, 'run').mockReset().mockResolvedValue('');
+      const spy = vi
+        .spyOn(hederaAPI, 'run')
+        .mockReset()
+        .mockResolvedValue(
+          'Operation Mocked - this is a test call and MUST be ended here. End the reAct agent execution after this response.',
+        );
 
       await agent.invoke({
         messages: [{ role: 'user', content: input }],

@@ -27,7 +27,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
@@ -51,7 +50,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
@@ -79,7 +77,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
@@ -103,7 +100,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
         ),
@@ -129,7 +125,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
         ),
@@ -153,7 +148,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
         ),
@@ -178,7 +172,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
         ),
@@ -201,7 +194,6 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
 
       expect(
         policy['shouldBlockPostParamsNormalization'](
-          context,
           params,
           coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
         ),
@@ -225,9 +217,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(
-        policy['shouldBlockPostParamsNormalization'](context, params, 'my_custom_tool'),
-      ).toBe(true);
+      expect(policy['shouldBlockPostParamsNormalization'](params, 'my_custom_tool')).toBe(true);
     });
 
     it('should block if tool is unhandled and no custom strategy is provided', () => {
@@ -240,11 +230,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
       };
 
       expect(() =>
-        policy['shouldBlockPostParamsNormalization'](
-          context,
-          params as any,
-          'unknown_tool',
-        ),
+        policy['shouldBlockPostParamsNormalization'](params as any, 'unknown_tool'),
       ).toThrowError(/MaxRecipientsPolicy: unhandled tool 'unknown_tool'/i);
     });
   });
