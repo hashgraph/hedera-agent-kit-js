@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
-import { Client, Status } from '@hashgraph/sdk';
-import { BaseTool } from '@/shared/tools';
+import { Client } from '@hashgraph/sdk';
+import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
@@ -69,58 +69,39 @@ ${tokenInfo.memo ? `**Memo**: ${tokenInfo.memo}` : ''}
 `;
 };
 
-export const GET_TOKEN_INFO_QUERY_TOOL = 'get_token_info_query_tool';
-
-export class GetTokenInfoQueryTool extends BaseTool {
-  method = GET_TOKEN_INFO_QUERY_TOOL;
-  name = 'Get Token Info';
-  description: string;
-  parameters: ReturnType<typeof tokenInfoQueryParameters>;
-  outputParser = untypedQueryOutputParser;
-
-  constructor(context: Context) {
-    super();
-    this.description = getTokenInfoQueryPrompt(context);
-    this.parameters = tokenInfoQueryParameters(context);
-  }
-
-  async normalizeParams(
-    params: z.infer<ReturnType<typeof tokenInfoQueryParameters>>,
-    _context: Context,
-    _client: Client,
-  ) {
-    return params;
-  }
-
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
+export const getTokenInfoQuery = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof tokenInfoQueryParameters>>,
+) => {
+  try {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const tokenInfo: TokenInfo = {
-      ...(await mirrornodeService.getTokenInfo(normalisedParams.tokenId!)),
-      token_id: normalisedParams.tokenId!,
+      ...(await mirrornodeService.getTokenInfo(params.tokenId!)),
+      token_id: params.tokenId!,
     };
 
     return {
-      raw: { tokenId: normalisedParams.tokenId, tokenInfo },
+      raw: { tokenId: params.tokenId, tokenInfo },
       humanMessage: postProcess(tokenInfo),
     };
-  }
-
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
+  } catch (error) {
     const desc = 'Failed to get token info';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_token_info_query_tool]', message);
-    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+    return { raw: { error: message }, humanMessage: message };
   }
-}
+};
 
-const tool = (context: Context): BaseTool => new GetTokenInfoQueryTool(context);
+export const GET_TOKEN_INFO_QUERY_TOOL = 'get_token_info_query_tool';
+
+const tool = (context: Context): Tool => ({
+  method: GET_TOKEN_INFO_QUERY_TOOL,
+  name: 'Get Token Info',
+  description: getTokenInfoQueryPrompt(context),
+  parameters: tokenInfoQueryParameters(context),
+  execute: getTokenInfoQuery,
+  outputParser: untypedQueryOutputParser,
+});
 
 export default tool;

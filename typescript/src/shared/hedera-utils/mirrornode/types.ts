@@ -89,11 +89,6 @@ export type AccountResponse = {
   accountPublicKey: string;
   balance: AccountBalanceResponse;
   evmAddress: string;
-  ethereumNonce: number;
-  memo: string;
-  maxAutomaticTokenAssociations: number;
-  deleted: boolean;
-  createdTimestamp: string;
 };
 
 export type AccountAPIResponse = {
@@ -104,11 +99,6 @@ export type AccountAPIResponse = {
   };
   balance: AccountBalanceResponse;
   evm_address: string;
-  memo: string;
-  max_automatic_token_associations: number;
-  deleted: boolean;
-  ethereum_nonce: number;
-  created_timestamp: string;
 };
 
 export type AccountBalanceResponse = {

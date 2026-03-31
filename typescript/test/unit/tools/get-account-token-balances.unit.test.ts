@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Client, LedgerId } from '@hashgraph/sdk';
 import toolFactory, {
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
-  GetAccountTokenBalancesQueryTool,
+  getAccountTokenBalancesQuery,
 } from '@/plugins/core-account-query-plugin/tools/queries/get-account-token-balances-query';
 import * as mirrornodeUtils from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -23,12 +23,12 @@ const makeClient = () => {
   return client;
 };
 
-describe('GetAccountTokenBalancesQueryTool', () => {
+describe('getAccountTokenBalancesQuery Tool', () => {
   const context = { accountId: '0.0.1001' };
   const client = makeClient();
 
   const mockService = {
-    getAccountTokenBalances: vi.fn(),
+    getAccountTokenBalances: vi.fn<[], any>(),
   } as any;
 
   beforeEach(() => {
@@ -63,8 +63,7 @@ describe('GetAccountTokenBalancesQueryTool', () => {
     };
     mockService.getAccountTokenBalances.mockResolvedValue(response);
 
-    const tool = new GetAccountTokenBalancesQueryTool(context);
-    const res = await tool.execute(client, context, { accountId, tokenId });
+    const res = await getAccountTokenBalancesQuery(client, context, { accountId, tokenId });
 
     expect(HederaParameterNormaliser.normaliseAccountTokenBalancesParams).toHaveBeenCalledWith(
       { accountId, tokenId },
@@ -87,8 +86,7 @@ describe('GetAccountTokenBalancesQueryTool', () => {
     const response: TokenBalancesResponse = { tokens: [] };
     mockService.getAccountTokenBalances.mockResolvedValue(response);
 
-    const tool = new GetAccountTokenBalancesQueryTool(context);
-    const res = await tool.execute(client, context, { tokenId } as any);
+    const res = await getAccountTokenBalancesQuery(client, context, { tokenId } as any);
 
     expect(HederaParameterNormaliser.normaliseAccountTokenBalancesParams).toHaveBeenCalled();
     expect(mockService.getAccountTokenBalances).toHaveBeenCalledWith('0.0.1001', tokenId);
@@ -97,8 +95,7 @@ describe('GetAccountTokenBalancesQueryTool', () => {
 
   it('returns error message when mirrornode service throws an Error', async () => {
     mockService.getAccountTokenBalances.mockRejectedValue(new Error('mirror-boom'));
-    const tool = new GetAccountTokenBalancesQueryTool(context);
-    const result = await tool.execute(client, context, { accountId: '0.0.1' });
+    const result = await getAccountTokenBalancesQuery(client, context, { accountId: '0.0.1' });
     expect(result.humanMessage).toContain('mirror-boom');
   });
 
@@ -106,8 +103,7 @@ describe('GetAccountTokenBalancesQueryTool', () => {
     mockService.getAccountTokenBalances.mockImplementation(() => {
       throw 'string error';
     });
-    const tool = new GetAccountTokenBalancesQueryTool(context);
-    const result = await tool.execute(client, context, { accountId: '0.0.1' });
+    const result = await getAccountTokenBalancesQuery(client, context, { accountId: '0.0.1' });
     expect(result.humanMessage).toBe('Failed to get account token balances');
     expect(result.raw.error).toContain('Failed to get account token balances');
   });

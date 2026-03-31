@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import type { Tool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -37,46 +37,36 @@ const postProcess = (response: RawTransactionResponse) => {
   return `HBAR allowance deleted successfully. Transaction ID: ${response.transactionId}`;
 };
 
-export const DELETE_HBAR_ALLOWANCE_TOOL = 'delete_hbar_allowance_tool';
-
-export class DeleteHbarAllowanceTool extends BaseTool {
-  method = DELETE_HBAR_ALLOWANCE_TOOL;
-  name = 'Delete HBAR Allowance';
-  description: string;
-  parameters: ReturnType<typeof deleteHbarAllowanceParameters>;
-  outputParser = transactionToolOutputParser;
-
-  constructor(context: Context) {
-    super();
-    this.description = deleteHbarAllowancePrompt(context);
-    this.parameters = deleteHbarAllowanceParameters(context);
-  }
-
-  async normalizeParams(
-    params: z.infer<ReturnType<typeof deleteHbarAllowanceParameters>>,
-    context: Context,
-    client: Client,
-  ) {
-    return HederaParameterNormaliser.normaliseDeleteHbarAllowance(params, context, client);
-  }
-
-  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
-    // deleteHbarAllowance effectively creates an approveHbarAllowance with amount 0
-    return HederaBuilder.approveHbarAllowance(normalisedParams);
-  }
-
-  async secondaryAction(transaction: any, client: Client, context: Context) {
-    return await handleTransaction(transaction, client, context, postProcess);
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
+const deleteHbarAllowance = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof deleteHbarAllowanceParameters>>,
+) => {
+  try {
+    const normalisedParams = HederaParameterNormaliser.normaliseDeleteHbarAllowance(
+      params,
+      context,
+      client,
+    );
+    const tx = HederaBuilder.approveHbarAllowance(normalisedParams);
+    return await handleTransaction(tx, client, context, postProcess);
+  } catch (error) {
     const desc = 'Failed to delete hbar allowance.';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[delete_hbar_allowance_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-}
+};
 
-const tool = (context: Context): BaseTool => new DeleteHbarAllowanceTool(context);
+export const DELETE_HBAR_ALLOWANCE_TOOL = 'delete_hbar_allowance_tool';
+
+const tool = (context: Context): Tool => ({
+  method: DELETE_HBAR_ALLOWANCE_TOOL,
+  name: 'Delete HBAR Allowance',
+  description: deleteHbarAllowancePrompt(context),
+  parameters: deleteHbarAllowanceParameters(context),
+  execute: deleteHbarAllowance,
+  outputParser: transactionToolOutputParser,
+});
 
 export default tool;

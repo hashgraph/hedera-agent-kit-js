@@ -8,7 +8,7 @@ import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod'
 import { returnHbarsAndDeleteAccount } from '../../utils/teardown/account-teardown';
 import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
 import { BALANCE_TIERS } from '../../utils/setup/langchain-test-config';
-import { wait } from "../../utils/general-util";
+import {wait} from "../../utils/general-util";
 import { MIRROR_NODE_WAITING_TIME } from '../../utils/test-constants';
 
 describe('Dissociate Token Integration Tests', () => {
@@ -139,8 +139,6 @@ describe('Dissociate Token Integration Tests', () => {
 
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.humanMessage).toContain('successfully dissociated');
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     const balances = await executorWrapper.getAccountTokenBalances(executorAccountId.toString());
     expect(balances.find(b => b.tokenId === tokenIdFT.toString())).toBeFalsy();

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import type { Tool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -42,45 +42,39 @@ Schedule ID: ${response.scheduleId.toString()}`;
 Transaction ID: ${response.transactionId}`;
 };
 
-export const UPDATE_ACCOUNT_TOOL = 'update_account_tool';
+const updateAccount = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof updateAccountParameters>>,
+) => {
+  try {
+    const normalisedParams = await HederaParameterNormaliser.normaliseUpdateAccount(
+      params,
+      context,
+      client,
+    );
 
-export class UpdateAccountTool extends BaseTool {
-  method = UPDATE_ACCOUNT_TOOL;
-  name = 'Update Account';
-  description: string;
-  parameters: ReturnType<typeof updateAccountParameters>;
-  outputParser = transactionToolOutputParser;
+    // Build transaction and wrap in SchedulingTransaction if needed
+    const tx = HederaBuilder.updateAccount(normalisedParams);
 
-  constructor(context: Context) {
-    super();
-    this.description = updateAccountPrompt(context);
-    this.parameters = updateAccountParameters(context);
-  }
-
-  async normalizeParams(
-    params: z.infer<ReturnType<typeof updateAccountParameters>>,
-    context: Context,
-    client: Client,
-  ) {
-    return await HederaParameterNormaliser.normaliseUpdateAccount(params, context, client);
-  }
-
-  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
-    return HederaBuilder.updateAccount(normalisedParams);
-  }
-
-  async secondaryAction(transaction: any, client: Client, context: Context) {
-    return await handleTransaction(transaction, client, context, postProcess);
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
+    return await handleTransaction(tx, client, context, postProcess);
+  } catch (error) {
     const desc = 'Failed to update account';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[update_account_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-}
+};
 
-const tool = (context: Context): BaseTool => new UpdateAccountTool(context);
+export const UPDATE_ACCOUNT_TOOL = 'update_account_tool';
+
+const tool = (context: Context): Tool => ({
+  method: UPDATE_ACCOUNT_TOOL,
+  name: 'Update Account',
+  description: updateAccountPrompt(context),
+  parameters: updateAccountParameters(context),
+  execute: updateAccount,
+  outputParser: transactionToolOutputParser,
+});
 
 export default tool;

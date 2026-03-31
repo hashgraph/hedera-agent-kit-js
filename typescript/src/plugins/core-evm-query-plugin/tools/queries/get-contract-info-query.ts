@@ -3,11 +3,10 @@ import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { contractInfoQueryParameters } from '@/shared/parameter-schemas/evm.zod';
 import { Client } from '@hashgraph/sdk';
-import { BaseTool } from '@/shared/tools';
+import { Tool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { ContractInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
-import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 export const getContractInfoQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -64,61 +63,36 @@ const postProcess = (contract: ContractInfo) => {
 `;
 };
 
-export const GET_CONTRACT_INFO_QUERY_TOOL = 'get_contract_info_query_tool';
-
-export class GetContractInfoQueryTool extends BaseTool {
-  method = GET_CONTRACT_INFO_QUERY_TOOL;
-  name = 'Get Contract Info';
-  description: string;
-  parameters: ReturnType<typeof contractInfoQueryParameters>;
-  outputParser = untypedQueryOutputParser;
-
-  constructor(context: Context) {
-    super();
-    this.description = getContractInfoQueryPrompt(context);
-    this.parameters = contractInfoQueryParameters(context);
-  }
-
-  async normalizeParams(
-    params: z.infer<ReturnType<typeof contractInfoQueryParameters>>,
-    context: Context,
-    _client: Client,
-  ) {
-    return HederaParameterNormaliser.parseParamsWithSchema(
-      params,
-      contractInfoQueryParameters,
-      context,
-    );
-  }
-
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
+export const getContractInfoQuery = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof contractInfoQueryParameters>>,
+) => {
+  try {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const contractInfo: ContractInfo = await mirrornodeService.getContractInfo(
-      normalisedParams.contractId,
-    );
+    const contractInfo: ContractInfo = await mirrornodeService.getContractInfo(params.contractId);
 
     return {
       raw: { contractId: contractInfo.contract_id, contractInfo },
       humanMessage: postProcess(contractInfo),
     };
-  }
-
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null; // Not applicable for query tools
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
+  } catch (error) {
     const desc = 'Failed to get contract info';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_contract_info_query_tool]', message);
     return { raw: { error: message }, humanMessage: message };
   }
-}
+};
 
-const tool = (context: Context): BaseTool => new GetContractInfoQueryTool(context);
+export const GET_CONTRACT_INFO_QUERY_TOOL = 'get_contract_info_query_tool';
+
+const tool = (context: Context): Tool => ({
+  method: GET_CONTRACT_INFO_QUERY_TOOL,
+  name: 'Get Contract Info',
+  description: getContractInfoQueryPrompt(context),
+  parameters: contractInfoQueryParameters(context),
+  execute: getContractInfoQuery,
+  outputParser: untypedQueryOutputParser,
+});
 
 export default tool;

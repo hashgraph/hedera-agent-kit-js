@@ -27,7 +27,7 @@ async function bootstrap(): Promise<void> {
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
     process.env.ACCOUNT_ID!,
-    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!),
+    PrivateKey.fromStringDer(process.env.PRIVATE_KEY!),
     // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
 

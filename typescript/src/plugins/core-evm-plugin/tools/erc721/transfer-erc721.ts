@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { AgentMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import type { Context } from '@/shared/configuration';
+import type { Tool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
@@ -49,28 +49,15 @@ Schedule ID: ${response.scheduleId.toString()}`
     : `ERC721 token transferred successfully.
     Transaction ID: ${response.transactionId}`;
 
-export const TRANSFER_ERC721_TOOL = 'transfer_erc721_tool';
+const transferERC721 = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof transferERC721Parameters>>,
+) => {
+  const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
 
-export class TransferErc721Tool extends BaseTool {
-  method = TRANSFER_ERC721_TOOL;
-  name = 'Transfer ERC721';
-  description: string;
-  parameters: ReturnType<typeof transferERC721Parameters>;
-  outputParser = transactionToolOutputParser;
-
-  constructor(context: Context) {
-    super();
-    this.description = transferERC721Prompt(context);
-    this.parameters = transferERC721Parameters(context);
-  }
-
-  async normalizeParams(
-    params: z.infer<ReturnType<typeof transferERC721Parameters>>,
-    context: Context,
-    client: Client,
-  ) {
-    const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
-    return await HederaParameterNormaliser.normaliseTransferERC721Params(
+  try {
+    const normalisedParams = await HederaParameterNormaliser.normaliseTransferERC721Params(
       params,
       ERC721_TRANSFER_FUNCTION_ABI,
       ERC721_TRANSFER_FUNCTION_NAME,
@@ -78,27 +65,26 @@ export class TransferErc721Tool extends BaseTool {
       mirrorNode,
       client,
     );
-  }
 
-  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
-    return HederaBuilder.executeTransaction(normalisedParams);
-  }
-
-  async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (context.mode === AgentMode.RETURN_BYTES) {
-      return await handleTransaction(transaction, client, context);
-    }
-    return await handleTransaction(transaction, client, context, postProcess);
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
+    const tx = HederaBuilder.executeTransaction(normalisedParams);
+    return await handleTransaction(tx, client, context, postProcess);
+  } catch (error) {
     const message =
       'Failed to transfer ERC721' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_erc721_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-}
+};
 
-const tool = (context: Context): BaseTool => new TransferErc721Tool(context);
+export const TRANSFER_ERC721_TOOL = 'transfer_erc721_tool';
+
+const tool = (context: Context): Tool => ({
+  method: TRANSFER_ERC721_TOOL,
+  name: 'Transfer ERC721',
+  description: transferERC721Prompt(context),
+  parameters: transferERC721Parameters(context),
+  execute: transferERC721,
+  outputParser: transactionToolOutputParser,
+});
 
 export default tool;
