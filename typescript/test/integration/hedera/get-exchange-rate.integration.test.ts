@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@hashgraph/sdk';
-import { GetExchangeRateQueryTool } from '@/plugins/core-misc-query-plugin/tools/queries/get-exchange-rate-query';
+import { getExchangeRateQuery } from '@/plugins/core-misc-query-plugin/tools/queries/get-exchange-rate-query';
 import { Context } from '@/shared/configuration';
 import { getOperatorClientForTests } from '../../utils';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -22,8 +22,7 @@ describe('Get Exchange Rate Integration Tests', () => {
       accountId: client.operatorAccountId?.toString(),
       mirrornodeService: mirrornode,
     };
-    const tool = new GetExchangeRateQueryTool(localContext);
-    const res: any = await tool.execute(client, localContext, {});
+    const res: any = await getExchangeRateQuery(client, localContext, {} as any);
 
     // Basic shape checks
     expect(res).toBeTruthy();
@@ -47,8 +46,7 @@ describe('Get Exchange Rate Integration Tests', () => {
     };
     // Use a recent historical timestamp format (seconds since epoch)
     const params = { timestamp: '1726000000' } as any;
-    const tool = new GetExchangeRateQueryTool(localContext);
-    const res: any = await tool.execute(client, localContext, params);
+    const res: any = await getExchangeRateQuery(client, localContext, params);
 
     expect(res).toBeTruthy();
     expect(res.raw).toBeTruthy();
@@ -69,8 +67,7 @@ describe('Get Exchange Rate Integration Tests', () => {
     };
 
     const params = { timestamp: '1757512862.640825000' } as any;
-    const tool = new GetExchangeRateQueryTool(localContext);
-    const res: any = await tool.execute(client, localContext, params);
+    const res: any = await getExchangeRateQuery(client, localContext, params);
 
     expect(res).toBeTruthy();
     expect(res.raw).toEqual({
@@ -94,15 +91,12 @@ describe('Get Exchange Rate Integration Tests', () => {
       accountId: client.operatorAccountId?.toString(),
       mirrornodeService: mirrornode,
     };
-    const tool = new GetExchangeRateQueryTool(localContext);
-    const res: any = await tool.execute(client, localContext, {
+    const res: any = await getExchangeRateQuery(client, localContext, {
       timestamp: 'not-a-timestamp',
-    });
+    } as any);
 
     expect(res).toBeTruthy();
     expect(typeof res.humanMessage).toBe('string');
-    // Error handling might return distinct structure depending on implementation
-    // The tool catches error and returns { raw: { error: ... }, humanMessage: ... }
-    // The previous test expected raw.error
+    expect(typeof res.raw?.error).toBe('string');
   });
 });

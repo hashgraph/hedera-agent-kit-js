@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import type { Tool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -29,54 +29,42 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Topic created successfully with topic id ${response.topicId?.toString()} and transaction id ${response.transactionId.toString()}`;
 };
 
-export const CREATE_TOPIC_TOOL = 'create_topic_tool';
-
-export class CreateTopicTool extends BaseTool {
-  method = CREATE_TOPIC_TOOL;
-  name = 'Create Topic';
-  description: string;
-  parameters: ReturnType<typeof createTopicParameters>;
-  outputParser = transactionToolOutputParser;
-
-  constructor(context: Context) {
-    super();
-    this.description = createTopicPrompt(context);
-    this.parameters = createTopicParameters(context);
-  }
-
-  async normalizeParams(
-    params: z.infer<ReturnType<typeof createTopicParameters>>,
-    context: Context,
-    client: Client,
-  ) {
+const createTopic = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof createTopicParameters>>,
+) => {
+  try {
     const mirrornodeService: IHederaMirrornodeService = getMirrornodeService(
       context.mirrornodeService!,
       client.ledgerId!,
     );
-    return await HederaParameterNormaliser.normaliseCreateTopicParams(
+    const normalisedParams = await HederaParameterNormaliser.normaliseCreateTopicParams(
       params,
       context,
       client,
       mirrornodeService,
     );
-  }
-
-  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
-    return HederaBuilder.createTopic(normalisedParams);
-  }
-
-  async secondaryAction(transaction: any, client: Client, context: Context) {
-    return await handleTransaction(transaction, client, context, postProcess);
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
+    const tx = HederaBuilder.createTopic(normalisedParams);
+    const result = await handleTransaction(tx, client, context, postProcess);
+    return result;
+  } catch (error) {
     const desc = 'Failed to create topic';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_topic_tool]', message);
     return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
-}
+};
 
-const tool = (context: Context): BaseTool => new CreateTopicTool(context);
+export const CREATE_TOPIC_TOOL = 'create_topic_tool';
+
+const tool = (context: Context): Tool => ({
+  method: CREATE_TOPIC_TOOL,
+  name: 'Create Topic',
+  description: createTopicPrompt(context),
+  parameters: createTopicParameters(context),
+  execute: createTopic,
+  outputParser: transactionToolOutputParser,
+});
 
 export default tool;

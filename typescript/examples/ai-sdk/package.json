@@ -6,9 +6,7 @@
     "ai-sdk:tool-calling-agent": "ts-node tool-calling-agent.ts",
     "ai-sdk:plugin-tool-calling-agent": "ts-node plugin-tool-calling-agent.ts",
     "ai-sdk:mcp-external-agent": "ts-node mcp-external-agent.ts",
-    "ai-sdk:preconfigured-mcp-client-agent": "ts-node preconfigured-mcp-client-agent.ts",
-    "ai-sdk:audit-trail-agent": "ts-node audit-trail-agent.ts",
-    "ai-sdk:policy-enforcement-agent": "ts-node policy-enforcement-agent.ts"
+    "ai-sdk:preconfigured-mcp-client-agent": "ts-node preconfigured-mcp-client-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/mcp": "^1.0.21",
@@ -17,7 +15,7 @@
     "ai": "^6.0.86",
     "dotenv": "17.2.3",
     "zod": "^3.23.8",
-    "hedera-agent-kit": "../..",
+    "hedera-agent-kit": "3.8.1",
     "prompts": "2.4.2"
   },
   "author": "",

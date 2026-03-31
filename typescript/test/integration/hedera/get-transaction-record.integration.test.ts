@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import { AccountId, Client, PrivateKey, TransactionId } from '@hashgraph/sdk';
-import { GetTransactionRecordQueryTool } from '@/plugins/core-transactions-query-plugin/tools/queries/get-transaction-record-query';
+import { getTransactionRecordQuery } from '@/plugins/core-transactions-query-plugin/tools/queries/get-transaction-record-query';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '../../utils';
 import { Context } from '@/shared';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -53,8 +53,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transaction to be indexed by mirrornode
 
-    const tool = new GetTransactionRecordQueryTool(context);
-    const result = await tool.execute(executorClient, context, {
+    const result = await getTransactionRecordQuery(executorClient, context, {
       transactionId: txIdMirrorNodeStyle,
     });
 
@@ -69,8 +68,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       mirrornodeService,
     };
 
-    const tool = new GetTransactionRecordQueryTool(context);
-    const response = await tool.execute(executorClient, context, {
+    const response = await getTransactionRecordQuery(executorClient, context, {
       transactionId: 'not-a-valid-id',
     });
 
@@ -86,8 +84,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
     };
 
     const nonExistentTxId = `${executorClient.operatorAccountId!.toString()}-123456789-000000000`;
-    const tool = new GetTransactionRecordQueryTool(context);
-    const response = await tool.execute(executorClient, context, {
+    const response = await getTransactionRecordQuery(executorClient, context, {
       transactionId: nonExistentTxId,
     });
     expect(response.humanMessage).toContain('Not Found');

@@ -1,5 +1,5 @@
 import { LedgerId } from '@hashgraph/sdk';
-import { IHederaMirrornodeService } from '@/shared';
+import { IHederaMirrornodeService } from './hedera-mirrornode-service.interface';
 import {
   AccountAPIResponse,
   AccountResponse,
@@ -53,11 +53,6 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
       accountPublicKey: data?.key?.key,
       balance: data.balance,
       evmAddress: data.evm_address,
-      ethereumNonce: data.ethereum_nonce,
-      createdTimestamp: data.created_timestamp,
-      memo: data.memo,
-      maxAutomaticTokenAssociations: data.max_automatic_token_associations,
-      deleted: data.deleted,
     };
   }
 

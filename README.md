@@ -11,7 +11,6 @@
 - [Key Features](#key-features)
 - [About the Agent Kit Functionality](#agent-kit-functionality)
 - [Third Party Plugins](#third-party-plugins)
-- [Hooks and Policies](#hooks-and-policies)
 - [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [Agent Execution Modes](#agent-execution-modes)
@@ -73,27 +72,9 @@ The Hedera Agent Kit is extensible with third party plugins by other projects. S
   Github repository: [https://github.com/henrytongv/chainlink-price-plugin-js](https://github.com/henrytongv/chainlink-price-plugin-js). Tested/endorsed version of plugin: chainlink-pricefeed-plugin@1.0.4
   
 _[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
-
-### Hooks and Policies
-
-The Hedera Agent Kit provides a flexible and powerful system for putting limits on tool usage and enforcing business logic, effectively enabling you to limit the functionality of AI agents through **Hooks** and **Policies**. These hooks and policies can be used to enforce security, compliance, and other business rules.
-
-**Features**
-* Hooks and policies can be called when parameters are passed, after parameter normalization, before tool execution when a transaction has been formed, and after tool execution when a transaction has been signed and submitted.
-* Users can create their own hooks and policies on any available Hedera Agent Kit tool, simply fork this repo and create your own hooks and policies in the `typescript/src/hooks` and `typescript/src/policies` directories.
-* We have provided examples:
-  * A hook to [log actions to an HCS topic](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#1-hcsaudittrailhook-hook), creating an easy to track audit trail. 
-  * A policy that [sets the maximum number of recipients](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#2-maxrecipientspolicy-policy) in a transfer or airdrop.
-  * A policy the [blocks tool usage](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#3-rejecttoolpolicy-policy) by an agent.
-
-For more information on hooks and policies, see the [Hooks and Policies documentation](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md).
-
-Try out an example [Audit Hook Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-try-out-the-audit-hook-agent) to see how hooks and policies work in practice.
-
 ---
 
 ## Developer Examples
-
 
 You can try out examples of the different types of agents you can build by followin the instructions in the [Developer Examples](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md) doc in this repo.
 
@@ -308,15 +289,15 @@ Currently, the following plugins are available:
 - Get Account Token Balances Query
 - Get Topic Messages Query
 
-_See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
+_See more in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 
 ---
 
 ## Creating Plugins & Contributing
 
-- You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md)
+- You can find a guide for creating plugins in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)
 
-- This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
+- This guide also has instructions for [publishing and registering your plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
 - If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 

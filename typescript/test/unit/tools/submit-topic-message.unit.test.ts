@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client } from '@hashgraph/sdk';
 import toolFactory, {
   SUBMIT_TOPIC_MESSAGE_TOOL,
-  SubmitTopicMessageTool,
 } from '@/plugins/core-consensus-plugin/tools/consensus/submit-topic-message';
 
 // Mocks for dependencies
@@ -33,7 +32,7 @@ const makeClient = () => {
   return Client.forNetwork({});
 };
 
-describe('SubmitTopicMessageTool', () => {
+describe('submit-topic-message tool (unit)', () => {
   const context: any = { accountId: '0.0.1001' };
   const params = {
     topicId: '0.0.7777',
@@ -58,7 +57,7 @@ describe('SubmitTopicMessageTool', () => {
   });
 
   it('executes happy path and returns formatted human message with tx id', async () => {
-    const tool = new SubmitTopicMessageTool(context);
+    const tool = toolFactory(context);
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params);
@@ -75,7 +74,7 @@ describe('SubmitTopicMessageTool', () => {
   });
 
   it('returns aligned error response when an Error is thrown', async () => {
-    const tool = new SubmitTopicMessageTool(context);
+    const tool = toolFactory(context);
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
@@ -91,7 +90,7 @@ describe('SubmitTopicMessageTool', () => {
   });
 
   it('returns aligned generic failure response when a non-Error is thrown', async () => {
-    const tool = new SubmitTopicMessageTool(context);
+    const tool = toolFactory(context);
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
