@@ -36,7 +36,7 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
     expect(tool.method).toBe(TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL);
     expect(tool.name).toBe('Transfer Fungible Token with Allowance');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('This tool will transfer a fungible token');
+    expect(tool.description).toContain('This tool will transfer a HTS fungible token');
     expect(tool.parameters).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });

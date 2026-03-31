@@ -37,7 +37,7 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide parameters as JSON.'),
-    getContextSnippet: vi.fn(() => 'some context'),
+    getContextSnippet: vi.fn(() => ''),
     getAnyAddressParameterDescription: vi.fn(
       () => 'toAddress (str, optional): The address to which the token will be minted.',
     ),
@@ -89,7 +89,9 @@ describe('mintERC721 tool (unit)', () => {
     expect(tool.method).toBe(MINT_ERC721_TOOL);
     expect(tool.name).toBe('Mint ERC721');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('This tool will mint a new ERC721 token');
+    expect(tool.description).toContain(
+      'This tool will mint (create a new token from existing contract) a new ERC721 token on Hedera.',
+    );
     expect(tool.parameters).toBeTruthy();
   });
 

@@ -50,7 +50,7 @@ describe('delete-nft-allowance tool (unit)', () => {
     expect(tool.method).toBe(DELETE_NFT_ALLOWANCE_TOOL);
     expect(tool.name).toBe('Delete Non Fungible Token Allowance');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('deletes NFT allowance');
+    expect(tool.description).toContain('deletes HTS NFT allowance');
     expect(tool.parameters).toBeTruthy();
   });
 

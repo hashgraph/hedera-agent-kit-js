@@ -12,16 +12,20 @@ export const transferHbarParameters = (context: Context = {}) =>
     transfers: z
       .array(
         z.object({
-          accountId: z.string().describe('Recipient account ID'),
-          amount: z.number().describe('Amount of HBAR to transfer'),
+          accountId: z.string().describe('Recipient account ID (Required)'),
+          amount: z.number().describe('Amount of HBAR to transfer (Required)'),
         }),
       )
-      .describe('Array of HBAR transfers')
+      .describe(
+        'Array of HBAR transfers to RECIPIENTS. Do NOT include the sender/source account in this array.',
+      )
       .min(1),
     sourceAccountId: z
       .string()
       .optional()
-      .describe('Account ID of the HBAR owner — the balance will be deducted from this account'),
+      .describe(
+        'Account ID of the sender/owner — the balance will be deducted from this account. Use this INSTEAD of adding a negative transfer.',
+      ),
     transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
   });
 
@@ -178,12 +182,12 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
     tokenApprovals: z
       .array(
         z.object({
-          tokenId: z.string().describe('Token ID'),
+          tokenId: z.string().describe('Token ID (Required)'),
           amount: z
             .number()
             .nonnegative()
             .describe(
-              'Amount of tokens to approve (must be positive, can be float or int) Given in display units, the tool will handle parsing',
+              'Amount of tokens to approve (must be positive, can be float or int) Given in display units, the tool will handle parsing. (Required)',
             ),
         }),
       )

@@ -21,7 +21,7 @@ const createNonFungibleTokenPrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool creates a non-fungible token (NFT) on Hedera.
+This tool creates a HTS non-fungible token (NFT) on Hedera.
 
 Parameters:
 - tokenName (str, required): Name of the token
@@ -31,6 +31,8 @@ Parameters:
 - isSupplyKey (boolean, optional): If user wants to set supply key set to true, otherwise false
 - ${treasuryAccountDesc}
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+
+For tool call only tokenName and tokenSymbol are optional and if not provided, the tool will use the default values.
 
 ${usageInstructions}
 `;

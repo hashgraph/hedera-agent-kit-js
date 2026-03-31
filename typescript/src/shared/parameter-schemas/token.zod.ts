@@ -116,10 +116,10 @@ export const createNonFungibleTokenParametersNormalised = (_context: Context = {
     });
 
 const AirdropRecipientSchema = z.object({
-  accountId: z.string().describe('Recipient account ID (e.g., "0.0.xxxx").'),
+  accountId: z.string().describe('Recipient account ID (e.g., "0.0.xxxx"). (Required)'),
   amount: z
     .union([z.number(), z.string()])
-    .describe('Amount in display units, the tool will handle parsing.'),
+    .describe('Amount in display units, the tool will handle parsing. (Required)'),
 });
 
 export const airdropFungibleTokenParameters = (_context: Context = {}) =>
@@ -395,8 +395,8 @@ export const transferNonFungibleTokenWithAllowanceParameters = (_context: Contex
     recipients: z
       .array(
         z.object({
-          recipientId: z.string().describe('Account ID of the recipient'),
-          serialNumber: z.number().int().min(1).describe('Serial number of the NFT to transfer'),
+          recipientId: z.string().describe('Account ID of the recipient (Required)'),
+          serialNumber: z.number().int().min(1).describe('Serial number of the NFT to transfer (Required)'),
         }),
       )
       .min(1)
@@ -426,8 +426,8 @@ export const transferNonFungibleTokenParameters = (_context: Context) =>
       recipients: z
         .array(
           z.object({
-            recipientId: z.string().describe('Account ID of the recipient'),
-            serialNumber: z.number().int().min(1).describe('Serial number of the NFT to transfer'),
+            recipientId: z.string().describe('Account ID of the recipient (Required)'),
+            serialNumber: z.number().int().min(1).describe('Serial number of the NFT to transfer (Required)'),
           }),
         )
         .min(1)
@@ -457,11 +457,11 @@ export const transferFungibleTokenWithAllowanceParameters = (context: Context = 
     transfers: z
       .array(
         z.object({
-          accountId: z.string().describe('Recipient account ID'),
+          accountId: z.string().describe('Recipient account ID (Required)'),
           amount: z
             .number()
             .nonnegative()
-            .describe('Amount of tokens to transfer in display unit.'),
+            .describe('Amount of tokens to transfer in display unit. (Required)'),
         }),
       )
       .min(1)
