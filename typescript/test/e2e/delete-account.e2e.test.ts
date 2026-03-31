@@ -122,7 +122,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
         messages: [
           {
             role: 'user',
-            content: `Delete the account ${fakeAccountId}`,
+            content: `Delete the account ${fakeAccountId}. This account does not exist but try to call the tool anyway.`,
           },
         ],
       });
