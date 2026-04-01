@@ -103,6 +103,9 @@ Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire 01.02.2026 and
 
 Creates a new Hedera account. Supports scheduled transactions.
 
+> [!NOTE]
+> On Hedera, multiple accounts can be created using the same key pair. By default, this tool uses the operator's public key if no `publicKey` is provided. This means the newly created account will be controlled by the same private key as the operator account. The agent should NOT claim to have generated a new key pair unless it explicitly received one as input.
+
 #### Parameters
 
 | Parameter                       | Type     | Required | Default      | Description                                          |
