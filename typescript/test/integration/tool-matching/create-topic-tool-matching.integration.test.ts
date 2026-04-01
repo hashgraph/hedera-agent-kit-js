@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@/langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { coreConsensusPluginToolNames } from '@/plugins';
 
-describe.skip('Create Topic Tool Matching Integration Tests', () => {
+describe('Create Topic Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
@@ -26,8 +26,8 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
-    it.skip('should match create topic tool with default params', async () => {
+  describe('Tool Matching and Parameter Extraction', () => {
+    it('should match create topic tool with default params', async () => {
       const input = 'Create a new topic';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -44,7 +44,7 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
       expect(spy).toHaveBeenCalledWith(CREATE_TOPIC_TOOL, expect.objectContaining({}));
     });
 
-    it.skip('should match create topic tool with memo and submit key', async () => {
+    it('should match create topic tool with memo and submit key', async () => {
       const input = 'Create a topic with memo "Payments" and set submit key';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -62,16 +62,16 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
         CREATE_TOPIC_TOOL,
         expect.objectContaining({
           topicMemo: 'Payments',
-          isSubmitKey: true,
+          submitKey: true,
         }),
       );
     });
 
-    it.skip('should handle various natural language variations', async () => {
+    it('should handle various natural language variations', async () => {
       const variations = [
         { input: 'Open a new consensus topic', expected: {} },
         { input: 'Create topic with memo "My memo"', expected: { topicMemo: 'My memo' } },
-        { input: 'Create topic and set submit key', expected: { isSubmitKey: true } },
+        { input: 'Create topic and set submit key', expected: { submitKey: true } },
         {
           input: 'Create topic with transaction memo "TX: memo"',
           expected: { transactionMemo: 'TX: memo' },
@@ -85,9 +85,11 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
           .spyOn(hederaAPI, 'run')
           .mockReset()
           .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
         await agent.invoke({
           messages: [{ role: 'user', content: variation.input }],
         });
+
         expect(spy).toHaveBeenCalledOnce();
         expect(spy).toHaveBeenCalledWith(
           CREATE_TOPIC_TOOL,
@@ -98,8 +100,8 @@ describe.skip('Create Topic Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
-    it.skip('should have create topic tool available', () => {
+  describe('Tool Available', () => {
+    it('should have create topic tool available', () => {
       const tools = toolkit.getTools();
       const createTopic = tools.find(tool => tool.name === 'create_topic_tool');
 

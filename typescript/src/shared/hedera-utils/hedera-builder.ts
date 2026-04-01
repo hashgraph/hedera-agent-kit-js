@@ -173,7 +173,7 @@ export default class HederaBuilder {
     const { transactionMemo, ...rest } = params as any;
     const tx = new TopicCreateTransaction(rest);
     if (transactionMemo) tx.setTransactionMemo(transactionMemo);
-    return tx;
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static submitTopicMessage(

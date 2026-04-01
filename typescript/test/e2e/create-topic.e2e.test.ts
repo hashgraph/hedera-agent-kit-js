@@ -141,5 +141,26 @@ describe('Create Topic E2E Tests', () => {
         expect(record.transactionMemo).toBe(txMemo);
       }),
     );
+
+    it(
+      'should create a topic with admin key',
+      itWithRetry(async () => {
+        const input = `Create a new topic and set my key as admin key`;
+
+        const result = await agent.invoke({
+          messages: [
+            {
+              role: 'user',
+              content: input,
+            },
+          ],
+        });
+        const topicId = extractTopicId(result, responseParsingService);
+
+        const topicInfo = await hederaOperationsWrapper.getTopicInfo(topicId);
+
+        expect(topicInfo.adminKey?.toString()).toBe(client.operatorPublicKey?.toString());
+      }),
+    );
   });
 });
