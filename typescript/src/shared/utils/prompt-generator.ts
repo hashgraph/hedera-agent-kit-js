@@ -73,6 +73,7 @@ Important:
 - Do not generate placeholder values for optional fields
 - Leave optional parameters undefined if not specified by the user
 - If a required parameter is not specified by the user, DO NOT guess or generate placeholder values. You must stop and ask the user for the missing required information.
+- If the user says "schedule", "scheduled", or clearly asks to schedule execution, set schedulingParams.isScheduled to true.
 - Important: If the user mentions multiple recipients or amounts and tool accepts an array, combine all recipients, tokens or similar assets into a single array and make exactly one call to that tool. Do not split the action into multiple tool calls if it's possible to do so.
 `;
   }
