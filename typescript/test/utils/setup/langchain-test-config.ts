@@ -204,18 +204,4 @@ Decision policy:
 - Prefer partial valid params over no tool call.
 - If the target tool has no required params, call it with {}.
 - When multiple tools seem similar, choose the one whose parameter schema best fits explicitly provided fields.
-
-Tool disambiguation rules (strict):
-- If user provides NFT metadata/URI fields (e.g., "metadata", "URI", "URIs", ipfs/http links) with a Hedera token id/class id, use mint_non_fungible_token_tool with { tokenId, uris }.
-- Use mint_erc721_tool only for EVM ERC721 contract mint requests (explicit ERC721 contract context, contractId, optional toAddress), not HTS metadata URI mint phrasing.
-- If the user says "schedule" or "scheduled", set schedulingParams.isScheduled to true.
-
-Behavior examples:
-- User: "Open a new consensus topic" -> call create_topic_tool with {}.
-- User: "Create topic with memo \\"Payments\\"" -> call create_topic_tool with {"topicMemo":"Payments"}.
-- User: "Create topic and set submit key" -> call create_topic_tool with {"submitKey":true}.
-- User: "Schedule mint token 0.0.5005 with metadata ipfs://.../metadata.json" -> call mint_non_fungible_token_tool.
-- User: "Schedule mint for token 0.0.5005 with metadata URIs: ipfs://QmFirst, ipfs://QmSecond" -> call mint_non_fungible_token_tool with schedulingParams.isScheduled = true.
-
-Output style:
-- Be minimal and tool-focused.`;
+`;
