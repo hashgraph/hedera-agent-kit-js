@@ -11,16 +11,19 @@ import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/heder
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
-const createTopicPrompt = (_context: Context = {}) => {
+const createTopicPrompt = (context: Context = {}) => {
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
 
   return `
-This tool will create a new topic on the Hedera network.
+This tool will create a new topic (consensus topic) on the Hedera network (HCS). Use this for any request to: create a topic, open a consensus topic, or start a new communication channel.
+All parameters are optional!
 
 Parameters:
-- topicMemo (str, optional): A memo stored permanently on the topic itself (not the transaction)
+- topicMemo (str, optional): A memo stored permanently on the topic itself (not the transaction). It is not required to set a topic memo!
 - transactionMemo (str, optional): A memo attached to the transaction (separate from topicMemo). Use this when the user says "transaction memo" or "set the memo on the transaction"
-- isSubmitKey (bool, optional): Whether to set a submit key for the topic. Set to true if user wants to set a submit key, otherwise false
+- adminKey (bool or str, optional): Admin key for the topic. ONLY set this if the user wants to be able to UPDATE or DELETE the topic later. Pass true to use operator key, or public key string.
+- submitKey (bool or str, optional): Submit key for the topic. ONLY set this if the user explicitly wants to RESTRICT who can submit messages to the topic. If they say "do NOT restrict access", do NOT set this. Pass true to use operator key, or public key string.
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
 };

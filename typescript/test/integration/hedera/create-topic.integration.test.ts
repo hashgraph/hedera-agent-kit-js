@@ -48,7 +48,7 @@ describe('Create Topic Integration Tests', () => {
     it('should create a topic with memo and submit key', async () => {
       const params: z.infer<ReturnType<typeof createTopicParameters>> = {
         topicMemo: 'Integration test topic',
-        isSubmitKey: true,
+        submitKey: true,
       } as any;
 
       const tool = createTopicTool(context);
@@ -61,7 +61,7 @@ describe('Create Topic Integration Tests', () => {
       expect(topicInfo).toBeDefined();
       expect(topicInfo.topicMemo).toBe(params.topicMemo);
       expect(topicInfo.adminKey).toBeNull();
-      expect(topicInfo.submitKey!.toString()).toBe(client.operatorPublicKey?.toStringDer());
+      expect(topicInfo.submitKey!.toString()).toBe(client.operatorPublicKey?.toString());
     });
 
     it('should handle empty string topicMemo', async () => {
@@ -101,6 +101,20 @@ describe('Create Topic Integration Tests', () => {
         .setTransactionId(result.raw.transactionId)
         .execute(client);
       expect(record.transactionMemo).toBe(params.transactionMemo);
+    });
+
+    it('should create a topic with adminKey', async () => {
+      const params: z.infer<ReturnType<typeof createTopicParameters>> = {
+        adminKey: true,
+      } as any;
+
+      const tool = createTopicTool(context);
+      const result: any = await tool.execute(client, context, params);
+
+      const topicInfo = await hederaOperationsWrapper.getTopicInfo(result.raw.topicId!.toString());
+
+      expect(result.humanMessage).toContain('Topic created successfully');
+      expect(topicInfo.adminKey!.toString()).toBe(client.operatorPublicKey?.toString());
     });
   });
 });

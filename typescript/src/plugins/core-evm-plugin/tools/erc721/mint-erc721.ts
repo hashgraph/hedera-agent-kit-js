@@ -24,6 +24,8 @@ const mintERC721Prompt = (context: Context = {}) => {
 ${contextSnippet}
 
 This tool will mint (create a new token from existing contract) a new ERC721 token on Hedera. ERC721 is an EVM compatible non fungible token (NFT).
+Use this only for EVM contract-based ERC721 minting.
+Do NOT use this tool for HTS NFT mint requests that provide metadata URI/URIs for a Hedera token class (those belong to mint_non_fungible_token_tool).
 
 Parameters:
 - contractId (str, required): The id of the ERC721 contract

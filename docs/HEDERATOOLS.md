@@ -358,15 +358,18 @@ Show balance of token 0.0.11111 for account 0.0.12345
 
 ### CREATE_TOPIC_TOOL
 
-Create a new topic on the Hedera network.
+Create a new topic on the Hedera network. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter         | Type      | Required | Description                                |
-|-------------------|-----------|----------|--------------------------------------------|
-| `topicMemo`       | `string`  | ❌        | A memo for the topic.                      |
-| `transactionMemo` | `string`  | ❌        | An optional memo for the transaction.      |
-| `isSubmitKey`     | `boolean` | ❌        | Whether to set a submit key for the topic. |
+| Parameter         | Type                | Required | Description                                                               |
+|-------------------|---------------------|----------|---------------------------------------------------------------------------|
+| `topicMemo`       | `string`            | ❌        | A memo for the topic (optional).                                          |
+| `transactionMemo` | `string`            | ❌        | An optional memo for the transaction (optional).                          |
+| `adminKey`        | `boolean \| string` | ❌        | Admin key for the topic. Pass `true` for operator key, or public key.     |
+| `submitKey`       | `boolean \| string` | ❌        | Submit key for the topic. Pass `true` for operator key, or public key.    |
+
+Note: `isSubmitKey` is deprecated. Agent will use `submitKey` instead.
 
 #### Example Prompts
 
@@ -375,6 +378,14 @@ Create a new topic
 Create a topic with memo "Payments" and set submit key
 Open a new consensus topic
 Create topic with transaction memo "TX: memo"
+Create a topic with admin key <0xPassSpecificPublicKey>
+Schedule creating a topic with memo "Scheduled Topic"
+```
+
+#### Example (Scheduled)
+
+```
+Schedule create topic transaction with memo "Scheduled Topic". Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
