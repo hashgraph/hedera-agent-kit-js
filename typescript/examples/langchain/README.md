@@ -3,6 +3,30 @@
 This directory contains examples of using the Hedera Agent Kit with LangChain (Classic).
 For more information navigate to (DEVEXAMPLES.md)[https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md]
 
+## Setup
+
+1. **Environment Variables**:
+   Copy `.env.example` to `.env` and fill in your credentials:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Hedera Account**:
+   You'll need a Hedera Testnet account. Get one at [portal.hedera.com](https://portal.hedera.com).
+
+##### About Private Keys
+
+Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+// PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+
+
+
+
 ## Available Agents
 
 ### Tool Calling Agent
