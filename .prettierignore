@@ -1,0 +1,13 @@
+# compiled output
+dist
+build
+
+# tooling
+node_modules
+coverage
+*.lock
+package-lock.json
+pnpm-lock.yaml
+
+# changesets
+.changeset

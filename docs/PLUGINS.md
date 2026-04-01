@@ -59,7 +59,7 @@ export type Tool = {
 };
 ```
 
-See [typescript/src/shared/tools.ts](../typescript/src/shared/tools.ts) for the full definition.
+See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) for the full definition.
 
 ### Step-by-Step Guide
 
@@ -79,7 +79,7 @@ Create your tool file (e.g., tools/my-service/my-tool.ts):
 
 ```typescript
 import { z } from "zod";
-import { Context, Tool, handleTransaction } from "hedera-agent-kit";
+import { Context, Tool, handleTransaction } from "@hashgraph/hedera-agent-kit";
 import { Client, PrivateKey, AccountId } from "@hashgraph/sdk";
 import dotenv from "dotenv";
 
@@ -143,8 +143,7 @@ export default tool;
 Create your plugin index file (index.ts):
 
 ```typescript
-  import { Context } from '@/shared';
-  import { Plugin } from '@/shared/plugin';
+  import { Context, Plugin } from '@hashgraph/hedera-agent-kit';
   import myTool, { MY_TOOL } from './tools/my-service/my-tool';
 
   export const myCustomPlugin: Plugin = {
@@ -220,7 +219,8 @@ This allows you to easily display a user-friendly message while still having acc
 #### LangChain v0.3 (Classic)
 
 ```typescript
-import { HederaLangchainToolkit } from "hedera-agent-kit";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
+import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit-langchain";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -241,7 +241,8 @@ const toolkit = new HederaLangchainToolkit({
 #### LangChain v1 (New)
 
 ```typescript
-import { HederaLangchainToolkit, ResponseParserService } from "hedera-agent-kit";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
+import { HederaLangchainToolkit, ResponseParserService } from "@hashgraph/hedera-agent-kit-langchain";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -277,9 +278,9 @@ if (toolCall) {
 
 ### Examples and References
 
-- See existing core plugins in typescript/src/plugins/core-\*-plugin/
-- Follow the patterns established in tools like [transfer-hbar.ts](../typescript/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
-- See [typescript/examples/langchain-v1/tool-calling-agent.ts](../typescript/examples/langchain/tool-calling-agent.ts) for usage examples
+- See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
+- Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
+- See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
 ## Publish and Register Your Plugin
 
 To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
@@ -318,7 +319,11 @@ npm install <plugin-name>
 import { myPlugin } from "<plugin-name>";
 '''
 
-'''javascript
+'''typescript
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
+
 const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
@@ -329,7 +334,6 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
             coreTokenPlugin,
             coreAccountPlugin,
             coreConsensusPlugin,
-            coreQueriesPlugin,
             myPlugin,
         ],
     },

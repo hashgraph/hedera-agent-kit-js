@@ -1,0 +1,20 @@
+import { defineConfig, mergeConfig } from 'vitest/config';
+import * as path from 'node:path';
+import baseConfig from '../../vitest.base';
+
+const sharedSetup = path.resolve(__dirname, '../tests/shared/setup');
+const setupFiles: string[] = [
+  path.resolve(sharedSetup, 'usd-to-hbar-setup.ts'),
+];
+if (process.env.SLOW_TEST_DELAY_MS !== undefined) {
+  setupFiles.push(path.resolve(sharedSetup, 'slowdown.ts'));
+}
+
+export default mergeConfig(baseConfig, defineConfig({
+  test: {
+    include: ['tests/**/*.test.ts'],
+    exclude: ['node_modules/**', 'dist/**'],
+    globalSetup: [path.resolve(sharedSetup, 'global-setup.ts')],
+    setupFiles,
+  },
+}));

@@ -66,4 +66,4 @@ tmp/
 temp/
 
 # coverage report
-typescript/coverage/
+coverage/

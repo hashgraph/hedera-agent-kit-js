@@ -1,4 +1,4 @@
-name: Run E2E Tests (typescript)
+name: Run E2E Tests
 
 on:
   workflow_call:
@@ -7,11 +7,6 @@ on:
         description: Node.js version
         required: false
         default: '20'
-        type: string
-      workdir:
-        description: Working directory
-        required: false
-        default: 'typescript'
         type: string
     secrets:
       OPENAI_API_KEY:
@@ -28,7 +23,6 @@ jobs:
   e2e-tests:
     runs-on: hedera-agent-linux-medium
     env:
-      WORKDIR: typescript
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
@@ -48,15 +42,17 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ inputs.node-version }}
-          cache: npm
-          cache-dependency-path: 'typescript/package-lock.json'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
-        working-directory: ${{ inputs.workdir }}
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
 
       - name: Run E2E tests (throttled)
-        working-directory: ${{ inputs.workdir }}
         env:
           SLOW_TEST_DELAY_MS: '30000'
-        run: npm run test e2e -- --sequence.concurrent=false
+        run: pnpm -r test:e2e -- --sequence.concurrent=false
