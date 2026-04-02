@@ -20,6 +20,10 @@ See this list of available third party plugins for the Hedera Agent Kit Python S
   Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
   Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
 
+- [Hedera T3N Plugin](https://www.npmjs.com/package/@terminal3/hedera-t3n-plugin) provides access to [Terminal 3 Network (T3N)](https://docs.terminal3.io/t3n/) to enable identity verification, authentication, and last mile-delivery or selective disclosure of private and sensitive information for AI-driven applications, ensuring compliant and auditable interactions.
+
+  Github repository: [https://github.com/Terminal-3/hedera-t3n-plugin](https://github.com/Terminal-3/hedera-t3n-plugin)
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.

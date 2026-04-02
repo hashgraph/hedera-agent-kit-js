@@ -70,7 +70,11 @@ The Hedera Agent Kit is extensible with third party plugins by other projects. S
 - [Chainlink price feed Plugin](https://www.npmjs.com/package/chainlink-pricefeed-plugin) provides access to the [**Chainlink price feeds**](https://docs.chain.link/data-feeds/price-feeds) to get data aggregated from many data sources. It exposes the action (`get price feed`) that allows you to get the current price for ETH, BTC, HBAR, LINK, USDC, UST or DAI.
 
   Github repository: [https://github.com/henrytongv/chainlink-price-plugin-js](https://github.com/henrytongv/chainlink-price-plugin-js). Tested/endorsed version of plugin: chainlink-pricefeed-plugin@1.0.4
-  
+
+- [Hedera T3N Plugin](https://www.npmjs.com/package/@terminal3/hedera-t3n-plugin) provides access to [Terminal 3 Network (T3N)](https://docs.terminal3.io/t3n/) to enable identity verification, authentication, and last mile-delivery or selective disclosure of private and sensitive information for AI-driven applications, ensuring compliant and auditable interactions.
+
+  Github repository: [https://github.com/Terminal-3/hedera-t3n-plugin](https://github.com/Terminal-3/hedera-t3n-plugin)
+
 _[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 ---
 
