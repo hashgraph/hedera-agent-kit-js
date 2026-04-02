@@ -31,6 +31,9 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
 vi.mock('@/shared/utils/prompt-generator', () => ({
   PromptGenerator: {
     getParameterUsageInstructions: vi.fn(() => 'Usage: Provide the parameters as JSON.'),
+    getScheduledTransactionParamsDescription: vi.fn(
+      () => 'schedulingParams (object, optional): scheduling configuration.',
+    ),
   },
 }));
 vi.mock('@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils', () => ({
@@ -42,7 +45,7 @@ const makeClient = () => Client.forNetwork({});
 
 describe('create-topic tool (unit)', () => {
   const context: any = { accountId: '0.0.1001' };
-  const params = { topicMemo: 'my topic', isSubmitKey: true } as any;
+  const params = { topicMemo: 'my topic', submitKey: true, adminKey: true } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,7 +56,9 @@ describe('create-topic tool (unit)', () => {
     expect(tool.method).toBe(CREATE_TOPIC_TOOL);
     expect(tool.name).toBe('Create Topic');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('This tool will create a new topic on the Hedera network.');
+    expect(tool.description).toContain(
+      'This tool will create a new topic (consensus topic) on the Hedera network',
+    );
     expect(tool.parameters).toBeTruthy();
   });
 

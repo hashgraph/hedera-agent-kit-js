@@ -13,12 +13,23 @@ export const getTopicInfoParameters = (_context: Context = {}) => {
 };
 
 export const createTopicParameters = (_context: Context = {}) => {
-  return z.object({
+  return optionalScheduledTransactionParams(_context).extend({
     isSubmitKey: z
       .boolean()
       .optional()
-      .default(false)
-      .describe('Whether to set a submit key for the topic (optional)'),
+      .describe('Deprecated: use submitKey instead (optional)'),
+    submitKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'The submit key for the topic. ONLY set this if the user wants to RESTRICT who can submit messages. Pass true to use operator key, or a public key string. (optional)',
+      ),
+    adminKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'The admin key for the topic. ONLY set this if the user wants to be able to UPDATE or DELETE the topic later. Pass true to use operator key, or a public key string. (optional)',
+      ),
     topicMemo: z.string().optional().describe('Memo for the topic (optional)'),
     transactionMemo: z
       .string()
@@ -27,16 +38,20 @@ export const createTopicParameters = (_context: Context = {}) => {
   });
 };
 
-export const createTopicParametersNormalised = (_context: Context = {}) =>
-  createTopicParameters(_context).extend({
-    autoRenewAccountId: z
-      .string()
-      .describe(
-        'The auto renew account for the topic. If not provided, defaults to the operator account.',
-      ),
-    submitKey: z.custom<PublicKey>().optional().describe('The submit key of topic'),
-    adminKey: z.custom<PublicKey>().optional().describe('The admin key of topic'),
-  });
+export const createTopicParametersNormalised = (_context: Context = {}) => {
+  return createTopicParameters(_context)
+    .omit({ schedulingParams: true })
+    .merge(optionalScheduledTransactionParamsNormalised(_context))
+    .extend({
+      autoRenewAccountId: z
+        .string()
+        .describe(
+          'The auto renew account for the topic. If not provided, defaults to the operator account.',
+        ),
+      submitKey: z.custom<PublicKey>().optional().describe('The submit key of topic'),
+      adminKey: z.custom<PublicKey>().optional().describe('The admin key of topic'),
+    });
+};
 
 export const submitTopicMessageParameters = (_context: Context = {}) =>
   optionalScheduledTransactionParams(_context).extend({

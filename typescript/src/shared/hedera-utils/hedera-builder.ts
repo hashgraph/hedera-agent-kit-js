@@ -204,7 +204,7 @@ export default class HederaBuilder {
       tx.setTransactionMemo(transactionMemo);
     }
 
-    return tx;
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
   static submitTopicMessage(
     params: z.infer<ReturnType<typeof submitTopicMessageParametersNormalised>>,

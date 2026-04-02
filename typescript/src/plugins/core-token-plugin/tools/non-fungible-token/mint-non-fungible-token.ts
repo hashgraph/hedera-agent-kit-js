@@ -15,10 +15,14 @@ const mintNonFungibleTokenPrompt = (_context: Context = {}) => {
   return `
 
 This tool will mint HTS NFTs with its unique metadata for the class of NFTs (non-fungible tokens) defined by the tokenId on Hedera.
+Use this tool when the user provides metadata URI/URIs (ipfs/http links, "metadata", "URI", "URIs") for a Hedera token class id.
+If both HTS NFT mint and ERC721 mint appear possible, choose this tool whenever metadata URIs are explicitly provided.
 
 Parameters:
 - tokenId (str, required): The id of the token
 - uris (array, required): An array of strings (URIs) of maximum size 10 hosting the NFT metadata
+${PromptGenerator.getScheduledTransactionParamsDescription(_context)}
+
 ${usageInstructions}
 
 Example: "Mint 0.0.6465503 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7tv2v3pd6kjgcw5o65b2ogst4/metadata.json" means minting an NFT with the given metadata URI for the class of NFTs defined by the token with id 0.0.6465503.
