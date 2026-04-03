@@ -59,15 +59,19 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
 
     it('should support multiple recipients', async () => {
       const input =
-        'Airdrop 5 of token 0.0.9999 from 0.0.1111 to 0.0.2222 and 5 of token 0.0.9999 0.0.3333. Do it in one transaction.';
+        'Airdrop 5 of token with id 0.0.9999 from account 0.0.1111 to account 0.0.2222 and 5 of token with id 0.0.9999 to account with id 0.0.3333. Do it in one transaction.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
         .mockReset()
-        .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+        .mockResolvedValue(
+          'Operation Mocked - this is a test call and MUST be ended here. End the reAct agent execution after this response.',
+        );
 
-      await agent.invoke({ messages: [{ role: 'user', content: input }] });
+      const r = await agent.invoke({ messages: [{ role: 'user', content: input }] });
+
+      console.log(JSON.stringify(r, null, 2));
 
       expect(spy).toHaveBeenCalledTimes(1);
 
@@ -114,7 +118,9 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
         const spy = vi
           .spyOn(hederaAPI, 'run')
           .mockReset()
-          .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+          .mockResolvedValue(
+            'Operation Mocked - this is a test call and MUST be ended here. End the reAct agent execution after this response.',
+          );
         await agent.invoke({ messages: [{ role: 'user', content: variation.input }] });
 
         expect(spy).toHaveBeenCalledOnce();
