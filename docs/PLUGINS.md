@@ -79,7 +79,7 @@ Create your tool file (e.g., tools/my-service/my-tool.ts):
 
 ```typescript
 import { z } from "zod";
-import { Context, Tool, handleTransaction } from "hedera-agent-kit";
+import { Context, Tool, handleTransaction } from "@hashgraph/hedera-agent-kit";
 import { Client, PrivateKey, AccountId } from "@hashgraph/sdk";
 import dotenv from "dotenv";
 
@@ -220,7 +220,7 @@ This allows you to easily display a user-friendly message while still having acc
 #### LangChain v0.3 (Classic)
 
 ```typescript
-import { HederaLangchainToolkit } from "hedera-agent-kit";
+import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -241,7 +241,7 @@ const toolkit = new HederaLangchainToolkit({
 #### LangChain v1 (New)
 
 ```typescript
-import { HederaLangchainToolkit, ResponseParserService } from "hedera-agent-kit";
+import { HederaLangchainToolkit, ResponseParserService } from "@hashgraph/hedera-agent-kit";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,

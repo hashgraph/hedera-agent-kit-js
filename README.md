@@ -1,6 +1,6 @@
 # Hedera Agent Kit
 
-![npm version](https://badgen.net/npm/v/hedera-agent-kit)
+![npm version](https://badgen.net/npm/v/@hashgraph/hedera-agent-kit)
 ![license](https://badgen.net/github/license/hedera-dev/hedera-agent-kit)
 ![build](https://badgen.net/github/checks/hedera-dev/hedera-agent-kit)
 
@@ -96,7 +96,7 @@ First follow instructions in the [Developer Examples to clone and configure the 
 
 ## 🚀 60-Second Quick-Start
 
-See more info at [https://www.npmjs.com/package/hedera-agent-kit](https://www.npmjs.com/package/hedera-agent-kit)
+See more info at [https://www.npmjs.com/package/@hashgraph/hedera-agent-kit](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit)
 
 ### 🆓 Free AI Options Available!
 
@@ -119,7 +119,7 @@ npm init -y
 Open `package.json` and add `"type": "module"` to enable ES modules.
 
 ```bash
-npm install hedera-agent-kit @langchain/core langchain @langchain/langgraph @langchain/openai @hashgraph/sdk dotenv
+npm install @hashgraph/hedera-agent-kit @langchain/core langchain @langchain/langgraph @langchain/openai @hashgraph/sdk dotenv
 ```
 
 ### 2 – Configure: Add Environment Variables
@@ -159,7 +159,7 @@ Once you have created a new file `index.js` and added the environment variables,
 ```javascript
 // index.js
 import { Client, PrivateKey } from '@hashgraph/sdk';
-import { HederaLangchainToolkit, AgentMode } from 'hedera-agent-kit';
+import { HederaLangchainToolkit, AgentMode } from '@hashgraph/hedera-agent-kit';
 import { createAgent } from 'langchain';
 import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';

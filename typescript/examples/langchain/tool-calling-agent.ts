@@ -1,4 +1,4 @@
-import { AgentMode, HederaLangchainToolkit } from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';

@@ -32,7 +32,7 @@ If you don't provide an `outputParser`, a default one will be used, but providin
 
 1. **Import Required Types**:
 ```typescript
-import { Plugin, Context, Tool } from 'hedera-agent-kit';
+import { Plugin, Context, Tool } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';
 ```
 
@@ -73,7 +73,7 @@ export const myPlugin: Plugin = {
 To use plugins in your application:
 
 ```typescript
-import { HederaAIToolkit } from 'hedera-agent-kit';
+import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit';
 import { myPlugin } from './my-plugin';
 
 const toolkit = new HederaAIToolkit({
@@ -127,5 +127,5 @@ Plugins can be distributed as:
 When creating NPM packages, ensure you:
 - Export the plugin as the default export
 - Include proper TypeScript definitions
-- List `hedera-agent-kit` as a peer dependency
+- List `@hashgraph/hedera-agent-kit` as a peer dependency
 - Follow semantic versioning

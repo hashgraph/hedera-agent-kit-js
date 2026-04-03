@@ -1,4 +1,4 @@
-import { AgentMode, HederaAIToolkit } from 'hedera-agent-kit';
+import { AgentMode, HederaAIToolkit } from '@hashgraph/hedera-agent-kit';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
