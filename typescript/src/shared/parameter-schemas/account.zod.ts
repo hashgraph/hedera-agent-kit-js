@@ -1,7 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
 import { AccountId, Hbar, Key, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
-import BigNumber from 'bignumber.js';
 import Long from 'long';
 import {
   optionalScheduledTransactionParams,
@@ -35,13 +34,7 @@ export const transferHbarParametersNormalised = (context: Context = {}) =>
     hbarTransfers: z.array(
       z.object({
         accountId: z.union([z.string(), z.instanceof(AccountId)]),
-        amount: z.union([
-          z.number(),
-          z.string(),
-          z.instanceof(Hbar),
-          z.instanceof(Long),
-          z.instanceof(BigNumber),
-        ]),
+        amount: z.union([z.number(), z.string(), z.instanceof(Hbar), z.instanceof(Long)]),
       }),
     ),
     transactionMemo: z.string().optional(),
@@ -216,13 +209,7 @@ export const transferHbarWithAllowanceParametersNormalised = (_context: Context 
     hbarTransfers: z.array(
       z.object({
         accountId: z.union([z.string(), z.instanceof(AccountId)]),
-        amount: z.union([
-          z.number(),
-          z.string(),
-          z.instanceof(Hbar),
-          z.instanceof(Long),
-          z.instanceof(BigNumber),
-        ]),
+        amount: z.union([z.number(), z.string(), z.instanceof(Hbar), z.instanceof(Long)]),
       }),
     ),
     hbarApprovedTransfer: z.object({
