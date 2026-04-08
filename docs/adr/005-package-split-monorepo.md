@@ -1,7 +1,8 @@
 # ADR 005: TypeScript Package Split Monorepo
 
-- **Status:** Draft
+- **Status:** Accepted
 - **Date:** 2026-03-27
+- **Updated:** 2026-04-08
 
 ## Context
 
@@ -35,9 +36,9 @@ Cons:
 - too many packages for small query plugins
 - more contributor and workspace complexity
 
-### Option 2: Core package plus split toolkits plus plugin subpaths
+### Option 2: Core package plus split toolkits plus plugin barrel
 
-Keep core, plugins, and hooks in one package, but split toolkits into separate packages and expose plugins via subpaths.
+Keep core, plugins, and hooks in one package, but split toolkits into separate packages and expose plugins via a tree-shakeable barrel subpath.
 
 Pros:
 
@@ -70,7 +71,7 @@ Cons:
 | Option | Summary | Pros | Cons |
 |---|---|---|---|
 | 1 | Fully granular split | Maximum isolation | Too many packages, high maintenance |
-| 2 | Core + split toolkits + plugin subpaths | Best balance of clarity and complexity | Export map upkeep in core |
+| 2 | Core + split toolkits + plugin barrel | Best balance of clarity and complexity | Export map upkeep in core |
 | 3 | Core + split toolkits + conditional barrels | Better browser/node branching | Broader root surface, more barrel complexity |
 
 ## Decision
@@ -80,7 +81,7 @@ We choose **Option 2**.
 More precisely, we choose an Option 2-style architecture with these project-specific constraints:
 
 - split toolkit packages
-- one core package with flat plugin and hook subpaths
+- one core package with a `./plugins` barrel subpath for all built-in plugins
 - no root-barrel exports for built-in plugins or hooks
 - `hol-audit-trail-hook` stays an explicit Node-only subpath
 
@@ -94,12 +95,14 @@ We will use a pnpm workspace monorepo and split the TypeScript SDK into a small 
 
 ```text
 packages/
-├── core/        -> @hashgraph/hedera-agent-kit
-├── langchain/   -> @hashgraph/hedera-agent-kit-langchain
-├── ai-sdk/      -> @hashgraph/hedera-agent-kit-ai-sdk
-├── elizaos/     -> @hashgraph/hedera-agent-kit-elizaos
-├── mcp/         -> @hashgraph/hedera-agent-kit-mcp
-└── tests/       -> private workspace package
+├── core/                 -> @hashgraph/hedera-agent-kit
+├── langchain/            -> @hashgraph/hedera-agent-kit-langchain
+├── ai-sdk/               -> @hashgraph/hedera-agent-kit-ai-sdk
+├── elizaos/              -> @hashgraph/hedera-agent-kit-elizaos
+├── mcp/                  -> @hashgraph/hedera-agent-kit-mcp
+├── create-hedera-agent/  -> create-hedera-agent (scaffold CLI)
+├── core-contracts/       -> private (Hardhat ERC20/ERC721 factory contracts)
+└── tests/                -> private workspace package (shared test helpers)
 ```
 
 ### Public API shape
@@ -117,28 +120,35 @@ packages/
 
 Built-in plugins and hooks are not exported from the root barrel.
 
-They are imported through flat subpaths:
+All built-in plugins are available through a single tree-shakeable `./plugins` subpath:
 
-- `@hashgraph/hedera-agent-kit/core-account-plugin`
-- `@hashgraph/hedera-agent-kit/core-token-plugin`
-- `@hashgraph/hedera-agent-kit/core-consensus-plugin`
-- `@hashgraph/hedera-agent-kit/core-evm-plugin`
-- `@hashgraph/hedera-agent-kit/core-account-query-plugin`
-- `@hashgraph/hedera-agent-kit/core-token-query-plugin`
-- `@hashgraph/hedera-agent-kit/core-consensus-query-plugin`
-- `@hashgraph/hedera-agent-kit/core-evm-query-plugin`
-- `@hashgraph/hedera-agent-kit/core-misc-query-plugin`
-- `@hashgraph/hedera-agent-kit/core-transactions-query-plugin`
-- `@hashgraph/hedera-agent-kit/hol-audit-trail-hook`
+```ts
+import { coreAccountPlugin, coreTokenPlugin } from '@hashgraph/hedera-agent-kit/plugins'
+```
 
-Each plugin subpath exports both the plugin object and its `*ToolNames` constants.
+The `./plugins` barrel re-exports all 10 built-in plugins. Combined with `"sideEffects": false` in package.json, bundlers (webpack, Vite, Rollup, esbuild) tree-shake unused plugins from the final bundle.
+
+Available plugins:
+
+- `coreAccountPlugin` / `coreAccountToolNames`
+- `coreTokenPlugin` / `coreTokenToolNames`
+- `coreConsensusPlugin` / `coreConsensusToolNames`
+- `coreEvmPlugin` / `coreEvmToolNames`
+- `coreAccountQueryPlugin` / `coreAccountQueryToolNames`
+- `coreTokenQueryPlugin` / `coreTokenQueryToolNames`
+- `coreConsensusQueryPlugin` / `coreConsensusQueryToolNames`
+- `coreEvmQueryPlugin` / `coreEvmQueryToolNames`
+- `coreMiscQueryPlugin` / `coreMiscQueryToolNames`
+- `coreTransactionsQueryPlugin` / `coreTransactionsQueryToolNames`
+
+The `hol-audit-trail-hook` is implemented separately as a Node-only subpath (tracked in a different branch).
 
 ### Runtime rules
 
 - built-in plugins require explicit opt-in
 - empty `configuration.plugins` is valid and produces zero tools
 - deprecated compatibility aliases are removed
-- `hol-audit-trail-hook` remains Node-only
+- `hol-audit-trail-hook` remains Node-only (tracked separately)
 - `ResponseParserService` remains public from the LangChain package
 - MCP-specific config moves out of core and into toolkit-specific packages
 
@@ -158,8 +168,7 @@ Usage example:
 ```ts
 import { Client, PrivateKey } from '@hashgraph/sdk'
 import { AgentMode } from '@hashgraph/hedera-agent-kit'
-import { coreAccountPlugin } from '@hashgraph/hedera-agent-kit/core-account-plugin'
-import { coreTokenPlugin } from '@hashgraph/hedera-agent-kit/core-token-plugin'
+import { coreAccountPlugin, coreTokenPlugin } from '@hashgraph/hedera-agent-kit/plugins'
 import {
   HederaLangchainToolkit,
   ResponseParserService,
@@ -182,17 +191,10 @@ const tools = toolkit.getTools()
 const parser = new ResponseParserService(tools)
 ```
 
-Hook example:
-
-```ts
-import { holAuditTrail } from '@hashgraph/hedera-agent-kit/hol-audit-trail-hook'
-```
-
 ### Build, test, and release decisions
 
 - published packages ship both ESM and CJS
-- each package owns its own unit and integration tests
-- cross-package end-to-end tests live in `packages/tests/e2e`
+- each package owns its own unit, integration, and end-to-end tests
 - shared test helpers live in `packages/tests/shared`
 
 ### Versioning strategy
@@ -234,8 +236,5 @@ This keeps package releases flexible while preserving a simple compatibility sig
 
 ### Follow-up work
 
-- implement the pnpm workspace structure
-- migrate code from `typescript/` into the new packages
-- update CI to build and test per package
-- configure monorepo `semantic-release`
+- implement `hol-audit-trail-hook` subpath export (tracked separately)
 - define exact dependency/version compatibility rules between core and toolkit packages
