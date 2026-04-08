@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import express from "express";
-import cors from "cors";
+import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { LedgerId, Client } from "@hashgraph/sdk";
@@ -40,6 +39,7 @@ const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
 const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } =
   coreConsensusPluginToolNames;
 
+// CLI flags accepted by this server
 const ACCEPTED_ARGS = [
   "agent-mode",
   "account-id",
@@ -49,6 +49,7 @@ const ACCEPTED_ARGS = [
   "port",
 ];
 
+// Tools that can be selectively enabled via --tools=<name>,... or "all"
 const ACCEPTED_TOOLS = [
   CREATE_FUNGIBLE_TOKEN_TOOL,
   CREATE_NON_FUNGIBLE_TOKEN_TOOL,
@@ -65,6 +66,7 @@ function log(message: string, level: "info" | "error" | "warn" = "info") {
   console.log(`${prefix} ${message}`);
 }
 
+/** Parse process.argv flags into a typed Options object. */
 export function parseArgs(args: string[]): Options {
   const options: Options = {
     ledgerId: LedgerId.TESTNET,
@@ -106,6 +108,7 @@ export function parseArgs(args: string[]): Options {
     }
   });
 
+  // Validate that every explicitly listed tool is recognised
   options.tools?.forEach((tool: string) => {
     if (tool == "all") {
       return;
@@ -126,6 +129,11 @@ function handleError(error: any) {
   log(`Error initializing Hedera MCP server: ${error.message}`, "error");
 }
 
+/**
+ * Instantiate a HederaMCPToolkit with all core plugins loaded.
+ * contextOverride lets per-request headers (e.g. x-hedera-account-id) shadow
+ * the global context supplied at startup.
+ */
 function createHederaServer(
   options: Options,
   client: Client,
@@ -158,15 +166,15 @@ export async function main() {
     client = Client.forMainnet();
   }
 
-  const app = express();
-  app.use(
-    cors({
-      exposedHeaders: ["Mcp-Session-Id"],
-    }),
-  );
-  app.use(express.json());
+  // Each active MCP session gets its own StreamableHTTPServerTransport, keyed by session ID.
+  // A new entry is created on initialize and removed when the transport closes.
+  const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 
-  // Request logging middleware
+  // host: "0.0.0.0" allows external clients to connect; DNS rebinding protection
+  // is skipped for non-localhost bindings (the SDK logs a warning in that case).
+  const app = createMcpExpressApp({ host: "0.0.0.0" });
+
+  // Log every inbound request and its final status code + duration
   app.use((req, res, next) => {
     const start = Date.now();
     log(`→ ${req.method} ${req.path} from ${req.ip}`, "info");
@@ -183,10 +191,11 @@ export async function main() {
     next();
   });
 
-  // Map to store transports by session ID
-  const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
-
-  // Handle POST requests for JSON-RPC messages
+  // POST /mcp — main JSON-RPC entry point.
+  // Three cases are handled:
+  //   1. Existing session: route to the already-created transport.
+  //   2. No session + initialize request: create a new transport and server.
+  //   3. Anything else: return an appropriate error.
   app.post("/mcp", async (req, res) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     log(
@@ -237,7 +246,8 @@ export async function main() {
           }
         }
 
-        // Create a new transport + server
+        // Create a new transport; the session ID is generated on first response
+        // and stored in the transports map via onsessioninitialized.
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sessionId) => {
@@ -246,7 +256,7 @@ export async function main() {
           },
         });
 
-        // Clean up on close
+        // Remove the transport from the map when the client disconnects
         transport.onclose = () => {
           const sid = transport.sessionId;
           if (sid && transports[sid]) {
@@ -255,14 +265,14 @@ export async function main() {
           }
         };
 
-        // Create a new Hedera MCP server and connect to this transport
+        // Wire a fresh Hedera MCP server to this transport
         const server = createHederaServer(options, client, contextOverride);
         await server.connect(transport);
 
         await transport.handleRequest(req, res, req.body);
         return;
       } else if (sessionId) {
-        // Session ID provided but not found
+        // Session ID provided but no matching transport found
         res.status(404).json({
           jsonrpc: "2.0",
           error: { code: -32001, message: "Session not found" },
@@ -292,7 +302,7 @@ export async function main() {
     }
   });
 
-  // Handle GET requests for SSE streams
+  // GET /mcp — SSE stream for server-to-client notifications on an existing session
   app.get("/mcp", async (req, res) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     if (!sessionId) {
@@ -308,7 +318,7 @@ export async function main() {
     await transport.handleRequest(req, res);
   });
 
-  // Handle DELETE requests for session termination
+  // DELETE /mcp — explicit session termination by the client
   app.delete("/mcp", async (req, res) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     if (!sessionId) {
@@ -338,7 +348,7 @@ export async function main() {
     );
   });
 
-  // Handle server shutdown
+  // Graceful shutdown: close all open transports before exiting
   process.on("SIGINT", async () => {
     log("Shutting down server...", "info");
     for (const sessionId in transports) {
