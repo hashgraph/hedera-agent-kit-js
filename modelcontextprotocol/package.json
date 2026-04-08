@@ -4,16 +4,23 @@
   "homepage": "https://github.com/hedera-dev/hedera-agent-kit",
   "description": "A command line tool for setting up Hedera MCP server",
   "type": "module",
-  "bin": "dist/index.js",
+  "bin": {
+    "hedera-mcp": "dist/index.js",
+    "hedera-mcp-http": "dist/http.js"
+  },
   "files": [
     "dist/index.js",
+    "dist/http.js",
     "LICENSE",
     "README.md",
     "VERSION",
     "package.json"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\"",
+    "start": "node dist/index.js",
+    "start:http": "node dist/http.js",
+    "start:http:return-bytes": "node dist/http.js --agent-mode=returnBytes",
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\" && node -e \"require('fs').chmodSync('dist/http.js', '755')\"",
     "clean": "rm -rf dist",
     "lint": "eslint \"./**/*.ts*\"",
     "prettier": "prettier './**/*.{js,ts,md,html,css}' --write",
@@ -24,11 +31,13 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@hashgraph/sdk": "^2.80.0",
-    "@modelcontextprotocol/sdk": "1.26.0",
+    "@hashgraph/sdk": "2.80.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "colors": "^1.4.0",
-    "hedera-agent-kit": "../typescript",
-    "dotenv": "17.2.3"
+    "cors": "^2.8.6",
+    "dotenv": "17.2.3",
+    "express": "^5.2.1",
+    "hedera-agent-kit": "../typescript"
   },
   "keywords": [
     "mcp",
@@ -37,6 +46,8 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.13.4",
     "prettier": "^3.5.1",
     "typescript": "^5.8.3"

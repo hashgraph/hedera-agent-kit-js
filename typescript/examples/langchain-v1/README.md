@@ -38,6 +38,16 @@ A variant of the Return Bytes agent with **robust parsing logic** for handling m
 
 ---
 
+### Return Bytes Agent (External MCP)
+
+```bash
+npm run langchain:external-mcp-return-bytes-agent
+```
+
+An agent that demonstrates connecting to the [Hedera HTTP MCP server](../../../modelcontextprotocol/src/http.ts) running in `RETURN_BYTES` mode. This example shows how to pass account context via HTTP headers and handle transaction bytes returned from the server.
+
+---
+
 ## External MCP Agent Example
 
 This example demonstrates how to use the Hedera Agent Kit with an **external MCP (Model Context Protocol) server** to access Hedera blockchain tools.

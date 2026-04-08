@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 // CRITICAL: Redirect stdout to stderr BEFORE importing anything
 // This prevents any SDK console.log from polluting the MCP JSON-RPC channel
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -21,8 +19,7 @@ import type { Configuration, Context } from "hedera-agent-kit";
 
 import * as dotenv from "dotenv";
 
-// Load .env but suppress any output
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 type Options = {
   tools?: string[];
