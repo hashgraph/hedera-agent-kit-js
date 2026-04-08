@@ -10,7 +10,10 @@
     "disableSizeLimit": true,
     "noErrorTruncation": true,
     "maxNodeModuleJsDepth": 2,
-    "types": ["node"],
-    "strict": true
+    "types": [
+      "node"
+    ],
+    "strict": true,
+    "outDir": "dist"
   }
 }

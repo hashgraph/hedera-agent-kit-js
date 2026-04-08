@@ -233,7 +233,7 @@ The server accepts these command-line options:
 4. Run the server to verify it works:
 
 ```bash
-node dist/index.js
+node dist/stdio.js
 ```
 
 
@@ -246,7 +246,7 @@ node dist/index.js
   "hedera-mcp-server": {
         "command": "node",
         "args": [
-          "<Path>/hedera-agent-kit/modelcontextprotocol/dist/index.js"
+          "<Path>/hedera-agent-kit/modelcontextprotocol/dist/stdio.js"
         ],
         "env": {
           "HEDERA_OPERATOR_ID": "0.0.xxxx",

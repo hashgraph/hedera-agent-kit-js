@@ -5,11 +5,11 @@
   "description": "A command line tool for setting up Hedera MCP server",
   "type": "module",
   "bin": {
-    "hedera-mcp": "dist/index.js",
+    "hedera-mcp": "dist/stdio.js",
     "hedera-mcp-http": "dist/http.js"
   },
   "files": [
-    "dist/index.js",
+    "dist/stdio.js",
     "dist/http.js",
     "LICENSE",
     "README.md",
@@ -17,10 +17,10 @@
     "package.json"
   ],
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node dist/stdio.js",
     "start:http": "node dist/http.js",
     "start:http:return-bytes": "node dist/http.js --agent-mode=returnBytes",
-    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\" && node -e \"require('fs').chmodSync('dist/http.js', '755')\"",
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/stdio.js', '755')\" && node -e \"require('fs').chmodSync('dist/http.js', '755')\"",
     "clean": "rm -rf dist",
     "lint": "eslint \"./**/*.ts*\"",
     "prettier": "prettier './**/*.{js,ts,md,html,css}' --write",

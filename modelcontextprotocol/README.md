@@ -40,7 +40,7 @@ You can run the server directly using Node.js:
 ```bash
 export HEDERA_OPERATOR_ID=0.0.xxx
 export HEDERA_OPERATOR_KEY=302e...
-node dist/index.js --ledger-id=testnet
+node dist/stdio.js --ledger-id=testnet
 ```
 
 ### Supported Arguments
@@ -71,7 +71,7 @@ Add the following to your MCP client configuration (e.g., `claude_desktop_config
     "hedera": {
       "command": "node",
       "args": [
-        "{path-to}/hedera-agent-kit-v3/modelcontextprotocol/dist/index.js",
+        "{path-to}/hedera-agent-kit-v3/modelcontextprotocol/dist/stdio.js",
         "--ledger-id=testnet"
       ],
       "env": {
@@ -101,6 +101,10 @@ If you want to run the server on a remote machine, ensure it is accessible over 
   }
 }
 ```
+
+### Stdio Server Implementation
+
+The `src/stdio.ts` file provides a **Stdio** transport implementation of the MCP server, which is the default for most MCP clients like Claude Desktop.
 
 ### HTTP Server Implementation (Experimental)
 
