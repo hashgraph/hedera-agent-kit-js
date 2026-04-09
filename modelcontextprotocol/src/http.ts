@@ -170,9 +170,7 @@ export async function main() {
   // A new entry is created on initialize and removed when the transport closes.
   const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 
-  // host: "0.0.0.0" allows external clients to connect; DNS rebinding protection
-  // is skipped for non-localhost bindings (the SDK logs a warning in that case).
-  const app = createMcpExpressApp({ host: "0.0.0.0" });
+  const app = createMcpExpressApp();
 
   // Log every inbound request and its final status code + duration
   app.use((req, res, next) => {
