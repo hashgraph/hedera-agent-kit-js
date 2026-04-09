@@ -1,5 +1,5 @@
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  AgentMode,
   coreAccountPlugin,
   coreAccountPluginToolNames,
   coreAccountQueryPlugin,
@@ -12,16 +12,18 @@ import {
   coreTokenPluginToolNames,
   coreTokenQueryPlugin,
   coreTransactionQueryPlugin,
-  HcsAuditTrailHook,
-  HederaLangchainToolkit,
-  ResponseParserService,
-} from 'hedera-agent-kit';
+} from '@hashgraph/hedera-agent-kit/plugins';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { createAgent } from 'langchain';
 import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
+import {
+  HederaLangchainToolkit,
+  ResponseParserService,
+} from '@hashgraph/hedera-agent-kit-langchain';
+import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
 
 dotenv.config();
 
