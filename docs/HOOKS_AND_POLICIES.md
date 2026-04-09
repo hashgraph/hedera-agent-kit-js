@@ -129,7 +129,7 @@ const context = {
 
 > [!NOTE]
 > **Complete Examples**: See the Audit Trail agent implementations
-> in [AI SDK](../typescript/examples/ai-sdk/audit-trail-agent.ts)
+> in [AI SDK](../examples/ai-sdk/audit-trail-agent.ts)
 > or [LangChain v1](../typescript/examples/langchain-v1/audit-trail-agent.ts).
 
 ---
@@ -228,7 +228,7 @@ const extendedPolicy = new MaxRecipientsPolicy(
 
 > [!NOTE]
 > **Complete Examples**: Check the [Policy Enforcement Agent](DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
-> for full implementations in [AI SDK](../typescript/examples/ai-sdk/policy-enforcement-agent.ts)
+> for full implementations in [AI SDK](../examples/ai-sdk/policy-enforcement-agent.ts)
 > or [LangChain v1](../typescript/examples/langchain-v1/policy-enforcement-agent.ts).
 
 ---

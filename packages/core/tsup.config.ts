@@ -4,6 +4,8 @@ import * as path from 'node:path';
 const allEntries: Record<string, string> = {
   index: './src/index.ts',
   plugins: './src/plugins/index.ts',
+  hooks: './src/hooks/index.ts',
+  policies: './src/policies/index.ts',
 };
 
 const srcAlias = { '@': path.resolve(__dirname, 'src') };

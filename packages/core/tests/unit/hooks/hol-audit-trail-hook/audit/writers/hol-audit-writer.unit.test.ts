@@ -46,9 +46,9 @@ describe('HolAuditWriter', () => {
       topicTransaction: {
         execute: (...args: any[]) => mockFileTopicExecute(...args),
       },
-      buildMessageTransactions: vi.fn().mockReturnValue([
-        { execute: (...args: any[]) => mockFileMessageExecute(...args) },
-      ]),
+      buildMessageTransactions: vi
+        .fn()
+        .mockReturnValue([{ execute: (...args: any[]) => mockFileMessageExecute(...args) }]),
     });
     mockFileTopicExecute.mockResolvedValue({
       getReceipt: vi.fn().mockResolvedValue({
@@ -118,11 +118,13 @@ describe('HolAuditWriter', () => {
         topicTransaction: {
           execute: (...args: any[]) => mockFileTopicExecute(...args),
         },
-        buildMessageTransactions: vi.fn().mockReturnValue([
-          { execute: mockMsg1Execute },
-          { execute: mockMsg2Execute },
-          { execute: mockMsg3Execute },
-        ]),
+        buildMessageTransactions: vi
+          .fn()
+          .mockReturnValue([
+            { execute: mockMsg1Execute },
+            { execute: mockMsg2Execute },
+            { execute: mockMsg3Execute },
+          ]),
       });
 
       const writer = new HolAuditWriter(mockClient);

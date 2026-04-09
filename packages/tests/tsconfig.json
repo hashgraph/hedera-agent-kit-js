@@ -4,9 +4,17 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
-      "@shared/*": ["./shared/*"]
+      "@shared/*": [
+        "./shared/*"
+      ]
     }
   },
-  "include": ["e2e/**/*.ts", "shared/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "e2e/**/*.ts",
+    "shared/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
