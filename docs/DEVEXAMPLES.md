@@ -1,7 +1,7 @@
 ## 📦 Clone & Test the SDK Examples
 ### 1 – Install
 ```bash
-git clone https://github.com/hedera-dev/hedera-agent-kit.git 
+git clone https://github.com/hashgraph/hedera-agent-kit-js.git 
 ```
 
 **Requirements** 
@@ -17,18 +17,18 @@ git clone https://github.com/hedera-dev/hedera-agent-kit.git
 
 #### For Agent Examples
 **LangChain classic**
-Copy `typescript/examples/langchain/.env.example` to `typescript/examples/langchain/.env`:
+Copy `examples/langchain/.env.example` to `examples/langchain/.env`:
 
 ```bash
-cd typescript/examples/langchain
+cd examples/langchain
 cp .env.example .env
 ```
 
 **LangChain v1**
-Copy `typescript/examples/langchain-v1/.env.example` to `typescript/examples/langchain-v1/.env`:
+Copy `examples/langchain-v1/.env.example` to `examples/langchain-v1/.env`:
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 cp .env.example .env
 ```
 
@@ -59,12 +59,12 @@ Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front 
 With the tool-calling-agent you can experiment with and call the [available tools](../docs/HEDERAPLUGINS.md) in the Hedera Agent Kit for the operator account (the account you are using in the .env file). This example tool-calling-agent uses GPT 4-o-mini that is a simple template you can use with other LLMs. This agent is intended for use with simple tasks, such as an individual tool call.
 
 #### LangChain Classic
-Found at `typescript/examples/langchain/tool-calling-agent.ts`.
+Found at `examples/langchain/tool-calling-agent.ts`.
 
 1. First, go into the directory where the example is and run `npm install`
 
 ```bash
-cd typescript/examples/langchain
+cd examples/langchain
 npm install
 ```
 2. Then, run the example
@@ -74,12 +74,12 @@ npm run langchain:tool-calling-agent
 ```
 
 #### LangChain v1
-Found at `typescript/examples/langchain-v1/plugin-tool-calling-agent.ts`.
+Found at `examples/langchain-v1/plugin-tool-calling-agent.ts`.
 
 1. First, go into the directory where the example is and run `npm install`
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 npm install
 ```
 2. Then, run the example
@@ -105,7 +105,7 @@ The structured chat agent enables you to interact with the Hedera blockchain in 
 1. First, go into the directory where the example is and run `npm install`
 
 ```bash
-cd typescript/examples/langchain
+cd examples/langchain
 npm install
 ```
 2. Then, run the example
@@ -124,7 +124,7 @@ This agent will create the transaction requested in natural language, and return
 1. First, go into the directory where the example is and run `npm install`
 
 ```bash
-cd typescript/examples/langchain
+cd examples/langchain
 npm install
 ```
 2. Then, run the 'human in the loop' or 'return bytes' example:
@@ -138,7 +138,7 @@ npm run langchain:return-bytes-tool-calling-agent
 1. First, go into the directory where the example is and run `npm install`
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 npm install
 ```
 2. Then, run the 'human in the loop' or 'return bytes' example:
@@ -161,7 +161,7 @@ npm run langchain:return-bytes-tool-calling-agent-web
 ```
 The agent will start a CLI chatbot that you can interact with. You can make requests in natural language, and this demo will demonstrate an app with a workflow that requires a human in the loop to approve actions and execute transactions.
 
-You can modify the `typescript/examples/langchain/return-bytes-tool-calling-agent.ts` file to add define the available tools you would like to use with this agent:
+You can modify the `examples/langchain/return-bytes-tool-calling-agent.ts` file to add define the available tools you would like to use with this agent:
 
 ```javascript
 const {
@@ -206,34 +206,28 @@ In this example, we can just take the returned bytes and execute the transaction
 
 
 ### Option D: Try Out the MCP Server
-1. First, navigate into the folder for the agent kit mcp server.
+1. Build the MCP server from the repository root:
 
 ```bash
-cd modelcontextprotocol
+pnpm --filter @hashgraph/hedera-agent-kit-mcp build
 ```
 
-2. Export two environment variables, one for your Hedera testnet account, and one for your DER-encoded private key. You can also create an `.env` file in the `modelcontextprotocol` directory to store these variables.
+2. Export two environment variables, one for your Hedera testnet account, and one for your DER-encoded private key. You can also create an `.env` file in your working directory.
 
 ```bash
 export HEDERA_OPERATOR_ID="0.0.xxxxx"
 export HEDERA_OPERATOR_KEY="0x2g3..."
 ```
 
- 2. Build and Run the MCP Server. From the `modelcontextprotocol` directory, install dependencies and build:
-
-```bash
-npm install
-npm run build
-```
 3. Run and test the MCP server.
 The server accepts these command-line options:
-  - `--ledger-id=testnet|mainnet` (defaults to testnet)s
+  - `--ledger-id=testnet|mainnet` (defaults to testnet)
   - `--agent-mode`, and `--account-id` for additional configuration
 
 4. Run the server to verify it works:
 
 ```bash
-node dist/index.js
+node packages/mcp/dist/bin/cli.js
 ```
 
 
@@ -246,7 +240,7 @@ node dist/index.js
   "hedera-mcp-server": {
         "command": "node",
         "args": [
-          "<Path>/hedera-agent-kit/modelcontextprotocol/dist/index.js"
+          "<Path>/hedera-agent-kit-js/packages/mcp/dist/bin/cli.js"
         ],
         "env": {
           "HEDERA_OPERATOR_ID": "0.0.xxxx",
@@ -263,21 +257,19 @@ node dist/index.js
 This example demonstrates how to integrate external MCP (Model Context Protocol) servers with the Hedera Agent Kit. The agent combines a single plugin from the local toolkit with tools from a remote MCP server. While this example uses the Hedera MCP server from this repository, you can easily integrate other MCP servers by modifying the configuration.
 
 **Found at:**
-- `typescript/examples/langchain-v1/external-mcp-agent.ts`
-- `typescript/examples/ai-sdk/mcp-external-agent.ts`
+- `examples/langchain-v1/external-mcp-agent.ts`
+- `examples/ai-sdk/mcp-external-agent.ts`
 
 
 #### Prerequisites
 
-1. First, set up the Hedera MCP server by following the instructions in the [modelcontextprotocol README](../modelcontextprotocol/README.md):
+1. First, build the Hedera MCP server (see [packages/mcp/README.md](../packages/mcp/README.md)):
 
 ```bash
-cd modelcontextprotocol
-npm install
-npm run build
+pnpm --filter @hashgraph/hedera-agent-kit-mcp build
 ```
 
-2. Configure your environment variables in `typescript/examples/langchain-v1/.env`:
+2. Configure your environment variables in `examples/langchain-v1/.env`:
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
@@ -296,7 +288,7 @@ OPENAI_API_KEY=sk-proj-...
 1. Navigate to the example directory:
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 npm install
 ```
 
@@ -313,7 +305,7 @@ The agent will start a CLI chatbot that combines the `coreMiscQueriesPlugin` fro
 1. Navigate to the example directory:
 
 ```bash
-cd typescript/examples/ai-sdk
+cd examples/ai-sdk
 npm install
 ```
 
@@ -331,18 +323,15 @@ The agent will start a CLI chatbot using the AI SDK to interact with the externa
 
 ElizaOS is a powerful framework for building autonomous AI agents. The Hedera plugin for ElizaOS enables seamless integration with Hedera's blockchain services, allowing you to create sophisticated AI agents that can interact with the Hedera network.
 
-**⚠️ Breaking Change: v3.5.0 Import Update**
+**v4 Import Update**
 
-**`HederaElizaOSToolkit` has moved.**
-If you are upgrading to version `3.5.0` or higher, you must update your import paths:
+As of v4, ElizaOS is a standalone package:
 
 ```typescript
-// ❌ Deprecated (Will fail in v3.5.0+)
-import { HederaElizaOSToolkit } from 'hedera-agent-kit';
-
-// ✅ Correct
-import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos';
+import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit-elizaos';
 ```
+
+See the [v3 to v4 Migration Guide](MIGRATION-v4.md) for full details.
 
 
 1. Clone the [Hedera ElizaOS Plugin Repository](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
@@ -353,8 +342,8 @@ import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos';
 This example demonstrates how to use the Hedera Agent Kit with preconfigured MCP servers (like Hederion or Hgraph) to access advanced tools without manual server setup.
 
 **Found at:**
-- `typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts`
-- `typescript/examples/ai-sdk/preconfigured-mcp-client-agent.ts`
+- `examples/langchain-v1/preconfigured-mcp-client-agent.ts`
+- `examples/ai-sdk/preconfigured-mcp-client-agent.ts`
 
 #### Prerequisites
 
@@ -365,7 +354,7 @@ This example demonstrates how to use the Hedera Agent Kit with preconfigured MCP
 ##### LangChain v1
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 npm install
 npm run langchain:preconfigured-mcp-client-agent
 ```
@@ -373,7 +362,7 @@ npm run langchain:preconfigured-mcp-client-agent
 ##### AI SDK
 
 ```bash
-cd typescript/examples/ai-sdk
+cd examples/ai-sdk
 npm install
 npm run ai-sdk:preconfigured-mcp-client-agent
 ```

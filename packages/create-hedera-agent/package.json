@@ -9,8 +9,7 @@
   "main": "dist/index.js",
   "files": [
     "dist",
-    "template",
-    "README.md"
+    "template"
   ],
   "scripts": {
     "prepack": "npm run sync-template && npm run build",
