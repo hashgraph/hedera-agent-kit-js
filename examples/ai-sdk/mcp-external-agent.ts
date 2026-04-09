@@ -28,10 +28,10 @@ async function bootstrap(): Promise<void> {
   const accountId = process.env.ACCOUNT_ID!;
   const privateKey = process.env.PRIVATE_KEY!;
 
-  // Hedera client setup (Local)
   const client = Client.forTestnet().setOperator(
     accountId,
     PrivateKey.fromStringECDSA(privateKey),
+    // PrivateKey.fromStringED25519(privateKey), // Use this line if you have an ED25519 key
   );
 
   const hederaAgentToolkit = new HederaAIToolkit({

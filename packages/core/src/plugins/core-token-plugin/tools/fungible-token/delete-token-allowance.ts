@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import {
   handleTransaction,
@@ -40,23 +40,49 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Token allowance(s) deleted successfully. Transaction ID: ${response.transactionId}`;
 };
 
-const deleteTokenAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof deleteTokenAllowanceParameters>>,
-) => {
-  try {
+export const DELETE_TOKEN_ALLOWANCE_TOOL = 'delete_token_allowance_tool';
+
+export class DeleteTokenAllowanceTool extends BaseTool {
+  method = DELETE_TOKEN_ALLOWANCE_TOOL;
+  name = 'Delete Token Allowance';
+  description: string;
+  parameters: ReturnType<typeof deleteTokenAllowanceParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = deleteTokenAllowancePrompt(context);
+    this.parameters = deleteTokenAllowanceParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof deleteTokenAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseDeleteTokenAllowance(
+    return HederaParameterNormaliser.normaliseDeleteTokenAllowance(
       params,
       context,
       client,
       mirrornodeService,
     );
+  }
 
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.approveTokenAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to delete token allowance(s).';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[delete_token_allowance_tool]', message);
@@ -65,17 +91,8 @@ const deleteTokenAllowance = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const DELETE_TOKEN_ALLOWANCE_TOOL = 'delete_token_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: DELETE_TOKEN_ALLOWANCE_TOOL,
-  name: 'Delete Token Allowance',
-  description: deleteTokenAllowancePrompt(context),
-  parameters: deleteTokenAllowanceParameters(context),
-  execute: deleteTokenAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new DeleteTokenAllowanceTool(context);
 
 export default tool;

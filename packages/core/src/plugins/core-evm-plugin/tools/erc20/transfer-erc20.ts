@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { AgentMode, type Context } from '@/shared/configuration';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import {
@@ -46,14 +46,28 @@ Transaction ID: ${response.transactionId}
 Schedule ID: ${response.scheduleId.toString()}`
     : `ERC20 token transferred successfully.`;
 
-const transferERC20 = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof transferERC20Parameters>>,
-) => {
-  const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
-  try {
-    const normalisedParams = await HederaParameterNormaliser.normaliseTransferERC20Params(
+export const TRANSFER_ERC20_TOOL = 'transfer_erc20_tool';
+
+export class TransferErc20Tool extends BaseTool {
+  method = TRANSFER_ERC20_TOOL;
+  name = 'Transfer ERC20';
+  description: string;
+  parameters: ReturnType<typeof transferERC20Parameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = transferERC20Prompt(context);
+    this.parameters = transferERC20Parameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof transferERC20Parameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
+    return await HederaParameterNormaliser.normaliseTransferERC20Params(
       params,
       ERC20_TRANSFER_FUNCTION_ABI,
       ERC20_TRANSFER_FUNCTION_NAME,
@@ -61,11 +75,20 @@ const transferERC20 = async (
       mirrorNode,
       client,
     );
+  }
 
-    const tx = HederaBuilder.executeTransaction(normalisedParams);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.executeTransaction(normalisedParams);
+  }
 
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    if (context.mode === AgentMode.RETURN_BYTES) {
+      return await handleTransaction(transaction, client, context);
+    }
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to transfer ERC20';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_erc20_tool]', message);
@@ -74,17 +97,8 @@ const transferERC20 = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const TRANSFER_ERC20_TOOL = 'transfer_erc20_tool';
-
-const tool = (context: Context): Tool => ({
-  method: TRANSFER_ERC20_TOOL,
-  name: 'Transfer ERC20',
-  description: transferERC20Prompt(context),
-  parameters: transferERC20Parameters(context),
-  execute: transferERC20,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new TransferErc20Tool(context);
 
 export default tool;

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client } from '@hashgraph/sdk';
 import toolFactory, {
   CREATE_TOPIC_TOOL,
+  CreateTopicTool,
 } from '@/plugins/core-consensus-plugin/tools/consensus/create-topic';
 
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
@@ -43,7 +44,7 @@ vi.mock('@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils', () => ({
 
 const makeClient = () => Client.forNetwork({});
 
-describe('create-topic tool (unit)', () => {
+describe('CreateTopicTool', () => {
   const context: any = { accountId: '0.0.1001' };
   const params = { topicMemo: 'my topic', submitKey: true, adminKey: true } as any;
 
@@ -63,7 +64,7 @@ describe('create-topic tool (unit)', () => {
   });
 
   it('executes happy path and returns formatted human message with tx and topic id', async () => {
-    const tool = toolFactory(context);
+    const tool = new CreateTopicTool(context);
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params);
@@ -91,7 +92,7 @@ describe('create-topic tool (unit)', () => {
   });
 
   it('returns error response object when an Error is thrown', async () => {
-    const tool = toolFactory(context);
+    const tool = new CreateTopicTool(context);
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');
@@ -106,7 +107,7 @@ describe('create-topic tool (unit)', () => {
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
-    const tool = toolFactory(context);
+    const tool = new CreateTopicTool(context);
     const client = makeClient();
 
     const { default: HederaBuilder } = await import('@/shared/hedera-utils/hedera-builder');

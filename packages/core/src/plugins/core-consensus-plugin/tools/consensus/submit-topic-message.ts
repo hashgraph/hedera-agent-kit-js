@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import {
   handleTransaction,
@@ -31,21 +31,38 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Message submitted successfully with transaction id ${response.transactionId.toString()}`;
 };
 
-const submitTopicMessage = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
-) => {
-  try {
-    const normalisedParams = await HederaParameterNormaliser.normaliseSubmitTopicMessage(
-      params,
-      context,
-      client,
-    );
-    const tx = HederaBuilder.submitTopicMessage(normalisedParams);
+export const SUBMIT_TOPIC_MESSAGE_TOOL = 'submit_topic_message_tool';
 
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+export class SubmitTopicMessageTool extends BaseTool {
+  method = SUBMIT_TOPIC_MESSAGE_TOOL;
+  name = 'Submit Topic Message';
+  description: string;
+  parameters: ReturnType<typeof submitTopicMessageParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = submitTopicMessagePrompt(context);
+    this.parameters = submitTopicMessageParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof submitTopicMessageParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return await HederaParameterNormaliser.normaliseSubmitTopicMessage(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.submitTopicMessage(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to submit message to topic';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[submit_topic_message_tool]', message);
@@ -54,17 +71,8 @@ const submitTopicMessage = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const SUBMIT_TOPIC_MESSAGE_TOOL = 'submit_topic_message_tool';
-
-const tool = (context: Context): Tool => ({
-  method: SUBMIT_TOPIC_MESSAGE_TOOL,
-  name: 'Submit Topic Message',
-  description: submitTopicMessagePrompt(context),
-  parameters: submitTopicMessageParameters(context),
-  execute: submitTopicMessage,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new SubmitTopicMessageTool(context);
 
 export default tool;

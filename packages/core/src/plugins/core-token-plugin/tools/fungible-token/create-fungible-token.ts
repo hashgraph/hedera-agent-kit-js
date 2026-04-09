@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import {
@@ -52,23 +52,49 @@ Transaction ID: ${response.transactionId}
 Token ID: ${tokenIdStr}`;
 };
 
-const createFungibleToken = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof createFungibleTokenParameters>>,
-) => {
-  try {
+export const CREATE_FUNGIBLE_TOKEN_TOOL = 'create_fungible_token_tool';
+
+export class CreateFungibleTokenTool extends BaseTool {
+  method = CREATE_FUNGIBLE_TOKEN_TOOL;
+  name = 'Create Fungible Token';
+  description: string;
+  parameters: ReturnType<typeof createFungibleTokenParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = createFungibleTokenPrompt(context);
+    this.parameters = createFungibleTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof createFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const normalisedParams = await HederaParameterNormaliser.normaliseCreateFungibleTokenParams(
+    return HederaParameterNormaliser.normaliseCreateFungibleTokenParams(
       params,
       context,
       client,
       mirrornodeService,
     );
-    const tx = HederaBuilder.createFungibleToken(normalisedParams);
+  }
 
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const tx = HederaBuilder.createFungibleToken(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to create fungible token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_fungible_token_tool]', message);
@@ -77,17 +103,8 @@ const createFungibleToken = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const CREATE_FUNGIBLE_TOKEN_TOOL = 'create_fungible_token_tool';
-
-const tool = (context: Context): Tool => ({
-  method: CREATE_FUNGIBLE_TOKEN_TOOL,
-  name: 'Create Fungible Token',
-  description: createFungibleTokenPrompt(context),
-  parameters: createFungibleTokenParameters(context),
-  execute: createFungibleToken,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new CreateFungibleTokenTool(context);
 
 export default tool;

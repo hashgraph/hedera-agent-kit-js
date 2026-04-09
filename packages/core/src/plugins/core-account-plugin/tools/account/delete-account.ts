@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import {
   handleTransaction,
@@ -34,23 +34,38 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Account successfully deleted. Transaction ID: ${response.transactionId}`;
 };
 
-const deleteAccount = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof deleteAccountParameters>>,
-) => {
-  try {
-    const normalisedParams = HederaParameterNormaliser.normaliseDeleteAccount(
-      params,
-      context,
-      client,
-    );
+export const DELETE_ACCOUNT_TOOL = 'delete_account_tool';
 
-    let tx = HederaBuilder.deleteAccount(normalisedParams);
+export class DeleteAccountTool extends BaseTool {
+  method = DELETE_ACCOUNT_TOOL;
+  name = 'Delete Account';
+  description: string;
+  parameters: ReturnType<typeof deleteAccountParameters>;
+  outputParser = transactionToolOutputParser;
 
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
-  } catch (error) {
+  constructor(context: Context) {
+    super();
+    this.description = deleteAccountPrompt(context);
+    this.parameters = deleteAccountParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof deleteAccountParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseDeleteAccount(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.deleteAccount(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to delete account';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[delete_account_tool]', message);
@@ -59,17 +74,8 @@ const deleteAccount = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const DELETE_ACCOUNT_TOOL = 'delete_account_tool';
-
-const tool = (context: Context): Tool => ({
-  method: DELETE_ACCOUNT_TOOL,
-  name: 'Delete Account',
-  description: deleteAccountPrompt(context),
-  parameters: deleteAccountParameters(context),
-  execute: deleteAccount,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new DeleteAccountTool(context);
 
 export default tool;

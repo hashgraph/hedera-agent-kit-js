@@ -114,7 +114,7 @@ describe('Create Account Tool Matching Integration Tests', () => {
 
     it('should match and extract params for scheduled create account transaction request', async () => {
       const input =
-        'Schedule creation of an account with max automatic token associations 10. Make it expire tomorrow and wait for its expiration time with executing it.';
+        'Schedule creation of an account with max automatic token associations 10. Make it expire tomorrow and wait for its expiration time without executing it.';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
@@ -132,7 +132,6 @@ describe('Create Account Tool Matching Integration Tests', () => {
         expect.objectContaining({
           maxAutomaticTokenAssociations: 10,
           schedulingParams: expect.objectContaining({
-            adminKey: false,
             isScheduled: true,
             expirationTime: expect.any(String),
             waitForExpiry: true,

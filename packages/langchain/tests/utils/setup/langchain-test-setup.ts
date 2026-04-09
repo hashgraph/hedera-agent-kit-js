@@ -66,6 +66,7 @@ export async function createLangchainTestSetup(
       context: {
         mode: toolkitOptions.agentMode || AgentMode.AUTONOMOUS,
         accountId: operatorAccountId.toString(),
+        hooks: toolkitOptions.hooks,
       },
     },
   });

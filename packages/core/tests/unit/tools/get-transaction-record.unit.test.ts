@@ -18,7 +18,7 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
   const client = makeClient();
 
   const mockService = {
-    getTransactionRecord: vi.fn<[], any>(),
+    getTransactionRecord: vi.fn(),
   } as unknown as {
     getTransactionRecord: (txId: string, nonce?: number) => Promise<TransactionDetailsResponse>;
   };
@@ -97,6 +97,7 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
   });
 
   it('formats multiple transactions with separators', async () => {
+    const tool = toolFactory(context);
     const txId = '0.0.2002-123-456';
     const response: TransactionDetailsResponse = {
       transactions: [
@@ -123,36 +124,39 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
 
     (mockService.getTransactionRecord as any).mockResolvedValue(response);
 
-    const res = await getTransactionRecordQuery(client, context, { transactionId: txId });
+    const res = await tool.execute(client, context, { transactionId: txId });
     expect((res as any).humanMessage).toContain('Transaction 1 Details');
     expect((res as any).humanMessage).toContain('Transaction 2 Details');
     expect((res as any).humanMessage).toContain('='.repeat(50));
   });
 
   it('returns message when no transactions found', async () => {
+    const tool = toolFactory(context);
     const txId = '0.0.9-10-11';
     const response: TransactionDetailsResponse = { transactions: [] } as any;
 
     (mockService.getTransactionRecord as any).mockResolvedValue(response);
 
-    const res = await getTransactionRecordQuery(client, context, { transactionId: txId });
+    const res = await tool.execute(client, context, { transactionId: txId });
     expect((res as any).humanMessage).toBe(
       `No transaction details found for transaction ID: ${txId}`,
     );
   });
 
   it('returns aligned error response when mirror node throws an Error', async () => {
+    const tool = toolFactory(context);
     (mockService.getTransactionRecord as any).mockRejectedValue(new Error('boom'));
-    const result = await getTransactionRecordQuery(client, context, { transactionId: '0.0.1-1-1' });
+    const result = await tool.execute(client, context, { transactionId: '0.0.1-1-1' });
     expect(result.humanMessage).toContain('Failed to get transaction record');
     expect(result.humanMessage).toContain('boom');
   });
 
   it('returns aligned generic failure message when mirror node throws non-Error', async () => {
+    const tool = toolFactory(context);
     (mockService.getTransactionRecord as any).mockImplementation(() => {
       throw 'string error';
     });
-    const result = await getTransactionRecordQuery(client, context, { transactionId: '0.0.1-1-1' });
+    const result = await tool.execute(client, context, { transactionId: '0.0.1-1-1' });
     expect(result.humanMessage).toBe('Failed to get transaction record');
   });
 });

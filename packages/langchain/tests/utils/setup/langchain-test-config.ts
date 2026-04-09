@@ -1,4 +1,4 @@
-import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { AgentMode, AbstractHook } from '@hashgraph/hedera-agent-kit';
 import type { Plugin } from '@hashgraph/hedera-agent-kit';
 import { LLMProvider, type LlmOptions } from './llm-factory';
 import {
@@ -23,6 +23,7 @@ export interface LangchainTestOptions {
   tools: string[];
   plugins: Plugin[];
   agentMode: AgentMode;
+  hooks?: AbstractHook[];
 }
 
 const {

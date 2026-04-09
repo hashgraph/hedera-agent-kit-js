@@ -4,7 +4,7 @@ import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } f
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { getAccountTokenBalancesQuery } from '@/plugins/core-account-query-plugin/tools/queries/get-account-token-balances-query';
+import { GetAccountTokenBalancesQueryTool } from '@/plugins/core-account-query-plugin/tools/queries/get-account-token-balances-query';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
@@ -95,7 +95,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transactions to be indexed by mirrornode
 
-    const result = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const result = await tool.execute(operatorClient, context, {
       accountId: targetAccountId.toString(),
       tokenId: tokenId.toString(),
     });
@@ -131,7 +132,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transactions to be indexed by mirrornode
 
-    const result = await getAccountTokenBalancesQuery(executorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const result = await tool.execute(executorClient, context, {
       tokenId: tokenId.toString(),
     });
 
@@ -196,7 +198,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transactions to be indexed by mirrornode
 
-    const result = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const result = await tool.execute(operatorClient, context, {
       accountId: targetAccountId.toString(),
     });
 
@@ -229,7 +232,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     const nonExistentAccountId = '0.0.999999999';
 
-    const resp = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const resp = await tool.execute(operatorClient, context, {
       accountId: nonExistentAccountId,
     });
 
@@ -256,7 +260,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for an account to be indexed by mirrornode
 
-    const result = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const result = await tool.execute(operatorClient, context, {
       accountId: emptyAccountId.toString(),
     });
 
@@ -326,7 +331,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transactions to be indexed by mirrornode
 
     // Query for only the first token
-    const result = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const result = await tool.execute(operatorClient, context, {
       accountId: targetAccountId.toString(),
       tokenId: tokenId1.toString(),
     });
@@ -349,7 +355,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
       mirrornodeService,
     };
 
-    const resp = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const resp = await tool.execute(operatorClient, context, {
       accountId: targetAccountId.toString(),
       tokenId: 'invalid-token-id',
     });
@@ -387,7 +394,8 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transactions to be indexed by mirrornode
 
-    const result = await getAccountTokenBalancesQuery(operatorClient, context, {
+    const tool = new GetAccountTokenBalancesQueryTool(context);
+    const result = await tool.execute(operatorClient, context, {
       accountId: targetAccountId.toString(),
       tokenId: tokenId.toString(),
     });

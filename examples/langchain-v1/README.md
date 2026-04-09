@@ -6,6 +6,46 @@ For more developer-oriented examples and deeper explanations, see the [Developer
 
 ---
 
+## Setup
+
+### 1. Set Up the MCP Server
+
+Build the Hedera MCP server from the repository root:
+
+```bash
+pnpm --filter @hashgraph/hedera-agent-kit-mcp build
+```
+
+---
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the `typescript/examples/langchain-v1` directory (or copy from `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Add your Hedera credentials and OpenAI API key:
+
+```env
+ACCOUNT_ID=0.0.xxxxx
+PRIVATE_KEY=302e...
+OPENAI_API_KEY=sk-proj-...
+```
+
+##### About Private Keys
+
+Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+
+---
+
 ## Available Agents
 
 ### Plugin Tool Calling Agent
@@ -38,51 +78,39 @@ A variant of the Return Bytes agent with **robust parsing logic** for handling m
 
 ---
 
+### Policy Enforcement Agent
+
+```bash
+npm run langchain:policy-enforcement-agent
+```
+
+An agent that demonstrates **MaxRecipientsPolicy** enforcement, restricting transfers to a maximum of 2 recipients.
+
+---
+
+### Audit Trail Agent
+
+```bash
+npm run langchain:audit-trail-agent
+```
+
+An agent that demonstrates **HcsAuditTrailHook**, automatically auditing specific actions (like HBAR transfers or token creation) to a Hedera Consensus Service (HCS) topic.
+
+> [!IMPORTANT]
+> This agent works only in `mode: AgentMode.AUTONOMOUS`.
+
+
+---
+
 ## External MCP Agent Example
 
 This example demonstrates how to use the Hedera Agent Kit with an **external MCP (Model Context Protocol) server** to access Hedera blockchain tools.
 
-### Setup
-
-#### 1. Set Up the MCP Server
-
-Build the Hedera MCP server from the repository root:
-
-```bash
-pnpm --filter @hashgraph/hedera-agent-kit-mcp build
-```
-
 ---
 
-#### 2. Configure Environment Variables
+### MCP Agent Configuration
 
-Create a `.env` file in the `typescript/examples/langchain-v1` directory (or copy from `.env.example`):
-
-```bash
-cp .env.example .env
-```
-
-Add your Hedera credentials and OpenAI API key:
-
-```env
-ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
-OPENAI_API_KEY=sk-proj-...
-```
-
-##### About Private Keys
-
-The Hedera Agent Kit supports **DER-encoded private keys** by default. To use **hex-encoded keys** instead, uncomment the appropriate line in `external-mcp-agent.ts`:
-
-```ts
-PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
-```
-
-For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
-
----
-
-#### 3. Update MCP Server Path
+#### 1. Update MCP Server Path
 
 Open `external-mcp-agent.ts` and update the `args` array with the **absolute path** to your MCP server build output:
 

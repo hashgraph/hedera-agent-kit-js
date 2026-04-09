@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import {
   handleTransaction,
@@ -48,24 +48,50 @@ Schedule ID: ${response.scheduleId.toString()}`;
 Transaction ID: ${response.transactionId}`;
 };
 
-const transferFungibleTokenWithAllowance = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
-) => {
-  try {
-    const mirrornode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
-    const normalisedParams =
-      await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
-        params,
-        context,
-        client,
-        mirrornode,
-      );
+export const TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
+  'transfer_fungible_token_with_allowance_tool';
 
+export class TransferFungibleTokenWithAllowanceTool extends BaseTool {
+  method = TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
+  name = 'Transfer Fungible Token with Allowance';
+  description: string;
+  parameters: ReturnType<typeof transferFungibleTokenWithAllowanceParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = transferFungibleTokenWithAllowancePrompt(context);
+    this.parameters = transferFungibleTokenWithAllowanceParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    const mirrornode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
+    return HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+      params,
+      context,
+      client,
+      mirrornode,
+    );
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to transfer fungible token with allowance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_fungible_token_with_allowance_tool]', message);
@@ -74,18 +100,8 @@ const transferFungibleTokenWithAllowance = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
-  'transfer_fungible_token_with_allowance_tool';
-
-const tool = (context: Context): Tool => ({
-  method: TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
-  name: 'Transfer Fungible Token with Allowance',
-  description: transferFungibleTokenWithAllowancePrompt(context),
-  parameters: transferFungibleTokenWithAllowanceParameters(context),
-  execute: transferFungibleTokenWithAllowance,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new TransferFungibleTokenWithAllowanceTool(context);
 
 export default tool;

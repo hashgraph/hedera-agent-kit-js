@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hashgraph/sdk';
 import {
   handleTransaction,
@@ -30,16 +30,38 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Transaction successfully signed. Transaction ID: ${response.transactionId}`;
 };
 
-const signScheduleTransaction = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
-) => {
-  try {
-    const tx = HederaBuilder.signScheduleTransaction(params);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
-  } catch (error) {
+export const SIGN_SCHEDULE_TRANSACTION_TOOL = 'sign_schedule_transaction_tool';
+
+export class SignScheduleTransactionTool extends BaseTool {
+  method = SIGN_SCHEDULE_TRANSACTION_TOOL;
+  name = 'Sign Scheduled Transaction';
+  description: string;
+  parameters: ReturnType<typeof signScheduleTransactionParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = signScheduleTransactionPrompt(context);
+    this.parameters = signScheduleTransactionParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof signScheduleTransactionParameters>>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params;
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.signScheduleTransaction(normalisedParams);
+  }
+
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to sign scheduled transaction';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[sign_schedule_transaction_tool]', message);
@@ -48,17 +70,8 @@ const signScheduleTransaction = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const SIGN_SCHEDULE_TRANSACTION_TOOL = 'sign_schedule_transaction_tool';
-
-const tool = (context: Context): Tool => ({
-  method: SIGN_SCHEDULE_TRANSACTION_TOOL,
-  name: 'Sign Scheduled Transaction',
-  description: signScheduleTransactionPrompt(context),
-  parameters: signScheduleTransactionParameters(context),
-  execute: signScheduleTransaction,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new SignScheduleTransactionTool(context);
 
 export default tool;

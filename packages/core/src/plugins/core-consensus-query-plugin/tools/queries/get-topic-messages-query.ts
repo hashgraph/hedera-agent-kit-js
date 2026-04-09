@@ -3,13 +3,14 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { Client } from '@hashgraph/sdk';
 import { z } from 'zod';
-import { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import {
   TopicMessage,
   TopicMessagesQueryParams,
 } from '@/shared/hedera-utils/mirrornode/types';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 export const getTopicMessagesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -69,39 +70,64 @@ const convertMessagesFromBase64ToString = (messages: TopicMessage[]) => {
   });
 };
 
-export const getTopicMessagesQuery = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof topicMessagesQueryParameters>>,
-) => {
-  try {
+export const GET_TOPIC_MESSAGES_QUERY_TOOL = 'get_topic_messages_query_tool';
+
+export class GetTopicMessagesQueryTool extends BaseTool {
+  method = GET_TOPIC_MESSAGES_QUERY_TOOL;
+  name = 'Get Topic Messages';
+  description: string;
+  parameters: ReturnType<typeof topicMessagesQueryParameters>;
+  outputParser = untypedQueryOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = getTopicMessagesQueryPrompt(context);
+    this.parameters = topicMessagesQueryParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof topicMessagesQueryParameters>>,
+    context: Context,
+    _client: Client,
+  ) {
+    return HederaParameterNormaliser.parseParamsWithSchema(
+      params,
+      topicMessagesQueryParameters,
+      context,
+    );
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
-    const messages = await mirrornodeService.getTopicMessages(getTopicMessagesQueryParams(params));
+    const messages = await mirrornodeService.getTopicMessages(
+      getTopicMessagesQueryParams(normalisedParams),
+    );
 
     return {
       raw: {
         topicId: messages.topicId,
         messages: convertMessagesFromBase64ToString(messages.messages),
       },
-      humanMessage: postProcess(messages.messages, params.topicId),
+      humanMessage: postProcess(messages.messages, normalisedParams.topicId),
     };
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null; // Not applicable for query tools
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to get topic messages';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_topic_messages_query_tool]', message);
     return { raw: { error: message }, humanMessage: message };
   }
-};
+}
 
-export const GET_TOPIC_MESSAGES_QUERY_TOOL = 'get_topic_messages_query_tool';
-
-const tool = (context: Context): Tool => ({
-  method: GET_TOPIC_MESSAGES_QUERY_TOOL,
-  name: 'Get Topic Messages',
-  description: getTopicMessagesQueryPrompt(context),
-  parameters: topicMessagesQueryParameters(context),
-  execute: getTopicMessagesQuery,
-  outputParser: untypedQueryOutputParser,
-});
+const tool = (context: Context): BaseTool => new GetTopicMessagesQueryTool(context);
 
 export default tool;

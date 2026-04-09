@@ -6,7 +6,9 @@
     "ai-sdk:tool-calling-agent": "tsx tool-calling-agent.ts",
     "ai-sdk:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
     "ai-sdk:mcp-external-agent": "tsx mcp-external-agent.ts",
-    "ai-sdk:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts"
+    "ai-sdk:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts",
+    "ai-sdk:audit-trail-agent": "ts-node audit-trail-agent.ts",
+    "ai-sdk:policy-enforcement-agent": "ts-node policy-enforcement-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/mcp": "^1.0.21",

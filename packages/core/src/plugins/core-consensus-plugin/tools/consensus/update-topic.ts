@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import { Client, PublicKey, Status } from '@hashgraph/sdk';
 import {
   handleTransaction,
@@ -97,26 +97,43 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Topic successfully updated. Transaction ID: ${response.transactionId}`;
 };
 
-const updateTopic = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof updateTopicParameters>>,
-) => {
-  try {
-    const normalisedParams = await HederaParameterNormaliser.normaliseUpdateTopic(
-      params,
-      context,
-      client,
-    );
+export const UPDATE_TOPIC_TOOL = 'update_topic_tool';
+
+export class UpdateTopicTool extends BaseTool {
+  method = UPDATE_TOPIC_TOOL;
+  name = 'Update Topic';
+  description: string;
+  parameters: ReturnType<typeof updateTopicParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = updateTopicPrompt(context);
+    this.parameters = updateTopicParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof updateTopicParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return await HederaParameterNormaliser.normaliseUpdateTopic(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const mirrornodeService = getMirrornodeService(context.mirrornodeService!, client.ledgerId!);
     const userPublicKey = await AccountResolver.getDefaultPublicKey(context, client);
 
     await checkValidityOfUpdates(normalisedParams, mirrornodeService, userPublicKey);
 
-    const tx = HederaBuilder.updateTopic(normalisedParams);
+    return HederaBuilder.updateTopic(normalisedParams);
+  }
 
-    return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to update topic';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[update_topic_tool]', message);
@@ -125,17 +142,8 @@ const updateTopic = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const UPDATE_TOPIC_TOOL = 'update_topic_tool';
-
-const tool = (context: Context): Tool => ({
-  method: UPDATE_TOPIC_TOOL,
-  name: 'Update Topic',
-  description: updateTopicPrompt(context),
-  parameters: updateTopicParameters(context),
-  execute: updateTopic,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new UpdateTopicTool(context);
 
 export default tool;

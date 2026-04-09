@@ -41,11 +41,9 @@ describe('Approve Token Allowance Tool Matching Integration Tests', () => {
         .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      const resp = await agent.invoke({
+      await agent.invoke({
         messages: [{ role: 'user', content: input }],
       });
-
-      console.log(JSON.stringify(resp, null, 2));
 
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(

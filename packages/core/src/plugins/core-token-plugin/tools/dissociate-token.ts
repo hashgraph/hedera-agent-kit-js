@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import type { Tool } from '@/shared/tools';
+import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hashgraph/sdk';
 import {
@@ -39,20 +39,43 @@ const postProcess = (response: RawTransactionResponse) => {
   return `Token(s) successfully dissociated with transaction id ${response.transactionId.toString()}`;
 };
 
-const dissociateToken = async (
-  client: Client,
-  context: Context,
-  params: z.infer<ReturnType<typeof dissociateTokenParameters>>,
-) => {
-  try {
-    const normalisedParams = await HederaParameterNormaliser.normaliseDissociateTokenParams(
-      params,
-      context,
-      client,
-    );
+export const DISSOCIATE_TOKEN_TOOL = 'dissociate_token_tool';
+
+export class DissociateTokenTool extends BaseTool {
+  method = DISSOCIATE_TOKEN_TOOL;
+  name = 'Dissociate Token';
+  description: string;
+  parameters: ReturnType<typeof dissociateTokenParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = dissociateTokenPrompt(context);
+    this.parameters = dissociateTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof dissociateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseDissociateTokenParams(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.dissociateToken(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
-  } catch (error) {
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = 'Failed to dissociate token';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[dissociate_token_tool]', message);
@@ -61,17 +84,8 @@ const dissociateToken = async (
       humanMessage: message,
     };
   }
-};
+}
 
-export const DISSOCIATE_TOKEN_TOOL = 'dissociate_token_tool';
-
-const tool = (context: Context): Tool => ({
-  method: DISSOCIATE_TOKEN_TOOL,
-  name: 'Dissociate Token',
-  description: dissociateTokenPrompt(context),
-  parameters: dissociateTokenParameters(context),
-  execute: dissociateToken,
-  outputParser: transactionToolOutputParser,
-});
+const tool = (context: Context): BaseTool => new DissociateTokenTool(context);
 
 export default tool;
