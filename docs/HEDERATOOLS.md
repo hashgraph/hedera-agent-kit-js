@@ -108,12 +108,14 @@ Creates a new Hedera account. Supports scheduled transactions.
 
 #### Parameters
 
-| Parameter                       | Type     | Required | Default      | Description                                          |
-|---------------------------------|----------|----------|--------------|------------------------------------------------------|
-| `publicKey`                     | `string` | ❌        | operator key | Public key to use for the account.                   |
-| `accountMemo`                   | `string` | ❌        | `null`       | Memo for the account (max 100 chars).                |
-| `initialBalance`                | `number` | ❌        | `0`          | Initial HBAR balance.                                |
-| `maxAutomaticTokenAssociations` | `number` | ❌        | `-1`         | Max automatic token associations (-1 for unlimited). |
+| Parameter                       | Type     | Required | Default              | Description                                          |
+|---------------------------------|----------|----------|----------------------|------------------------------------------------------|
+| `publicKey`                     | `string` | ❌        | operator/context key | Public key to use for the account.                   |
+| `accountMemo`                   | `string` | ❌        | `null`               | Memo for the account (max 100 chars).                |
+| `initialBalance`                | `number` | ❌        | `0`                  | Initial HBAR balance.                                |
+| `maxAutomaticTokenAssociations` | `number` | ❌        | `-1`                 | Max automatic token associations (-1 for unlimited). |
+
+**WARNING:** If no public key is provided, the context/operator's key will be used.
 
 #### Example Prompts
 
