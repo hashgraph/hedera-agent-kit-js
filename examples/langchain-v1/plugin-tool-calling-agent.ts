@@ -96,7 +96,6 @@ async function bootstrap(): Promise<void> {
       );
 
       console.log('--- Agent Response ---');
-      console.log(JSON.stringify(response, null, 2));
 
       const parsedToolData = responseParsingService.parseNewToolMessages(response);
 
