@@ -28,13 +28,23 @@ An agent that returns transaction bytes for **manual signing and execution**, ra
 
 ---
 
-### Return Bytes Agent (Web / Robust Parsing)
+#### Migration note (breaking change)
 
-```bash
-npm run langchain:return-bytes-tool-calling-agent-web
+`RETURN_BYTES` now standardizes `raw.bytes` to `Uint8Array` across Node.js and web. If your integration previously handled Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), migrate to a `Uint8Array` parser.
+
+Before:
+
+```ts
+const realBytes = Buffer.isBuffer(bytesObject)
+  ? bytesObject
+  : Buffer.from(bytesObject.data);
 ```
 
-A variant of the Return Bytes agent with **robust parsing logic** for handling multiple Buffer serialization formats (for example, browser `Uint8Array` and JSON-serialized buffers).
+After:
+
+```ts
+const realBytes = Uint8Array.from(bytesObject);
+```
 
 ---
 

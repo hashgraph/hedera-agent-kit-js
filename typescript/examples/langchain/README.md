@@ -17,6 +17,20 @@ An agent that uses a structured chat prompt.
 `npm run langchain:return-bytes-tool-calling-agent`
 An agent that returns transaction bytes for manual signing/execution instead of executing them directly.
 
-### Return Bytes Agent (Web / Robust Parsing)
-`npm run langchain:return-bytes-tool-calling-agent-web`
-A variant of the Return Bytes agent with robust parsing logic for handling various Buffer serialization formats (e.g. browser `Uint8Array`, JSON objects).
+#### Migration note (breaking change)
+
+`RETURN_BYTES` now standardizes `raw.bytes` to `Uint8Array` across Node.js and web. If you previously parsed Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), migrate to a `Uint8Array` parser.
+
+Before:
+
+```ts
+const realBytes = Buffer.isBuffer(bytesObject)
+  ? bytesObject
+  : Buffer.from(bytesObject.data);
+```
+
+After:
+
+```ts
+const realBytes = Uint8Array.from(bytesObject);
+```
