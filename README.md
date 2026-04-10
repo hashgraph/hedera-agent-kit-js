@@ -92,6 +92,8 @@ First follow instructions in the [Developer Examples to clone and configure the 
 - **Option F -** [Example Preconfigured MCP Client Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-g-try-out-the-preconfigured-mcp-client-agent)
 - **Option G -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-try-out-the-google-adk-agent)
 
+> ⚠️ **Breaking change v4.0.0:** Return-bytes flows now use canonical `Uint8Array` bytes across Node.js and web runtimes. If your integration previously parsed Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), follow the migration examples in [Developer Examples](docs/DEVEXAMPLES.md).
+
 ---
 
 ## 🚀 60-Second Quick-Start
