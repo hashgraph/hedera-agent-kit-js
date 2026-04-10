@@ -130,7 +130,7 @@ const context = {
 > [!NOTE]
 > **Complete Examples**: See the Audit Trail agent implementations
 > in [AI SDK](../examples/ai-sdk/audit-trail-agent.ts)
-> or [LangChain v1](../typescript/examples/langchain-v1/audit-trail-agent.ts).
+> or [LangChain v1](../examples/langchain-v1/audit-trail-agent.ts).
 
 ---
 
@@ -229,7 +229,7 @@ const extendedPolicy = new MaxRecipientsPolicy(
 > [!NOTE]
 > **Complete Examples**: Check the [Policy Enforcement Agent](DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
 > for full implementations in [AI SDK](../examples/ai-sdk/policy-enforcement-agent.ts)
-> or [LangChain v1](../typescript/examples/langchain-v1/policy-enforcement-agent.ts).
+> or [LangChain v1](../examples/langchain-v1/policy-enforcement-agent.ts).
 
 ---
 
@@ -263,7 +263,7 @@ const context = {
 ## Tool Lifecycle Deep Dive
 
 Every tool in the kit follows a standardized 7-stage lifecycle. The execution logic is defined in
-`typescript/src/shared/tools.ts`.
+`packages/core/src/shared/tools.ts`.
 
 ```text
 [1. Pre-Tool Execution] --------> Hook: preToolExecutionHook
@@ -387,16 +387,7 @@ parameter structures using one of three patterns:
 **Example**: `HcsAuditTrailHook` logs all inputs to HCS without needing to know each tool's schema.
 
 ```typescript
-async
-postToolExecutionHook(context
-:
-Context, params
-:
-PostSecondaryActionParams, method
-:
-string
-)
-{
+async postToolExecutionHook(context: Context, params: PostSecondaryActionParams, method: string) {
   // Works for all tools - generic logging
   const logEntry = {
     tool: method,
@@ -420,40 +411,24 @@ string
 **Example**:
 
 ```typescript
-public async
-postParamsNormalizationHook(
-  context
-:
-Context,
-  params
-:
-PostParamsNormalizationParams,
-  method
-:
-string
-):
-Promise < any > {
+public async postParamsNormalizationHook(
+  context: Context,
+  params: PostParamsNormalizationParams,
+  method: string
+): Promise<any> {
   // Filter and branch based on the tool
-  switch(method) {
-  case
-    'transfer_hbar'
-  :
-  case
-    'transfer_hbar_with_allowance'
-  :
-    {
+  switch (method) {
+    case 'transfer_hbar':
+    case 'transfer_hbar_with_allowance': {
       // Both tools share the 'transfers' structure
-      const p = params.normalisedParams as { transfers: Array<{ to: string, amount: number }> };
+      const p = params.normalisedParams as { transfers: Array<{ to: string; amount: number }> };
 
       // Example: Log total transfer amount
       const total = p.transfers.reduce((sum, t) => sum + t.amount, 0);
       console.log(`Total HBAR being transferred: ${total}`);
       break;
     }
-  case
-    'create_account'
-  :
-    {
+    case 'create_account': {
       const p = params.normalisedParams as { initialBalance: number };
       console.log(`Creating account with balance: ${p.initialBalance}`);
       break;
@@ -693,75 +668,39 @@ export class MyCustomPolicy extends Policy {
 
 ```typescript
 // 1. Threshold Policy
-protected
-shouldBlockPostParamsNormalization(
-  context
-:
-Context,
-  params
-:
-PostParamsNormalizationParams,
-  method
-:
-string
-):
-boolean
-{
+protected shouldBlockPostParamsNormalization(
+  context: Context,
+  params: PostParamsNormalizationParams,
+  method: string
+): boolean {
   return params.normalisedParams.amount > this.maxAmount;
 }
 
 // 2. Allowlist/Blocklist Policy
-protected
-shouldBlockPreToolExecution(
-  context
-:
-Context,
-  params
-:
-PreToolExecutionParams,
-  method
-:
-string
-):
-boolean
-{
+protected shouldBlockPreToolExecution(
+  context: Context,
+  params: PreToolExecutionParams,
+  method: string
+): boolean {
   return this.blockedAccounts.includes(params.rawParams.accountId);
 }
 
 // 3. Time-based Policy
-protected
-shouldBlockPreToolExecution(
-  context
-:
-Context,
-  params
-:
-PreToolExecutionParams,
-  method
-:
-string
-):
-boolean
-{
+protected shouldBlockPreToolExecution(
+  context: Context,
+  params: PreToolExecutionParams,
+  method: string
+): boolean {
   const hour = new Date().getHours();
   return hour < 9 || hour > 17; // Block outside business hours
 }
 
 // 4. Rate Limiting Policy (using context)
-protected
-shouldBlockPreToolExecution(
-  context
-:
-Context,
-  params
-:
-PreToolExecutionParams,
-  method
-:
-string
-):
-boolean
-{
+protected shouldBlockPreToolExecution(
+  context: Context,
+  params: PreToolExecutionParams,
+  method: string
+): boolean {
   const callCount = (context.state.callCount || 0) + 1;
   context.state.callCount = callCount;
   return callCount > this.maxCallsPerSession;
@@ -774,7 +713,7 @@ boolean
 
 When adding a new Hook or Policy:
 
-1. **Implementation**: Add the implementation file to `typescript/src/hooks` or `typescript/src/policies`
+1. **Implementation**: Add the implementation file to `packages/core/src/hooks` or `packages/core/src/policies`
 2. **Export**: Export it from the appropriate index file
 3. **Documentation**: Add a new section in [Part 1: Available Hooks and Policies](#available-hooks-and-policies) with:
     - Name and Type (Hook or Policy)

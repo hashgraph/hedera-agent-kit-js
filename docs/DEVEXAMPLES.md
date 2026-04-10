@@ -219,34 +219,35 @@ In this example, we can just take the returned bytes and execute the transaction
 
 
 ### Option D: Try Out the MCP Server
-1. First, navigate into the folder for the agent kit mcp server.
+1. Navigate to the MCP examples directory:
 
 ```bash
 cd examples/modelcontextprotocol
 ```
 
-2. Export two environment variables, one for your Hedera testnet account, and one for your DER-encoded private key. You can also create an `.env` file in the `modelcontextprotocol` directory to store these variables.
+2. Configure your environment:
+Create an `.env` file with `HEDERA_OPERATOR_ID` and `HEDERA_OPERATOR_KEY`.
 
-```bash
-export HEDERA_OPERATOR_ID="0.0.xxxxx"
-export HEDERA_OPERATOR_KEY="0x2g3..."
-```
-
- 2. Build and Run the MCP Server. From the `modelcontextprotocol` directory, install dependencies and build:
+3. Install dependencies and build:
 
 ```bash
 npm install
+cd ../../packages/mcp
+npm install
 npm run build
+cd ../../examples/modelcontextprotocol
 ```
-3. Run and test the MCP server.
-The server accepts these command-line options:
-  - `--ledger-id=testnet|mainnet` (defaults to testnet)
-  - `--agent-mode`, and `--account-id` for additional configuration
 
-4. Run the server to verify it works:
+4. Run the Stdio MCP Server:
 
 ```bash
-node packages/mcp/dist/bin/stdio.js
+npm start:stdio
+```
+
+5. Or run the HTTP MCP Server:
+
+```bash
+npm start:http
 ```
 
 
@@ -282,12 +283,15 @@ This example demonstrates how to integrate external MCP (Model Context Protocol)
 
 #### Prerequisites
 
-1. First, set up the Hedera MCP server by following the instructions in the [modelcontextprotocol README](../examples/modelcontextprotocol/README.md):
+1. Set up the Hedera MCP server following the instructions in [Option D](#option-d-try-out-the-mcp-server).
 
 ```bash
 cd examples/modelcontextprotocol
 npm install
+cd ../../packages/mcp
+npm install
 npm run build
+cd ../../examples/modelcontextprotocol
 ```
 
 2. Configure your environment variables in `examples/langchain-v1/.env`:
@@ -397,15 +401,15 @@ These agents connect to the configured MCP servers (defined in your code) and al
 This example demonstrates how to use the **MaxRecipientsPolicy** to enforce rules on transactions. In this case, it restricts any HBAR transfer to a maximum of 2 recipients.
 
 **Found at:**
-- `typescript/examples/ai-sdk/policy-enforcement-agent.ts`
-- `typescript/examples/langchain-v1/policy-enforcement-agent.ts`
+- `examples/ai-sdk/policy-enforcement-agent.ts`
+- `examples/langchain-v1/policy-enforcement-agent.ts`
 
 #### Running the Example
 
 ##### AI SDK
 
 ```bash
-cd typescript/examples/ai-sdk
+cd examples/ai-sdk
 npm install
 npm run ai-sdk:policy-enforcement-agent
 ```
@@ -413,7 +417,7 @@ npm run ai-sdk:policy-enforcement-agent
 ##### LangChain v1
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 npm install
 npm run langchain:policy-enforcement-agent
 ```
@@ -425,8 +429,8 @@ npm run langchain:policy-enforcement-agent
 This example demonstrates how to use the **HcsAuditTrailHook** to automatically audit specific actions (like HBAR transfers or token creation) by submitting audit logs to a Hedera Consensus Service (HCS) topic.
 
 **Found at:**
-- `typescript/examples/ai-sdk/audit-trail-agent.ts`
-- `typescript/examples/langchain-v1/audit-trail-agent.ts`
+- `examples/ai-sdk/audit-trail-agent.ts`
+- `examples/langchain-v1/audit-trail-agent.ts`
 
 > [!IMPORTANT]
 > This agent works only in `mode: AgentMode.AUTONOMOUS`.
@@ -436,7 +440,7 @@ This example demonstrates how to use the **HcsAuditTrailHook** to automatically 
 ##### AI SDK
 
 ```bash
-cd typescript/examples/ai-sdk
+cd examples/ai-sdk
 npm install
 npm run ai-sdk:audit-trail-agent
 ```
@@ -444,7 +448,7 @@ npm run ai-sdk:audit-trail-agent
 ##### LangChain v1
 
 ```bash
-cd typescript/examples/langchain-v1
+cd examples/langchain-v1
 npm install
 npm run langchain:audit-trail-agent
 ```

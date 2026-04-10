@@ -246,11 +246,7 @@ If you would like, try adding in other prompts to the agent to see what it can d
    console.log(response.messages[response.messages.length - 1].content);
 ```
 
-> To get other Hedera Agent Kit tools working, take a look at the example agent implementations at [https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/examples/langchain](https://github.com/hedera-dev/hedera-agent-kit/tree/main/typescript/examples/langchain)
-
----
-
-## About the Agent Kit
+> To get other Hedera Agent Kit tools working, take a look at the example agent implementations at [https://github.com/hedera-dev/hedera-agent-kit/tree/main/examples/langchain-v1/plugin-tool-calling-agent.ts](https://github.com/hedera-dev/hedera-agent-kit/tree/main/examples/langchain-v1/plugin-tool-calling-agent.ts)
 
 ### Agent Execution Modes
 

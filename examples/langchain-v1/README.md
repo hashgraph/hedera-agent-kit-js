@@ -70,7 +70,7 @@ An agent that demonstrates **HcsAuditTrailHook**, automatically auditing specifi
 npm run langchain:external-mcp-return-bytes-agent
 ```
 
-An agent that demonstrates connecting to the [Hedera HTTP MCP server](../../../modelcontextprotocol/src/http.ts) running in `RETURN_BYTES` mode. This example shows how to pass account context via HTTP headers and handle transaction bytes returned from the server.
+An agent that demonstrates connecting to the [Hedera HTTP MCP server](../modelcontextprotocol/src/http.ts) running in `RETURN_BYTES` mode. This example is specifically designed to demonstrate integration with the modular HTTP return-bytes MCP implementation found in the [modelcontextprotocol examples](../modelcontextprotocol/src/http.ts). It shows how to pass account context via HTTP headers and handle transaction bytes returned from the server for local signing.
 
 ---
 
@@ -82,12 +82,15 @@ This example demonstrates how to use the Hedera Agent Kit with an **external MCP
 
 #### 1. Set Up the MCP Server
 
-Follow the setup instructions in the [modelcontextprotocol README](../../../modelcontextprotocol/README.md) to build the Hedera MCP server:
+Follow the setup instructions in the [modelcontextprotocol README](../modelcontextprotocol/README.md) to build the Hedera MCP server:
 
 ```bash
 cd examples/modelcontextprotocol
 npm install
+cd ../../packages/mcp
+npm install
 npm run build
+cd ../../examples/modelcontextprotocol
 ```
 
 ---

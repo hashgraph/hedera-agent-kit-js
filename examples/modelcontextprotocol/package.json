@@ -4,40 +4,27 @@
   "homepage": "https://github.com/hedera-dev/hedera-agent-kit",
   "description": "A command line tool for setting up Hedera MCP server",
   "type": "module",
-  "bin": {
-    "hedera-mcp": "dist/stdio.js",
-    "hedera-mcp-http": "dist/http.js"
-  },
-  "files": [
-    "dist/stdio.js",
-    "dist/http.js",
-    "LICENSE",
-    "README.md",
-    "VERSION",
-    "package.json"
-  ],
   "scripts": {
-    "start": "node dist/stdio.js",
-    "start:http": "node dist/http.js",
-    "start:http:return-bytes": "node dist/http.js --agent-mode=returnBytes",
-    "build": "tsc && node -e \"require('fs').chmodSync('dist/stdio.js', '755')\" && node -e \"require('fs').chmodSync('dist/http.js', '755')\"",
+    "start:stdio": "tsx src/stdio.ts",
+    "start:http:return-bytes": "tsx src/http.ts --agent-mode=returnBytes",
+    "build": "tsc",
     "clean": "rm -rf dist",
     "lint": "eslint \"./**/*.ts*\"",
     "prettier": "prettier './**/*.{js,ts,md,html,css}' --write",
-    "prettier-check": "prettier './**/*.{js,ts,md,html,css}' --check",
-    "test": "jest"
+    "prettier-check": "prettier './**/*.{js,ts,md,html,css}' --check"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
-    "@hashgraph/sdk": "2.80.0",
+    "@hashgraph/sdk": "2.81.0",
     "@modelcontextprotocol/sdk": "1.29.0",
     "colors": "^1.4.0",
     "cors": "^2.8.6",
     "dotenv": "17.2.3",
     "express": "^5.2.1",
-    "hedera-agent-kit": "../typescript"
+    "@hashgraph/hedera-agent-kit": "file:../../packages/core",
+    "@hashgraph/hedera-agent-kit-mcp": "file:../../packages/mcp"
   },
   "keywords": [
     "mcp",
@@ -50,6 +37,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.13.4",
     "prettier": "^3.5.1",
+    "tsx": "4.20.6",
     "typescript": "^5.8.3"
   }
 }
