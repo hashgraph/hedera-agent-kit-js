@@ -7,14 +7,14 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
 ## Available Third Party Plugins
 
-See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](https://github.com/hashgraph/hedera-agent-kit-js?tab=readme-ov-file#third-party-plugins) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
+See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](../README.md) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
 
 - [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
 
   NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
   Source: https://github.com/jmgomezl/hak-saucerswap-plugin
   Tested/endorsed version: hak-saucerswap-plugin@1.0.1
-  
+
 - [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
 
   Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
@@ -59,7 +59,7 @@ export type Tool = {
 };
 ```
 
-See [typescript/src/shared/tools.ts](../typescript/src/shared/tools.ts) for the full definition.
+See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) for the full definition.
 
 ### Step-by-Step Guide
 
@@ -79,7 +79,7 @@ Create your tool file (e.g., tools/my-service/my-tool.ts):
 
 ```typescript
 import { z } from "zod";
-import { Context, Tool, handleTransaction } from "hedera-agent-kit";
+import { Context, Tool, handleTransaction } from "@hashgraph/hedera-agent-kit";
 import { Client, PrivateKey, AccountId } from "@hashgraph/sdk";
 import dotenv from "dotenv";
 
@@ -143,8 +143,7 @@ export default tool;
 Create your plugin index file (index.ts):
 
 ```typescript
-  import { Context } from '@/shared';
-  import { Plugin } from '@/shared/plugin';
+  import { Context, Plugin } from '@hashgraph/hedera-agent-kit';
   import myTool, { MY_TOOL } from './tools/my-service/my-tool';
 
   export const myCustomPlugin: Plugin = {
@@ -220,7 +219,8 @@ This allows you to easily display a user-friendly message while still having acc
 #### LangChain v0.3 (Classic)
 
 ```typescript
-import { HederaLangchainToolkit } from "hedera-agent-kit";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
+import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit-langchain";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -241,7 +241,8 @@ const toolkit = new HederaLangchainToolkit({
 #### LangChain v1 (New)
 
 ```typescript
-import { HederaLangchainToolkit, ResponseParserService } from "hedera-agent-kit";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
+import { HederaLangchainToolkit, ResponseParserService } from "@hashgraph/hedera-agent-kit-langchain";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -277,9 +278,9 @@ if (toolCall) {
 
 ### Examples and References
 
-- See existing core plugins in typescript/src/plugins/core-\*-plugin/
-- Follow the patterns established in tools like [transfer-hbar.ts](../typescript/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
-- See [typescript/examples/langchain-v1/tool-calling-agent.ts](../typescript/examples/langchain/tool-calling-agent.ts) for usage examples
+- See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
+- Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
+- See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
 ## Publish and Register Your Plugin
 
 To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
@@ -318,7 +319,11 @@ npm install <plugin-name>
 import { myPlugin } from "<plugin-name>";
 '''
 
-'''javascript
+'''typescript
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
+
 const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
@@ -329,7 +334,6 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
             coreTokenPlugin,
             coreAccountPlugin,
             coreConsensusPlugin,
-            coreQueriesPlugin,
             myPlugin,
         ],
     },

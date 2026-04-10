@@ -10,7 +10,7 @@ The Hedera Agent Kit provides easy access to MCP servers hosted by affiliated ec
 These servers are preconfigured in the `HederaMCPServer` enum and can be loaded directly into your agent configuration:
 
 ```typescript
-import { HederaMCPServer } from 'hedera-agent-kit';
+import { HederaLangchainToolkit, HederaMCPServer } from '@hashgraph/hedera-agent-kit-langchain';
 
 const toolkit = new HederaLangchainToolkit({
   configuration: {
@@ -31,8 +31,8 @@ const mcpTools = await toolkit.getMcpTools();
 
 You can find complete working examples of how to use preconfigured MCP clients in the following files:
 
-- **LangChain v1**: [`typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts`](../typescript/examples/langchain-v1/preconfigured-mcp-client-agent.ts)
-- **AI SDK**: [`typescript/examples/ai-sdk/preconfigured-mcp-client-agent.ts`](../typescript/examples/ai-sdk/preconfigured-mcp-client-agent.ts)
+- **LangChain v1**: [`examples/langchain-v1/preconfigured-mcp-client-agent.ts`](../examples/langchain-v1/preconfigured-mcp-client-agent.ts)
+- **AI SDK**: [`examples/ai-sdk/preconfigured-mcp-client-agent.ts`](../examples/ai-sdk/preconfigured-mcp-client-agent.ts)
 
 > [!NOTE]
 > MCP tool support is only available for LangChain v1 and Vercel AI SDK. Legacy LangChain (Classic) is not supported.
