@@ -65,7 +65,7 @@ class ReturnBytesStrategy implements TxModeStrategy {
     if (!context.accountId) throw new Error('…');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
-    return { bytes: tx.toBytes() };
+    return { bytes: Array.from(tx.toBytes()) };
   }
 }
 
