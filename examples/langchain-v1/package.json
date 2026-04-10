@@ -12,7 +12,8 @@
     "langchain:external-mcp-agent": "tsx external-mcp-agent.ts",
     "langchain:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts",
     "langchain:policy-enforcement-agent": "tsx policy-enforcement-agent.ts",
-    "langchain:audit-trail-agent": "tsx audit-trail-agent.ts"
+    "langchain:audit-trail-agent": "tsx audit-trail-agent.ts",
+    "langchain:external-mcp-return-bytes-agent": "tsx external-mcp-return-bytes-agent.ts"
   },
   "dependencies": {
     "@hashgraph/sdk": "2.80.0",

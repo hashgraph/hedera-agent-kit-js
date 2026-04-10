@@ -6,46 +6,6 @@ For more developer-oriented examples and deeper explanations, see the [Developer
 
 ---
 
-## Setup
-
-### 1. Set Up the MCP Server
-
-Build the Hedera MCP server from the repository root:
-
-```bash
-pnpm --filter @hashgraph/hedera-agent-kit-mcp build
-```
-
----
-
-### 2. Configure Environment Variables
-
-Create a `.env` file in the `typescript/examples/langchain-v1` directory (or copy from `.env.example`):
-
-```bash
-cp .env.example .env
-```
-
-Add your Hedera credentials and OpenAI API key:
-
-```env
-ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
-OPENAI_API_KEY=sk-proj-...
-```
-
-##### About Private Keys
-
-Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
-
-```ts
-PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
-```
-
-For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
-
----
-
 ## Available Agents
 
 ### Plugin Tool Calling Agent
@@ -78,6 +38,9 @@ A variant of the Return Bytes agent with **robust parsing logic** for handling m
 
 ---
 
+
+---
+
 ### Policy Enforcement Agent
 
 ```bash
@@ -100,23 +63,73 @@ An agent that demonstrates **HcsAuditTrailHook**, automatically auditing specifi
 > This agent works only in `mode: AgentMode.AUTONOMOUS`.
 
 
+
+### Return Bytes Agent (External MCP)
+
+```bash
+npm run langchain:external-mcp-return-bytes-agent
+```
+
+An agent that demonstrates connecting to the [Hedera HTTP MCP server](../modelcontextprotocol/src/http.ts) running in `RETURN_BYTES` mode. This example is specifically designed to demonstrate integration with the modular HTTP return-bytes MCP implementation found in the [modelcontextprotocol examples](../modelcontextprotocol/src/http.ts). It shows how to pass account context via HTTP headers and handle transaction bytes returned from the server for local signing.
+
 ---
 
 ## External MCP Agent Example
 
 This example demonstrates how to use the Hedera Agent Kit with an **external MCP (Model Context Protocol) server** to access Hedera blockchain tools.
 
+### Setup
+
+#### 1. Set Up the MCP Server
+
+Follow the setup instructions in the [modelcontextprotocol README](../modelcontextprotocol/README.md) to build the Hedera MCP server:
+
+```bash
+cd examples/modelcontextprotocol
+npm install
+cd ../../packages/mcp
+npm install
+npm run build
+cd ../../examples/modelcontextprotocol
+```
+
 ---
 
-### MCP Agent Configuration
+#### 2. Configure Environment Variables
 
-#### 1. Update MCP Server Path
+Create a `.env` file in the `typescript/examples/langchain-v1` directory (or copy from `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Add your Hedera credentials and OpenAI API key:
+
+```env
+ACCOUNT_ID=0.0.xxxxx
+PRIVATE_KEY=302e...
+OPENAI_API_KEY=sk-proj-...
+```
+
+##### About Private Keys
+
+The Hedera Agent Kit supports **DER-encoded private keys** by default. To use **hex-encoded keys** instead, uncomment the appropriate line in `external-mcp-agent.ts`:
+
+```ts
+PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+
+---
+
+#### 3. Update MCP Server Path
 
 Open `external-mcp-agent.ts` and update the `args` array with the **absolute path** to your MCP server build output:
 
 ```ts
 args: [
-  '<YOUR PATH TO>/hedera-agent-kit-js/packages/mcp/dist/bin/cli.js',
+  '<YOUR PATH TO>/hedera-agent-kit-js/examples/modelcontextprotocol/dist/stdio.js',
   '--ledger-id=testnet',
 ]
 ```
