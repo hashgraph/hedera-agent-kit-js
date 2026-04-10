@@ -49,10 +49,10 @@
         "@google/adk": "0.6.1"
     },
     "peerDependencies": {
-        "@hashgraph/sdk": "2.80.0"
+        "@hashgraph/sdk": "2.81.0"
     },
     "devDependencies": {
-        "@hashgraph/sdk": "2.80.0",
+        "@hashgraph/sdk": "2.81.0",
         "tsup": "8.5.0",
         "typescript": "5.8.3",
         "vitest": "4.0.16"
