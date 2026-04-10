@@ -55,7 +55,7 @@
     "zod": "3.25.76"
   },
   "peerDependencies": {
-    "@hashgraph/sdk": ">=2.80.0"
+    "@hashgraph/sdk": "2.80.0"
   },
   "devDependencies": {
     "@hashgraph/sdk": "2.80.0",
