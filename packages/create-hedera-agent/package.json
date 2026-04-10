@@ -23,16 +23,16 @@
   },
   "dependencies": {
     "execa": "^8.0.1",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.3.4",
     "kolorist": "^1.8.0",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "tsup": "^8.0.1",
-    "tsx": "^4.16.2",
-    "typescript": "^5.6.2",
-    "@types/node": "^22.7.4",
     "@types/fs-extra": "^11.0.4",
-    "@types/prompts": "^2.4.9"
+    "@types/node": "^22.19.17",
+    "@types/prompts": "^2.4.9",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

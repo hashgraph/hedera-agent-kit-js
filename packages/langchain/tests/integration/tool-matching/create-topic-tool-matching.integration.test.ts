@@ -71,7 +71,10 @@ describe('Create Topic Tool Matching Integration Tests', () => {
       const variations = [
         { input: 'Open a new consensus topic', expected: {} },
         { input: 'Create topic with memo "My memo"', expected: { topicMemo: 'My memo' } },
-        { input: 'Create topic and set submit key to my key', expected: { submitKey: true } },
+        {
+          input: `Create topic and set submit key to the operator's`,
+          expected: { submitKey: true },
+        },
         {
           input: 'Create topic with transaction memo "TX: memo"',
           expected: { transactionMemo: 'TX: memo' },

@@ -24,6 +24,10 @@ This tool will create a new Hedera account with a passed public key. If not pass
 
 IMPORTANT: All parameters are optional. If the user does not explicitly provide optional parameters, proceed immediately using the default values. Do NOT ask the user for optional parameters.
 
+NOTE: On Hedera, multiple accounts can be created and controlled using the same key pair (e.g., the operator account's key). This means that assets on the newly created account will be accessible using the same key pair as the operator account if no explicit public key is provided.
+CRITICAL: Do NOT tell the user that you have generated a new key pair. This tool CANNOT generate a new key pair.
+WARNING: If no public key is provided, the operator's key will be used. 
+
 Parameters:
 - publicKey (string, optional): Public key to use for the account. If not provided, the tool will use the operator's public key.
 - accountMemo (string, optional): Optional memo for the account. Max 100 chars. Length will be validated in tool call.
