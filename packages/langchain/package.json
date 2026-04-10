@@ -56,11 +56,11 @@
     "zod": "3.25.76"
   },
   "peerDependencies": {
-    "@hashgraph/sdk": ">=2.80.0"
+    "@hashgraph/sdk": ">=2.81.0"
   },
   "devDependencies": {
     "@hashgraph/hedera-agent-kit-tests": "workspace:*",
-    "@hashgraph/sdk": "2.80.0",
+    "@hashgraph/sdk": "2.81.0",
     "@langchain/openai": "1.2.7",
     "dotenv": "17.2.1",
     "tsup": "8.5.0",

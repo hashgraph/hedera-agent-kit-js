@@ -48,15 +48,15 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "@hashgraph/hedera-agent-kit": "workspace:*",
     "@elizaos/core": "1.7.2",
+    "@hashgraph/hedera-agent-kit": "workspace:*",
     "zod-to-json-schema": "3.24.6"
   },
   "peerDependencies": {
-    "@hashgraph/sdk": ">=2.80.0"
+    "@hashgraph/sdk": ">=2.81.0"
   },
   "devDependencies": {
-    "@hashgraph/sdk": "2.80.0",
+    "@hashgraph/sdk": "2.81.0",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
     "vitest": "4.0.16"
