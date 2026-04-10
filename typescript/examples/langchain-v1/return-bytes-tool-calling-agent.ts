@@ -86,7 +86,7 @@ async function bootstrap(): Promise<void> {
       if (toolCall.parsedData?.raw?.bytes) {
         console.log('Transaction bytes found. Executing...');
         const bytesObject = toolCall.parsedData.raw.bytes;
-        const realBytes = Uint8Array.from(bytesObject.data);
+        const realBytes = Uint8Array.from(bytesObject);
 
         const tx = Transaction.fromBytes(realBytes);
         const result = await tx.execute(humanInTheLoopClient);

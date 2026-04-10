@@ -29,11 +29,11 @@ describe('Get Topic Messages Tool (unit)', () => {
   const context = { mirrornodeService: 'mockService' } as any;
   const mockMessages = [
     {
-      message: Buffer.from('Hello world!').toString('base64'),
+      message: btoa('Hello world!'),
       consensus_timestamp: '1690000000.000000001',
     },
     {
-      message: Buffer.from('Second message').toString('base64'),
+      message: btoa('Second message'),
       consensus_timestamp: '1690000001.000000001',
     },
   ];

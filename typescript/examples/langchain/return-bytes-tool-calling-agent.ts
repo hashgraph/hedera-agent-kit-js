@@ -94,7 +94,7 @@ async function bootstrap(): Promise<void> {
       console.log(`AI: ${response?.output ?? response}`);
       const bytes = extractBytesFromAgentResponse(response);
       if (bytes !== undefined) {
-        const realBytes = Uint8Array.from(bytes.data);
+        const realBytes = Uint8Array.from(bytes);
         const tx = Transaction.fromBytes(realBytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);
