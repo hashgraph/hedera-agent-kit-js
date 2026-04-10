@@ -1,0 +1,33 @@
+{
+  "name": "hedera-agent-toolkit-examples-ai-sdk",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"No tests specified for example package\"",
+    "ai-sdk:tool-calling-agent": "tsx tool-calling-agent.ts",
+    "ai-sdk:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
+    "ai-sdk:mcp-external-agent": "tsx mcp-external-agent.ts",
+    "ai-sdk:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts",
+    "ai-sdk:audit-trail-agent": "ts-node audit-trail-agent.ts",
+    "ai-sdk:policy-enforcement-agent": "ts-node policy-enforcement-agent.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/mcp": "^1.0.21",
+    "@ai-sdk/openai": "^3.0.29",
+    "@modelcontextprotocol/sdk": "1.26.0",
+    "ai": "^6.0.86",
+    "dotenv": "17.2.3",
+    "zod": "^3.23.8",
+    "@hashgraph/sdk": "2.80.0",
+    "@hashgraph/hedera-agent-kit": "file:../../packages/core",
+    "@hashgraph/hedera-agent-kit-ai-sdk": "file:../../packages/ai-sdk",
+    "prompts": "2.4.2"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "description": "",
+  "devDependencies": {
+    "@types/prompts": "2.4.9",
+    "json-schema-to-zod": "^2.6.0",
+    "tsx": "4.20.6"
+  }
+}
