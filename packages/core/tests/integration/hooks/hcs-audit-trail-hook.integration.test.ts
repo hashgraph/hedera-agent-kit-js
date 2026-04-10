@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { Context, AgentMode } from '@/shared';
 import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
-import { getOperatorClientForTests } from '../../utils';
+import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
 import {
   Client,
   TopicCreateTransaction,

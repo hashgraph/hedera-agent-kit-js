@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { Context, AgentMode } from '@/shared';
-import { getOperatorClientForTests } from '../../utils';
+import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
 import { Client } from '@hashgraph/sdk';
 import getHbarBalanceTool from '@/plugins/core-account-query-plugin/tools/queries/get-hbar-balance-query';
 import { coreAccountQueryPluginToolNames } from '@/plugins';
