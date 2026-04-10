@@ -1,5 +1,14 @@
 name: Release
 
+# The run-name (the title shown in the runs list, the dispatch button, and PR
+# checks) makes the mode unmissable: every run is labelled either [DRY RUN] or
+# [LIVE]. Push-trigger runs are always [LIVE] because the push event can't
+# carry a dry-run input.
+run-name: >-
+  Release
+  ${{ inputs.dry-run-enabled && '[DRY RUN]' || '[LIVE]' }}
+  ${{ inputs.tag || github.ref_name }}
+
 on:
   push:
     tags:
@@ -49,6 +58,18 @@ jobs:
         uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
         with:
           egress-policy: audit
+
+      # Surfaces the run mode as a colored annotation at the top of the run
+      # page in the GitHub UI. The run-name on the workflow already carries
+      # the same label in the runs list, but this banner is what reviewers see
+      # the moment they open the run.
+      - name: Announce release mode
+        run: |
+          if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+            echo "::notice title=DRY RUN::This is a dry run. Nothing will be published to npm and no GitHub Release will be created."
+          else
+            echo "::warning title=LIVE RELEASE::This is a LIVE release. Packages WILL be published to the public npm registry."
+          fi
 
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -123,7 +144,7 @@ jobs:
   #    to confirm the repo at this ref still compiles cleanly.
   # ----------------------------------------------------------------------------
   safety-checks:
-    name: Safety checks (build)
+    name: Safety checks
     runs-on: hedera-agent-linux-medium
     needs: [prepare-release]
     if: needs.prepare-release.outputs.hasPublishWork == 'true'
