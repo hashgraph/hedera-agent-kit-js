@@ -325,10 +325,10 @@ They should not stop execution unless an error occurs.
 
 **Example**: `HcsAuditTrailHook` logs execution details to an HCS topic without blocking.
 
-### Policies (`Policy`)
+### Policies (`AbstractPolicy`)
 
 Policies are specialized Hooks designed to **validate** and **block** execution. They use `shouldBlock...` methods that
-return boolean values. If `true` is returned, the `Policy` base class throws an error, immediately halting the tool's
+return boolean values. If `true` is returned, the `AbstractPolicy` base class throws an error, immediately halting the tool's
 lifecycle.
 
 **Policy Execution Flow:**
@@ -338,7 +338,7 @@ lifecycle.
          |
     (Hook Entry)
          |
-    [Policy.preToolExecutionHook] (calls shouldBlockPreToolExecution)
+    [AbstractPolicy.preToolExecutionHook] (calls shouldBlockPreToolExecution)
          |
     [shouldBlockPreToolExecution?] -- Yes --> [THROW ERROR] --> (Error returned to LLM/Agent)
          |
@@ -352,7 +352,7 @@ lifecycle.
 `shouldBlock...`
 > methods (e.g., `shouldBlockPreToolExecution`, `shouldBlockPostParamsNormalization`, etc.). While the tool won't break
 > if they are undefined, the policy won't perform any blocking logic. You **must not** override the native hook methods (
-> e.g., `preToolExecutionHook`) as the `Policy` base class uses these internally to trigger the blocking logic and throw
+> e.g., `preToolExecutionHook`) as the `AbstractPolicy` base class uses these internally to trigger the blocking logic and throw
 > errors.
 
 **Available `shouldBlock...` methods:**
@@ -363,7 +363,7 @@ lifecycle.
 - `shouldBlockPostSecondaryAction()`
 
 > [!NOTE]
-> Every `Policy` is an `AbstractHook`, but with pre-defined error handling and "block check" methods.
+> Every `AbstractPolicy` is an `AbstractHook`, but with pre-defined error handling and "block check" methods.
 
 ---
 
@@ -386,8 +386,12 @@ parameter structures using one of three patterns:
 
 **Example**: `HcsAuditTrailHook` logs all inputs to HCS without needing to know each tool's schema.
 
-```typescript
-async postToolExecutionHook(context: Context, params: PostSecondaryActionParams, method: string) {
+```
+async postToolExecutionHook(
+  context: Context,
+  params: PostSecondaryActionParams,
+  method: string
+) {
   // Works for all tools - generic logging
   const logEntry = {
     tool: method,
@@ -410,7 +414,7 @@ async postToolExecutionHook(context: Context, params: PostSecondaryActionParams,
 
 **Example**:
 
-```typescript
+```
 public async postParamsNormalizationHook(
   context: Context,
   params: PostParamsNormalizationParams,
@@ -450,7 +454,7 @@ public async postParamsNormalizationHook(
 **Example**: `MaxRecipientsPolicy` uses a `customStrategies` map:
 
 ```typescript
-export class MaxRecipientsPolicy extends Policy {
+export class MaxRecipientsPolicy extends AbstractPolicy {
   constructor(
     private maxRecipients: number,
     additionalTools: string[] = [],
@@ -580,7 +584,7 @@ export class MyCustomHook extends AbstractHook {
 
 ```typescript
 import {
-  Policy,
+  AbstractPolicy,
   Context,
   PreToolExecutionParams,
   PostParamsNormalizationParams,
@@ -588,7 +592,7 @@ import {
   PostSecondaryActionParams
 } from '@/shared';
 
-export class MyCustomPolicy extends Policy {
+export class MyCustomPolicy extends AbstractPolicy {
   name = 'My Custom Policy';
   description = 'Detailed explanation of what this policy blocks';
   relevantTools = ['transfer_hbar', 'transfer_fungible_token'];
@@ -657,7 +661,7 @@ export class MyCustomPolicy extends Policy {
 **Best Practices:**
 
 1. **Naming**: Use descriptive names ending in `Policy`
-2. **Error Messages**: The `Policy` base class will create error messages. For custom messages, you can throw your own
+2. **Error Messages**: The `AbstractPolicy` base class will create error messages. For custom messages, you can throw your own
    error in the `shouldBlock...` method
 3. **Specificity**: Be specific about what conditions trigger blocking
 4. **Documentation**: Clearly document what conditions will block execution
@@ -666,7 +670,7 @@ export class MyCustomPolicy extends Policy {
 
 **Common Policy Patterns:**
 
-```typescript
+```
 // 1. Threshold Policy
 protected shouldBlockPostParamsNormalization(
   context: Context,
@@ -715,7 +719,7 @@ When adding a new Hook or Policy:
 
 1. **Implementation**: Add the implementation file to `packages/core/src/hooks` or `packages/core/src/policies`
 2. **Export**: Export it from the appropriate index file
-3. **Documentation**: Add a new section in [Part 1: Available Hooks and Policies](#available-hooks-and-policies) with:
+3. **Documentation**: Add a new section in [Available Hooks](#available-hooks) or [Available Policies](#available-policies) with:
     - Name and Type (Hook or Policy)
     - Description
     - Prerequisites (if any)

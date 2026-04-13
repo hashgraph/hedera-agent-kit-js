@@ -7,9 +7,18 @@ export { AgentMode } from './shared/configuration';
 export type { Configuration, Context } from './shared/configuration';
 export type { Plugin } from './shared/plugin';
 export { PluginRegistry } from './shared/plugin';
+export { BaseTool } from './shared/tools';
 export type { Tool } from './shared/tools';
 export { ToolDiscovery } from './shared/tool-discovery';
 export { default as HederaBuilder } from './shared/hedera-utils/hedera-builder';
+export { AbstractPolicy } from './shared/policy';
+export { AbstractHook } from './shared/hook';
+export {
+  PreToolExecutionParams,
+  PostParamsNormalizationParams,
+  PostCoreActionParams,
+  PostSecondaryActionParams,
+} from './shared/hook';
 
 // Utility exports used by plugins and toolkit packages
 export { handleTransaction } from './shared/strategies/tx-mode-strategy';
