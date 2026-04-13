@@ -1,7 +1,7 @@
 {
   "name": "@hashgraph/hedera-agent-kit-tests",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "description": "Shared test utilities for Hedera Agent Kit.",
   "main": "./shared/index.ts",
   "scripts": {

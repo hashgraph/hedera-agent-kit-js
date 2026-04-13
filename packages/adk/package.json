@@ -1,6 +1,6 @@
 {
     "name": "@hashgraph/hedera-agent-kit-adk",
-    "version": "4.0.0",
+    "version": "1.0.0",
     "description": "Google ADK integration for Hedera Agent Kit.",
     "main": "./dist/cjs/index.js",
     "module": "./dist/esm/index.mjs",

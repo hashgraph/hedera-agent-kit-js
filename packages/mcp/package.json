@@ -1,6 +1,6 @@
 {
   "name": "@hashgraph/hedera-agent-kit-mcp",
-  "version": "4.0.0",
+  "version": "1.0.0",
   "description": "Model Context Protocol integration for Hedera Agent Kit.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",

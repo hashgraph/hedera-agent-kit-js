@@ -1,6 +1,6 @@
 {
   "name": "@hashgraph/hedera-agent-kit-ai-sdk",
-  "version": "4.0.0",
+  "version": "1.0.0",
   "description": "Vercel AI SDK integration for Hedera Agent Kit.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
