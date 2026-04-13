@@ -8,8 +8,8 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
-import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
-import { TRANSFER_HBAR_TOOL } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
+import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
+import { TRANSFER_HBAR_TOOL } from '@hashgraph/hedera-agent-kit/plugins';
 
 describe('HcsAuditTrailHook E2E Tests', () => {
   let operatorClient: Client;

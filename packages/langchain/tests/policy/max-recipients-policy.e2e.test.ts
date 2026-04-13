@@ -3,7 +3,7 @@ import { Client } from '@hashgraph/sdk';
 import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup } from '../../utils';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
-import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
+import { MaxRecipientsPolicy } from '@hashgraph/hedera-agent-kit/policies';
 
 describe('MaxRecipientsPolicy E2E Tests', () => {
   let operatorClient: Client;

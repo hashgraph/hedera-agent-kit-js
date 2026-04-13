@@ -3,8 +3,8 @@ import { Client } from '@hashgraph/sdk';
 import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup } from '../../utils';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
-import { RejectToolPolicy } from '@/policies/reject-tool-policy';
-import { coreAccountQueryPluginToolNames } from '@/plugins';
+import { RejectToolPolicy } from '@hashgraph/hedera-agent-kit/policies';
+import { coreAccountQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
 
 const { GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
