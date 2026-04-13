@@ -1,9 +1,7 @@
 import { beforeAll, describe, it, expect } from 'vitest';
 import { Client } from '@hashgraph/sdk';
-import {
-    createLangchainTestSetup,
-    getOperatorClientForTests,
-} from '../../utils';
+import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { createLangchainTestSetup } from '../../utils';
 import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
 import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { coreAccountQueryPluginToolNames } from '@/plugins';
