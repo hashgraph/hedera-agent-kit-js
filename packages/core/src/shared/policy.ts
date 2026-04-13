@@ -7,9 +7,9 @@ import {
 } from './hook';
 
 /**
- * Policy extends Hook and throws errors when validation fails.
+ * AbstractPolicy extends AbstractHook and throws errors when validation fails.
  */
-export abstract class Policy extends AbstractHook {
+export abstract class AbstractPolicy extends AbstractHook {
   public abstract name: string;
   public abstract description?: string;
   public abstract relevantTools: string[];
