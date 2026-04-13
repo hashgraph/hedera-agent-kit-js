@@ -62,7 +62,8 @@ export class ExecuteStrategy implements TxModeStrategy {
 
 class ReturnBytesStrategy implements TxModeStrategy {
   async handle(tx: Transaction, client: Client, context: Context) {
-    if (!context.accountId) throw new Error('…');
+    if (!context.accountId)
+      throw new Error('Account ID is required in context for RETURN_BYTES mode');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
     return { bytes: tx.toBytes() };
