@@ -89,7 +89,6 @@ async function bootstrap(): Promise<void> {
         const tx = Transaction.fromBytes(bytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);
-
         console.log('Transaction receipt:', receipt.status.toString());
         console.log('Transaction ID:', result.transactionId.toString());
       }
