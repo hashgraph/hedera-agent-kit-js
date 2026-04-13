@@ -88,6 +88,12 @@ By default, the interface will be available at `http://localhost:8000`. Open thi
 
 ---
 
+---
+
+## See Also
+
+- **[LangChain Integration (Return-Bytes)](../langchain-v1/external-mcp-return-bytes-agent.ts)**: A similar integration demonstrating how to use LangChain with the "Return-Bytes" MCP mode, including client-side signing logic.
+
 ## Reference
 
 - [Google ADK Documentation](https://google.github.io/adk-docs/get-started/)

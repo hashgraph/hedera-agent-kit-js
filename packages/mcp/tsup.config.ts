@@ -23,14 +23,4 @@ export default defineConfig([
     external: ['@hashgraph/sdk', '@hashgraph/hedera-agent-kit'],
     target: 'node16',
   },
-  {
-    entry: { cli: './src/cli.ts' },
-    outDir: 'dist/bin',
-    format: ['cjs'],
-    clean: true,
-    bundle: true,
-    banner: { js: '#!/usr/bin/env node' },
-    external: ['@hashgraph/sdk', '@hashgraph/hedera-agent-kit'],
-    target: 'node18',
-  },
 ]);

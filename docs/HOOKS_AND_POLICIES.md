@@ -263,7 +263,7 @@ const context = {
 ## Tool Lifecycle Deep Dive
 
 Every tool in the kit follows a standardized 7-stage lifecycle. The execution logic is defined in
-`typescript/src/shared/tools.ts`.
+`packages/core/src/shared/tools.ts`.
 
 ```text
 [1. Pre-Tool Execution] --------> Hook: preToolExecutionHook
@@ -425,7 +425,7 @@ public async postParamsNormalizationHook(
     case 'transfer_hbar':
     case 'transfer_hbar_with_allowance': {
       // Both tools share the 'transfers' structure
-      const p = params.normalisedParams as { transfers: Array<{ to: string, amount: number }> };
+      const p = params.normalisedParams as { transfers: Array<{ to: string; amount: number }> };
 
       // Example: Log total transfer amount
       const total = p.transfers.reduce((sum, t) => sum + t.amount, 0);
@@ -717,7 +717,7 @@ protected shouldBlockPreToolExecution(
 
 When adding a new Hook or Policy:
 
-1. **Implementation**: Add the implementation file to `typescript/src/hooks` or `typescript/src/policies`
+1. **Implementation**: Add the implementation file to `packages/core/src/hooks` or `packages/core/src/policies`
 2. **Export**: Export it from the appropriate index file
 3. **Documentation**: Add a new section in [Available Hooks](#available-hooks) or [Available Policies](#available-policies) with:
     - Name and Type (Hook or Policy)
