@@ -30,7 +30,7 @@ const realBytes = Buffer.isBuffer(bytesObject)
 ```
 
 After:
-
 ```ts
-const realBytes = Uint8Array.from(bytesObject);
+const bytes = toolCall.parsedData.raw.bytes;
+const tx = Transaction.fromBytes(bytes);
 ```

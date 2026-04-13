@@ -1,4 +1,4 @@
-import { AgentMode, HederaLangchainToolkit } from 'hedera-agent-kit';
+import { AgentMode, HederaLangchainToolkit, ResponseParserService } from 'hedera-agent-kit';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
@@ -51,6 +51,9 @@ async function bootstrap(): Promise<void> {
   // cast to any to avoid excessively deep type instantiation caused by zod@3.25
   const tools = hederaAgentToolkit.getTools();
 
+  // Create ResponseParserService to handle bytes conversion
+  const responseParser = new ResponseParserService(tools);
+
   // Create the underlying agent
   const agent = createToolCallingAgent({
     llm,
@@ -92,10 +95,20 @@ async function bootstrap(): Promise<void> {
     try {
       const response = await agentExecutor.invoke({ input: userInput });
       console.log(`AI: ${response?.output ?? response}`);
-      const bytes = extractBytesFromAgentResponse(response);
-      if (bytes !== undefined) {
-        const realBytes = Uint8Array.from(bytes);
-        const tx = Transaction.fromBytes(realBytes);
+
+      const messages = response.intermediateSteps?.map((step: any, index: number) => ({
+        type: 'tool',
+        id: step.action?.toolCallId || `step-${index}`,
+        name: step.action?.tool,
+        content: step.observation,
+        tool_call_id: step.action?.toolCallId,
+      })) || [];
+
+      const parsedTools = responseParser.parseNewToolMessages({ messages });
+      let bytes = parsedTools?.[0]?.parsedData?.raw?.bytes;
+
+      if (bytes) {
+        const tx = Transaction.fromBytes(bytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);
         console.log('Transaction receipt:', receipt.status.toString());
@@ -117,22 +130,3 @@ bootstrap()
   .then(() => {
     process.exit(0);
   });
-
-function extractBytesFromAgentResponse(response: any): any {
-  if (
-    response.intermediateSteps &&
-    response.intermediateSteps.length > 0 &&
-    response.intermediateSteps[0].observation
-  ) {
-    const obs = response.intermediateSteps[0].observation;
-    try {
-      const obsObj = typeof obs === 'string' ? JSON.parse(obs) : obs;
-      if (obsObj.bytes) {
-        return obsObj.bytes;
-      }
-    } catch (e) {
-      console.error('Error parsing observation:', e);
-    }
-  }
-  return undefined;
-}
