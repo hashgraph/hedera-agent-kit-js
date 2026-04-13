@@ -1,11 +1,11 @@
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  AgentMode,
-  coreAccountPlugin,
-  coreTokenPlugin,
   HederaLangchainToolkit,
-  MaxRecipientsPolicy,
   ResponseParserService,
-} from 'hedera-agent-kit';
+} from '@hashgraph/hedera-agent-kit-langchain';
+import { coreAccountPlugin, coreTokenPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import { MaxRecipientsPolicy } from '@hashgraph/hedera-agent-kit/policies';
+
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -33,7 +33,8 @@ async function bootstrap(): Promise<void> {
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      plugins: [coreAccountPlugin, coreTokenPlugin],
+      plugins: [coreAccountPlugin, coreTokenPlugin], // Load coreAccountPlugin which includes transfer HBAR tool and coreTokenPlugin which includes transfer token tool
+      tools: [], // Load all tools from selected plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
         accountId: operatorId,

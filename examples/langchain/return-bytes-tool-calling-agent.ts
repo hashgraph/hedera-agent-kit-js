@@ -1,8 +1,15 @@
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-  coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-  coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
+  coreTokenPlugin,
+  coreAccountPlugin,
+  coreConsensusPlugin,
+  coreEVMPlugin,
+  coreAccountQueryPlugin,
+  coreTokenQueryPlugin,
+  coreConsensusQueryPlugin,
+  coreEVMQueryPlugin,
+  coreMiscQueriesPlugin,
+  coreTransactionQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { ChatOpenAI } from '@langchain/openai';
@@ -45,20 +52,27 @@ async function bootstrap(): Promise<void> {
 
   const agentClient = Client.forTestnet();
 
-  // Prepare Hedera toolkit (load all tools by default)
+  // Prepare Hedera toolkit
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client: agentClient,
     configuration: {
-      tools: [], // use an empty array if you wantto load all tools
       context: {
         mode: AgentMode.RETURN_BYTES,
         accountId: operatorAccountId,
       },
       plugins: [
-          coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-          coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-          coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-        ],
+        coreTokenPlugin,
+        coreAccountPlugin,
+        coreConsensusPlugin,
+        coreEVMPlugin,
+        coreAccountQueryPlugin,
+        coreTokenQueryPlugin,
+        coreConsensusQueryPlugin,
+        coreEVMQueryPlugin,
+        coreMiscQueriesPlugin,
+        coreTransactionQueryPlugin,
+      ], // Load selected plugins
+      tools: [], // Load all tools from selected plugins
     },
   });
 
