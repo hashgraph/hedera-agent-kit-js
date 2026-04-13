@@ -1,6 +1,6 @@
-import { Policy, PreToolExecutionParams } from '@/shared';
+import { AbstractPolicy, PreToolExecutionParams } from '@/shared';
 
-export class RejectToolPolicy extends Policy {
+export class RejectToolPolicy extends AbstractPolicy {
   name = 'Reject Tool Call';
   description = 'Stops agent from calling predefined tools';
   relevantTools: string[] = [];

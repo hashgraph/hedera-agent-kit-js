@@ -1,6 +1,6 @@
 import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { describe, it, expect } from 'vitest';
-import { Policy } from '@/shared';
+import { AbstractPolicy } from '@/shared';
 import { Client } from '@hashgraph/sdk';
 
 describe('RejectToolPolicy', async () => {
@@ -12,7 +12,7 @@ describe('RejectToolPolicy', async () => {
     const params = { context, client } as any;
     const method = 'toolA';
 
-    await expect((policy as Policy).preToolExecutionHook(params, method)).rejects.toThrow(
+    await expect((policy as AbstractPolicy).preToolExecutionHook(params, method)).rejects.toThrow(
       new RegExp(`Action ${method} blocked by policy: Reject Tool Call ( \\(.+\\))?`),
     );
   });
@@ -25,6 +25,8 @@ describe('RejectToolPolicy', async () => {
     const params = { context, client } as any;
     const method = 'toolC'; // not in relevant tools
 
-    await expect((policy as Policy).preToolExecutionHook(params, method)).resolves.toBeUndefined();
+    await expect(
+      (policy as AbstractPolicy).preToolExecutionHook(params, method),
+    ).resolves.toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-import { Policy, PostParamsNormalizationParams } from '@/shared';
+import { AbstractPolicy, PostParamsNormalizationParams } from '@/shared';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 import z from 'zod';
@@ -14,7 +14,7 @@ import {
   transferHbarWithAllowanceParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 
-export class MaxRecipientsPolicy extends Policy {
+export class MaxRecipientsPolicy extends AbstractPolicy {
   readonly name = 'Max Recipients Policy';
   readonly description: string;
   readonly relevantTools: string[];
