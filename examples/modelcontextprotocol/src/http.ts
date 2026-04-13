@@ -13,6 +13,18 @@ import {
   coreTokenPluginToolNames,
   coreAccountQueryPlugin,
   coreAccountQueryPluginToolNames,
+  coreEVMPlugin,
+  coreEVMPluginToolNames,
+  coreTokenQueryPlugin,
+  coreTokenQueryPluginToolNames,
+  coreConsensusQueryPlugin,
+  coreConsensusQueryPluginToolNames,
+  coreEVMQueryPlugin,
+  coreEVMQueryPluginToolNames,
+  coreMiscQueriesPlugin,
+  coreMiscQueriesPluginsToolNames,
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp';
 import { getMirrornodeService } from '@hashgraph/hedera-agent-kit';
@@ -25,32 +37,21 @@ type Options = {
   port: number;
 };
 
-const { GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
-
-const {
-  CREATE_FUNGIBLE_TOKEN_TOOL,
-  CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-  AIRDROP_FUNGIBLE_TOKEN_TOOL,
-  MINT_NON_FUNGIBLE_TOKEN_TOOL,
-} = coreTokenPluginToolNames;
-
-const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
-
-const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
-
 // CLI flags accepted by this server
 const ACCEPTED_ARGS = ['agent-mode', 'account-id', 'public-key', 'tools', 'ledger-id', 'port'];
 
 // Tools that can be selectively enabled via --tools=<name>,... or "all"
 const ACCEPTED_TOOLS = [
-  CREATE_FUNGIBLE_TOKEN_TOOL,
-  CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-  AIRDROP_FUNGIBLE_TOKEN_TOOL,
-  MINT_NON_FUNGIBLE_TOKEN_TOOL,
-  TRANSFER_HBAR_TOOL,
-  CREATE_TOPIC_TOOL,
-  SUBMIT_TOPIC_MESSAGE_TOOL,
-  GET_HBAR_BALANCE_QUERY_TOOL,
+  ...Object.values(coreTokenPluginToolNames),
+  ...Object.values(coreAccountPluginToolNames),
+  ...Object.values(coreConsensusPluginToolNames),
+  ...Object.values(coreAccountQueryPluginToolNames),
+  ...Object.values(coreEVMPluginToolNames),
+  ...Object.values(coreTokenQueryPluginToolNames),
+  ...Object.values(coreConsensusQueryPluginToolNames),
+  ...Object.values(coreEVMQueryPluginToolNames),
+  ...Object.values(coreMiscQueriesPluginsToolNames),
+  ...Object.values(coreTransactionQueryPluginToolNames),
 ];
 
 function log(message: string, level: 'info' | 'error' | 'warn' = 'info') {
@@ -126,7 +127,18 @@ function createHederaServer(
   const configuration: Configuration = {
     tools: options.tools,
     context: { ...options.context, ...contextOverride },
-    plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreAccountQueryPlugin],
+    plugins: [
+      coreTokenPlugin,
+      coreAccountPlugin,
+      coreConsensusPlugin,
+      coreAccountQueryPlugin,
+      coreEVMPlugin,
+      coreTokenQueryPlugin,
+      coreConsensusQueryPlugin,
+      coreEVMQueryPlugin,
+      coreMiscQueriesPlugin,
+      coreTransactionQueryPlugin,
+    ],
   };
 
   return new HederaMCPToolkit({

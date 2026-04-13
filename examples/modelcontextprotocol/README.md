@@ -7,87 +7,52 @@ This is a Model Context Protocol (MCP) server for Hedera, allowing LLMs to inter
 - Node.js >= 18
 - A Hedera Testnet or Mainnet account (Operator ID and Key)
 
-## Installation
+## Installation & Setup
 
-1. Navigate to this directory:
-   ```bash
-   cd modelcontextprotocol
-   ```
+Choose the appropriate setup flow based on your `package.json` configuration.
 
-2. Install dependencies and build:
+### 1. Standard Installation (NPM)
+Use this flow if you are using versioned packages from npm (e.g., `"@hashgraph/hedera-agent-kit": "v4.x.x"`).
 
-   ```bash
-   npm install
-   cd ../../packages/mcp
-   npm install
-   npm run build
-   cd ../../examples/modelcontextprotocol
-   ```
+```bash
+# Install dependencies
+npm install
 
-3. Build the server:
-   ```bash
-   npm run build
-   ```
+# Build the server
+npm run build
+```
+
+### 2. Local Development (Linked Packages)
+Use this flow if you are developing locally and have linked the core packages using `file:` links (e.g., `"@hashgraph/hedera-agent-kit": "file:../../packages/core"`).
+
+```bash
+# 1. Build the MCP package
+cd ../../packages/mcp
+pnpm install
+pnpm build
+
+# 2. Setup the example
+cd ../../examples/modelcontextprotocol
+pnpm install
+pnpm build
+```
 
 ## Configuration
 
-The server requires the following environment variables to be set:
-
-- `HEDERA_OPERATOR_ID`: Your Hedera account ID (e.g., `0.0.12345`).
-- `HEDERA_OPERATOR_KEY`: Your Hedera private key (DER encoded).
-
-## Usage
-
-### Running Manually
-
-You can run the server directly using Node.js:
-
-```bash
-export HEDERA_OPERATOR_ID=0.0.xxx
-export HEDERA_OPERATOR_KEY=302e...
-node dist/stdio.js --ledger-id=testnet
+The server requires a `.env` file or environment variables:
+```env
+HEDERA_OPERATOR_ID=0.0.xxxx
+HEDERA_OPERATOR_KEY=302e...
 ```
 
-### Supported Arguments
+## Supported Arguments
 
 - `--ledger-id`: `testnet` (default) or `mainnet`.
-- `--tools`: Comma-separated list of tools to enable (default: all). See [Tools](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HEDERATOOLS.md) for available tools.
+- `--tools`: Comma-separated list of tools to enable. If omitted, all tools from the registered plugins are loaded by default.
 - `--agent-mode`: Set the agent mode (`AUTONOMUS` or `RETURN_BYTES`).
 - `--account-id`: Specific account ID context (in format `0.0.?????`).
 - `--public-key`: Specific public key context (ECDSA DER encoded).
-# Hedera MCP Server Examples
 
-This directory contains examples of how to run a Hedera MCP server using the `@hashgraph/hedera-agent-kit-mcp` adapter.
-
-## Examples
-
-### 1. Stdio Server (`src/stdio.ts`)
-A standard MCP server that communicates over stdin/stdout. Ideal for use with Claude Desktop or other MCP clients that spawn the server as a subprocess.
-
-### 2. HTTP Server (`src/http.ts`)
-A streaming HTTP MCP server using Express. Supports session-based context and "return bytes" mode for client-side signing.
-
-## Setup
-
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Build the package**:
-   ```bash
-   cd ../../packages/mcp
-   npm install
-   npm run build
-   cd ../../examples/modelcontextprotocol
-   ```
-
-3. **Configure environment**:
-   Create a `.env` file:
-   ```env
-   HEDERA_OPERATOR_ID=0.0.xxxx
-   HEDERA_OPERATOR_KEY=302e...
-   ```
 
 ## Running
 
@@ -106,9 +71,12 @@ pnpm start:http
 pnpm start:http:return-bytes
 ```
 
+> [!NOTE]
+> The `start:*` scripts in `package.json` do not specify a `--tools` array. Therefore, they will load all available tools from the Hedera Agent Kit SDK by default.
+
 ## Modular Approach
 
-These examples use the modular approach of the Hedera Agent Kit. They import specific plugins from `@hashgraph/hedera-agent-kit/plugins` and use the `HederaMCPToolkit` adapter from `@hashgraph/hedera-agent-kit-mcp`.
+These examples use the modular approach of the Hedera Agent Kit and are **currently configured to load all 10 available core plugins**. They import specific tool name objects from `@hashgraph/hedera-agent-kit/plugins` for dynamic validation and use the `HederaMCPToolkit` adapter.
 
 ```typescript
 import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp';
@@ -165,3 +133,9 @@ If you want to run the server on a remote machine, ensure it is accessible over 
   }
 }
 ```
+
+---
+
+## See Also
+
+- **[LangChain Integration (Return-Bytes)](../langchain-v1/external-mcp-return-bytes-agent.ts)**: A complete implementation example using LangChain that connects to this MCP server in `RETURN_BYTES` mode. It includes logic for parsing the returned tool results and signing/executing transaction bytes locally.

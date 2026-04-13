@@ -1,3 +1,8 @@
+/**
+ * This file showcases an example integration of LangChain with the "Return-Bytes" MCP mode.
+ * It demonstrates how an external agent can connect to an HTTP MCP server, receive unsigned 
+ * transaction bytes, and then use its own local Hedera SDK client to sign and execute them.
+ */
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
 import prompts from 'prompts';

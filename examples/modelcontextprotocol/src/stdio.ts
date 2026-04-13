@@ -15,6 +15,20 @@ import {
   coreConsensusPluginToolNames,
   coreTokenPlugin,
   coreTokenPluginToolNames,
+  coreAccountQueryPlugin,
+  coreAccountQueryPluginToolNames,
+  coreEVMPlugin,
+  coreEVMPluginToolNames,
+  coreTokenQueryPlugin,
+  coreTokenQueryPluginToolNames,
+  coreConsensusQueryPlugin,
+  coreConsensusQueryPluginToolNames,
+  coreEVMQueryPlugin,
+  coreEVMQueryPluginToolNames,
+  coreMiscQueriesPlugin,
+  coreMiscQueriesPluginsToolNames,
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp';
 import type { Configuration, Context } from '@hashgraph/hedera-agent-kit';
@@ -29,27 +43,19 @@ type Options = {
   ledgerId?: LedgerId;
 };
 
-// all the available tools
-const {
-  CREATE_FUNGIBLE_TOKEN_TOOL,
-  CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-  AIRDROP_FUNGIBLE_TOKEN_TOOL,
-  MINT_NON_FUNGIBLE_TOKEN_TOOL,
-} = coreTokenPluginToolNames;
-
-const { TRANSFER_HBAR_TOOL } = coreAccountPluginToolNames;
-
-const { CREATE_TOPIC_TOOL, SUBMIT_TOPIC_MESSAGE_TOOL } = coreConsensusPluginToolNames;
 
 const ACCEPTED_ARGS = ['agent-mode', 'account-id', 'public-key', 'tools', 'ledger-id'];
 const ACCEPTED_TOOLS = [
-  CREATE_FUNGIBLE_TOKEN_TOOL,
-  CREATE_NON_FUNGIBLE_TOKEN_TOOL,
-  AIRDROP_FUNGIBLE_TOKEN_TOOL,
-  MINT_NON_FUNGIBLE_TOKEN_TOOL,
-  TRANSFER_HBAR_TOOL,
-  CREATE_TOPIC_TOOL,
-  SUBMIT_TOPIC_MESSAGE_TOOL,
+  ...Object.values(coreTokenPluginToolNames),
+  ...Object.values(coreAccountPluginToolNames),
+  ...Object.values(coreConsensusPluginToolNames),
+  ...Object.values(coreAccountQueryPluginToolNames),
+  ...Object.values(coreEVMPluginToolNames),
+  ...Object.values(coreTokenQueryPluginToolNames),
+  ...Object.values(coreConsensusQueryPluginToolNames),
+  ...Object.values(coreEVMQueryPluginToolNames),
+  ...Object.values(coreMiscQueriesPluginsToolNames),
+  ...Object.values(coreTransactionQueryPluginToolNames),
 ];
 
 // Helper function for stderr logging without colors when in MCP mode
@@ -141,7 +147,18 @@ export async function main() {
   const configuration: Configuration = {
     tools: options.tools,
     context: options.context,
-    plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin],
+    plugins: [
+      coreTokenPlugin,
+      coreAccountPlugin,
+      coreConsensusPlugin,
+      coreAccountQueryPlugin,
+      coreEVMPlugin,
+      coreTokenQueryPlugin,
+      coreConsensusQueryPlugin,
+      coreEVMQueryPlugin,
+      coreMiscQueriesPlugin,
+      coreTransactionQueryPlugin,
+    ],
   };
 
   const server = new HederaMCPToolkit({
