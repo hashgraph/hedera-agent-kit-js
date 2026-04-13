@@ -26,7 +26,8 @@ async function bootstrap(): Promise<void> {
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
-      plugins: [coreAccountPlugin],
+      plugins: [coreAccountPlugin], // Load coreAccountPlugin which includes transfer HBAR tool
+      tools: [], // Load all tools from the selected plugin
       context: {
         mode: AgentMode.AUTONOMOUS,
         accountId: operatorId,
