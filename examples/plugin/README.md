@@ -2,6 +2,11 @@
 
 This directory contains examples of how to create custom plugins for the Hedera Agent Kit.
 
+> [!IMPORTANT]
+> **Migrating from v3 to v4?** Check out our [Migration Guide](../../docs/MIGRATION-v4.md).
+> 
+> **Note on Plugins:** Starting with v4, you must **explicitly pass all plugins** in the configuration. An empty plugin array will no longer result in all default tools being imported. For more details, see [Explicit Plugin Opt-In](https://github.com/hashgraph/hedera-agent-kit-js/blob/feat/release/16.04/docs/MIGRATION-v4.md#4-explicit-plugin-opt-in-behavioral-change).
+
 ## What are Plugins?
 
 Plugins are a way to extend the Hedera Agent Kit with custom tools without modifying the core codebase. Each plugin is a logical grouping of tools that can be easily shared and reused across different projects.

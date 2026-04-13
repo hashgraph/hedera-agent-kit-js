@@ -10,6 +10,14 @@ import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { openai } from '@ai-sdk/openai';
 import { generateText, stepCountIs, wrapLanguageModel } from 'ai';
+import {
+  coreAccountPlugin,
+  coreAccountQueryPlugin,
+  coreConsensusPlugin,
+  coreTokenPlugin,
+  coreConsensusQueryPlugin,
+  coreTokenQueryPlugin,
+} from '@hashgraph/hedera-agent-kit/plugins';
 
 dotenv.config();
 
@@ -35,7 +43,15 @@ async function bootstrap(): Promise<void> {
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
-      plugins: [], // Load all plugins
+      plugins: [
+        coreAccountPlugin,
+        coreAccountQueryPlugin,
+        coreConsensusPlugin,
+        coreConsensusQueryPlugin,
+        coreTokenPlugin,
+        coreTokenQueryPlugin,
+      ], // Load selected plugins
+      tools: [], // Load all tools from selected plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
         accountId: operatorId,

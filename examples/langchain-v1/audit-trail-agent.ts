@@ -5,13 +5,9 @@ import {
   coreAccountQueryPlugin,
   coreConsensusPlugin,
   coreConsensusQueryPlugin,
-  coreEVMPlugin,
-  coreEVMQueryPlugin,
-  coreMiscQueriesPlugin,
   coreTokenPlugin,
   coreTokenPluginToolNames,
   coreTokenQueryPlugin,
-  coreTransactionQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
@@ -56,11 +52,8 @@ async function bootstrap(): Promise<void> {
         coreConsensusQueryPlugin,
         coreTokenPlugin,
         coreTokenQueryPlugin,
-        coreEVMPlugin,
-        coreEVMQueryPlugin,
-        coreTransactionQueryPlugin,
-        coreMiscQueriesPlugin,
-      ],
+      ], // Load selected plugins
+      tools: [], // Load all tools from selected plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
         accountId: operatorId,

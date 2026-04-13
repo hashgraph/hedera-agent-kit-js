@@ -1,6 +1,10 @@
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import { coreMiscQueriesPlugin } from '@hashgraph/hedera-agent-kit/plugins';
-import { HederaLangchainToolkit, ResponseParserService, HederaMCPServer } from '@hashgraph/hedera-agent-kit-langchain';
+import {
+  HederaLangchainToolkit,
+  ResponseParserService,
+  HederaMCPServer,
+} from '@hashgraph/hedera-agent-kit-langchain';
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -31,12 +35,12 @@ async function bootstrap(): Promise<void> {
     // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
 
-  // Prepare Hedera toolkit with core tools AND custom plugin
+  // Prepare Hedera toolkit with selected core plugin and MCP servers
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      tools: [],
       plugins: [coreMiscQueriesPlugin], // only one plugin, other tools will be available through the MCP
+      tools: [], // load all tools from selected plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
       },

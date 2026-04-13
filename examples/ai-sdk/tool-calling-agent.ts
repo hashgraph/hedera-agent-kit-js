@@ -1,8 +1,15 @@
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-  coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-  coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
+  coreTokenPlugin,
+  coreAccountPlugin,
+  coreConsensusPlugin,
+  coreEVMPlugin,
+  coreAccountQueryPlugin,
+  coreTokenQueryPlugin,
+  coreConsensusQueryPlugin,
+  coreEVMQueryPlugin,
+  coreMiscQueriesPlugin,
+  coreTransactionQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';
 import { Client, PrivateKey } from '@hashgraph/sdk';
@@ -36,10 +43,17 @@ async function bootstrap(): Promise<void> {
     client,
     configuration: {
       plugins: [
-          coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-          coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-          coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-        ],
+        coreTokenPlugin,
+        coreAccountPlugin,
+        coreConsensusPlugin,
+        coreEVMPlugin,
+        coreAccountQueryPlugin,
+        coreTokenQueryPlugin,
+        coreConsensusQueryPlugin,
+        coreEVMQueryPlugin,
+        coreMiscQueriesPlugin,
+        coreTransactionQueryPlugin,
+      ],
       context: {
         mode: AgentMode.AUTONOMOUS,
       },
