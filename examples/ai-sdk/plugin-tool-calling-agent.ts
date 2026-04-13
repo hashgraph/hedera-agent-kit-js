@@ -1,8 +1,15 @@
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-  coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-  coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
+  coreTokenPlugin,
+  coreAccountPlugin,
+  coreConsensusPlugin,
+  coreEVMPlugin,
+  coreAccountQueryPlugin,
+  coreTokenQueryPlugin,
+  coreConsensusQueryPlugin,
+  coreEVMQueryPlugin,
+  coreMiscQueriesPlugin,
+  coreTransactionQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';
 import { Client, PrivateKey } from '@hashgraph/sdk';
@@ -32,15 +39,22 @@ async function bootstrap(): Promise<void> {
     PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!),
     // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
-  // Prepare Hedera toolkit with core tools AND custom plugin
+  // Prepare Hedera toolkit with selected core plugins
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
       plugins: [
-          coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-          coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-          coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-        ],
+        coreTokenPlugin,
+        coreAccountPlugin,
+        coreConsensusPlugin,
+        coreEVMPlugin,
+        coreAccountQueryPlugin,
+        coreTokenQueryPlugin,
+        coreConsensusQueryPlugin,
+        coreEVMQueryPlugin,
+        coreMiscQueriesPlugin,
+        coreTransactionQueryPlugin,
+      ],
       context: {
         mode: AgentMode.AUTONOMOUS,
       },

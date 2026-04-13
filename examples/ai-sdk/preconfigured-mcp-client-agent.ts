@@ -28,12 +28,12 @@ async function bootstrap(): Promise<void> {
     PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!),
     // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
-  // Prepare Hedera toolkit with core tools AND configurations
+  // Prepare Hedera toolkit
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
     configuration: {
-      tools: [],
-      plugins: [coreMiscQueriesPlugin], //Load all plugins
+      plugins: [coreMiscQueriesPlugin], // only one plugin, other tools will be available through the MC
+      tools: [], // Load all tools from selected plugin
       context: {
         mode: AgentMode.AUTONOMOUS,
       },

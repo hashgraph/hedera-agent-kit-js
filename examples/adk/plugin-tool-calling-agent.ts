@@ -5,7 +5,14 @@ import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { LlmAgent, Runner, InMemorySessionService, isFinalResponse } from '@google/adk';
 import { Content, Part } from '@google/genai';
-import { coreAccountPlugin, coreConsensusPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import {
+  coreAccountPlugin,
+  coreAccountQueryPlugin,
+  coreConsensusPlugin,
+  coreTokenPlugin,
+  coreConsensusQueryPlugin,
+  coreTokenQueryPlugin,
+} from '@hashgraph/hedera-agent-kit/plugins';
 
 dotenv.config();
 
@@ -21,11 +28,19 @@ async function bootstrap(): Promise<void> {
     // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
   );
 
-  // Prepare Hedera toolkit with core tools AND custom plugin
+  // Prepare Hedera toolkit
   const hederaAgentToolkit = new HederaADKToolkit({
     client,
     configuration: {
-      plugins: [coreAccountPlugin, coreConsensusPlugin], // Load all tools from selected plugins
+      plugins: [
+        coreAccountPlugin,
+        coreAccountQueryPlugin,
+        coreConsensusPlugin,
+        coreConsensusQueryPlugin,
+        coreTokenPlugin,
+        coreTokenQueryPlugin,
+      ], // Load selected plugins
+      tools: [], // Load all tools from selected plugins
       context: {
         mode: AgentMode.AUTONOMOUS,
         accountId: process.env.ACCOUNT_ID,

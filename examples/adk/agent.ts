@@ -5,8 +5,11 @@ import { HederaADKToolkit } from '@hashgraph/hedera-agent-kit-adk';
 import * as dotenv from 'dotenv';
 import {
   coreAccountPlugin,
-  coreConsensusPlugin,
   coreAccountQueryPlugin,
+  coreConsensusPlugin,
+  coreTokenPlugin,
+  coreConsensusQueryPlugin,
+  coreTokenQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
 
 dotenv.config();
@@ -17,11 +20,18 @@ const client = Client.forTestnet().setOperator(
   // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!), // Use this line if you have an ED25519 key
 );
 
-// Prepare Hedera toolkit with core tools AND custom plugin
+// Prepare Hedera toolkit
 const hederaAgentToolkit = new HederaADKToolkit({
   client,
   configuration: {
-    plugins: [coreAccountPlugin, coreAccountQueryPlugin, coreConsensusPlugin], // Load selected plugins
+    plugins: [
+      coreAccountPlugin,
+      coreAccountQueryPlugin,
+      coreConsensusPlugin,
+      coreConsensusQueryPlugin,
+      coreTokenPlugin,
+      coreTokenQueryPlugin,
+    ], // Load selected plugins
     tools: [], // Load all tools from selected plugins
     context: {
       mode: AgentMode.AUTONOMOUS,
