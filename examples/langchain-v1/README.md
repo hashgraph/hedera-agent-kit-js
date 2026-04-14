@@ -33,19 +33,6 @@ An agent that returns transaction bytes for **manual signing and execution**, ra
 
 ---
 
-### Return Bytes Agent (Web / Robust Parsing)
-
-```bash
-npm run langchain:return-bytes-tool-calling-agent-web
-```
-
-A variant of the Return Bytes agent with **robust parsing logic** for handling multiple Buffer serialization formats (for example, browser `Uint8Array` and JSON-serialized buffers).
-
----
-
-
----
-
 ### Policy Enforcement Agent
 
 ```bash

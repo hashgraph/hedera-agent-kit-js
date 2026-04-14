@@ -1,6 +1,16 @@
 import { BaseMessage, ToolMessage } from '@langchain/core/messages';
 import HederaAgentKitTool from './tool';
 
+function convertBytes(data: any): any {
+  if (data?.raw?.bytes && typeof data.raw.bytes === 'object' && data.raw.bytes.type === 'Buffer') {
+    return { ...data, raw: { ...data.raw, bytes: new Uint8Array(data.raw.bytes.data) } };
+  }
+  if (data?.bytes && typeof data.bytes === 'object' && data.bytes.type === 'Buffer') {
+    return { bytes: new Uint8Array(data.bytes.data) };
+  }
+  return data;
+}
+
 /**
  * This interface defines the shape of the object response from the agent.
  */
@@ -82,7 +92,7 @@ class ResponseParserService {
             allParsedData.push({
               toolName: toolName,
               toolCallId: message.tool_call_id,
-              parsedData: parsedData,
+              parsedData: convertBytes(parsedData),
             });
           } catch (error) {
             console.error(`Failed to parse content for tool ${toolName}:`, error);
@@ -91,10 +101,11 @@ class ResponseParserService {
           console.warn(`No parsing function found for tool: ${toolName}`);
           try {
             console.warn(`Parsing with default JSON.parse for tool: ${toolName}`);
+            const parsedData = JSON.parse(message.content as string);
             allParsedData.push({
               toolName: toolName,
               toolCallId: message.tool_call_id,
-              parsedData: JSON.parse(message.content as string),
+              parsedData: convertBytes(parsedData),
             });
           } catch (error) {
             console.error(

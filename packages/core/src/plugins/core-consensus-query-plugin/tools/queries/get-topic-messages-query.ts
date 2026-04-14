@@ -11,6 +11,7 @@ import {
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { base64ToUtf8 } from '@/shared/utils/base64-utils';
 
 export const getTopicMessagesQueryPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -37,7 +38,7 @@ const postProcess = (messages: TopicMessage[], topicId: string) => {
 
   const messagesText = messages.map(
     message =>
-      `${Buffer.from(message.message, 'base64').toString('utf-8')} - posted at: ${message.consensus_timestamp}\n`,
+        `${base64ToUtf8(message.message)} - posted at: ${message.consensus_timestamp}\n`,
   );
 
   return `Messages for topic ${topicId}:
@@ -65,7 +66,7 @@ const convertMessagesFromBase64ToString = (messages: TopicMessage[]) => {
   return messages.map(message => {
     return {
       ...message,
-      message: Buffer.from(message.message, 'base64').toString('utf-8'),
+      message: base64ToUtf8(message.message),
     };
   });
 };

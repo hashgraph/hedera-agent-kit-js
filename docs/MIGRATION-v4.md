@@ -134,6 +134,27 @@ In v3, `@hashgraph/sdk` was a regular dependency and installed automatically. In
 npm install @hashgraph/sdk
 ```
 
+### 10. `RETURN_BYTES` mode - `raw.bytes` standardized to `Uint8Array`
+
+In v3, `raw.bytes` returned by `ResponseParserService` could be a Node.js `Buffer` or a `{ type: 'Buffer', data: [...] }` plain object, depending on the environment. In v4, `raw.bytes` is always a `Uint8Array` in both Node.js and browser environments.
+
+**Before (v3):**
+```
+const realBytes = parseTransactionBytes(toolCall.parsedData.raw.bytes);
+const realBytes = Buffer.isBuffer(bytesObject)
+? bytesObject
+: Buffer.from(bytesObject.data);
+const tx = Transaction.fromBytes(realBytes);
+```
+**After (v4):**
+```
+const bytes = toolCall.parsedData.raw.bytes;
+const tx = Transaction.fromBytes(bytes);
+```
+
+If you have custom code that converts the bytes payload before passing it to `Transaction.fromBytes`, remove that conversion - `raw.bytes` is now a plain `Uint8Array` and can be passed directly.
+
+
 ## Installation Changes
 
 ### LangChain

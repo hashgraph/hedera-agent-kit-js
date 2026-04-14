@@ -124,12 +124,8 @@ async function bootstrap(): Promise<void> {
       // 2. Handle RETURN_BYTES mode
       if (toolCall.parsedData?.raw?.bytes) {
         console.log('Transaction bytes found. Executing...');
-        const bytesObject = toolCall.parsedData.raw.bytes;
-        const realBytes = Buffer.isBuffer(bytesObject)
-          ? bytesObject
-          : Buffer.from(bytesObject.data);
-
-        const tx = Transaction.fromBytes(realBytes);
+        const bytes = toolCall.parsedData.raw.bytes;
+        const tx = Transaction.fromBytes(bytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);
 
