@@ -64,6 +64,13 @@ npm run langchain:external-mcp-return-bytes-agent
 
 An agent that demonstrates connecting to the [Hedera HTTP MCP server](../modelcontextprotocol/src/http.ts) running in `RETURN_BYTES` mode. This example is specifically designed to demonstrate integration with the modular HTTP return-bytes MCP implementation found in the [modelcontextprotocol examples](../modelcontextprotocol/src/http.ts). It shows how to pass account context via HTTP headers and handle transaction bytes returned from the server for local signing.
 
+> [!IMPORTANT]
+> **The MCP server must be started with the `--agent-mode=returnBytes` flag** (i.e. `npm run start:http:return-bytes` in the `modelcontextprotocol` directory) before running this agent. The HTTP server does not configure an operator on its Hedera client, so without `RETURN_BYTES` mode the default `ExecuteStrategy` is active and all transaction tools will fail with:
+> ```
+> `transactionId` must be set or `client` must be provided with `freezeWith`
+> ```
+> This error indicates the SDK cannot auto-generate a transaction ID (no operator on the server-side client) and no ID was pre-set, which only happens when the server is **not** in `RETURN_BYTES` mode.
+
 ---
 
 ## External MCP Agent Example
@@ -182,4 +189,4 @@ The combined agent can perform various Hedera blockchain operations such as:
 
 ## Reference
 
-For more developer examples, see the [Developer Examples documentation](../../../docs/DEVEXAMPLES.md).
+For more developer examples, see the [Developer Examples documentation](../../docs/DEVEXAMPLES.md).

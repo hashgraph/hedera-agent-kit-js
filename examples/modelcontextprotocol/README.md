@@ -66,6 +66,14 @@ pnpm start:stdio
 pnpm start:http
 ```
 
+> [!WARNING]
+> The HTTP server (`http.ts`) does **not** set an operator on the Hedera client, because it is designed to be used in `RETURN_BYTES` mode where the calling client handles signing. If you start it without `--agent-mode=returnBytes`, the default `ExecuteStrategy` will be used and **every transaction tool call will fail** with:
+> ```
+> `transactionId` must be set or `client` must be provided with `freezeWith`
+> ```
+> This error means the SDK cannot auto-generate a transaction ID (no operator) and none was pre-set (not in return-bytes mode). **The plain `pnpm start:http` command is not ready for autonomous/execute mode** unless you also configure an operator on the client.
+
+
 ### HTTP Server (Return Bytes Mode)
 ```bash
 pnpm start:http:return-bytes
@@ -91,7 +99,7 @@ const server = new HederaMCPToolkit({
 ```
 
 > [!IMPORTANT]
-> When using the HTTP server in `RETURN_BYTES` mode, you must provide the account context by passing the `x-hedera-account-id` header in your requests. This ensures the server remains stateless while identifying which account the transactions are being built for. For a complete implementation example using LangChain, see [external-mcp-return-bytes-agent.ts](../examples/langchain-v1/external-mcp-return-bytes-agent.ts).
+> When using the HTTP server in `RETURN_BYTES` mode, you must provide the account context by passing the `x-hedera-account-id` header in your requests. This ensures the server remains stateless while identifying which account the transactions are being built for. For a complete implementation example using LangChain, see [external-mcp-return-bytes-agent.ts](../../examples/langchain-v1/external-mcp-return-bytes-agent.ts).
 
 ### Using with Antigravity / Claude Desktop
 #### As a local MCP server
