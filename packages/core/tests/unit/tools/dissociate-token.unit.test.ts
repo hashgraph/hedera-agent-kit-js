@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Client, AccountId, TokenId, Status } from '@hashgraph/sdk';
+import { Client, AccountId, TokenId, Status } from '@hiero-ledger/sdk';
 import tool from '@/plugins/core-token-plugin/tools/dissociate-token';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';

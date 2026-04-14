@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
-import { AccountId, PublicKey, TopicId } from '@hashgraph/sdk';
+import { AccountId, PublicKey, TopicId } from '@hiero-ledger/sdk';
 import {
   optionalScheduledTransactionParams,
   optionalScheduledTransactionParamsNormalised,

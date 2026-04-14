@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { GET_ACCOUNT_QUERY_TOOL } from '@/plugins/core-account-query-plugin/tools/queries/get-account-query';
 import { toHbar } from '@/shared/hedera-utils/hbar-conversion-utils';
 import BigNumber from 'bignumber.js';

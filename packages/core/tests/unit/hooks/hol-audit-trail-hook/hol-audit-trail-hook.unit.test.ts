@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HolAuditTrailHook } from '@/hooks/hol-audit-trail-hook';
 import { AgentMode } from '@/shared/configuration';
-import type { Client } from '@hashgraph/sdk';
+import type { Client } from '@hiero-ledger/sdk';
 import { PostSecondaryActionParams, PreToolExecutionParams } from '@/shared';
 
 const mockEntryExecute = vi.fn();

@@ -3,7 +3,7 @@ import { ReactAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { coreAccountPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
-import { PrivateKey } from '@hashgraph/sdk';
+import { PrivateKey } from '@hiero-ledger/sdk';
 
 describe('Create Account Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;

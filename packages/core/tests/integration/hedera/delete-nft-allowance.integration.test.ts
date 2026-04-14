@@ -11,7 +11,7 @@ import {
   TokenSupplyType,
   TokenType,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import approveNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
 import deleteNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/delete-non-fungible-token-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';

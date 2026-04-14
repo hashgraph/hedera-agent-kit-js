@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
+import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import createTopicTool from '@/plugins/core-consensus-plugin/tools/consensus/create-topic';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

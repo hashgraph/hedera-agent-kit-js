@@ -7,7 +7,7 @@ import {
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
 import { BufferMemory } from '@langchain/classic/memory';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { ChatOpenAI } from '@langchain/openai';

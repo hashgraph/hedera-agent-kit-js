@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, {
   DELETE_ACCOUNT_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/delete-account';

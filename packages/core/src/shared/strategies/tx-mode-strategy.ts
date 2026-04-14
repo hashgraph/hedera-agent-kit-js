@@ -6,7 +6,7 @@ import {
   TopicId,
   Transaction,
   TransactionId,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 
 interface TxModeStrategy {

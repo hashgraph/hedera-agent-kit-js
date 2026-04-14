@@ -1,4 +1,4 @@
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import {

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { BaseTool } from '@/shared/tools';
-import { Client, Status, TransactionRecordQuery } from '@hashgraph/sdk';
+import { Client, Status, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import {
   ExecuteStrategyResult,
   handleTransaction,

@@ -8,7 +8,7 @@ import {
   AccountId,
   TopicId,
   PublicKey,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { AgentMode, type Context } from '@/shared/configuration';
 import updateTokenTool from '@/plugins/core-token-plugin/tools/update-token';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

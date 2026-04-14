@@ -11,7 +11,7 @@
  * @see OPERATION_FEES.md for Hedera operation costs in USD
  */
 
-import { LedgerId } from '@hashgraph/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
 import { HederaMirrornodeServiceDefaultImpl } from '@hashgraph/hedera-agent-kit';
 
 export class UsdToHbarService {

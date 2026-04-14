@@ -80,7 +80,7 @@ Create your tool file (e.g., tools/my-service/my-tool.ts):
 ```typescript
 import { z } from "zod";
 import { Context, Tool, handleTransaction } from "@hashgraph/hedera-agent-kit";
-import { Client, PrivateKey, AccountId } from "@hashgraph/sdk";
+import { Client, PrivateKey, AccountId } from "@hiero-ledger/sdk";
 import dotenv from "dotenv";
 
 // Load environment variables

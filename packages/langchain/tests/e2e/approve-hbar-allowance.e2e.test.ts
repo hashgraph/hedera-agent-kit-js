@@ -7,7 +7,7 @@ import {
   Key,
   PrivateKey,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
 import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';

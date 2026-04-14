@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { GET_TOKEN_INFO_QUERY_TOOL } from '@/plugins/core-token-query-plugin/tools/queries/get-token-info-query';
 
 vi.mock('@/shared/utils/prompt-generator', () => ({

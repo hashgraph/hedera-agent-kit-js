@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Hbar, HbarAllowance, HbarUnit, Key, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, Hbar, HbarAllowance, HbarUnit, Key, PrivateKey } from '@hiero-ledger/sdk';
 import transferHbarWithAllowanceTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';

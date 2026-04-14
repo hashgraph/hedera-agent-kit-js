@@ -1,6 +1,6 @@
 import { HederaAgentAPI, type Configuration, ToolDiscovery } from '@hashgraph/hedera-agent-kit';
 import type { Tool, LanguageModelMiddleware } from 'ai';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import HederaAgentKitTool from './tool';
 import { loadMultipleMCPTools } from './hedera-mcps';
 import { HederaMCPServer } from './mcp-configs';

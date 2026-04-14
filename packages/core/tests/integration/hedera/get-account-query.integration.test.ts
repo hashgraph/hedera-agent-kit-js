@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
-import { Client, PrivateKey, Key, AccountId } from '@hashgraph/sdk';
+import { Client, PrivateKey, Key, AccountId } from '@hiero-ledger/sdk';
 import getAccountQueryTool from '@/plugins/core-account-query-plugin/tools/queries/get-account-query';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

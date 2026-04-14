@@ -16,7 +16,7 @@ import {
   TopicInfoQuery,
   TransactionRecordQuery,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import BigNumber from 'bignumber.js';
 import { HederaBuilder } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';

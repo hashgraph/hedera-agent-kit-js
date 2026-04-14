@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AccountId, Client, PrivateKey, TokenType, TokenSupplyType } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey, TokenType, TokenSupplyType } from '@hiero-ledger/sdk';
 import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';

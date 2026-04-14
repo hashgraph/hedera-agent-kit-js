@@ -2,7 +2,7 @@ import { BaseToolkit, type StructuredToolInterface } from '@langchain/core/tools
 import HederaAgentKitTool from './tool';
 import { HederaAgentAPI } from '@hashgraph/hedera-agent-kit';
 import { type Configuration, ToolDiscovery } from '@hashgraph/hedera-agent-kit';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { loadMultipleMCPTools } from './hedera-mcps';
 import { HederaMCPServer } from './mcp-configs';
 

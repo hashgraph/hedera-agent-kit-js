@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ReactAgent } from 'langchain';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/shared/langchain-test-setup';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';

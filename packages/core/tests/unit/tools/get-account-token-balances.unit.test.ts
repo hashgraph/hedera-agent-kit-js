@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, LedgerId } from '@hashgraph/sdk';
+import { Client, LedgerId } from '@hiero-ledger/sdk';
 import toolFactory, {
   GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL,
   GetAccountTokenBalancesQueryTool,

@@ -5,7 +5,7 @@ import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/s
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
 import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';

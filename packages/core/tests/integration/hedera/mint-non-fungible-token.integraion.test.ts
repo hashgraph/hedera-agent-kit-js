@@ -7,7 +7,7 @@ import {
   TokenId,
   TokenType,
   TokenSupplyType,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import mintNonFungibleTokenTool from '@/plugins/core-token-plugin/tools/non-fungible-token/mint-non-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

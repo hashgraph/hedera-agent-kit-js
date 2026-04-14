@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import mintERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/mint-erc721';
 import createERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';

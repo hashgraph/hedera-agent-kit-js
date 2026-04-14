@@ -1,7 +1,7 @@
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import { BaseTool } from '@/shared/tools';
 import {

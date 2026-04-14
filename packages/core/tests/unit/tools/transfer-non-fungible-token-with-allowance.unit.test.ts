@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL } from '@/plugins/core-token-plugin/tools/non-fungible-token/transfer-non-fungible-token-with-allowance';
 
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({

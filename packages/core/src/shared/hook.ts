@@ -1,4 +1,4 @@
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import type { Context } from './configuration';
 
 export interface PreToolExecutionParams<TParams = any> {

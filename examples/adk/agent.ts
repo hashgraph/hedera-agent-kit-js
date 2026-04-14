@@ -1,4 +1,4 @@
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { LlmAgent } from '@google/adk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import { HederaADKToolkit } from '@hashgraph/hedera-agent-kit-adk';

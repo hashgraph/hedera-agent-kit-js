@@ -9,7 +9,7 @@ import {
   TokenMintTransaction,
   TokenSupplyType,
   TokenType,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import approveNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

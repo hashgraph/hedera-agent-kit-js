@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client, Status } from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -57,8 +57,8 @@ vi.mock('@/shared/constants/contracts', () => ({
   ERC20_FACTORY_ABI: [{ name: 'deployToken' }],
 }));
 
-vi.mock('@hashgraph/sdk', async () => {
-  const actual: any = await vi.importActual('@hashgraph/sdk');
+vi.mock('@hiero-ledger/sdk', async () => {
+  const actual: any = await vi.importActual('@hiero-ledger/sdk');
   return {
     ...actual,
     TransactionRecordQuery: vi.fn(function () {

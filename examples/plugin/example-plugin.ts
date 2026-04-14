@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Plugin, Context, Tool, handleTransaction, PromptGenerator, AccountResolver } from '@hashgraph/hedera-agent-kit';
-import { Client, TransferTransaction, Hbar, AccountId } from '@hashgraph/sdk';
+import { Client, TransferTransaction, Hbar, AccountId } from '@hiero-ledger/sdk';
 import { transactionToolOutputParser } from '@hashgraph/hedera-agent-kit';
 
 // Example: Simple greeting tool

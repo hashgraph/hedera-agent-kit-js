@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client, Status } from '@hiero-ledger/sdk';
 import toolFactory, { MINT_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/mint-fungible-token';
 import z from 'zod';
 import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';

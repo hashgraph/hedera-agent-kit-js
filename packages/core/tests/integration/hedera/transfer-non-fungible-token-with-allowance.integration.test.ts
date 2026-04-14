@@ -9,7 +9,7 @@ import {
   TokenSupplyType,
   TokenNftAllowance,
   Long,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';

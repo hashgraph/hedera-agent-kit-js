@@ -8,7 +8,7 @@ import {
   TokenSupplyType,
   TokenNftAllowance,
   Long,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';

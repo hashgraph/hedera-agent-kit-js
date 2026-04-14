@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
-import { AccountId, Client, PrivateKey, TokenSupplyType } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey, TokenSupplyType } from '@hiero-ledger/sdk';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';

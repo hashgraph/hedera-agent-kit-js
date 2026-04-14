@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { APPROVE_NFT_ALLOWANCE_TOOL } from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
 
 // Mocks for dependencies

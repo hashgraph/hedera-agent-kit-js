@@ -4,7 +4,7 @@ const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { LedgerId, Client, PrivateKey } from '@hashgraph/sdk';
+import { LedgerId, Client, PrivateKey } from '@hiero-ledger/sdk';
 import {
   AgentMode,
 } from '@hashgraph/hedera-agent-kit';

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
 import { Context, AgentMode } from '@/shared';
-import { Client, Hbar } from '@hashgraph/sdk';
+import { Client, Hbar } from '@hiero-ledger/sdk';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 
