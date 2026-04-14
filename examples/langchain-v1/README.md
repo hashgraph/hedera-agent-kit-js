@@ -33,27 +33,6 @@ An agent that returns transaction bytes for **manual signing and execution**, ra
 
 ---
 
-#### Migration note (breaking change)
-
-`RETURN_BYTES` now standardizes `raw.bytes` to `Uint8Array` across Node.js and web. If your integration previously handled Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), migrate to a `Uint8Array` parser.
-
-Before:
-
-```ts
-const realBytes = Buffer.isBuffer(bytesObject)
-  ? bytesObject
-  : Buffer.from(bytesObject.data);
-```
-
-After:
-
-```ts
-const bytes = toolCall.parsedData.raw.bytes;
-const tx = Transaction.fromBytes(bytes);
-```
-
----
-
 ### Policy Enforcement Agent
 
 ```bash
