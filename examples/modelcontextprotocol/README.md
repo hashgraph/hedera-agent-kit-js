@@ -28,13 +28,13 @@ Use this flow if you are developing locally and have linked the core packages us
 ```bash
 # 1. Build the MCP package
 cd ../../packages/mcp
-pnpm install
-pnpm build
+npm install
+npm run build
 
 # 2. Setup the example
 cd ../../examples/modelcontextprotocol
-pnpm install
-pnpm build
+npm install
+npm run build
 ```
 
 ## Configuration
@@ -58,12 +58,7 @@ HEDERA_OPERATOR_KEY=302e...
 
 ### Stdio Server
 ```bash
-pnpm start:stdio
-```
-
-### HTTP Server
-```bash
-pnpm start:http
+npm run start:stdio
 ```
 
 > [!WARNING]
@@ -76,7 +71,7 @@ pnpm start:http
 
 ### HTTP Server (Return Bytes Mode)
 ```bash
-pnpm start:http:return-bytes
+npm run start:http:return-bytes
 ```
 
 > [!NOTE]

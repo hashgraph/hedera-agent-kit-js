@@ -25,7 +25,7 @@ Framework integrations are no longer bundled in the core package. Each toolkit i
 | `@hashgraph/hedera-agent-kit-langchain` | `HederaLangchainToolkit`, `ResponseParserService`, `HederaMCPServer` |
 | `@hashgraph/hedera-agent-kit-ai-sdk` | `HederaAIToolkit`, `HederaMCPServer` |
 | `@hashgraph/hedera-agent-kit-elizaos` | `HederaElizaOSToolkit` |
-| `@hashgraph/hedera-agent-kit-mcp` | `HederaMCPToolkit`, `hedera-agent-kit-mcp` CLI binary |
+| `@hashgraph/hedera-agent-kit-mcp` | `HederaMCPToolkit` |
 
 ### 3. Plugin imports moved to `/plugins` subpath
 
@@ -69,6 +69,22 @@ const toolkit = new HederaLangchainToolkit({
   },
 });
 ```
+
+If you want the v3 "everything" behaviour, use the `allCorePlugins` shortcut from the `/plugins` subpath:
+
+```typescript
+import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
+
+const toolkit = new HederaLangchainToolkit({
+  client,
+  configuration: {
+    plugins: allCorePlugins,
+    context: { mode: AgentMode.AUTONOMOUS },
+  },
+});
+```
+
+`allCorePlugins` is the array of every built-in core plugin (account, token, consensus, EVM, plus all query plugins). Pick individual plugins instead when you want a smaller tool surface; bundlers will tree-shake the unused ones either way.
 
 ### 5. Deprecated aliases removed
 
@@ -118,15 +134,7 @@ npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-k
 + import { HederaMCPServer } from '@hashgraph/hedera-agent-kit-ai-sdk';
 ```
 
-### 8. New MCP CLI binary
-
-The `@hashgraph/hedera-agent-kit-mcp` package provides a standalone CLI:
-
-```bash
-npx @hashgraph/hedera-agent-kit-mcp --ledger-id=testnet
-```
-
-### 9. `@hashgraph/sdk` moved from dependency to peer dependency
+### 8. `@hashgraph/sdk` moved from dependency to peer dependency
 
 In v3, `@hashgraph/sdk` was a regular dependency and installed automatically. In v4, all packages declare it as a peer dependency (`>=2.80.0`). You must install it yourself:
 
@@ -203,9 +211,12 @@ npm install hedera-agent-kit @hashgraph/sdk
 npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-elizaos
 ```
 
-### MCP Server (standalone)
+### MCP
 
-**Before (v3):** MCP was bundled in the main package and not available as a standalone CLI.
+**Before (v3):**
+```bash
+npm install hedera-agent-kit @hashgraph/sdk
+```
 
 **After (v4):**
 ```bash
@@ -254,11 +265,7 @@ npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-k
 ```typescript
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
-import {
-  coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-  coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-  coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-} from '@hashgraph/hedera-agent-kit/plugins';
+import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { ChatOpenAI } from '@langchain/openai';
 
@@ -270,11 +277,7 @@ const client = Client.forTestnet().setOperator(
 const toolkit = new HederaLangchainToolkit({
   client,
   configuration: {
-    plugins: [
-      coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-      coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-      coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-    ],
+    plugins: allCorePlugins, // or pick individual plugins for a smaller tool surface
     context: { mode: AgentMode.AUTONOMOUS },
   },
 });
@@ -340,11 +343,7 @@ npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-k
 ```typescript
 import { Client, PrivateKey } from '@hashgraph/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
-import {
-  coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-  coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-  coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-} from '@hashgraph/hedera-agent-kit/plugins';
+import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';
 import { openai } from '@ai-sdk/openai';
 import { generateText, stepCountIs, wrapLanguageModel } from 'ai';
@@ -357,11 +356,7 @@ const client = Client.forTestnet().setOperator(
 const toolkit = new HederaAIToolkit({
   client,
   configuration: {
-    plugins: [
-      coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin, coreEVMPlugin,
-      coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-      coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-    ],
+    plugins: allCorePlugins, // or pick individual plugins for a smaller tool surface
     context: { mode: AgentMode.AUTONOMOUS },
   },
 });
@@ -429,40 +424,50 @@ const toolkit = new HederaElizaOSToolkit({
 - The `hedera-agent-kit/elizaos` subpath no longer exists
 - ElizaOS is now its own package: `@hashgraph/hedera-agent-kit-elizaos`
 
-### MCP Server
+### MCP
 
-**Before (v3):** MCP server was bundled in the main package and not available as a standalone CLI.
+**Before (v3):**
+
+```bash
+npm install hedera-agent-kit @hashgraph/sdk
+```
+
+```typescript
+import { HederaMCPToolkit, AgentMode } from 'hedera-agent-kit';
+
+const server = new HederaMCPToolkit({
+  client,
+  configuration: {
+    plugins: [],
+    context: { mode: AgentMode.AUTONOMOUS },
+  },
+});
+```
 
 **After (v4):**
-
-The MCP server is now a standalone package with its own CLI binary.
 
 ```bash
 npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-mcp
 ```
 
-**Run directly:**
+```typescript
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { coreTokenPlugin, coreAccountPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp';
 
-```bash
-npx @hashgraph/hedera-agent-kit-mcp --ledger-id=testnet
+const server = new HederaMCPToolkit({
+  client,
+  configuration: {
+    plugins: [coreTokenPlugin, coreAccountPlugin],
+    context: { mode: AgentMode.AUTONOMOUS },
+  },
+});
 ```
 
-**Claude Desktop / IDE configuration:**
-
-```json
-{
-  "mcpServers": {
-    "hedera-mcp-server": {
-      "command": "npx",
-      "args": ["@hashgraph/hedera-agent-kit-mcp", "--ledger-id=testnet"],
-      "env": {
-        "HEDERA_OPERATOR_ID": "0.0.xxxxx",
-        "HEDERA_OPERATOR_KEY": "302e..."
-      }
-    }
-  }
-}
-```
+**Key changes:**
+- `HederaMCPToolkit` now comes from `@hashgraph/hedera-agent-kit-mcp`
+- `AgentMode` comes from `@hashgraph/hedera-agent-kit`
+- Plugins come from `@hashgraph/hedera-agent-kit/plugins` and must be explicitly passed
 
 ### Preconfigured MCP Client
 
@@ -484,7 +489,7 @@ import { HederaMCPServer } from '@hashgraph/hedera-agent-kit-langchain';
 import { HederaMCPServer } from '@hashgraph/hedera-agent-kit-ai-sdk';
 ```
 
-> **Note:** `HederaMCPServer` is for connecting to **external** MCP servers as a client. It is separate from `@hashgraph/hedera-agent-kit-mcp` which runs your own Hedera MCP server.
+> **Note:** `HederaMCPServer` is for connecting to **external** MCP servers as a client. It is separate from `@hashgraph/hedera-agent-kit-mcp`, which exports the `HederaMCPToolkit` adapter.
 
 ## Plugin Author Migration
 
@@ -530,7 +535,7 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 - [ ] **LangChain integration**: Split imports between `@hashgraph/hedera-agent-kit` and `@hashgraph/hedera-agent-kit-langchain`; update `ResponseParserService` import
 - [ ] **AI SDK integration**: Update to `@hashgraph/hedera-agent-kit-ai-sdk`
 - [ ] **ElizaOS integration**: Update to `@hashgraph/hedera-agent-kit-elizaos`; remove v3.5 subpath migration note
-- [ ] **MCP Server page**: Update to `@hashgraph/hedera-agent-kit-mcp`; document CLI binary
+- [ ] **MCP integration**: Update to `@hashgraph/hedera-agent-kit-mcp`; update `HederaMCPToolkit` import
 - [ ] **Plugin authoring guide**: Update template imports; update peer dependency guidance
 - [ ] **npm package links**: Update from `npmjs.com/package/hedera-agent-kit` to `npmjs.com/package/@hashgraph/hedera-agent-kit`
 
@@ -538,8 +543,7 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 
 - [ ] Migration banner on quickstart page linking to this guide
 - [ ] "Which package do I need?" table (core + one toolkit)
-- [ ] Explicit plugin opt-in documentation (empty `plugins` = no tools)
-- [ ] MCP CLI binary usage (`npx @hashgraph/hedera-agent-kit-mcp`)
+- [ ] Explicit plugin opt-in documentation (empty `plugins` = no tools; use `allCorePlugins` for the v3-style "everything" default)
 
 ### Content to remove
 
@@ -556,7 +560,7 @@ hedera-agent-kit                  → @hashgraph/hedera-agent-kit           (cor
 (bundled)                         → @hashgraph/hedera-agent-kit-langchain (LangChain)
 (bundled)                         → @hashgraph/hedera-agent-kit-ai-sdk    (Vercel AI SDK)
 hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (ElizaOS)
-(bundled)                         → @hashgraph/hedera-agent-kit-mcp       (MCP server + CLI)
+(bundled)                         → @hashgraph/hedera-agent-kit-mcp       (MCP)
 ```
 
 ### Import mapping
@@ -619,7 +623,7 @@ hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (Eli
 ## FAQ / Troubleshooting
 
 **"My agent has no tools / does nothing."**
-In v4, you must explicitly pass plugins. An empty `plugins` array means zero tools. See [Breaking Change #4](#4-explicit-plugin-opt-in-behavioral-change).
+In v4, you must explicitly pass plugins. An empty `plugins` array means zero tools. Pass `allCorePlugins` from `@hashgraph/hedera-agent-kit/plugins` to restore the v3 "everything" behaviour, or list individual plugins. See [Breaking Change #4](#4-explicit-plugin-opt-in-behavioral-change).
 
 **"Cannot find module 'hedera-agent-kit'."**
 The package has been renamed. Install `@hashgraph/hedera-agent-kit` instead.

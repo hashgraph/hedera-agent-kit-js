@@ -1,6 +1,8 @@
 # @hashgraph/hedera-agent-kit-mcp
 
-Model Context Protocol (MCP) integration for Hedera Agent Kit. Provides both a reusable toolkit class and a ready-to-run CLI server.
+Model Context Protocol (MCP) integration for Hedera Agent Kit. This package ships the `HederaMCPToolkit` class — a reusable `McpServer` subclass that registers every tool produced by your configured plugins. Host it inside your own stdio or HTTP entry point.
+
+A complete runnable server (stdio + HTTP transports) lives in [`examples/modelcontextprotocol`](../../examples/modelcontextprotocol).
 
 ## Library Usage
 
@@ -18,6 +20,7 @@ const server = new HederaMCPToolkit({
     plugins: [coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin],
   },
 });
-```
 
-See [examples](file:///home/stanislawkurzyp/Documents/arianelabs/hedera-agent-kit-v3/examples/modelcontextprotocol) for full implementations.
+// Connect `server` to a transport (StdioServerTransport, StreamableHTTPServerTransport, etc.)
+// See examples/modelcontextprotocol/src/stdio.ts and src/http.ts for reference implementations.
+```

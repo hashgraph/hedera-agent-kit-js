@@ -237,6 +237,8 @@ complete example of how to use the Hedera plugins.
 
 First, you will need to import the core plugins from the `/plugins` subpath, which contain all the tools you may want to use such as `coreAccountPlugin`.
 
+> **Shortcut:** to register every built-in plugin in one go, import `allCorePlugins` from `@hashgraph/hedera-agent-kit/plugins` and pass it as `plugins`. The example below uses individual plugin imports so you can see the per-plugin granularity.
+
 You also have the option to pick and choose which tools from a Hedera plugin you want to enable. If you choose to do
 this, only the tools specified will be usable.
 

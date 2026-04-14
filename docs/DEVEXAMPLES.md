@@ -227,6 +227,7 @@ In this example, we can just take the returned bytes and execute the transaction
 
 
 ### Option D: Try Out the MCP Server
+
 1. Navigate to the MCP examples directory:
 
 ```bash
@@ -239,23 +240,24 @@ Create an `.env` file with `HEDERA_OPERATOR_ID` and `HEDERA_OPERATOR_KEY`.
 3. Install dependencies and build:
 
 ```bash
-npm install
 cd ../../packages/mcp
 npm install
 npm run build
 cd ../../examples/modelcontextprotocol
+npm install
+npm run build
 ```
 
 4. Run the Stdio MCP Server:
 
 ```bash
-npm start:stdio
+npm run start:stdio
 ```
 
-5. Or run the HTTP MCP Server:
+5. Or run the HTTP MCP Server in Return Bytes mode:
 
 ```bash
-npm start:http
+npm run start:http:return-bytes
 ```
 
 
@@ -294,12 +296,12 @@ This example demonstrates how to integrate external MCP (Model Context Protocol)
 1. Set up the Hedera MCP server following the instructions in [Option D](#option-d-try-out-the-mcp-server).
 
 ```bash
-cd examples/modelcontextprotocol
-npm install
-cd ../../packages/mcp
+cd packages/mcp
 npm install
 npm run build
 cd ../../examples/modelcontextprotocol
+npm install
+npm run build
 ```
 
 2. Configure your environment variables in `examples/langchain-v1/.env`:
