@@ -2,10 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import { BaseTool } from '@/shared/tools';
 import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -25,7 +22,7 @@ Parameters:
 - topicMemo (str, optional): A memo stored permanently on the topic itself (not the transaction). It is not required to set a topic memo!
 - transactionMemo (str, optional): A memo attached to the transaction (separate from topicMemo). Use this when the user says "transaction memo" or "set the memo on the transaction"
 - adminKey (bool or str, optional): Admin key for the topic. ONLY set this if the user wants to be able to UPDATE or DELETE the topic later. Pass boolean value 'true' to use operator key, or string value public key.
-- submitKey (bool or str, optional): Submit key for the topic. ONLY set this if the user explicitly wants to RESTRICT who can submit messages to the topic. If they say "do NOT restrict access", do NOT set this. Pass boolean value 'true' to use operator key, or string value public key.
+- submitKey (bool or str, optional): Submit key for the topic. ONLY set this if the user explicitly says they want to RESTRICT who can submit messages (e.g. "restrict submit access", "require a key to submit"). If the user says "do NOT restrict", "open access", "anyone can submit", or simply omits it — do NOT set this parameter at all, leave it undefined. Pass boolean value 'true' to use operator key, or string value public key.
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 `;
