@@ -236,9 +236,6 @@ importers:
       langchain:
         specifier: 1.2.24
         version: 1.2.24(@langchain/core@1.1.24(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.0))(openai@6.34.0(ws@8.20.0)(zod@3.25.76))(ws@8.20.0))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.0))(openai@6.34.0(ws@8.20.0)(zod@3.25.76))(react-dom@19.1.2(react@19.2.4))(react@19.2.4)(ws@8.20.0)(zod-to-json-schema@3.25.2(zod@3.25.76))
-      long:
-        specifier: 5.3.2
-        version: 5.3.2
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -255,6 +252,9 @@ importers:
       dotenv:
         specifier: 17.2.1
         version: 17.2.1
+      long:
+        specifier: 5.3.2
+        version: 5.3.2
       tsup:
         specifier: 8.5.0
         version: 8.5.0(jiti@2.6.1)(postcss@8.5.9)(tsx@4.21.0)(typescript@5.8.3)(yaml@2.8.3)
