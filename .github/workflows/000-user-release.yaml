@@ -37,7 +37,8 @@ permissions:
   id-token: write
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
+  NPM_VERSION: '11.11.0'
 
 jobs:
   # ----------------------------------------------------------------------------
@@ -313,6 +314,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
+      # npm OIDC trusted publishing requires npm >= 11.5.1. Node 22 ships with
+      # npm 10.9.x, so upgrade the CLI before publishing.
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install --global npm@${{ env.NPM_VERSION }}
+
       - name: Download tarball artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
@@ -321,8 +327,7 @@ jobs:
 
       - name: Publish ${{ matrix.name }}
         working-directory: ${{ matrix.dir }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Authentication is OIDC trusted publishing (configured per package on npmjs.com).
         # publishArgs is built by scripts/release/validate.js and already includes
         # --access public, --no-git-checks, optional --dry-run, and optional --tag beta.
         run: npm publish ${{ matrix.tarball }} ${{ matrix.publishArgs }}
