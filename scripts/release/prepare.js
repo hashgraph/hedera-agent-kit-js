@@ -204,14 +204,14 @@ function printPretty(result) {
     name: s.name,
     version: s.version,
     onNpm: s.publishRequired ? 'no' : 'yes',
-    publish: s.publishRequired ? `yes (${s.prereleaseType})` : 'no',
+    action: s.publishRequired ? 'publish' : 'skip',
   }));
 
   const colWidths = {
     name: Math.max(7, ...rows.map((r) => r.name.length)),
     version: Math.max(7, ...rows.map((r) => r.version.length)),
     onNpm: Math.max(6, ...rows.map((r) => r.onNpm.length)),
-    publish: Math.max(11, ...rows.map((r) => r.publish.length)),
+    action: Math.max(6, ...rows.map((r) => r.action.length)),
   };
 
   const pad = (s, n) => s + ' '.repeat(n - s.length);
@@ -220,7 +220,7 @@ function printPretty(result) {
       pad('Package', colWidths.name),
       pad('Version', colWidths.version),
       pad('On npm', colWidths.onNpm),
-      pad('Will publish', colWidths.publish),
+      pad('Action', colWidths.action),
     ].join('  '),
   );
   w(
@@ -228,7 +228,7 @@ function printPretty(result) {
       '-'.repeat(colWidths.name),
       '-'.repeat(colWidths.version),
       '-'.repeat(colWidths.onNpm),
-      '-'.repeat(colWidths.publish),
+      '-'.repeat(colWidths.action),
     ].join('  '),
   );
   for (const r of rows) {
@@ -237,7 +237,7 @@ function printPretty(result) {
         pad(r.name, colWidths.name),
         pad(r.version, colWidths.version),
         pad(r.onNpm, colWidths.onNpm),
-        pad(r.publish, colWidths.publish),
+        pad(r.action, colWidths.action),
       ].join('  '),
     );
   }

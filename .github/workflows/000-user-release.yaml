@@ -1,4 +1,4 @@
-name: Release
+name: "000: [USER] Release"
 
 # The run-name (the title shown in the runs list, the dispatch button, and PR
 # checks) makes the mode unmissable: every run is labelled either [DRY RUN] or
@@ -127,16 +127,30 @@ jobs:
             ARGS+=(--dry-run)
           fi
 
-          # 1. Human-readable table for the run log.
-          node scripts/release/prepare.js "${ARGS[@]}"
+          # 1. Human-readable table — echoed to the run log AND the run
+          #    Summary page (GITHUB_STEP_SUMMARY), so reviewers see the plan
+          #    at the top of the run without opening the logs. In dry-run mode
+          #    a banner is prepended so no one mistakes the plan for a live run.
+          TABLE=$(node scripts/release/prepare.js "${ARGS[@]}")
+          echo "${TABLE}"
+          {
+            echo "#### Release plan"
+            if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+              echo "> **[!] DRY RUN** - no packages will be published to npm. This is a simulation."
+              echo ""
+            fi
+            echo '```text'
+            echo "${TABLE}"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
 
           # 2. JSON for the workflow outputs.
           PLAN=$(node scripts/release/prepare.js "${ARGS[@]}" --json)
           {
-            echo "publishMatrix=$(echo "$PLAN" | jq -c '{include: .publishMatrix}')"
-            echo "hasPublishWork=$(echo "$PLAN" | jq -r '.hasPublishWork')"
-            echo "tag=$(echo "$PLAN" | jq -r '.tag // ""')"
-          } >> "$GITHUB_OUTPUT"
+            echo "publishMatrix=$(echo "${PLAN}" | jq -c '{include: .publishMatrix}')"
+            echo "hasPublishWork=$(echo "${PLAN}" | jq -r '.hasPublishWork')"
+            echo "tag=$(echo "${PLAN}" | jq -r '.tag // ""')"
+          } >> "${GITHUB_OUTPUT}"
 
   # ----------------------------------------------------------------------------
   # 2. Safety checks
@@ -272,7 +286,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: release
-    needs: [prepare-release, build-release-package]
+    needs:
+      - prepare-release
+      - build-release-package
     if: needs.prepare-release.outputs.hasPublishWork == 'true'
     strategy:
       # Don't abort sibling publishes if one fails — partial publishes are
