@@ -515,6 +515,269 @@ The `Plugin`, `Tool`, `Context`, and `handleTransaction` types/utilities are sti
 
 **3. Update your README examples** to show the new import patterns with `@hashgraph/hedera-agent-kit/plugins` for built-in plugins.
 
+**4. (Recommended) Migrate your tools to `BaseTool`** to gain support for the hooks and policies system introduced in v4. See the [Migrating Custom Tools to BaseTool](#migrating-custom-tools-to-basetool-recommended-non-breaking) section below.
+
+---
+
+## Migrating Custom Tools to BaseTool (Recommended, Non-Breaking)
+
+> [!IMPORTANT]
+> **This is NOT a breaking change.** Tools that directly implement the `Tool` interface continue to work exactly as before in v4. However, they will **not** benefit from the hooks and policies system (e.g., `HcsAuditTrailHook`, `MaxRecipientsPolicy`, `RejectToolPolicy`) introduced in v4. To enable those features, migrate your tool to the `BaseTool` abstract class, which itself implements the `Tool` interface.
+
+### Why migrate?
+
+- Unlock **hooks** (logging, audit trails, metrics) and **policies** (blocking rules, rate limits)
+- Enforce a consistent, structured tool lifecycle across your plugin
+- Benefit from built-in error handling and hook dispatching
+
+### What is `BaseTool`?
+
+`BaseTool` is an abstract class that **implements** the `Tool` interface. This means any class extending `BaseTool` is a drop-in replacement everywhere a `Tool` is expected — including inside `Plugin.tools()`. The class enforces a 7-stage lifecycle:
+
+```text
+[1] preToolExecutionHook
+[2] normalizeParams        ← your logic
+[3] postParamsNormalizationHook
+[4] coreAction             ← your logic
+[5] postCoreActionHook
+[6] secondaryAction        ← your logic (optional, e.g. tx signing)
+[7] postToolExecutionHook
+```
+
+Hooks and policies tap into stages 1, 3, 5, and 7 automatically — **you never call them manually**.
+
+### Step-by-step migration
+
+Below is a fully annotated before/after comparison using the `transfer_hbar` tool as the reference example.
+
+#### Before (v3 — functional `Tool` object)
+
+```typescript
+import { z } from 'zod';
+import type { Context } from '@/shared/configuration';
+// ── The old approach returned a plain Tool object literal ──
+import type { Tool } from '@/shared/tools';
+import { Client, Status } from '@hashgraph/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
+import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
+import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+
+// ── Tool description / prompt ──────────────────────────────────────────────
+const transferHbarPrompt = (context: Context = {}) => {
+  const contextSnippet = PromptGenerator.getContextSnippet(context);
+  const sourceAccountDesc = PromptGenerator.getAccountParameterDescription(
+    'sourceAccountId', context,
+  );
+  const usageInstructions = PromptGenerator.getParameterUsageInstructions();
+  return `
+${contextSnippet}
+This tool will transfer HBAR to an account.
+Parameters:
+- transfers (array): List of transfers. Each: { accountId, amount }
+- ${sourceAccountDesc}
+- transactionMemo (string, optional)
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+${usageInstructions}
+`;
+};
+
+// ── Post-processing helper ─────────────────────────────────────────────────
+const postProcess = (response: RawTransactionResponse) => {
+  if (response.scheduleId) {
+    return `Scheduled HBAR transfer created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `HBAR successfully transferred.\nTransaction ID: ${response.transactionId}`;
+};
+
+// ── Standalone execute function — ALL logic lives here ─────────────────────
+// This monolithic function cannot be split into hookable lifecycle stages,
+// so hooks and policies have no entry points.
+const transferHbar = async (
+  client: Client,
+  context: Context,
+  params: z.infer<ReturnType<typeof transferHbarParameters>>,
+) => {
+  try {
+    const normalisedParams = await HederaParameterNormaliser.normaliseTransferHbar(
+      params, context, client,
+    );
+    const tx = HederaBuilder.transferHbar(normalisedParams);
+    return await handleTransaction(tx, client, context, postProcess);
+  } catch (error) {
+    const desc = 'Failed to transfer HBAR';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[transfer_hbar_tool]', message);
+    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+  }
+};
+
+export const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
+
+// ── Factory function returns a plain Tool object literal ───────────────────
+// ✗ No hook/policy support — execute() is opaque to the framework
+const tool = (context: Context): Tool => ({
+  method: TRANSFER_HBAR_TOOL,
+  name: 'Transfer HBAR',
+  description: transferHbarPrompt(context),
+  parameters: transferHbarParameters(context),
+  execute: transferHbar,
+  outputParser: transactionToolOutputParser,
+});
+
+export default tool;
+```
+
+#### After (v4 — `BaseTool` class)
+
+```typescript
+import { z } from 'zod';
+import type { Context } from '@/shared/configuration';
+// ── Import BaseTool instead of the raw Tool type ───────────────────────────
+// BaseTool implements Tool, so this remains fully backward-compatible.
+import { BaseTool } from '@/shared/tools';
+import { Client, Status } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
+import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
+import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+
+// ── Tool description / prompt (unchanged from v3) ──────────────────────────
+const transferHbarPrompt = (context: Context = {}) => {
+  const contextSnippet = PromptGenerator.getContextSnippet(context);
+  const sourceAccountDesc = PromptGenerator.getAccountParameterDescription(
+    'sourceAccountId', context,
+  );
+  const usageInstructions = PromptGenerator.getParameterUsageInstructions();
+  return `
+${contextSnippet}
+This tool will transfer HBAR to an account.
+Parameters:
+- transfers (array): RECIPIENTS ONLY. Do NOT include the sender here.
+  Each: { accountId (recipient), amount }
+- ${sourceAccountDesc} (this is the sender; do NOT put it in transfers)
+- transactionMemo (string, optional)
+${PromptGenerator.getScheduledTransactionParamsDescription(context)}
+${usageInstructions}
+`;
+};
+
+// ── Post-processing helper (unchanged from v3) ─────────────────────────────
+const postProcess = (response: RawTransactionResponse) => {
+  if (response.scheduleId) {
+    return `Scheduled HBAR transfer created successfully.\nTransaction ID: ${response.transactionId}\nSchedule ID: ${response.scheduleId.toString()}`;
+  }
+  return `HBAR successfully transferred.\nTransaction ID: ${response.transactionId}`;
+};
+
+export const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
+
+// ── Extend BaseTool instead of returning an object literal ─────────────────
+// BaseTool<TParams, TNormalisedParams> — generics are optional but help with types.
+export class TransferHbarTool extends BaseTool {
+  // ── Required fields from the Tool interface ──────────────────────────────
+  method = TRANSFER_HBAR_TOOL;
+  name = 'Transfer HBAR';
+  description: string;                                  // set in constructor
+  parameters: ReturnType<typeof transferHbarParameters>; // set in constructor
+  outputParser = transactionToolOutputParser;           // ✓ optional, same as before
+
+  constructor(context: Context) {
+    super();
+    // Context-dependent fields are computed once at construction time,
+    // exactly as the old factory function did.
+    this.description = transferHbarPrompt(context);
+    this.parameters = transferHbarParameters(context);
+  }
+
+  // ── Stage 2: Parameter normalisation ─────────────────────────────────────
+  // Called by BaseTool.execute() between preToolExecutionHook and
+  // postParamsNormalizationHook. Return the normalised params object.
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof transferHbarParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return await HederaParameterNormaliser.normaliseTransferHbar(params, context, client);
+  }
+
+  // ── Stage 4: Core action ──────────────────────────────────────────────────
+  // Build the transaction (or perform the query). Do NOT sign/submit here.
+  // BaseTool will call postCoreActionHook after this returns.
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.transferHbar(normalisedParams);
+  }
+
+  // ── Stage 6: Secondary action ─────────────────────────────────────────────
+  // Sign and submit the transaction (or any post-core step).
+  // BaseTool.shouldSecondaryAction() returns true by default; override it
+  // in query-only tools to skip this stage entirely.
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+
+  // ── Error handling ────────────────────────────────────────────────────────
+  // Override BaseTool.handleError() for tool-specific error messages.
+  // If you omit this, BaseTool provides a sensible default.
+  async handleError(error: unknown, _context: Context): Promise<any> {
+    const desc = 'Failed to transfer HBAR';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[transfer_hbar_tool]', message);
+    return {
+      raw: { status: Status.InvalidTransaction, error: message },
+      humanMessage: message,
+    };
+  }
+}
+
+// ── Factory function: now returns a BaseTool instance ─────────────────────
+// Return type changed from Tool → BaseTool, but BaseTool implements Tool,
+// so Plugin.tools() and all framework adapters accept this transparently.
+const tool = (context: Context): BaseTool => new TransferHbarTool(context);
+
+export default tool;
+```
+
+### What changed – summary
+
+| Aspect | v3 (`Tool` object) | v4 (`BaseTool` class) |
+|---|---|---|
+| Declaration | Object literal `{ method, name, … execute }` | Class extending `BaseTool` |
+| Import | `import type { Tool }` | `import { BaseTool }` |
+| Lifecycle stages | All inside a single `execute()` function | Split into `normalizeParams`, `coreAction`, `secondaryAction` |
+| Hook/Policy support | ✗ None | ✓ Automatic at stages 1, 3, 5, 7 |
+| Error handling | Manual `try/catch` inside `execute` | Override `handleError()` (BaseTool provides a default) |
+| Breaking change? | — | **No** — `BaseTool implements Tool` |
+
+### Migrating a query-only tool
+
+For tools that only read data (no transaction signing), override `shouldSecondaryAction` to skip stage 6:
+
+```typescript
+export class MyQueryTool extends BaseTool {
+  // ...
+
+  // Stage 4: perform the query and return the result directly
+  async coreAction(normalisedParams: any, _context: Context, client: Client) {
+    return await someHederaQuery(normalisedParams, client);
+  }
+
+  // Skip secondaryAction for query tools — there is nothing to sign/submit
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context) {
+    return false;
+  }
+
+  // secondaryAction is still required by the abstract class — provide a no-op
+  async secondaryAction(result: any, _client: Client, _context: Context) {
+    return result;
+  }
+}
+```
+
 ## Doc Maintainer Checklist
 
 Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.com) for v4 compatibility.
@@ -544,6 +807,8 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 - [ ] Migration banner on quickstart page linking to this guide
 - [ ] "Which package do I need?" table (core + one toolkit)
 - [ ] Explicit plugin opt-in documentation (empty `plugins` = no tools; use `allCorePlugins` for the v3-style "everything" default)
+- [ ] Note explaining that new hooks and policies are only supported by tools extending `BaseTool`
+- [ ] Recommendation and guide for migrating custom tools to `BaseTool`
 
 ### Content to remove
 
@@ -639,6 +904,9 @@ This monolithic plugin was removed. Use the individual query plugins: `coreAccou
 
 **"ResponseParserService is not exported from @hashgraph/hedera-agent-kit."**
 It moved to `@hashgraph/hedera-agent-kit-langchain`.
+
+**"My hooks / policies don't work with my custom plugin tools."**
+Hooks and policies only fire for tools that extend the `BaseTool` abstract class. Tools that implement the `Tool` interface directly (the v3 functional pattern) are fully supported but bypass the hook/policy lifecycle entirely — this is intentional and **not a breaking change**. To gain hook and policy support, migrate your tools to `BaseTool`. The migration is straightforward and non-breaking: `BaseTool` itself implements `Tool`, so no call sites need to change. See the [Migrating Custom Tools to BaseTool](#migrating-custom-tools-to-basetool-recommended-non-breaking) section for a step-by-step guide and annotated before/after example.
 
 ## Versioning
 

@@ -45,7 +45,7 @@ export interface Plugin {
 
 ### Tool Interface
 
-Each tool must implement the Tool interface:
+Each tool must implement the `Tool` interface:
 
 ```typescript
 export type Tool = {
@@ -61,6 +61,26 @@ export type Tool = {
 
 See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) for the full definition.
 
+### Recommended: Extend `BaseTool` (v4)
+
+> [!IMPORTANT]
+> **`BaseTool` is the recommended way to implement tools in v4.** It is an abstract class that **implements** the `Tool` interface, so it is a fully backward-compatible, non-breaking upgrade. Tools based on the older functional pattern (plain object literals) continue to work, but they **do not support hooks and policies**.
+
+`BaseTool` enforces a clean 7-stage lifecycle that lets the hooks and policies system tap in automatically — you never call hooks manually:
+
+```text
+[1] preToolExecutionHook        ← hooks/policies
+[2] normalizeParams             ← your logic
+[3] postParamsNormalizationHook ← hooks/policies
+[4] coreAction                  ← your logic (build tx or run query)
+[5] postCoreActionHook          ← hooks/policies
+[6] secondaryAction             ← your logic (sign/submit tx; skip for queries)
+[7] postToolExecutionHook       ← hooks/policies
+```
+
+For a step-by-step migration guide with fully annotated before/after code, see
+[Migrating Custom Tools to BaseTool](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking) in the v4 migration guide.
+
 ### Step-by-Step Guide
 
 **Step 1: Create Plugin Directory Structure**
@@ -75,18 +95,85 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 
 **Step 2: Implement Your Tool**
 
-Create your tool file (e.g., tools/my-service/my-tool.ts):
+Create your tool file (e.g., tools/my-service/my-tool.ts).
+
+> [!TIP]
+> **v4 Recommended approach — extend `BaseTool`.**  
+> `BaseTool` implements the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that `BaseTool`-based tools automatically participate in the hooks and policies lifecycle.
 
 ```typescript
 import { z } from "zod";
-import { Context, Tool, handleTransaction } from "@hashgraph/hedera-agent-kit";
-import { Client, PrivateKey, AccountId } from "@hashgraph/sdk";
-import dotenv from "dotenv";
+import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
+import { Client } from "@hashgraph/sdk";
 
-// Load environment variables
-dotenv.config();
+// Define your parameter schema (same as before)
+const myToolParameters = z.object({
+  requiredParam: z.string().describe("Description of required parameter"),
+  optionalParam: z
+    .string()
+    .optional()
+    .describe("Description of optional parameter"),
+});
 
-// Define parameter schema
+export const MY_TOOL = "my_tool";
+
+// Extend BaseTool — BaseTool implements Tool, so this is backward-compatible
+export class MyTool extends BaseTool {
+  method = MY_TOOL;
+  name = "My Custom Tool";
+  description = `
+  This tool performs a specific operation.
+
+  Parameters:
+  - requiredParam (string, required): Description
+  - optionalParam (string, optional): Description
+  `;
+  parameters = myToolParameters;
+
+  // Stage 2 — validate / transform raw params from the LLM
+  async normalizeParams(
+    params: z.infer<typeof myToolParameters>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params; // pass-through; add validation/transformation here
+  }
+
+  // Stage 4 — core business logic (build a transaction or run a query)
+  async coreAction(
+    normalisedParams: z.infer<typeof myToolParameters>,
+    _context: Context,
+    _client: Client,
+  ) {
+    // Your implementation here
+    return `Result for ${normalisedParams.requiredParam}`;
+  }
+
+  // Skip secondary action for non-transaction tools
+  async shouldSecondaryAction(_result: any, _context: Context) {
+    return false; // return true (default) if you need to sign/submit a transaction
+  }
+
+  // Stage 6 — sign/submit the transaction (omit for query-only tools)
+  async secondaryAction(result: any, _client: Client, _context: Context) {
+    return result; // no-op for non-transaction tools
+  }
+}
+
+// Factory function: return a BaseTool instance (satisfies the Tool interface)
+const tool = (_context: Context) => new MyTool();
+
+export default tool;
+```
+
+<details>
+<summary>Legacy v3 pattern (still works, but no hook/policy support)</summary>
+
+```typescript
+import { z } from "zod";
+import { Context, Tool } from "@hashgraph/hedera-agent-kit";
+import { Client } from "@hashgraph/sdk";
+
 const myToolParameters = (context: Context = {}) =>
   z.object({
     requiredParam: z.string().describe("Description of required parameter"),
@@ -96,7 +183,6 @@ const myToolParameters = (context: Context = {}) =>
       .describe("Description of optional parameter"),
   });
 
-// Create prompt function
 const myToolPrompt = (context: Context = {}) => {
   return `
   This tool performs a specific operation.
@@ -107,14 +193,12 @@ const myToolPrompt = (context: Context = {}) => {
   `;
 };
 
-// Implement tool logic
 const myToolExecute = async (
   client: Client,
   context: Context,
   params: z.infer<ReturnType<typeof myToolParameters>>,
 ) => {
   try {
-    // Your implementation here
     const result = await someHederaOperation(params);
     return result;
   } catch (error) {
@@ -127,6 +211,7 @@ const myToolExecute = async (
 
 export const MY_TOOL = "my_tool";
 
+// This pattern works in v4 but does NOT support hooks or policies
 const tool = (context: Context): Tool => ({
   method: MY_TOOL,
   name: "My Custom Tool",
@@ -137,6 +222,8 @@ const tool = (context: Context): Tool => ({
 
 export default tool;
 ```
+
+</details>
 
 **Step 3: Create Plugin Definition**
 
@@ -278,9 +365,11 @@ if (toolCall) {
 
 ### Examples and References
 
+- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts)
 - See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
+- For migrating existing v3 tools to `BaseTool`, see the [Migration Guide](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking)
 ## Publish and Register Your Plugin
 
 To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
