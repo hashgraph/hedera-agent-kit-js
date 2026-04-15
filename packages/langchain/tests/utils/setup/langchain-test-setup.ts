@@ -6,14 +6,17 @@ import {
   DEFAULT_LLM_OPTIONS,
   getProviderApiKeyMap,
   SYSTEM_PROMPT,
-} from './langchain-test-config';
-
-import { LLMFactory, type LlmOptions, LLMProvider } from './llm-factory';
+} from '@tests/utils';
 
 import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
-import type { LangchainTestOptions } from './langchain-test-config';
+import type { LangchainTestOptions } from '@tests/utils';
 import { createAgent, ReactAgent } from 'langchain';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import {
+  LLMFactory,
+  LlmOptions,
+  LLMProvider,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/llm-factory';
 
 export interface LangchainTestSetup {
   client: Client;

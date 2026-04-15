@@ -1,18 +1,31 @@
 import { AgentMode, AbstractHook } from '@hashgraph/hedera-agent-kit';
 import type { Plugin } from '@hashgraph/hedera-agent-kit';
-import { LLMProvider, type LlmOptions } from './llm-factory';
 import {
-  coreAccountPlugin, coreAccountPluginToolNames,
-  coreTokenPlugin, coreTokenPluginToolNames,
-  coreConsensusPlugin, coreConsensusPluginToolNames,
-  coreEVMPlugin, coreEVMPluginToolNames,
-  coreAccountQueryPlugin, coreAccountQueryPluginToolNames,
-  coreTokenQueryPlugin, coreTokenQueryPluginToolNames,
-  coreConsensusQueryPlugin, coreConsensusQueryPluginToolNames,
-  coreEVMQueryPlugin, coreEVMQueryPluginToolNames,
-  coreTransactionQueryPlugin, coreTransactionQueryPluginToolNames,
-  coreMiscQueriesPlugin, coreMiscQueriesPluginsToolNames,
+  coreAccountPlugin,
+  coreAccountPluginToolNames,
+  coreTokenPlugin,
+  coreTokenPluginToolNames,
+  coreConsensusPlugin,
+  coreConsensusPluginToolNames,
+  coreEVMPlugin,
+  coreEVMPluginToolNames,
+  coreAccountQueryPlugin,
+  coreAccountQueryPluginToolNames,
+  coreTokenQueryPlugin,
+  coreTokenQueryPluginToolNames,
+  coreConsensusQueryPlugin,
+  coreConsensusQueryPluginToolNames,
+  coreEVMQueryPlugin,
+  coreEVMQueryPluginToolNames,
+  coreTransactionQueryPlugin,
+  coreTransactionQueryPluginToolNames,
+  coreMiscQueriesPlugin,
+  coreMiscQueriesPluginsToolNames,
 } from '@hashgraph/hedera-agent-kit/plugins';
+import {
+  LlmOptions,
+  LLMProvider,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/llm-factory';
 
 export { BALANCE_TIERS, type BalanceTier } from '@hashgraph/hedera-agent-kit-tests';
 

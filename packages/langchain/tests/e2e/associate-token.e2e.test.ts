@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, PrivateKey, AccountId, TokenSupplyType, PublicKey } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
@@ -10,7 +13,7 @@ import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/s
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Associate Token E2E Tests', () => {
   let operatorClient: Client;

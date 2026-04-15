@@ -9,15 +9,18 @@ import {
   TokenSupplyType,
 } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 
 /**
  * E2E tests for Approve Token Allowance using the LangChain agent.

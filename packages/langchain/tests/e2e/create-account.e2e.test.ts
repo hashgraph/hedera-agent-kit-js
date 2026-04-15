@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
@@ -8,7 +11,7 @@ import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/he
 import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 
 function extractAccountId(agentResult: any, responseParsingService: ResponseParserService): string {
   const parsedResponse = responseParsingService.parseNewToolMessages(agentResult);

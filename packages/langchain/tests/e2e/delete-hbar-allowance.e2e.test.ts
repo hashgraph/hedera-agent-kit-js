@@ -1,15 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { Client, PrivateKey, AccountId, Hbar, HbarUnit, HbarAllowance } from '@hashgraph/sdk';
 import { z } from 'zod';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { approveHbarAllowanceParametersNormalised } from '@hashgraph/hedera-agent-kit';
 import { ReactAgent } from 'langchain';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Delete HBAR Allowance Integration Tests', () => {
   let testSetup: LangchainTestSetup;

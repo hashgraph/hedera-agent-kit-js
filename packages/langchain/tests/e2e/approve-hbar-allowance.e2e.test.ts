@@ -9,11 +9,17 @@ import {
   TransferTransaction,
 } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import {
+  createLangchainTestSetup,
+  LangchainTestSetup,
+} from '@tests/utils/setup/langchain-test-setup';
 import { verifyHbarBalanceChange } from '@hashgraph/hedera-agent-kit-tests/shared/verification/balance-verification-utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils/setup/langchain-test-config';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 

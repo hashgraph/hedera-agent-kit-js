@@ -1,8 +1,11 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
 import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
 import { ReactAgent } from 'langchain';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
 import { toDisplayUnit } from '@hashgraph/hedera-agent-kit';
@@ -10,7 +13,7 @@ import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shar
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () => {
