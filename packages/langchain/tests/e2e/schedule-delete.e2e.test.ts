@@ -2,7 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
 import { scheduleDeleteTool } from '@hashgraph/hedera-agent-kit/plugins';
 import { Context, AgentMode } from '@hashgraph/hedera-agent-kit';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { z } from 'zod';
 import {
@@ -11,7 +14,7 @@ import {
 } from '@hashgraph/hedera-agent-kit';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Schedule Delete E2E Tests', () => {

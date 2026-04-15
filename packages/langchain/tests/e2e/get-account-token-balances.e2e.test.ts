@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { ReactAgent } from 'langchain';
-import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client, TokenSupplyType, AccountId } from '@hashgraph/sdk';
