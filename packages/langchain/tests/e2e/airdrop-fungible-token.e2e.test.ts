@@ -1,8 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AccountId, Client, PrivateKey, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, type LangchainTestSetup, BALANCE_TIERS } from '../utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
@@ -11,7 +14,6 @@ import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util
 import { ReactAgent } from 'langchain';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
   let operatorClient: Client;

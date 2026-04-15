@@ -1,8 +1,8 @@
 import { beforeAll, describe, it, expect } from 'vitest';
 import { Client } from '@hiero-ledger/sdk';
 import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
-import { createLangchainTestSetup } from '../../utils';
-import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
+import { createLangchainTestSetup } from '@tests/utils';
+import { TOOLKIT_OPTIONS } from '@tests/utils';
 import { MaxRecipientsPolicy } from '@hashgraph/hedera-agent-kit/policies';
 
 describe('MaxRecipientsPolicy E2E Tests', () => {
@@ -43,7 +43,7 @@ describe('MaxRecipientsPolicy E2E Tests', () => {
     expect(parsedResponse.length).toBeGreaterThan(0);
     // Check if the policy blocked any tool call
     const policyError = parsedResponse.find(
-      tool =>
+      (tool: any) =>
         tool.parsedData.raw.error &&
         tool.parsedData.raw.error.includes('blocked by policy: Max Recipients Policy'),
     );

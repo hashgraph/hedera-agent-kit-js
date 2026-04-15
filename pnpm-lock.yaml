@@ -252,6 +252,9 @@ importers:
       dotenv:
         specifier: 17.2.1
         version: 17.2.1
+      long:
+        specifier: 5.3.2
+        version: 5.3.2
       tsup:
         specifier: 8.5.0
         version: 8.5.0(jiti@2.6.1)(postcss@8.5.9)(tsx@4.21.0)(typescript@5.8.3)(yaml@2.8.3)

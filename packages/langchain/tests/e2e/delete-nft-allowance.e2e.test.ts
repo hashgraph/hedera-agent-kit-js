@@ -12,11 +12,17 @@ import {
   TokenType,
   TransferTransaction,
 } from '@hiero-ledger/sdk';
-import { approveNftAllowanceTool, deleteNftAllowanceTool } from '@hashgraph/hedera-agent-kit/plugins';
+import {
+  approveNftAllowanceTool,
+  deleteNftAllowanceTool,
+} from '@hashgraph/hedera-agent-kit/plugins';
 import { approveNftAllowanceParameters } from '@hashgraph/hedera-agent-kit';
 import { deleteNftAllowanceParameters } from '@hashgraph/hedera-agent-kit';
-import { getCustomClient, getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getCustomClient,
+  getOperatorClientForTests,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
@@ -24,7 +30,7 @@ import { z } from 'zod';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 
 /**
  * E2E test: Create an HTS NFT, approve NFT allowance for a spender, delete the allowance,

@@ -6,8 +6,7 @@ import {
   wait,
   MIRROR_NODE_WAITING_TIME,
 } from '@hashgraph/hedera-agent-kit-tests';
-import { createLangchainTestSetup, type LangchainTestSetup } from '../../utils';
-import { TOOLKIT_OPTIONS } from '../../utils/setup/langchain-test-config';
+import { createLangchainTestSetup, type LangchainTestSetup, TOOLKIT_OPTIONS } from '../../utils';
 import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
 import { TRANSFER_HBAR_TOOL } from '@hashgraph/hedera-agent-kit/plugins';
 
@@ -16,10 +15,19 @@ describe('HcsAuditTrailHook E2E Tests', () => {
   let topicId: string;
   let testSetup: LangchainTestSetup;
   let operatorWrapper: HederaOperationsWrapper;
+  let recipientId: string;
 
   beforeAll(async () => {
     operatorClient = getOperatorClientForTests();
     operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
+    // create recipient account for testing
+    recipientId = await operatorWrapper
+      .createAccount({
+        initialBalance: 0,
+        key: operatorClient.operatorPublicKey!,
+      })
+      .then(resp => resp.accountId!.toString());
 
     // Create a temporary topic for testing
     const tx = await new TopicCreateTransaction().execute(operatorClient);
@@ -50,7 +58,6 @@ describe('HcsAuditTrailHook E2E Tests', () => {
 
   it('should log tool execution to HCS successfully via Langchain agent', async () => {
     const agent = testSetup.agent;
-    const recipientId = operatorClient.operatorAccountId!.toString();
     const amount = 0.0001;
     const input = `Transfer ${amount} HBAR to ${recipientId}`;
 

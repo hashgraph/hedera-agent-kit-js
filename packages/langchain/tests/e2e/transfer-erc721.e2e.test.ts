@@ -1,7 +1,10 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { ReactAgent } from 'langchain';
-import { getOperatorClientForTests, getCustomClient } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/shared/langchain-test-setup';
+import {
+  getOperatorClientForTests,
+  getCustomClient,
+} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
@@ -12,7 +15,7 @@ import { createERC721Parameters } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/shared/langchain-test-config';
+import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Transfer ERC721 Token E2E Tests', () => {
   let testSetup: LangchainTestSetup;
