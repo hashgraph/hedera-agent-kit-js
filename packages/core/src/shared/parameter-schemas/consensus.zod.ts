@@ -22,7 +22,7 @@ export const createTopicParameters = (_context: Context = {}) => {
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'The submit key for the topic. ONLY set this if the user wants to RESTRICT who can submit messages. Pass true to use operator key, or a public key string. (optional)',
+        'The submit key for the topic. ONLY set this if the user explicitly wants to RESTRICT who can submit messages. If the user says they do NOT want to restrict access, or says "open access", leave this UNDEFINED — do not set it to true or any value. Pass true to use operator key, or a public key string. (optional)',
       ),
     adminKey: z
       .union([z.boolean(), z.string()])
