@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { AgentMode, type Context } from '@/shared/configuration';
 import {

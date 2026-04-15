@@ -17,11 +17,11 @@
         "strict": true,
         "baseUrl": ".",
         "paths": {
-            "@hashgraph/sdk": [
-                "../../packages/adk/node_modules/@hashgraph/sdk"
+            "@hiero-ledger/sdk": [
+                "../../packages/adk/node_modules/@hiero-ledger/sdk"
             ],
-            "@hashgraph/sdk/*": [
-                "../../packages/adk/node_modules/@hashgraph/sdk/*"
+            "@hiero-ledger/sdk/*": [
+                "../../packages/adk/node_modules/@hiero-ledger/sdk/*"
             ]
         }
     }

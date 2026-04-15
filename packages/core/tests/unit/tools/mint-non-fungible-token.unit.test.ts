@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { MINT_NON_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/non-fungible-token/mint-non-fungible-token';
 import z from 'zod';
 import { mintNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';

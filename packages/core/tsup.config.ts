@@ -19,7 +19,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     bundle: true,
-    external: ['@hashgraph/sdk'],
+    external: ['@hiero-ledger/sdk'],
     target: 'es2022',
     esbuildOptions(options) {
       options.alias = srcAlias;
@@ -33,7 +33,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     bundle: true,
-    external: ['@hashgraph/sdk'],
+    external: ['@hiero-ledger/sdk'],
     target: 'node16',
     esbuildOptions(options) {
       options.alias = srcAlias;

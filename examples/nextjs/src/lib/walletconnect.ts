@@ -1,6 +1,6 @@
 "use client";
 
-import { LedgerId } from "@hashgraph/sdk";
+import { LedgerId } from "@hiero-ledger/sdk";
 import {
     DAppConnector,
     HederaChainId,

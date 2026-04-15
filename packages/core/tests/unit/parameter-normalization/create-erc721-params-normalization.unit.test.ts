@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { ERC721_FACTORY_ABI } from '@/shared/constants/contracts';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 
 describe('HederaParameterNormaliser.normaliseCreateERC721Params', () => {
   const factoryContractId = '0.0.7890';

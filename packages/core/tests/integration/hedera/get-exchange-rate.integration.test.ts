@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { GetExchangeRateQueryTool } from '@/plugins/core-misc-query-plugin/tools/queries/get-exchange-rate-query';
 import type { Context } from '@/shared/configuration';
 import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, LedgerId } from '@hashgraph/sdk';
+import { Client, LedgerId } from '@hiero-ledger/sdk';
 import toolFactory, { AIRDROP_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/airdrop-fungible-token';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';

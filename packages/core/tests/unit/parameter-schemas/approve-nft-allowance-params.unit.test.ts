@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 
 const schema = approveNftAllowanceParameters();
 

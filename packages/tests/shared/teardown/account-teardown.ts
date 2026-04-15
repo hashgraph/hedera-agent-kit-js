@@ -1,4 +1,4 @@
-import { AccountId, Hbar, HbarUnit } from '@hashgraph/sdk';
+import { AccountId, Hbar, HbarUnit } from '@hiero-ledger/sdk';
 import { HederaOperationsWrapper } from '../index';
 import { toBaseUnit } from '@hashgraph/hedera-agent-kit';
 
@@ -21,7 +21,7 @@ import { toBaseUnit } from '@hashgraph/hedera-agent-kit';
  *
  * @example
  * ```typescript
- * import { AccountId } from '@hashgraph/sdk';
+ * import { AccountId } from '@hiero-ledger/sdk';
  * import { HederaOperationsWrapper } from '../index';
  * import { returnHbarsAndDeleteAccount } from './account-teardown';
  *

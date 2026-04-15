@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client, Status } from '@hiero-ledger/sdk';
 import toolFactory, {
   SCHEDULE_DELETE_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/schedule-delete';

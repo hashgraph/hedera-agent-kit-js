@@ -1,5 +1,5 @@
 import { HederaAgentAPI, Configuration, ToolDiscovery, type Tool } from '@hashgraph/hedera-agent-kit';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import HederaAgentKitTool from './tool';
 import type { BaseTool, ToolInputParameters } from '@google/adk';
 

@@ -7,7 +7,7 @@ import {
   PublicKey,
   TokenId,
   TokenSupplyType,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import approveTokenAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/approve-token-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

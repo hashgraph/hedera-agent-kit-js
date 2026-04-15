@@ -9,7 +9,7 @@ import {
   coreTokenPluginToolNames,
   coreTokenQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { createAgent } from 'langchain';

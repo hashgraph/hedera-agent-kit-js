@@ -115,7 +115,7 @@ npm init -y
 Open `package.json` and add `"type": "module"` to enable ES modules.
 
 ```bash
-npm install hedera-agent-kit @langchain/core langchain @langchain/langgraph @langchain/openai @hashgraph/sdk dotenv
+npm install hedera-agent-kit @langchain/core langchain @langchain/langgraph @langchain/openai @hiero-ledger/sdk dotenv
 ```
 
 ### 2 – Configure: Add Environment Variables
@@ -154,7 +154,7 @@ Once you have created a new file `index.js` and added the environment variables,
 
 ```javascript
 // index.js
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { HederaLangchainToolkit, AgentMode } from 'hedera-agent-kit';
 import { createAgent } from 'langchain';
 import { MemorySaver } from '@langchain/langgraph';

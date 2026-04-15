@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, AccountId, PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import type { Context } from '@/shared/configuration';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';

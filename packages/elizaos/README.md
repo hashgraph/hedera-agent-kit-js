@@ -7,7 +7,7 @@ ElizaOS integration for Hedera Agent Kit. Wraps Hedera tools as ElizaOS Actions 
 ### 1. Install dependencies
 
 ```bash
-npm install @hashgraph/hedera-agent-kit-elizaos @hashgraph/hedera-agent-kit @hashgraph/sdk @elizaos/core dotenv
+npm install @hashgraph/hedera-agent-kit-elizaos @hashgraph/hedera-agent-kit @hiero-ledger/sdk @elizaos/core dotenv
 ```
 
 ### 2. Configure environment variables
@@ -26,7 +26,7 @@ Get your Hedera testnet keys at https://portal.hedera.com/dashboard. We recommen
 
 ```typescript
 import 'dotenv/config';
-import { Client, AccountId, PrivateKey } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey } from '@hiero-ledger/sdk';
 import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit-elizaos';
 import {
   coreTokenPlugin,

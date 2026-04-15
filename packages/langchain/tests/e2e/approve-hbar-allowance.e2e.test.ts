@@ -7,7 +7,7 @@ import {
   Key,
   PrivateKey,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
 import {
   getCustomClient,

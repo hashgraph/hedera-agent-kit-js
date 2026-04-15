@@ -1,4 +1,4 @@
-import { Client, PublicKey } from '@hashgraph/sdk';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import { Context, AgentMode } from '@/shared/configuration';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';

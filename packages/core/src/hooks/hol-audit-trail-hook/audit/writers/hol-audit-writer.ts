@@ -1,4 +1,4 @@
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 
 import { Hcs1FileBuilder } from '@/hooks/hol-audit-trail-hook/hol/hcs1-file-builder';
 import { Hcs2RegistryBuilder } from '@/hooks/hol-audit-trail-hook/hol/hcs2-registry-builder';

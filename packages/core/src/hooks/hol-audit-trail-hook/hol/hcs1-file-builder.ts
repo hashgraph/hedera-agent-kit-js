@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { brotliCompressSync, constants as zlibConstants } from 'zlib';
 
-import { PublicKey } from '@hashgraph/sdk';
+import { PublicKey } from '@hiero-ledger/sdk';
 
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { HCS1_CHUNK_SIZE } from '@/hooks/hol-audit-trail-hook/hol/constants';

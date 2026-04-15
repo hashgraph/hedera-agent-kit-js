@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HolAuditWriter } from '@/hooks/hol-audit-trail-hook/audit/writers/hol-audit-writer';
 import type { AuditEntry } from '@/hooks/hol-audit-trail-hook/audit/audit-entry';
-import type { Client } from '@hashgraph/sdk';
+import type { Client } from '@hiero-ledger/sdk';
 
 const mockCreateFile = vi.fn();
 const mockFileTopicExecute = vi.fn();

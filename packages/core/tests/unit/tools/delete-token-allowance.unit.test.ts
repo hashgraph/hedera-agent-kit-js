@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client, Status } from '@hiero-ledger/sdk';
 import toolFactory, { DELETE_TOKEN_ALLOWANCE_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/delete-token-allowance';
 
 // ---- Mocks ----

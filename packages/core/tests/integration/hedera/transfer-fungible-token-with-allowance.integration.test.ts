@@ -7,7 +7,7 @@ import {
   TokenSupplyType,
   TokenAllowance,
   Long,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 import transferFungibleTokenWithAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token-with-allowance';

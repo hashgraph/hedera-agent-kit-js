@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, TopicCreateTransaction } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, TopicCreateTransaction } from '@hiero-ledger/sdk';
 import { brotliDecompressSync } from 'zlib';
 import { randomBytes } from 'crypto';
 

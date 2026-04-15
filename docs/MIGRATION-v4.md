@@ -114,13 +114,13 @@ You always need to install your LLM provider separately. The toolkit does not pi
 
 ```bash
 # v4 LangChain + OpenAI
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai
 
 # v4 LangChain + Anthropic
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/anthropic
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/anthropic
 
 # v4 AI SDK + OpenAI
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai
 ```
 
 ### 7. MCP configuration moved to toolkit packages
@@ -134,15 +134,25 @@ npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-k
 + import { HederaMCPServer } from '@hashgraph/hedera-agent-kit-ai-sdk';
 ```
 
-### 8. `@hashgraph/sdk` moved from dependency to peer dependency
+### 8. Hedera SDK renamed to `@hiero-ledger/sdk` and moved to peer dependency
 
-In v3, `@hashgraph/sdk` was a regular dependency and installed automatically. In v4, all packages declare it as a peer dependency (`>=2.80.0`). You must install it yourself:
+The Hedera SDK has been renamed from `@hashgraph/sdk` to `@hiero-ledger/sdk`. In v3, the SDK was a regular dependency of the agent kit and installed automatically. In v4, all packages declare `@hiero-ledger/sdk` as a **peer dependency** (`^2.81.0`) - you must install it yourself:
 
-```bash
-npm install @hashgraph/sdk
+```diff
+- npm install @hashgraph/sdk
++ npm install @hiero-ledger/sdk
 ```
 
-### 10. `RETURN_BYTES` mode - `raw.bytes` standardized to `Uint8Array`
+Update every import that previously pulled from `@hashgraph/sdk`:
+
+```diff
+- import { Client, PrivateKey } from '@hashgraph/sdk';
++ import { Client, PrivateKey } from '@hiero-ledger/sdk';
+```
+
+`@hiero-ledger/sdk` is the successor package maintained under the Hiero Ledger project; the `@hashgraph/sdk` package on npm is no longer receiving updates aligned with the agent kit.
+
+### 9. `RETURN_BYTES` mode - `raw.bytes` standardized to `Uint8Array`
 
 In v3, `raw.bytes` returned by `ResponseParserService` could be a Node.js `Buffer` or a `{ type: 'Buffer', data: [...] }` plain object, depending on the environment. In v4, `raw.bytes` is always a `Uint8Array` in both Node.js and browser environments.
 
@@ -175,16 +185,16 @@ npm install hedera-agent-kit @hashgraph/sdk @langchain/core langchain @langchain
 **After (v4):** `@langchain/core` and `langchain` are bundled in the toolkit. Install your LLM provider separately.
 ```bash
 # OpenAI
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
 
 # Anthropic
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/anthropic dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/anthropic dotenv
 
 # Groq
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/groq dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/groq dotenv
 
 # Ollama (local, no API key needed)
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/ollama dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/ollama dotenv
 ```
 
 ### Vercel AI SDK
@@ -196,7 +206,7 @@ npm install hedera-agent-kit @hashgraph/sdk ai @ai-sdk/openai dotenv
 
 **After (v4):** `ai` is bundled in the toolkit. LLM provider is **not** bundled, always install it.
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai dotenv
 ```
 
 ### ElizaOS
@@ -208,7 +218,7 @@ npm install hedera-agent-kit @hashgraph/sdk
 
 **After (v4):**
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-elizaos
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-elizaos
 ```
 
 ### MCP
@@ -220,7 +230,7 @@ npm install hedera-agent-kit @hashgraph/sdk
 
 **After (v4):**
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-mcp
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-mcp
 ```
 
 ## Framework-Specific Migration
@@ -257,13 +267,13 @@ const tools = toolkit.getTools();
 **After (v4):**
 
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
 # @langchain/core and langchain are bundled in the toolkit
 # Always install your LLM provider: @langchain/openai, @langchain/anthropic, @langchain/groq, or @langchain/ollama
 ```
 
 ```typescript
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
@@ -335,13 +345,13 @@ const response = await generateText({
 **After (v4):**
 
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai dotenv
 # `ai` is bundled in the toolkit
 # LLM provider (@ai-sdk/openai, @ai-sdk/anthropic, etc.) is NOT bundled, always install it
 ```
 
 ```typescript
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';
@@ -403,7 +413,7 @@ const toolkit = new HederaElizaOSToolkit({
 **After (v4):**
 
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-elizaos
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-elizaos
 ```
 
 ```typescript
@@ -447,7 +457,7 @@ const server = new HederaMCPToolkit({
 **After (v4):**
 
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-mcp
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-mcp
 ```
 
 ```typescript
@@ -522,6 +532,8 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 ### Global find-and-replace
 
 - [ ] Replace all `from 'hedera-agent-kit'` and `from "hedera-agent-kit"` with the appropriate `@hashgraph/hedera-agent-kit*` import (see import table above)
+- [ ] Replace all `from '@hashgraph/sdk'` with `from '@hiero-ledger/sdk'` (SDK rename - see [Breaking Change #8](#8-hedera-sdk-renamed-to-hiero-ledgersdk-and-moved-to-peer-dependency))
+- [ ] Replace `npm install @hashgraph/sdk` with `npm install @hiero-ledger/sdk`
 - [ ] Replace `npm install hedera-agent-kit` with the framework-specific install commands
 - [ ] Replace `coreHTSPlugin` with `coreTokenPlugin`
 - [ ] Replace `coreSCSPlugin` with `coreEVMPlugin`

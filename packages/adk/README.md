@@ -7,7 +7,7 @@ Google Agent Development Kit (ADK) integration for Hedera Agent Kit. Wraps Heder
 ### 1. Install dependencies
 
 ```bash
-npm install @hashgraph/hedera-agent-kit-adk @hashgraph/hedera-agent-kit @hashgraph/sdk @google/adk dotenv
+npm install @hashgraph/hedera-agent-kit-adk @hashgraph/hedera-agent-kit @hiero-ledger/sdk @google/adk dotenv
 ```
 
 ### 2. Configure environment variables
@@ -26,7 +26,7 @@ Get your Hedera testnet keys at https://portal.hedera.com/dashboard. We recommen
 
 ```typescript
 import 'dotenv/config';
-import { Client, AccountId, PrivateKey } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey } from '@hiero-ledger/sdk';
 import { HederaADKToolkit } from '@hashgraph/hedera-agent-kit-adk';
 import {
   coreTokenPlugin,

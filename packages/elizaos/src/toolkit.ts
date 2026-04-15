@@ -1,4 +1,4 @@
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { type Configuration, type Context, ToolDiscovery } from '@hashgraph/hedera-agent-kit';
 import HederaAgentKitTool from './tool';
 

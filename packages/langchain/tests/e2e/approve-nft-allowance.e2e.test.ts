@@ -11,7 +11,7 @@ import {
   TokenSupplyType,
   TokenType,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { approveNftAllowanceTool } from '@hashgraph/hedera-agent-kit/plugins';
 import { approveNftAllowanceParameters } from '@hashgraph/hedera-agent-kit';
 import {

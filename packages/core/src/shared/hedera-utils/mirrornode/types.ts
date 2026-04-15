@@ -1,4 +1,4 @@
-import { LedgerId } from '@hashgraph/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
 import BigNumber from 'bignumber.js';
 
 export const LedgerIdToBaseUrl: Map<string, string> = new Map([

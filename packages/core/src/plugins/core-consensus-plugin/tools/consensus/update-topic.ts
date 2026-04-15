@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import { BaseTool } from '@/shared/tools';
-import { Client, PublicKey, Status } from '@hashgraph/sdk';
+import { Client, PublicKey, Status } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,

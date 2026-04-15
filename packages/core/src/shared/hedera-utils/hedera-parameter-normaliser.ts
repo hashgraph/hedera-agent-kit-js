@@ -76,7 +76,7 @@ import {
   TokenSupplyType,
   TokenType,
   TopicId,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from './mirrornode/hedera-mirrornode-service.interface';

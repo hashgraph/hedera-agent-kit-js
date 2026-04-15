@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
+import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 import mintFungibleTokenTool from '@/plugins/core-token-plugin/tools/fungible-token/mint-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

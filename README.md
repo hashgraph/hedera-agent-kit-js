@@ -142,7 +142,7 @@ Open `package.json` and add `"type": "module"` to enable ES modules.
 Install the core package, LangChain toolkit, your LLM provider, and the Hedera SDK:
 
 ```bash
-npm install @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
 ```
 
 > Using a different LLM? Replace `@langchain/openai` with `@langchain/anthropic`, `@langchain/groq`, or `@langchain/ollama`.
@@ -183,7 +183,7 @@ Once you have created the file and added the environment variables, you can run 
 
 ```typescript
 // index.ts
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
   coreAccountPlugin, coreTokenPlugin, coreConsensusPlugin, coreEVMPlugin,

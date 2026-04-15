@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import type { Context } from '@/shared/configuration';
-import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
 
 describe('HederaParameterNormaliser.normaliseAssociateTokenParams', () => {
   const context = { accountId: '0.0.1111' } as Context;

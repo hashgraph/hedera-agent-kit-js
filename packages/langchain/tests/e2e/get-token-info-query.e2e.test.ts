@@ -7,7 +7,7 @@ import {
   TokenSupplyType,
   PublicKey,
   TokenType,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
 import {
   getCustomClient,

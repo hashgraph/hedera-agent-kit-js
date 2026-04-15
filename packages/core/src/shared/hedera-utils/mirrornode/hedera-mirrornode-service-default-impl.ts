@@ -1,4 +1,4 @@
-import { LedgerId } from '@hashgraph/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
 import { IHederaMirrornodeService } from '@/shared';
 import {
   AccountAPIResponse,

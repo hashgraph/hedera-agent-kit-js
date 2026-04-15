@@ -8,7 +8,7 @@ import {
   TokenSupplyType,
   TokenAllowance,
   Long,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import {
   getCustomClient,
   getOperatorClientForTests,

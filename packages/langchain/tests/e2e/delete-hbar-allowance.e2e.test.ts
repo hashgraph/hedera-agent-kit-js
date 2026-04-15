@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { Client, PrivateKey, AccountId, Hbar, HbarUnit, HbarAllowance } from '@hashgraph/sdk';
+import { Client, PrivateKey, AccountId, Hbar, HbarUnit, HbarAllowance } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import {
   getCustomClient,

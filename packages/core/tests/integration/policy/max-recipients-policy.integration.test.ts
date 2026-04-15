@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
 import { Context, AgentMode } from '@/shared';
 import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 
 describe('MaxRecipientsPolicy Integration Tests', () => {

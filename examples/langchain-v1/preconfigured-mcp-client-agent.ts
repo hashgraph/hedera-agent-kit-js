@@ -5,7 +5,7 @@ import {
   ResponseParserService,
   HederaMCPServer,
 } from '@hashgraph/hedera-agent-kit-langchain';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import type { StructuredToolInterface } from '@langchain/core/tools';

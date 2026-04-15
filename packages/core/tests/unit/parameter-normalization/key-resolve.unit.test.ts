@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import { describe, it, expect, beforeEach } from 'vitest';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 

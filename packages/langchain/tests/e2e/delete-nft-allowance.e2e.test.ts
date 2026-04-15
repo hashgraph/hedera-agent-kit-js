@@ -11,7 +11,7 @@ import {
   TokenSupplyType,
   TokenType,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import {
   approveNftAllowanceTool,
   deleteNftAllowanceTool,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
 import {
   getCustomClient,

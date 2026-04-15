@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { GET_CONTRACT_INFO_QUERY_TOOL } from '@/plugins/core-evm-query-plugin/tools/queries/get-contract-info-query';
 
 vi.mock('@/shared/utils/prompt-generator', () => ({

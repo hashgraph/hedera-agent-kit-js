@@ -12,7 +12,7 @@
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",
     "@hashgraph/hedera-agent-kit-adk": "file:../../packages/adk",
     "prompts": "2.4.2",
-    "@hashgraph/sdk": "2.80.0"
+    "@hiero-ledger/sdk": "2.81.0"
   },
   "author": "",
   "license": "Apache-2.0",

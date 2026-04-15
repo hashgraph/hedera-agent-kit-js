@@ -15,7 +15,7 @@ import {
   HederaLangchainToolkit,
   ResponseParserService,
 } from '@hashgraph/hedera-agent-kit-langchain';
-import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
+import { Client, PrivateKey, Transaction } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { createAgent } from 'langchain';

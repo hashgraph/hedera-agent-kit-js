@@ -15,7 +15,7 @@
     "langchain:external-mcp-return-bytes-agent": "tsx external-mcp-return-bytes-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "2.80.0",
+    "@hiero-ledger/sdk": "2.81.0",
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",
     "@hashgraph/hedera-agent-kit-langchain": "file:../../packages/langchain",
     "@langchain/core": "1.1.24",

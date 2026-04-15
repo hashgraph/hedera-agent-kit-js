@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import scheduleDeleteTool from '@/plugins/core-account-plugin/tools/account/schedule-delete';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

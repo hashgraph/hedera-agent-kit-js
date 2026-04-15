@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hashgraph/sdk';
+import { Client, Status } from '@hiero-ledger/sdk';
 import toolFactory, { ASSOCIATE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/associate-token';
 import z from 'zod';
 import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';

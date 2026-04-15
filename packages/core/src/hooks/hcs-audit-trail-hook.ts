@@ -5,7 +5,7 @@ import {
   PreToolExecutionParams,
 } from '@/shared';
 import { RawTransactionResponse } from '@/shared';
-import { Client, TopicMessageSubmitTransaction } from '@hashgraph/sdk';
+import { Client, TopicMessageSubmitTransaction } from '@hiero-ledger/sdk';
 
 /**
  * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AccountId, Client } from '@hashgraph/sdk';
+import { AccountId, Client } from '@hiero-ledger/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 vi.mock('@/shared/utils/account-resolver', () => ({

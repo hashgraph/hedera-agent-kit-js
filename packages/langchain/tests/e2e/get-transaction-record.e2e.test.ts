@@ -7,7 +7,7 @@ import {
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { Client, TransactionId, PrivateKey } from '@hashgraph/sdk';
+import { Client, TransactionId, PrivateKey } from '@hiero-ledger/sdk';
 import Long from 'long';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status, TokenSupplyType } from '@hashgraph/sdk';
+import { Client, Status, TokenSupplyType } from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/create-fungible-token';
 import z from 'zod';
 import {

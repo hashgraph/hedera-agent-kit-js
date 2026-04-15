@@ -1,4 +1,4 @@
-import { LedgerId } from '@hashgraph/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
 import { HederaMirrornodeServiceDefaultImpl } from './hedera-mirrornode-service-default-impl';
 import { IHederaMirrornodeService } from './hedera-mirrornode-service.interface';
 

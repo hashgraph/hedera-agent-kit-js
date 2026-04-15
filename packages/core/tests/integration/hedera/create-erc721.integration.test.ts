@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import createERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
 import { AgentMode, type Context } from '@/shared/configuration';

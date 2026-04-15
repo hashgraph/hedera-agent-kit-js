@@ -9,7 +9,7 @@
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@hashgraph/sdk": "2.80.0",
+    "@hiero-ledger/sdk": "2.81.0",
     "@langchain/classic": "1.0.17",
     "@langchain/core": "1.1.24",
     "@langchain/openai": "1.2.7",

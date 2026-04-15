@@ -2,7 +2,7 @@ import { openai } from '@ai-sdk/openai';
 import { generateText, stepCountIs } from 'ai';
 import * as dotenv from 'dotenv';
 import prompts from 'prompts';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import { coreMiscQueriesPlugin } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';

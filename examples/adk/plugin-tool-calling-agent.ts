@@ -1,6 +1,6 @@
 import { HederaADKToolkit } from '@hashgraph/hedera-agent-kit-adk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { LlmAgent, Runner, InMemorySessionService, isFinalResponse } from '@google/adk';

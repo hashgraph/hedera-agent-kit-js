@@ -116,7 +116,7 @@ nextjs/
 ## Included Dependencies
 
 - `next@15`, `react@19`, `typescript`, `zod`
-- `hedera-agent-kit`, `@hashgraph/sdk`
+- `hedera-agent-kit`, `@hiero-ledger/sdk`
 - `@walletconnect/universal-provider`, `@hashgraph/hedera-wallet-connect`
 
 ## Requirements & Notes
