@@ -268,8 +268,7 @@ const tools = toolkit.getTools();
 
 ```bash
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
-# @langchain/core and langchain are bundled in the toolkit
-# Always install your LLM provider: @langchain/openai, @langchain/anthropic, @langchain/groq, or @langchain/ollama
+# Always install your LLM provider explicitly: @langchain/openai, @langchain/anthropic, @langchain/groq, or @langchain/ollama
 ```
 
 ```typescript
@@ -278,6 +277,7 @@ import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { ChatOpenAI } from '@langchain/openai';
+import { createAgent } from 'langchain';
 
 const client = Client.forTestnet().setOperator(
   process.env.ACCOUNT_ID!,
@@ -292,7 +292,15 @@ const toolkit = new HederaLangchainToolkit({
   },
 });
 
-const tools = toolkit.getTools();
+const agent = createAgent({
+  model: new ChatOpenAI({ model: 'gpt-4o-mini' }),
+  tools: toolkit.getTools(),
+  systemPrompt: 'You are a helpful assistant with access to Hedera blockchain tools',
+});
+
+const response = await agent.invoke({
+  messages: [{ role: 'user', content: "What's my HBAR balance?" }],
+});
 ```
 
 **Key changes:**

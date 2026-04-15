@@ -4,7 +4,7 @@
 ![license](https://badgen.net/github/license/hashgraph/hedera-agent-kit-js)
 ![build](https://badgen.net/github/checks/hashgraph/hedera-agent-kit-js)
 
-> Build Hedera-powered AI agents **in under a minute**.
+Build Hedera-powered AI agents **in under a minute**.
 
 > **Upgrading from v3?** See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for all breaking changes.
 
@@ -185,15 +185,10 @@ Once you have created the file and added the environment variables, you can run 
 // index.ts
 import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
-import {
-  coreAccountPlugin, coreTokenPlugin, coreConsensusPlugin, coreEVMPlugin,
-  coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-  coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-} from '@hashgraph/hedera-agent-kit/plugins';
+import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from '@langchain/classic/agents';
+import { createAgent } from 'langchain';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -209,31 +204,23 @@ async function main() {
   const toolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      plugins: [
-        coreAccountPlugin, coreTokenPlugin, coreConsensusPlugin, coreEVMPlugin,
-        coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
-        coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
-      ],
+      plugins: allCorePlugins,
       context: { mode: AgentMode.AUTONOMOUS },
     },
   });
 
-  const tools = toolkit.getTools();
+  const agent = createAgent({
+    model: new ChatOpenAI({ model: 'gpt-4o-mini' }),
+    tools: toolkit.getTools(),
+    systemPrompt: 'You are a helpful assistant with access to Hedera blockchain tools',
+  });
 
-  const llm = new ChatOpenAI({ model: 'gpt-4o-mini' });
+  const response = await agent.invoke({
+    messages: [{ role: 'user', content: "What's my HBAR balance?" }],
+  });
 
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', 'You are a helpful assistant with access to Hedera blockchain tools'],
-    ['placeholder', '{chat_history}'],
-    ['human', '{input}'],
-    ['placeholder', '{agent_scratchpad}'],
-  ]);
-
-  const agent = createToolCallingAgent({ llm, tools, prompt });
-  const executor = new AgentExecutor({ agent, tools });
-
-  const response = await executor.invoke({ input: "What's my HBAR balance?" });
-  console.log(response.output);
+  const lastMessage = response.messages[response.messages.length - 1];
+  console.log(lastMessage.content);
 }
 
 main().catch(console.error);

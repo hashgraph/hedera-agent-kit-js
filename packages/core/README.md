@@ -1,16 +1,19 @@
 # Hedera Agent Kit
 
-![npm version](https://badgen.net/npm/v/hedera-agent-kit)
-![license](https://badgen.net/github/license/hedera-dev/hedera-agent-kit)
-![build](https://badgen.net/github/checks/hedera-dev/hedera-agent-kit)
+![npm version](https://badgen.net/npm/v/@hashgraph/hedera-agent-kit)
+![license](https://badgen.net/github/license/hashgraph/hedera-agent-kit-js)
+![build](https://badgen.net/github/checks/hashgraph/hedera-agent-kit-js)
 
-> Build Hedera-powered AI agents **in under a minute**.
+Build Hedera-powered AI agents **in under a minute**.
+
+> **Upgrading from v3?** See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for all breaking changes.
 
 ## 📋 Contents
 
 - [Key Features](#key-features)
 - [About the Agent Kit Functionality](#agent-kit-functionality)
 - [Third Party Plugins](#third-party-plugins)
+- [Hooks and Policies](#hooks-and-policies)
 - [Developer Examples](#developer-examples)
 - [🚀 60-Second Quick-Start](#-60-second-quick-start)
 - [Agent Execution Modes](#agent-execution-modes)
@@ -25,7 +28,7 @@
 
 The Hedera Agent Kit is an open-source toolkit that brings intelligent agent workflows to the Hedera network. It’s designed for developers who want to integrate Hedera account management and Hedera native functionality into agent applications. With the Hedera Agent Kit, developers can build agents that interact on-chain through a conversational interface. This means Hedera agents can do more than process information; they can also send tokens, manage accounts, store data on Hedera Consensus Service, and coordinate workflows directly on a public ledger.
 
-This version of the Hedera Agent Kit, known as v3, is a complete rewrite of the original version. It is designed to be more flexible and easier to use, with a focus on developer experience. It enables direct API execution through a simple HederaAgentAPI class, with an individual LangChain tools call for each example. [Learn more about Hedera Agent Kit V3](https://hedera.com/blog/whats-new-in-ai-studio/)
+As of v4, the Hedera Agent Kit is organized as a monorepo of `@hashgraph`-scoped packages. You install the core package plus only the toolkit for your framework (LangChain, Vercel AI SDK, ElizaOS, or MCP). See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for details.
 
 The Hedera Agent Kit is extensible with third party plugins by other projects.
 
@@ -37,7 +40,7 @@ The list of currently available Hedera plugins and functionality can be found in
 
 👉 See [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HEDERAPLUGINS.md) for the full catalogue & usage examples for Hedera Tools.
 
-Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
+Want to add more functionality from Hedera Services? [Open an issue](https://github.com/hashgraph/hedera-agent-kit-js/issues/new?template=toolkit_feature_request.yml&labels=feature-request)!
 
 ---
 
@@ -70,11 +73,33 @@ The Hedera Agent Kit is extensible with third party plugins by other projects. S
 - [Chainlink price feed Plugin](https://www.npmjs.com/package/chainlink-pricefeed-plugin) provides access to the [**Chainlink price feeds**](https://docs.chain.link/data-feeds/price-feeds) to get data aggregated from many data sources. It exposes the action (`get price feed`) that allows you to get the current price for ETH, BTC, HBAR, LINK, USDC, UST or DAI.
 
   Github repository: [https://github.com/henrytongv/chainlink-price-plugin-js](https://github.com/henrytongv/chainlink-price-plugin-js). Tested/endorsed version of plugin: chainlink-pricefeed-plugin@1.0.4
-  
+
+- [Hedera T3N Plugin](https://www.npmjs.com/package/@terminal3/hedera-t3n-plugin) provides access to [Terminal 3 Network (T3N)](https://docs.terminal3.io/t3n/) to enable identity verification, authentication, and last mile-delivery or selective disclosure of private and sensitive information for AI-driven applications, ensuring compliant and auditable interactions.
+
+  Github repository: [https://github.com/Terminal-3/hedera-t3n-plugin](https://github.com/Terminal-3/hedera-t3n-plugin)
+
 _[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
+
+### Hooks and Policies
+
+The Hedera Agent Kit provides a flexible and powerful system for putting limits on tool usage and enforcing business logic, effectively enabling you to limit the functionality of AI agents through **Hooks** and **Policies**. These hooks and policies can be used to enforce security, compliance, and other business rules.
+
+**Features**
+* Hooks and policies can be called when parameters are passed, after parameter normalization, before tool execution when a transaction has been formed, and after tool execution when a transaction has been signed and submitted.
+* Users can create their own hooks and policies on any available Hedera Agent Kit tool, simply fork this repo and create your own hooks and policies in the `typescript/src/hooks` and `typescript/src/policies` directories.
+* We have provided examples:
+  * A hook to [log actions to an HCS topic](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#1-hcsaudittrailhook-hook), creating an easy to track audit trail. 
+  * A policy that [sets the maximum number of recipients](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#2-maxrecipientspolicy-policy) in a transfer or airdrop.
+  * A policy the [blocks tool usage](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#3-rejecttoolpolicy-policy) by an agent.
+
+For more information on hooks and policies, see the [Hooks and Policies documentation](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md).
+
+Try out an example [Audit Hook Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-try-out-the-audit-hook-agent) to see how hooks and policies work in practice.
+
 ---
 
 ## Developer Examples
+
 
 You can try out examples of the different types of agents you can build by followin the instructions in the [Developer Examples](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md) doc in this repo.
 
@@ -92,7 +117,7 @@ First follow instructions in the [Developer Examples to clone and configure the 
 
 ## 🚀 60-Second Quick-Start
 
-See more info at [https://www.npmjs.com/package/hedera-agent-kit](https://www.npmjs.com/package/hedera-agent-kit)
+See more info at [https://www.npmjs.com/package/@hashgraph/hedera-agent-kit](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit)
 
 ### 🆓 Free AI Options Available!
 
@@ -114,9 +139,13 @@ npm init -y
 
 Open `package.json` and add `"type": "module"` to enable ES modules.
 
+Install the core package, LangChain toolkit, your LLM provider, and the Hedera SDK:
+
 ```bash
-npm install hedera-agent-kit @langchain/core langchain @langchain/langgraph @langchain/openai @hiero-ledger/sdk dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
 ```
+
+> Using a different LLM? Replace `@langchain/openai` with `@langchain/anthropic`, `@langchain/groq`, or `@langchain/ollama`.
 
 ### 2 – Configure: Add Environment Variables
 
@@ -144,67 +173,54 @@ GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
 
-Create a new file called `index.js` in the `hello-hedera-agent-kit` folder.
+Create a new file called `index.ts` in the `hello-hedera-agent-kit` folder.
 
 ```bash
-touch index.js
+touch index.ts
 ```
 
-Once you have created a new file `index.js` and added the environment variables, you can run the following code:
+Once you have created the file and added the environment variables, you can run the following code:
 
-```javascript
-// index.js
+```typescript
+// index.ts
 import { Client, PrivateKey } from '@hiero-ledger/sdk';
-import { HederaLangchainToolkit, AgentMode } from 'hedera-agent-kit';
-import { createAgent } from 'langchain';
-import { MemorySaver } from '@langchain/langgraph';
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { allCorePlugins } from '@hashgraph/hedera-agent-kit/plugins';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { ChatOpenAI } from '@langchain/openai';
-import dotenv from 'dotenv';
+import { createAgent } from 'langchain';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 async function main() {
   // Hedera client setup (Testnet by default)
   const client = Client.forTestnet().setOperator(
-    process.env.ACCOUNT_ID,
-    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY)
+    process.env.ACCOUNT_ID!,
+    PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)
   );
 
-  // Prepare Hedera toolkit
-  const hederaAgentToolkit = new HederaLangchainToolkit({
+  // Prepare Hedera toolkit with explicit plugin selection
+  const toolkit = new HederaLangchainToolkit({
     client,
     configuration: {
-      tools: [], // Add specific tools here if needed, or leave empty for defaults/plugins
-      plugins: [], // Add plugins here
-      context: {
-        mode: AgentMode.AUTONOMOUS,
-      },
+      plugins: allCorePlugins,
+      context: { mode: AgentMode.AUTONOMOUS },
     },
   });
 
-  // Fetch tools from a toolkit
-  const tools = hederaAgentToolkit.getTools();
-
-  const llm = new ChatOpenAI({
-    model: 'gpt-4o-mini',
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
   const agent = createAgent({
-    model: llm,
-    tools: tools,
+    model: new ChatOpenAI({ model: 'gpt-4o-mini' }),
+    tools: toolkit.getTools(),
     systemPrompt: 'You are a helpful assistant with access to Hedera blockchain tools',
-    checkpointer: new MemorySaver(),
   });
 
-  console.log('Sending a message to the agent...');
-  
-  const response = await agent.invoke(
-    { messages: [{ role: 'user', content: "what's my balance?" }] },
-    { configurable: { thread_id: '1' } }
-  );
+  const response = await agent.invoke({
+    messages: [{ role: 'user', content: "What's my HBAR balance?" }],
+  });
 
-  console.log(response.messages[response.messages.length - 1].content);
+  const lastMessage = response.messages[response.messages.length - 1];
+  console.log(lastMessage.content);
 }
 
 main().catch(console.error);
@@ -212,41 +228,17 @@ main().catch(console.error);
 
 ### 4 – Run Your "Hello Hedera Agent Kit" Example
 
-From the root directory, run your example agent, and prompt it to give your hbar balance:
+From the root directory, run your example agent:
 
 ```bash
-node index.js
+npx tsx index.ts
 ```
 
-If you would like, try adding in other prompts to the agent to see what it can do.
+> To see more examples, check out the [examples/](https://github.com/hashgraph/hedera-agent-kit-js/tree/main/examples) directory in this repo.
 
-```javascript
-// ...
-//original
-  const response = await agent.invoke(
-    { messages: [{ role: 'user', content: "what's my balance?" }] },
-    { configurable: { thread_id: '1' } }
-  );
-// or
-  const response = await agent.invoke(
-    { messages: [{ role: 'user', content: "create a new token called 'TestToken' with symbol 'TEST'" }] },
-    { configurable: { thread_id: '1' } }
-  );
-// or
-  const response = await agent.invoke(
-    { messages: [{ role: 'user', content: "transfer 5 HBAR to account 0.0.1234" }] },
-    { configurable: { thread_id: '1' } }
-  );
-// or
-  const response = await agent.invoke(
-    { messages: [{ role: 'user', content: "create a new topic for project updates" }] },
-    { configurable: { thread_id: '1' } }
-  );
-// ...
-   console.log(response.messages[response.messages.length - 1].content);
-```
+---
 
-> To get other Hedera Agent Kit tools working, take a look at the example agent implementations at [https://github.com/hedera-dev/hedera-agent-kit/tree/main/examples/langchain-v1/plugin-tool-calling-agent.ts](https://github.com/hedera-dev/hedera-agent-kit/tree/main/examples/langchain-v1/plugin-tool-calling-agent.ts)
+## About the Agent Kit
 
 ### Agent Execution Modes
 
@@ -272,28 +264,30 @@ Currently, the following plugins are available:
 - Create a Topic
 - Submit a message to a Topic
 
-#### Core HTS Plugin: Tools for Hedera Token Service operations
+#### Core Token Plugin: Tools for Hedera Token Service operations
 
 - Create a Fungible Token
 - Create a Non-Fungible Token
 - Airdrop Fungible Tokens
 
-#### Core Queries Plugin: Tools for querying Hedera network data
+#### Query Plugins: Tools for querying Hedera network data
 
-- Get Account Query
-- Get HBAR Balance Query
-- Get Account Token Balances Query
-- Get Topic Messages Query
+- Account queries (balances, info)
+- Token queries (info, airdrops)
+- Consensus queries (topic info, messages)
+- EVM queries (contract info)
+- Misc queries (exchange rates)
+- Transaction queries (transaction records)
 
-_See more in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
+_See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
 
 ---
 
 ## Creating Plugins & Contributing
 
-- You can find a guide for creating plugins in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)
+- You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md)
 
-- This guide also has instructions for [publishing and registering your plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
+- This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
 - If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 

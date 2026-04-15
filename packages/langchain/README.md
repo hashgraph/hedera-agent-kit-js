@@ -28,7 +28,7 @@ Get your Hedera testnet keys at https://portal.hedera.com/dashboard. We recommen
 import 'dotenv/config';
 import { Client, AccountId, PrivateKey } from '@hiero-ledger/sdk';
 import { ChatOpenAI } from '@langchain/openai';
-import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { createAgent } from 'langchain';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import {
   coreTokenPlugin,
@@ -51,8 +51,10 @@ const toolkit = new HederaLangchainToolkit({
   },
 });
 
-const llm = new ChatOpenAI({ model: 'gpt-4o' });
-const agent = createReactAgent({ llm, tools: toolkit.getTools() });
+const agent = createAgent({
+  model: new ChatOpenAI({ model: 'gpt-4o' }),
+  tools: toolkit.getTools(),
+});
 
 const response = await agent.invoke({
   messages: [{ role: 'user', content: 'Create a new Hedera account' }],
