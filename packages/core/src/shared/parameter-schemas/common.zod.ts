@@ -1,6 +1,6 @@
 import { Context } from '@/shared/index';
 import { z } from 'zod';
-import { AccountId, PublicKey, Timestamp } from '@hashgraph/sdk';
+import { AccountId, PublicKey, Timestamp } from '@hiero-ledger/sdk';
 
 export const optionalScheduledTransactionParams = (_context: Context = {}) =>
   z.object({

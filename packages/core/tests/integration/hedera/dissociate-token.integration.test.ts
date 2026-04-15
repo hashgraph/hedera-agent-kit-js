@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TokenId, TokenSupplyType } from '@hashgraph/sdk';
+import { Client, PrivateKey, AccountId, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 import dissociateTokenTool from '@/plugins/core-token-plugin/tools/dissociate-token';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

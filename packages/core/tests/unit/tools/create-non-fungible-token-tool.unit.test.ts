@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, PublicKey, TokenSupplyType, TokenType } from '@hashgraph/sdk';
+import { Client, PublicKey, TokenSupplyType, TokenType } from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_NON_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/non-fungible-token/create-non-fungible-token';
 import z from 'zod';
 import {

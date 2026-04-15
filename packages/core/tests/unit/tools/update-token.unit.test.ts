@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, PublicKey } from '@hashgraph/sdk';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import toolFactory, { UPDATE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/update-token';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, TopicCreateTransaction } from '@hashgraph/sdk';
+import { Client, TopicCreateTransaction } from '@hiero-ledger/sdk';
 import {
   getOperatorClientForTests,
   HederaOperationsWrapper,
@@ -75,6 +75,7 @@ describe('HcsAuditTrailHook E2E Tests', () => {
 
     // Verify that the message was published to the HCS topic
     const mirrorNodeMessages = await operatorWrapper.getTopicMessages(topicId);
+    console.log('mirrorNodeMessages', mirrorNodeMessages);
 
     expect(mirrorNodeMessages.messages.length).toBeGreaterThan(0);
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { GET_EXCHANGE_RATE_TOOL } from '@/plugins/core-misc-query-plugin/tools/queries/get-exchange-rate-query';
 import type { ExchangeRateResponse } from '@/shared/hedera-utils/mirrornode/types';
 

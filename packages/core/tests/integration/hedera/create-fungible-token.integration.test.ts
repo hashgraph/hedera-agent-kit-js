@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import createFungibleTokenTool from '@/plugins/core-token-plugin/tools/fungible-token/create-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

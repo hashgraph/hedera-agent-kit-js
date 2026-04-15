@@ -1,7 +1,7 @@
 import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { describe, it, expect } from 'vitest';
 import { AbstractPolicy } from '@/shared';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 
 describe('RejectToolPolicy', async () => {
   it('should reject a tool call by returning true', async () => {

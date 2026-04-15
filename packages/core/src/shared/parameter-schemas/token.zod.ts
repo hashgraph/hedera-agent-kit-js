@@ -8,7 +8,7 @@ import {
   TokenNftAllowance,
   TokenSupplyType,
   TokenType,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 import {
   optionalScheduledTransactionParams,

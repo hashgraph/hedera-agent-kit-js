@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { ERC20_FACTORY_ABI } from '@/shared/constants/contracts';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { AccountId, Client } from '@hashgraph/sdk';
+import { AccountId, Client } from '@hiero-ledger/sdk';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 
 describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {

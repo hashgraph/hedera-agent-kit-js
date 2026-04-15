@@ -3,7 +3,7 @@ import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
-import { Client, TransactionRecordQuery } from '@hashgraph/sdk';
+import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 
 function extractTopicId(agentResult: any, responseParsingService: ResponseParserService): string {

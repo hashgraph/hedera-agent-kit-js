@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hashgraph/sdk';
+import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hiero-ledger/sdk';
 import getTopicMessagesQueryTool from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-messages-query';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

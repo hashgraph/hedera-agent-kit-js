@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ethers } from 'ethers';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { ERC721_TRANSFER_FUNCTION_ABI } from '@/shared/constants/contracts';
 import { transferERC721Parameters } from '@/shared/parameter-schemas/evm.zod';

@@ -159,14 +159,14 @@ Install core, SDK, and only the toolkit you need.
 LangChain example:
 
 ```bash
-pnpm add @hashgraph/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain
+pnpm add @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain
 pnpm add @langchain/core langchain @langchain/openai @langchain/mcp-adapters
 ```
 
 Usage example:
 
 ```ts
-import { Client, PrivateKey } from '@hashgraph/sdk'
+import { Client, PrivateKey } from '@hiero-ledger/sdk'
 import { AgentMode } from '@hashgraph/hedera-agent-kit'
 import { coreAccountPlugin, coreTokenPlugin } from '@hashgraph/hedera-agent-kit/plugins'
 import {

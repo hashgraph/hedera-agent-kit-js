@@ -1,4 +1,4 @@
-import { LedgerId } from '@hashgraph/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
 
 const TESTNET_ERC20_FACTORY_ADDRESS = '0.0.6471814';
 const TESTNET_ERC721_FACTORY_ADDRESS = '0.0.6510666'; // TODO: Update with actual deployed address

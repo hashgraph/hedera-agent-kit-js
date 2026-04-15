@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, AccountId, PrivateKey } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey } from '@hiero-ledger/sdk';
 
 const makeClient = () => {
   const client = Client.forNetwork({});

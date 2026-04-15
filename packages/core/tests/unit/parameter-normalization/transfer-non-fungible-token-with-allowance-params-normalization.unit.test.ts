@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AccountId, NftId } from '@hashgraph/sdk';
+import { AccountId, NftId } from '@hiero-ledger/sdk';
 import type { Context } from '@/shared/configuration';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { transferNonFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';

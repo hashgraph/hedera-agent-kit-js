@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TopicId, AccountId, PublicKey, PrivateKey } from '@hashgraph/sdk';
+import { TopicId, AccountId, PublicKey, PrivateKey } from '@hiero-ledger/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { z } from 'zod';
 import { AccountResolver } from '@/shared/utils/account-resolver';

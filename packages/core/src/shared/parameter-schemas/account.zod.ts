@@ -1,6 +1,6 @@
 import { Context } from '@/shared/configuration';
 import { z } from 'zod';
-import { AccountId, Hbar, Key, HbarAllowance, TokenAllowance } from '@hashgraph/sdk';
+import { AccountId, Hbar, Key, HbarAllowance, TokenAllowance } from '@hiero-ledger/sdk';
 import Long from 'long';
 import {
   optionalScheduledTransactionParams,

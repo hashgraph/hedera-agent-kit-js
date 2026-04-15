@@ -4,7 +4,7 @@
  * transaction bytes, and then use its own local Hedera SDK client to sign and execute them.
  */
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import { Client, PrivateKey, Transaction } from '@hashgraph/sdk';
+import { Client, PrivateKey, Transaction } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import type { StructuredToolInterface } from '@langchain/core/tools';

@@ -3,8 +3,8 @@ import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
 import { AgentMode } from '@/shared/configuration';
 import type { PostSecondaryActionParams, PreToolExecutionParams } from '@/shared/hook';
 import type { RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
-import * as sdk from '@hashgraph/sdk';
-import { Client } from '@hashgraph/sdk';
+import * as sdk from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 
 // Mock UsdToHbarService to prevent it from making network requests during global setup
 vi.mock('../../utils/usd-to-hbar-service', () => {
@@ -19,7 +19,7 @@ vi.mock('../../utils/usd-to-hbar-service', () => {
 });
 
 // Mock Hashgraph SDK minimally
-vi.mock('@hashgraph/sdk', () => {
+vi.mock('@hiero-ledger/sdk', () => {
   const TopicMessageSubmitTransactionMock = vi.fn().mockImplementation(function () {
     return {
       setTopicId: vi.fn().mockReturnThis(),

@@ -15,7 +15,7 @@ The `contracts.ts` file contains contract-related constants and utilities:
 ### Usage Example
 
 ```typescript
-import { LedgerId } from '@hashgraph/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
 import { getERC20FactoryAddress, ERC20_FACTORY_ABI } from '@/shared/constants/contracts';
 
 // Get factory address for testnet

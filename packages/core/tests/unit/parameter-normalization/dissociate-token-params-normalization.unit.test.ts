@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, AccountId, TokenId } from '@hashgraph/sdk';
+import { Client, AccountId, TokenId } from '@hiero-ledger/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import type { Context } from '@/shared/configuration';
 import { AccountResolver } from '@/shared/utils/account-resolver';

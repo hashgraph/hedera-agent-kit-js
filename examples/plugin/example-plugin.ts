@@ -19,7 +19,7 @@ import {
   PromptGenerator,
   AccountResolver,
 } from '@hashgraph/hedera-agent-kit';
-import { Client, TransferTransaction, Hbar, AccountId } from '@hashgraph/sdk';
+import { Client, TransferTransaction, Hbar, AccountId } from '@hiero-ledger/sdk';
 import { transactionToolOutputParser } from '@hashgraph/hedera-agent-kit';
 
 // ─── Tool 1: Greeting tool (no Hedera transaction) ────────────────────────────

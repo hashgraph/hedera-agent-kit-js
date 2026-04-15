@@ -104,7 +104,7 @@ Create your tool file (e.g., tools/my-service/my-tool.ts).
 ```typescript
 import { z } from "zod";
 import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
-import { Client } from "@hashgraph/sdk";
+import { Client } from "@hiero-ledger/sdk";
 
 // Define your parameter schema (same as before)
 const myToolParameters = z.object({

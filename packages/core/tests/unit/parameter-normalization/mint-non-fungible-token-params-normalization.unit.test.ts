@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 
 vi.mock('@/shared/utils/account-resolver', () => ({

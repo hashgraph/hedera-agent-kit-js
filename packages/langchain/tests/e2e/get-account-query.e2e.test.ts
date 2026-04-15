@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { Client, Key, PrivateKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';

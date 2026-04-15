@@ -12,7 +12,7 @@ import {
   type State,
   Validator,
 } from '@elizaos/core';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import type { Tool, Context } from '@hashgraph/hedera-agent-kit';
 import { generateExtractionTemplate } from './utils/extraction';
 import { customParseJSONObjectFromText } from './utils/parser';

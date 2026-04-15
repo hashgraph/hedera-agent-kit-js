@@ -25,7 +25,7 @@ import {
   TopicUpdateTransaction,
   Transaction,
   TransferTransaction,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import {
   airdropFungibleTokenParametersNormalised,
   approveNftAllowanceParametersNormalised,

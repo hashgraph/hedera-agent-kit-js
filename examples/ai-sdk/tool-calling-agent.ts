@@ -12,7 +12,7 @@ import {
   coreTransactionQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { openai } from '@ai-sdk/openai';

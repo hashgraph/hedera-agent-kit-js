@@ -7,7 +7,7 @@ import {
   PublicKey,
   TokenSupplyType,
   TokenType,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import getTokenInfoQueryTool from '@/plugins/core-token-query-plugin/tools/queries/get-token-info-query';
 import { AgentMode, type Context } from '@/shared/configuration';
 import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';

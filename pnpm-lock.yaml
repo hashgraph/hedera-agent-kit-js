@@ -45,7 +45,7 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       tsup:
@@ -76,7 +76,7 @@ importers:
         specifier: 3.25.76
         version: 3.25.76
     devDependencies:
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       tsup:
@@ -110,7 +110,7 @@ importers:
       '@hashgraph/hedera-agent-kit-tests':
         specifier: workspace:*
         version: link:../tests
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       tsup:
@@ -206,7 +206,7 @@ importers:
         specifier: 3.24.6
         version: 3.24.6(zod@4.3.6)
     devDependencies:
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       tsup:
@@ -243,7 +243,7 @@ importers:
       '@hashgraph/hedera-agent-kit-tests':
         specifier: workspace:*
         version: link:../tests
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       '@langchain/openai':
@@ -280,7 +280,7 @@ importers:
         specifier: 3.25.76
         version: 3.25.76
     devDependencies:
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       tsup:
@@ -295,7 +295,7 @@ importers:
       '@hashgraph/hedera-agent-kit':
         specifier: workspace:*
         version: link:../core
-      '@hashgraph/sdk':
+      '@hiero-ledger/sdk':
         specifier: 2.81.0
         version: 2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       bignumber.js:
@@ -1112,8 +1112,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@hashgraph/cryptography@1.17.0':
-    resolution: {integrity: sha512-AFJncwcZxpeNUoaAbNjkXxUESO+WB8Wdi3IODD1iE6e7kFjk/T1rmFDTtoJRcE50Y3/h24y7GfMOkxiDlhRpxg==}
+  '@hiero-ledger/cryptography@1.17.0':
+    resolution: {integrity: sha512-9o4c7H64i81PKCNS2nc9TA1QerI4Le6yZzyYtMDF/jmzgkzciPqm6059M2bbtq06Rv5FqCvOIkxe00jUAI3ZWw==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       expo-crypto: '*'
@@ -1121,8 +1121,8 @@ packages:
       expo-crypto:
         optional: true
 
-  '@hashgraph/proto@2.26.0-beta.3':
-    resolution: {integrity: sha512-i89RMYEjpG5uVOa7VzDMVQq8gNs4feeXvEJFyZzwp6i1NSmMHn9DfmIWePylh67LOFBNnX5ZyXNcgUJaAC8Fmw==}
+  '@hiero-ledger/proto@2.26.0-beta.3':
+    resolution: {integrity: sha512-2UhTKX2RbL2LC8XcgetFa4iS5d8cELY/8PmFolj750z4CoQu2YOchZTqNTdI431qR9uAx3aBVSf+mx/YBYIUNA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       ansi-regex: 6.2.2
@@ -1131,8 +1131,8 @@ packages:
       protobufjs: 7.5.4
       strip-ansi: 7.1.2
 
-  '@hashgraph/sdk@2.81.0':
-    resolution: {integrity: sha512-AaNcQsdi1pLJcxkt9vQyah54+e9aZZla12LIOjMIYdf2v8UvIv37J7TMApfDapXAUwYI7lTV06tv3Z8V5abrCg==}
+  '@hiero-ledger/sdk@2.81.0':
+    resolution: {integrity: sha512-abRmKWR8w2vPIZYQzM3G8S61D06s2TPymcWuU27PEycNT/Bl9J0dQktlBUHDlhz+JNTYu37kYR4gOI/avm0ufg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       bn.js: 5.2.3
@@ -6644,7 +6644,7 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@hashgraph/cryptography@1.17.0(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))':
+  '@hiero-ledger/cryptography@1.17.0(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))':
     dependencies:
       '@noble/curves': 1.8.1
       ansi-regex: 6.2.2
@@ -6666,7 +6666,7 @@ snapshots:
       - react-native
       - supports-color
 
-  '@hashgraph/proto@2.26.0-beta.3(ansi-regex@6.2.2)(ansi-styles@6.2.3)(debug@4.4.1)(protobufjs@8.0.0)(strip-ansi@7.1.2)':
+  '@hiero-ledger/proto@2.26.0-beta.3(ansi-regex@6.2.2)(ansi-styles@6.2.3)(debug@4.4.1)(protobufjs@8.0.0)(strip-ansi@7.1.2)':
     dependencies:
       ansi-regex: 6.2.2
       ansi-styles: 6.2.3
@@ -6675,15 +6675,15 @@ snapshots:
       protobufjs: 8.0.0
       strip-ansi: 7.1.2
 
-  '@hashgraph/sdk@2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))':
+  '@hiero-ledger/sdk@2.81.0(bn.js@5.2.3)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))':
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/bignumber': 5.8.0
       '@ethersproject/bytes': 5.8.0
       '@ethersproject/rlp': 5.8.0
       '@grpc/grpc-js': 1.12.6
-      '@hiero-ledger/cryptography': '@hashgraph/cryptography@1.17.0(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))'
-      '@hiero-ledger/proto': '@hashgraph/proto@2.26.0-beta.3(ansi-regex@6.2.2)(ansi-styles@6.2.3)(debug@4.4.1)(protobufjs@8.0.0)(strip-ansi@7.1.2)'
+      '@hiero-ledger/cryptography': 1.17.0(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
+      '@hiero-ledger/proto': 2.26.0-beta.3(ansi-regex@6.2.2)(ansi-styles@6.2.3)(debug@4.4.1)(protobufjs@8.0.0)(strip-ansi@7.1.2)
       ansi-regex: 6.2.2
       ansi-styles: 6.2.3
       bignumber.js: 9.1.1
@@ -11088,7 +11088,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 25.6.0
+      '@types/node': 22.19.17
       long: 5.3.2
 
   proxy-addr@2.0.7:

@@ -6,7 +6,7 @@ import {
 import { coreAccountPlugin, coreTokenPlugin } from '@hashgraph/hedera-agent-kit/plugins';
 import { MaxRecipientsPolicy } from '@hashgraph/hedera-agent-kit/policies';
 
-import { Client, PrivateKey } from '@hashgraph/sdk';
+import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { createAgent } from 'langchain';

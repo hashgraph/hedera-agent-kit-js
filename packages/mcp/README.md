@@ -7,7 +7,7 @@ A complete runnable server (stdio + HTTP transports) lives in [`examples/modelco
 ## Library Usage
 
 ```typescript
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp';
 import { coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin } from '@hashgraph/hedera-agent-kit/plugins';
 

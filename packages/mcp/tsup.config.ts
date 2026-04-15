@@ -9,7 +9,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     bundle: true,
-    external: ['@hashgraph/sdk', '@hashgraph/hedera-agent-kit'],
+    external: ['@hiero-ledger/sdk', '@hashgraph/hedera-agent-kit'],
     target: 'es2022',
   },
   {
@@ -20,7 +20,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     bundle: true,
-    external: ['@hashgraph/sdk', '@hashgraph/hedera-agent-kit'],
+    external: ['@hiero-ledger/sdk', '@hashgraph/hedera-agent-kit'],
     target: 'node16',
   },
 ]);

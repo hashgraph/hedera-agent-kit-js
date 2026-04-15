@@ -1,6 +1,6 @@
 // tests/unit/update-topic-tool.unit.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, PrivateKey, PublicKey } from '@hashgraph/sdk';
+import { Client, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import toolFactory, {
   UPDATE_TOPIC_TOOL,
   UpdateTopicTool,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, LedgerId, Status } from '@hashgraph/sdk';
+import { Client, LedgerId, Status } from '@hiero-ledger/sdk';
 import toolFactory, { TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token-with-allowance';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';

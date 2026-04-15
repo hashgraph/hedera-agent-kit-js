@@ -7,7 +7,7 @@ LangChain integration for Hedera Agent Kit. Wraps Hedera tools as LangChain `Str
 ### 1. Install dependencies
 
 ```bash
-npm install @hashgraph/hedera-agent-kit-langchain @hashgraph/hedera-agent-kit @hashgraph/sdk @langchain/openai dotenv
+npm install @hashgraph/hedera-agent-kit-langchain @hashgraph/hedera-agent-kit @hiero-ledger/sdk @langchain/openai dotenv
 ```
 
 ### 2. Configure environment variables
@@ -26,7 +26,7 @@ Get your Hedera testnet keys at https://portal.hedera.com/dashboard. We recommen
 
 ```typescript
 import 'dotenv/config';
-import { Client, AccountId, PrivateKey } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey } from '@hiero-ledger/sdk';
 import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';

@@ -50,10 +50,10 @@
     "zod": "3.25.76"
   },
   "peerDependencies": {
-    "@hashgraph/sdk": ">=2.81.0"
+    "@hiero-ledger/sdk": "^2.81.0"
   },
   "devDependencies": {
-    "@hashgraph/sdk": "2.81.0",
+    "@hiero-ledger/sdk": "2.81.0",
     "tsup": "8.5.0",
     "typescript": "5.8.3"
   }

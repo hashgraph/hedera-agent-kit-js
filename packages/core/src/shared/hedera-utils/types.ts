@@ -1,8 +1,8 @@
-import { AccountId, Hbar } from '@hashgraph/sdk';
+import { AccountId, Hbar } from '@hiero-ledger/sdk';
 import Long from 'long';
 
 /**
- * The implementation from @hashgraph/sdk is not correctly exported, so a local definition of the type is needed
+ * The implementation from @hiero-ledger/sdk is not correctly exported, so a local definition of the type is needed
  */
 export type TransferHbarInput = {
   accountId: AccountId | string;
@@ -10,7 +10,7 @@ export type TransferHbarInput = {
 };
 
 /**
- * The implementation of TokenTransfer from @hashgraph/sdk is not correctly exported, so a local definition of the type is needed
+ * The implementation of TokenTransfer from @hiero-ledger/sdk is not correctly exported, so a local definition of the type is needed
  */
 export type TokenTransferMinimalParams = {
   tokenId: string;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { GET_PENDING_AIRDROP_TOOL } from '@/plugins/core-token-query-plugin/tools/queries/get-pending-airdrop-query';
 
 vi.mock('@/shared/utils/prompt-generator', () => ({

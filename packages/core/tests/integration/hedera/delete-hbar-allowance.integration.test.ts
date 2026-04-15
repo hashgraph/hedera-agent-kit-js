@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
 import deleteHbarAllowanceTool from '@/plugins/core-account-plugin/tools/account/delete-hbar-allowance';
 import approveHbarAllowanceTool from '@/plugins/core-account-plugin/tools/account/approve-hbar-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';

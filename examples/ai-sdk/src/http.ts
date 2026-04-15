@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { LedgerId, Client } from "@hashgraph/sdk";
+import { LedgerId, Client } from "@hiero-ledger/sdk";
 import {
   AgentMode,
   coreAccountPlugin,

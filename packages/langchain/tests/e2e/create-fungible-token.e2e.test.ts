@@ -5,7 +5,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { Client, PrivateKey, TokenId } from '@hashgraph/sdk';
+import { Client, PrivateKey, TokenId } from '@hiero-ledger/sdk';
 import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
 import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';

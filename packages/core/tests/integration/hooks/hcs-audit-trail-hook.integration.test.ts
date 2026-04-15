@@ -9,7 +9,7 @@ import {
   Timestamp,
   PublicKey,
   NftId,
-} from '@hashgraph/sdk';
+} from '@hiero-ledger/sdk';
 import getTransferHbarTool, {
   TRANSFER_HBAR_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';

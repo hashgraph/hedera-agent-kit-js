@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, { GET_TOPIC_MESSAGES_QUERY_TOOL } from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-messages-query';
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import toolFactory, {
   SUBMIT_TOPIC_MESSAGE_TOOL,
   SubmitTopicMessageTool,

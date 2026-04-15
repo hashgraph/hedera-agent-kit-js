@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Client } from '@hashgraph/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { Context } from './configuration';
 
 import {

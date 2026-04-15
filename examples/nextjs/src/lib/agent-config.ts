@@ -6,7 +6,7 @@ import {
   coreAccountQueryPlugin, coreTokenQueryPlugin, coreConsensusQueryPlugin,
   coreEVMQueryPlugin, coreMiscQueriesPlugin, coreTransactionQueryPlugin,
 } from '@hashgraph/hedera-agent-kit/plugins';
-import { AccountId, Client, PrivateKey } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
 
 export type AppMode = 'autonomous' | 'human';
 export type HederaNetwork = 'testnet' | 'mainnet';

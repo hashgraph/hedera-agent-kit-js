@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AccountId, Client, PrivateKey, PublicKey, TokenId, TokenSupplyType } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 
 import {
   getCustomClient,
