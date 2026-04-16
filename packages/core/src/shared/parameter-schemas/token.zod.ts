@@ -1,0 +1,488 @@
+import { Context } from '@/shared/configuration';
+import { z } from 'zod';
+import {
+  AccountId,
+  NftId,
+  PublicKey,
+  TokenId,
+  TokenNftAllowance,
+  TokenSupplyType,
+  TokenType,
+} from '@hiero-ledger/sdk';
+import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
+import {
+  optionalScheduledTransactionParams,
+  optionalScheduledTransactionParamsNormalised,
+} from './common.zod';
+
+export const createFungibleTokenParameters = (_context: Context = {}) =>
+  optionalScheduledTransactionParams(_context).extend({
+    tokenName: z.string().describe('The name of the token.'),
+    tokenSymbol: z.string().describe('The symbol of the token.'),
+    initialSupply: z
+      .number()
+      .int()
+      .optional()
+      .default(0)
+      .describe(
+        'The initial supply of the token. Given in display units, the tool will handle parsing',
+      ),
+    supplyType: z
+      .enum(['finite', 'infinite'])
+      .optional()
+      .default('finite')
+      .describe('Supply type of the token.'),
+    maxSupply: z
+      .number()
+      .int()
+      .optional()
+      .describe(
+        'The maximum supply of the token. Given in display units, the tool will handle parsing',
+      ),
+    decimals: z.number().int().optional().default(0).describe('The number of decimals.'),
+    treasuryAccountId: z.string().optional().describe('The treasury account of the token.'),
+    isSupplyKey: z
+      .boolean()
+      .optional()
+      .describe('Determines if the token supply key should be set.'),
+  });
+
+export const createFungibleTokenParametersNormalised = (_context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(_context).merge(
+    createFungibleTokenParameters(_context)
+      .omit({ schedulingParams: true })
+      .extend({
+        treasuryAccountId: z.string().describe('The treasury account of the token.'),
+        autoRenewAccountId: z
+          .string()
+          .optional()
+          .describe(
+            'The auto renew account for the token. If not provided, defaults to the operator account.',
+          ),
+        supplyKey: z
+          .custom<PublicKey>()
+          .optional()
+          .describe('The supply key. If not provided, defaults to the operator’s public key.'),
+        supplyType: z.custom<TokenSupplyType>().describe('Supply type of the token.'),
+        adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
+        kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
+        freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
+        wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
+        pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
+        metadataKey: z.custom<PublicKey>().optional().describe('The metadata key for the token.'),
+        tokenMemo: z.string().optional().describe('The memo for the token.'),
+        tokenType: z.custom<TokenType>().optional().describe('The type of the token.'),
+      }),
+  );
+
+export const createNonFungibleTokenParameters = (_context: Context = {}) =>
+  optionalScheduledTransactionParams(_context).extend({
+    tokenName: z.string().describe('The name of the token.'),
+    tokenSymbol: z.string().describe('The symbol of the token.'),
+    maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
+    treasuryAccountId: z.string().optional().describe('The treasury account of the token.'),
+    supplyType: z.enum(['finite', 'infinite']).optional().describe('Supply type of the token.'),
+    isSupplyKey: z
+      .boolean()
+      .optional()
+      .describe('Determines if the token supply key should be set.'),
+  });
+
+export const createNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
+  createNonFungibleTokenParameters(_context)
+    .omit({ schedulingParams: true }) // remove unnormalized scheduling params
+    .merge(optionalScheduledTransactionParamsNormalised(_context)) // add normalized ones
+    .extend({
+      autoRenewAccountId: z
+        .string()
+        .describe(
+          'The auto renew account for the token. If not provided, defaults to the operator account.',
+        ),
+      supplyKey: z
+        .custom<PublicKey>()
+        .describe('The supply key. If not provided, defaults to the operator’s public key.'),
+      supplyType: z.custom<TokenSupplyType>().describe('Supply type of the token.'),
+      maxSupply: z.number().int().optional().describe('The maximum supply of the token.'),
+      tokenType: z
+        .custom<TokenType>()
+        .default(TokenType.NonFungibleUnique)
+        .describe('Token type of the token - must be non-fungible unique for NFT.'),
+      adminKey: z.custom<PublicKey>().optional().describe('The admin key for the token.'),
+      kycKey: z.custom<PublicKey>().optional().describe('The KYC key for the token.'),
+      freezeKey: z.custom<PublicKey>().optional().describe('The freeze key for the token.'),
+      wipeKey: z.custom<PublicKey>().optional().describe('The wipe key for the token.'),
+      pauseKey: z.custom<PublicKey>().optional().describe('The pause key for the token.'),
+      tokenMemo: z.string().optional().describe('The memo for the token.'),
+    });
+
+const AirdropRecipientSchema = z.object({
+  accountId: z.string().describe('Recipient account ID (e.g., "0.0.xxxx"). (Required)'),
+  amount: z
+    .union([z.number(), z.string()])
+    .describe('Amount in display units, the tool will handle parsing. (Required)'),
+});
+
+export const airdropFungibleTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().describe('The id of the token.'),
+    sourceAccountId: z.string().optional().describe('The account to airdrop the token from.'),
+    recipients: z
+      .array(AirdropRecipientSchema)
+      .min(1)
+      .describe('Array of recipient objects, each with accountId and amount.'),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
+  });
+
+export const airdropFungibleTokenParametersNormalised = () =>
+  z.object({
+    tokenTransfers: z
+      .custom<TokenTransferMinimalParams[]>()
+      .describe('Array of TokenTransfer objects constructed from the original recipients.'),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
+  });
+
+export const mintFungibleTokenParameters = (_context: Context = {}) =>
+  optionalScheduledTransactionParams(_context).extend({
+    tokenId: z.string().describe('The id of the token.'),
+    amount: z
+      .number()
+      .describe(
+        'The amount of tokens to mint. Given in display units, the tool will handle parsing',
+      ),
+  });
+
+export const mintFungibleTokenParametersNormalised = (_context: Context = {}) =>
+  mintFungibleTokenParameters(_context)
+    .omit({ schedulingParams: true })
+    .merge(optionalScheduledTransactionParamsNormalised(_context));
+
+export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
+  optionalScheduledTransactionParams(_context).extend({
+    tokenId: z.string().describe('The id of the NFT class.'),
+    uris: z.array(z.string().max(100)).max(10).describe('An array of URIs hosting NFT metadata.'),
+  });
+
+export const mintNonFungibleTokenParametersNormalised = (_context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(_context).extend({
+    tokenId: z.string().describe('The id of the NFT class.'),
+    metadata: z
+      .instanceof(Uint8Array<ArrayBufferLike>)
+      .array()
+      .optional(),
+  });
+
+export const deleteTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().describe('The ID of the token to delete.'),
+  });
+
+export const deleteTokenParametersNormalised = (_context: Context = {}) =>
+  deleteTokenParameters(_context).extend({});
+
+export const tokenInfoQueryParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().optional().describe('The token ID to query.'),
+  });
+
+export const updateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.string().describe('The ID of the token to update (e.g., 0.0.12345).'),
+    tokenDesc: z
+      .string()
+      .optional()
+      .describe('Optional description of the token update operation.'),
+    tokenName: z
+      .string()
+      .max(100)
+      .optional()
+      .describe('New name for the token. Up to 100 characters.'),
+    tokenSymbol: z
+      .string()
+      .max(100)
+      .optional()
+      .describe('New symbol for the token. Up to 100 characters.'),
+    treasuryAccountId: z
+      .string()
+      .optional()
+      .describe('New treasury account for the token (Hedera account ID).'),
+    adminKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New admin key. Pass boolean `true` to use the operator/user key, or provide a Hedera-compatible public key string. Required for most property updates.',
+      ),
+    kycKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New KYC key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    freezeKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New freeze key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    wipeKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New wipe key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    supplyKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New supply key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    feeScheduleKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New fee schedule key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    pauseKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New pause key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    metadataKey: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .describe(
+        'New metadata key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+      ),
+    metadata: z
+      .string()
+      .optional()
+      .describe('New metadata for the token, in bytes (as base64 or hex).'),
+    tokenMemo: z
+      .string()
+      .max(100)
+      .optional()
+      .describe('Short public memo for the token, up to 100 characters.'),
+    autoRenewAccountId: z
+      .string()
+      .optional()
+      .describe('Account to automatically pay for token renewal (Hedera account ID).'),
+  });
+
+export const updateTokenParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    tokenId: z.instanceof(TokenId),
+
+    // Strings
+    tokenName: z.string().optional(),
+    tokenSymbol: z.string().optional(),
+    tokenMemo: z.string().optional(),
+    metadata: z.instanceof(Uint8Array<ArrayBufferLike>).optional(),
+
+    // IDs
+    treasuryAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
+    autoRenewAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
+
+    // Keys
+    adminKey: z.instanceof(PublicKey).optional(),
+    supplyKey: z.instanceof(PublicKey).optional(),
+    wipeKey: z.instanceof(PublicKey).optional(),
+    freezeKey: z.instanceof(PublicKey).optional(),
+    kycKey: z.instanceof(PublicKey).optional(),
+    feeScheduleKey: z.instanceof(PublicKey).optional(),
+    pauseKey: z.instanceof(PublicKey).optional(),
+    metadataKey: z.instanceof(PublicKey).optional(),
+  });
+
+// Associate Token
+export const associateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    // If not passed, will be injected from context in normalisation
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'Account ID to associate tokens with (e.g., 0.0.xxxxx). If not provided, operator account ID will be used',
+      ),
+    // One or more token IDs to associate
+    tokenIds: z.array(z.string()).min(1).describe('Array of token IDs to associate'),
+  });
+
+export const associateTokenParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().describe('Resolved account ID to associate tokens with'),
+    tokenIds: z.array(z.string()).min(1).describe('Array of token IDs to associate'),
+  });
+
+export const pendingAirdropQueryParameters = (_context: Context = {}) =>
+  z.object({
+    accountId: z.string().optional().describe('The account ID to query.'),
+  });
+
+export const dissociateTokenParameters = (_context: Context = {}) =>
+  z.object({
+    tokenIds: z
+      .array(z.string())
+      .min(1)
+      .describe('The list of Hedera token IDs (strings) to dissociate. Must provide at least one.'),
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        'The account ID from which to dissociate the tokens. Defaults to operator account.',
+      ),
+    transactionMemo: z.string().optional().describe('Optional memo for the transaction.'),
+  });
+
+export const dissociateTokenParametersNormalised = (_context: Context = {}) =>
+  dissociateTokenParameters(_context).extend({
+    tokenIds: z.array(z.instanceof(TokenId)),
+    accountId: z.instanceof(AccountId),
+  });
+
+export const approveNftAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    spenderAccountId: z.string().describe('Spender account ID'),
+    tokenId: z.string().describe('The NFT token ID'),
+    allSerials: z
+      .boolean()
+      .optional()
+      .describe(
+        'If true, approve allowance for all current and future serials of the NFT collection. If true, do not provide serialNumbers.',
+      ),
+    serialNumbers: z
+      .array(z.number().int().nonnegative())
+      .optional()
+      .describe('Array of NFT serial numbers to approve. Required if allSerials is not true.'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const approveNftAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    nftApprovals: z.array(z.instanceof(TokenNftAllowance)).optional(),
+    transactionMemo: z.string().optional(),
+  });
+
+// Delete NFT Allowance
+export const deleteNftAllowanceParameters = (_context: Context = {}) =>
+  z.object({
+    ownerAccountId: z
+      .string()
+      .optional()
+      .describe('Owner account ID (defaults to operator account ID if omitted)'),
+    tokenId: z.string().describe('The NFT token ID'),
+    serialNumbers: z
+      .array(z.number().int().min(1))
+      .min(1)
+      .describe('Array of NFT serial numbers to remove allowance for.'),
+    transactionMemo: z.string().optional().describe('Memo to include with the transaction'),
+  });
+
+export const deleteNftAllowanceParametersNormalised = (_context: Context = {}) =>
+  z.object({
+    nftWipes: z.array(z.instanceof(NftId)).min(1),
+    ownerAccountId: z.instanceof(AccountId),
+    transactionMemo: z.string().optional(),
+  });
+
+export const transferNonFungibleTokenWithAllowanceParameters = (_context: Context) =>
+  z.object({
+    sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
+    tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
+    recipients: z
+      .array(
+        z.object({
+          recipientId: z.string().describe('Account ID of the recipient (Required)'),
+          serialNumber: z
+            .number()
+            .int()
+            .min(1)
+            .describe('Serial number of the NFT to transfer (Required)'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient and NFT serial number pairs to transfer'),
+    transactionMemo: z
+      .string()
+      .optional()
+      .describe('Optional memo to include with the transaction'),
+  });
+
+export const transferNonFungibleTokenWithAllowanceParametersNormalised = (_context: Context) =>
+  z.object({
+    sourceAccountId: z.instanceof(AccountId),
+    transactionMemo: z.string().optional(),
+    transfers: z.array(
+      z.object({
+        nftId: z.instanceof(NftId),
+        receiver: z.instanceof(AccountId),
+      }),
+    ),
+  });
+
+export const transferNonFungibleTokenParameters = (_context: Context) =>
+  optionalScheduledTransactionParams(_context).extend({
+    tokenId: z.string().describe('The NFT token ID (e.g. "0.0.12345")'),
+    recipients: z
+      .array(
+        z.object({
+          recipientId: z.string().describe('Account ID of the recipient (Required)'),
+          serialNumber: z
+            .number()
+            .int()
+            .min(1)
+            .describe('Serial number of the NFT to transfer (Required)'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient and NFT serial number pairs to transfer'),
+    transactionMemo: z
+      .string()
+      .optional()
+      .describe('Optional memo to include with the transaction'),
+  });
+
+export const transferNonFungibleTokenParametersNormalised = (_context: Context) =>
+  optionalScheduledTransactionParamsNormalised(_context).extend({
+    senderAccountId: z.instanceof(AccountId),
+    transactionMemo: z.string().optional(),
+    transfers: z.array(
+      z.object({
+        nftId: z.instanceof(NftId),
+        receiver: z.instanceof(AccountId),
+      }),
+    ),
+  });
+
+export const transferFungibleTokenWithAllowanceParameters = (context: Context = {}) =>
+  optionalScheduledTransactionParams(context).extend({
+    tokenId: z.string().describe('Token ID to transfer'),
+    sourceAccountId: z.string().describe('Account ID of the token owner (the allowance granter)'),
+    transfers: z
+      .array(
+        z.object({
+          accountId: z.string().describe('Recipient account ID (Required)'),
+          amount: z
+            .number()
+            .nonnegative()
+            .describe('Amount of tokens to transfer in display unit. (Required)'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient transfers'),
+    transactionMemo: z.string().optional().describe('Memo for the transaction'),
+  });
+
+export const transferFungibleTokenWithAllowanceParametersNormalised = (context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(context).extend({
+    tokenId: z.string(),
+    tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
+    approvedTransfer: z.object({
+      ownerAccountId: z.string(),
+      amount: z.number(),
+    }),
+    transactionMemo: z.string().optional(),
+  });

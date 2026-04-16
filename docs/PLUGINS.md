@@ -7,14 +7,14 @@ The Hedera services built into this agent toolkit are also implemented as plugin
 
 ## Available Third Party Plugins
 
-See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](https://github.com/hashgraph/hedera-agent-kit-js?tab=readme-ov-file#third-party-plugins) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
+See this list of available third party plugins for the Hedera Agent Kit Python SDK in the [README](../README.md) and in the [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins).
 
 - [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
 
   NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
   Source: https://github.com/jmgomezl/hak-saucerswap-plugin
   Tested/endorsed version: hak-saucerswap-plugin@1.0.1
-  
+
 - [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
 
   Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
@@ -45,7 +45,7 @@ export interface Plugin {
 
 ### Tool Interface
 
-Each tool must implement the Tool interface:
+Each tool must implement the `Tool` interface:
 
 ```typescript
 export type Tool = {
@@ -59,7 +59,27 @@ export type Tool = {
 };
 ```
 
-See [typescript/src/shared/tools.ts](../typescript/src/shared/tools.ts) for the full definition.
+See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) for the full definition.
+
+### Recommended: Extend `BaseTool` (v4)
+
+> [!IMPORTANT]
+> **`BaseTool` is the recommended way to implement tools in v4.** It is an abstract class that **implements** the `Tool` interface, so it is a fully backward-compatible, non-breaking upgrade. Tools based on the older functional pattern (plain object literals) continue to work, but they **do not support hooks and policies**.
+
+`BaseTool` enforces a clean 7-stage lifecycle that lets the hooks and policies system tap in automatically — you never call hooks manually:
+
+```text
+[1] preToolExecutionHook        ← hooks/policies
+[2] normalizeParams             ← your logic
+[3] postParamsNormalizationHook ← hooks/policies
+[4] coreAction                  ← your logic (build tx or run query)
+[5] postCoreActionHook          ← hooks/policies
+[6] secondaryAction             ← your logic (sign/submit tx; skip for queries)
+[7] postToolExecutionHook       ← hooks/policies
+```
+
+For a step-by-step migration guide with fully annotated before/after code, see
+[Migrating Custom Tools to BaseTool](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking) in the v4 migration guide.
 
 ### Step-by-Step Guide
 
@@ -75,18 +95,85 @@ See [typescript/src/shared/tools.ts](../typescript/src/shared/tools.ts) for the 
 
 **Step 2: Implement Your Tool**
 
-Create your tool file (e.g., tools/my-service/my-tool.ts):
+Create your tool file (e.g., tools/my-service/my-tool.ts).
+
+> [!TIP]
+> **v4 Recommended approach — extend `BaseTool`.**  
+> `BaseTool` implements the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that `BaseTool`-based tools automatically participate in the hooks and policies lifecycle.
 
 ```typescript
 import { z } from "zod";
-import { Context, Tool, handleTransaction } from "hedera-agent-kit";
-import { Client, PrivateKey, AccountId } from "@hashgraph/sdk";
-import dotenv from "dotenv";
+import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
+import { Client } from "@hiero-ledger/sdk";
 
-// Load environment variables
-dotenv.config();
+// Define your parameter schema (same as before)
+const myToolParameters = z.object({
+  requiredParam: z.string().describe("Description of required parameter"),
+  optionalParam: z
+    .string()
+    .optional()
+    .describe("Description of optional parameter"),
+});
 
-// Define parameter schema
+export const MY_TOOL = "my_tool";
+
+// Extend BaseTool — BaseTool implements Tool, so this is backward-compatible
+export class MyTool extends BaseTool {
+  method = MY_TOOL;
+  name = "My Custom Tool";
+  description = `
+  This tool performs a specific operation.
+
+  Parameters:
+  - requiredParam (string, required): Description
+  - optionalParam (string, optional): Description
+  `;
+  parameters = myToolParameters;
+
+  // Stage 2 — validate / transform raw params from the LLM
+  async normalizeParams(
+    params: z.infer<typeof myToolParameters>,
+    _context: Context,
+    _client: Client,
+  ) {
+    return params; // pass-through; add validation/transformation here
+  }
+
+  // Stage 4 — core business logic (build a transaction or run a query)
+  async coreAction(
+    normalisedParams: z.infer<typeof myToolParameters>,
+    _context: Context,
+    _client: Client,
+  ) {
+    // Your implementation here
+    return `Result for ${normalisedParams.requiredParam}`;
+  }
+
+  // Skip secondary action for non-transaction tools
+  async shouldSecondaryAction(_result: any, _context: Context) {
+    return false; // return true (default) if you need to sign/submit a transaction
+  }
+
+  // Stage 6 — sign/submit the transaction (omit for query-only tools)
+  async secondaryAction(result: any, _client: Client, _context: Context) {
+    return result; // no-op for non-transaction tools
+  }
+}
+
+// Factory function: return a BaseTool instance (satisfies the Tool interface)
+const tool = (_context: Context) => new MyTool();
+
+export default tool;
+```
+
+<details>
+<summary>Legacy v3 pattern (still works, but no hook/policy support)</summary>
+
+```typescript
+import { z } from "zod";
+import { Context, Tool } from "@hashgraph/hedera-agent-kit";
+import { Client } from "@hashgraph/sdk";
+
 const myToolParameters = (context: Context = {}) =>
   z.object({
     requiredParam: z.string().describe("Description of required parameter"),
@@ -96,7 +183,6 @@ const myToolParameters = (context: Context = {}) =>
       .describe("Description of optional parameter"),
   });
 
-// Create prompt function
 const myToolPrompt = (context: Context = {}) => {
   return `
   This tool performs a specific operation.
@@ -107,14 +193,12 @@ const myToolPrompt = (context: Context = {}) => {
   `;
 };
 
-// Implement tool logic
 const myToolExecute = async (
   client: Client,
   context: Context,
   params: z.infer<ReturnType<typeof myToolParameters>>,
 ) => {
   try {
-    // Your implementation here
     const result = await someHederaOperation(params);
     return result;
   } catch (error) {
@@ -127,6 +211,7 @@ const myToolExecute = async (
 
 export const MY_TOOL = "my_tool";
 
+// This pattern works in v4 but does NOT support hooks or policies
 const tool = (context: Context): Tool => ({
   method: MY_TOOL,
   name: "My Custom Tool",
@@ -138,13 +223,14 @@ const tool = (context: Context): Tool => ({
 export default tool;
 ```
 
+</details>
+
 **Step 3: Create Plugin Definition**
 
 Create your plugin index file (index.ts):
 
 ```typescript
-  import { Context } from '@/shared';
-  import { Plugin } from '@/shared/plugin';
+  import { Context, Plugin } from '@hashgraph/hedera-agent-kit';
   import myTool, { MY_TOOL } from './tools/my-service/my-tool';
 
   export const myCustomPlugin: Plugin = {
@@ -220,7 +306,8 @@ This allows you to easily display a user-friendly message while still having acc
 #### LangChain v0.3 (Classic)
 
 ```typescript
-import { HederaLangchainToolkit } from "hedera-agent-kit";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
+import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit-langchain";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -241,7 +328,8 @@ const toolkit = new HederaLangchainToolkit({
 #### LangChain v1 (New)
 
 ```typescript
-import { HederaLangchainToolkit, ResponseParserService } from "hedera-agent-kit";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
+import { HederaLangchainToolkit, ResponseParserService } from "@hashgraph/hedera-agent-kit-langchain";
 import {
   myCustomPlugin,
   myCustomPluginToolNames,
@@ -277,9 +365,11 @@ if (toolCall) {
 
 ### Examples and References
 
-- See existing core plugins in typescript/src/plugins/core-\*-plugin/
-- Follow the patterns established in tools like [transfer-hbar.ts](../typescript/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
-- See [typescript/examples/langchain-v1/tool-calling-agent.ts](../typescript/examples/langchain/tool-calling-agent.ts) for usage examples
+- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts)
+- See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
+- Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
+- See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
+- For migrating existing v3 tools to `BaseTool`, see the [Migration Guide](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking)
 ## Publish and Register Your Plugin
 
 To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
@@ -318,7 +408,11 @@ npm install <plugin-name>
 import { myPlugin } from "<plugin-name>";
 '''
 
-'''javascript
+'''typescript
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
+
 const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
     configuration: {
@@ -329,7 +423,6 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
             coreTokenPlugin,
             coreAccountPlugin,
             coreConsensusPlugin,
-            coreQueriesPlugin,
             myPlugin,
         ],
     },

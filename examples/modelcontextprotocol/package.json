@@ -1,0 +1,43 @@
+{
+  "name": "@hedera/mcp",
+  "version": "1.0.0",
+  "homepage": "https://github.com/hedera-dev/hedera-agent-kit",
+  "description": "A command line tool for setting up Hedera MCP server",
+  "type": "module",
+  "scripts": {
+    "start:stdio": "tsx src/stdio.ts",
+    "start:http:return-bytes": "tsx src/http.ts --agent-mode=returnBytes",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "lint": "eslint \"./**/*.ts*\"",
+    "prettier": "prettier './**/*.{js,ts,md,html,css}' --write",
+    "prettier-check": "prettier './**/*.{js,ts,md,html,css}' --check"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@hiero-ledger/sdk": "2.81.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "colors": "^1.4.0",
+    "cors": "^2.8.6",
+    "dotenv": "17.2.3",
+    "express": "^5.2.1",
+    "@hashgraph/hedera-agent-kit": "file:../../packages/core",
+    "@hashgraph/hedera-agent-kit-mcp": "file:../../packages/mcp"
+  },
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "hedera"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.13.4",
+    "prettier": "^3.5.1",
+    "tsx": "4.20.6",
+    "typescript": "^5.8.3"
+  }
+}

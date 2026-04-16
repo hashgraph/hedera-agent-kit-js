@@ -68,6 +68,8 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
 
 ### TRANSFER_HBAR_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Transfer HBAR between accounts. Supports scheduled transactions.
 
 #### Parameters
@@ -100,6 +102,8 @@ Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire 01.02.2026 and
 ---
 
 ### CREATE_ACCOUNT_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Creates a new Hedera account. Supports scheduled transactions.
 
@@ -137,6 +141,8 @@ Schedule creation of an account with max automatic token associations 10. Make i
 
 ### UPDATE_ACCOUNT_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Update an account's metadata. Supports scheduled transactions.
 
 #### Parameters
@@ -166,6 +172,8 @@ Schedule an account update for account 0.0.1234. Set the account memo to "update
 
 ### DELETE_ACCOUNT_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Delete an account and transfer its assets.
 
 #### Parameters
@@ -185,6 +193,8 @@ Delete account 0.0.12345 and transfer funds to 0.0.67890
 ---
 
 ### APPROVE_HBAR_ALLOWANCE_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Approve an HBAR spending allowance for a spender account.
 
@@ -208,6 +218,8 @@ Allow account 0.0.12345 to spend up to 10 HBAR from my account
 
 ### DELETE_HBAR_ALLOWANCE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Delete an HBAR allowance from an owner to a spender.
 
 #### Parameters
@@ -228,6 +240,8 @@ Delete HBAR allowance for 0.0.123
 ---
 
 ### TRANSFER_HBAR_WITH_ALLOWANCE_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Transfer HBAR using an existing allowance. Supports scheduled transactions.
 
@@ -256,6 +270,8 @@ Transfer 1 HBAR from 0.0.123 to 0.0.456 using allowance. Schedule this transacti
 
 ### SIGN_SCHEDULE_TRANSACTION_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Sign a scheduled transaction on the Hedera network.
 
 #### Parameters
@@ -274,6 +290,8 @@ Add my signature to schedule 0.0.12345
 ---
 
 ### SCHEDULE_DELETE_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Delete a scheduled transaction so it will not execute.
 
@@ -296,6 +314,8 @@ Cancel schedule 0.0.12345
 
 ### GET_ACCOUNT_QUERY_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Returns comprehensive account information for a given Hedera account.
 
 #### Parameters
@@ -303,6 +323,17 @@ Returns comprehensive account information for a given Hedera account.
 | Parameter   | Type     | Required | Description              |
 |-------------|----------|----------|--------------------------|
 | `accountId` | `string` | ✅        | The account ID to query. |
+
+#### Returned Information
+
+- Account balance
+- Public key
+- EVM address
+- Ethereum nonce
+- Created timestamp
+- Account memo
+- Max automatic token associations
+- Deleted status
 
 #### Example Prompts
 
@@ -315,6 +346,8 @@ Show me details about account 0.0.12345
 ---
 
 ### GET_HBAR_BALANCE_QUERY_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Returns the HBAR balance for a given Hedera account.
 
@@ -336,6 +369,8 @@ Get my HBAR balance
 ---
 
 ### GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Returns token balances for a Hedera account.
 
@@ -359,6 +394,8 @@ Show balance of token 0.0.11111 for account 0.0.12345
 ## Consensus Tools
 
 ### CREATE_TOPIC_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Create a new topic on the Hedera network. Supports scheduled transactions.
 
@@ -394,6 +431,8 @@ Schedule create topic transaction with memo "Scheduled Topic". Make it expire 01
 
 ### SUBMIT_TOPIC_MESSAGE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Submit a message to a topic on the Hedera network. Supports scheduled transactions.
 
 #### Parameters
@@ -421,6 +460,8 @@ Submit message "Hello World" to topic 0.0.12345. Schedule it and make it expire 
 
 ### DELETE_TOPIC_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Delete a topic on the Hedera network.
 
 #### Parameters
@@ -438,6 +479,8 @@ Delete topic 0.0.12345
 ---
 
 ### UPDATE_TOPIC_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Update a topic on the Hedera network.
 
@@ -467,6 +510,8 @@ Set my key as admin key for topic 0.0.12345
 
 ### GET_TOPIC_INFO_QUERY_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Returns information for a given Hedera Consensus Service (HCS) topic.
 
 #### Parameters
@@ -485,6 +530,8 @@ Show me details about topic 0.0.12345
 ---
 
 ### GET_TOPIC_MESSAGES_QUERY_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Returns messages for a given Hedera Consensus Service (HCS) topic.
 
@@ -510,6 +557,8 @@ Get messages from topic 0.0.12345 after 2024-01-01
 ## Token Tools
 
 ### CREATE_FUNGIBLE_TOKEN_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Creates a fungible token on Hedera. Supports scheduled transactions.
 
@@ -546,6 +595,8 @@ Schedule create fungible token transaction called MyToken with symbol MTK. Make 
 
 ### CREATE_NON_FUNGIBLE_TOKEN_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Creates a non-fungible token (NFT) on Hedera. Supports scheduled transactions.
 
 #### Parameters
@@ -578,6 +629,8 @@ Schedule create non-fungible token transaction called MyToken with symbol MTK. M
 
 ### MINT_FUNGIBLE_TOKEN_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Mints additional supply of an existing fungible token. Supports scheduled transactions.
 
 #### Parameters
@@ -603,6 +656,8 @@ Schedule mint 10 of token 0.0.12345. Make it expire 01.02.2026 and wait for its 
 ---
 
 ### MINT_NON_FUNGIBLE_TOKEN_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Mints NFTs with unique metadata for an existing NFT class. Supports scheduled transactions.
 
@@ -631,6 +686,8 @@ Schedule Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7
 
 ### ASSOCIATE_TOKEN_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Associates one or more tokens with an account.
 
 #### Parameters
@@ -650,6 +707,8 @@ Associate tokens 0.0.123 and 0.0.456 to account 0.0.789
 ---
 
 ### DISSOCIATE_TOKEN_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Dissociates one or more tokens from an account.
 
@@ -671,6 +730,8 @@ Dissociate tokens 0.0.123 and 0.0.456 from account 0.0.789
 ---
 
 ### UPDATE_TOKEN_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Update token metadata.
 
@@ -706,6 +767,8 @@ Update token 0.0.12345 with new memo "Updated token"
 
 ### AIRDROP_FUNGIBLE_TOKEN_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Airdrops a fungible token to multiple recipients.
 
 #### Parameters
@@ -729,6 +792,8 @@ Airdrop 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500
 
 ### APPROVE_TOKEN_ALLOWANCE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Approve fungible token spending allowances.
 
 #### Parameters
@@ -751,6 +816,8 @@ Allow 0.0.67890 to spend 50 of my token 0.0.12345
 
 ### DELETE_TOKEN_ALLOWANCE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Delete fungible token allowance(s).
 
 #### Parameters
@@ -772,6 +839,8 @@ Remove allowance for spender 0.0.123 on tokens 0.0.456 and 0.0.789
 ---
 
 ### TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Transfers a fungible token using an existing token allowance. Supports scheduled transactions.
 
@@ -801,6 +870,8 @@ Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allow
 
 ### APPROVE_NFT_ALLOWANCE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Approves an NFT allowance for specific serials or all serials.
 
 #### Parameters
@@ -828,6 +899,8 @@ Grant approval for the entire collection token 0.0.1010 to account 0.0.2020
 
 ### DELETE_NFT_ALLOWANCE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Deletes NFT allowance(s) for specific serial numbers.
 
 #### Parameters
@@ -851,6 +924,8 @@ Delete allowance for NFT token 0.0.1234 serials 10 and 12 with memo "cleanup"
 ---
 
 ### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Transfers NFTs from the operator's account to specified recipients. Supports scheduled transactions.
 
@@ -880,6 +955,8 @@ Transfer NFT 0.0.12345 serial 1 to 0.0.222. Schedule this transaction and make i
 
 ### TRANSFER_NFT_WITH_ALLOWANCE_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Transfers NFTs using an existing token allowance.
 
 #### Parameters
@@ -904,6 +981,8 @@ Use allowance to send serials 1 and 2 of NFT 0.0.12345 from 0.0.111 to 0.0.222
 
 ### GET_TOKEN_INFO_QUERY_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Returns details of a given token (HTS).
 
 #### Parameters
@@ -923,6 +1002,8 @@ Show me details about token 0.0.12345
 ---
 
 ### GET_PENDING_AIRDROP_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Returns pending airdrops for a Hedera account.
 
@@ -944,6 +1025,8 @@ Show pending airdrops for account 0.0.12345
 ## EVM Tools
 
 ### CREATE_ERC20_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Deploys a new ERC-20 token via the BaseERC20Factory. Supports scheduled transactions.
 
@@ -972,6 +1055,8 @@ Schedule deploy ERC20 token called MyCoin with symbol MC, 500 initial supply, an
 ---
 
 ### TRANSFER_ERC20_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Transfers an ERC-20 token. Supports scheduled transactions.
 
@@ -1003,6 +1088,8 @@ Schedule transfer 100 0.0.5678 ERC20 tokens from contract to 0x12345678901234567
 
 ### CREATE_ERC721_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Deploys a new ERC-721 token via the BaseERC721Factory. Supports scheduled transactions.
 
 #### Parameters
@@ -1030,6 +1117,8 @@ Schedule deploy ERC721 token called MyNFT with symbol MNFT. Make it expire 01.02
 
 ### MINT_ERC721_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Mints a new ERC-721 token. Supports scheduled transactions.
 
 #### Parameters
@@ -1055,6 +1144,8 @@ Schedule mint ERC721 token 0.0.5678 to 0x123456789012345678901234567890123456789
 ---
 
 ### TRANSFER_ERC721_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Transfers an ERC-721 token. Supports scheduled transactions.
 
@@ -1086,6 +1177,8 @@ Schedule transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x12345
 
 ### GET_CONTRACT_INFO_QUERY_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Returns details of a given smart contract.
 
 #### Parameters
@@ -1108,6 +1201,8 @@ What is the EVM address of contract 0.0.12345?
 
 ### GET_TRANSACTION_RECORD_QUERY_TOOL
 
+**Supports Hooks & Policies**: ✅ Yes
+
 Returns details for a given transaction ID.
 
 #### Parameters
@@ -1129,6 +1224,8 @@ Show me details about transaction 0.0.12345@1234567890.123456789
 ## Misc Query Tools
 
 ### GET_EXCHANGE_RATE_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
 
 Returns the Hedera network HBAR exchange rate.
 

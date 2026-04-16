@@ -6,7 +6,7 @@ const fse = require("fs-extra");
 async function main() {
   const pkgDir = __dirname ? path.resolve(__dirname, "..") : process.cwd();
   const repoRoot = path.resolve(pkgDir, "..", "..");
-  const src = path.resolve(repoRoot, "typescript", "examples", "nextjs");
+  const src = path.resolve(repoRoot, "examples", "nextjs");
   const dest = path.resolve(pkgDir, "template");
 
   if (!fs.existsSync(src)) {

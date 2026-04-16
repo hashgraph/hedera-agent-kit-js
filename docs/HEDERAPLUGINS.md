@@ -1,11 +1,11 @@
 # Available Tools
 
 The Hedera Agent Kit provides a comprehensive set of tools organized into **plugins** by the type of Hedera service they
-interact with. These tools can be used by an AI agent, like the ones in the `typescript/examples` folder, and enable a
+interact with. These tools can be used by an AI agent, like the ones in the `examples/` folder, and enable a
 user to interact with Hedera services using natural language.
 
 Want additional Hedera
-tools? [Open an issue](https://github.com/hedera-dev/hedera-agent-kit/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
+tools? [Open an issue](https://github.com/hashgraph/hedera-agent-kit-js/issues/new?template=toolkit_feature_request.yml&labels=feature-request).
 
 ## Plugin Architecture
 
@@ -22,11 +22,11 @@ The tools are organized into plugins, each containing related functionality:
 * **Core Misc Query Plugin**: Tools for fetching miscellaneous information from Hedera Mirror Node
 * **Core Transaction Query Plugin**: Tools for handling Hedera transaction–related queries
 
-See [an example of how to create a plugin](../typescript/examples/plugin/example-plugin.ts) as well as how they can be
-used to build with using [Langchain](../typescript/examples/langchain/plugin-tool-calling-agent.ts) or using
-the [Vercel AI SDK](../typescript/examples/ai-sdk/plugin-tool-calling-agent.ts).
+See [an example of how to create a plugin](../examples/plugin/example-plugin.ts) as well as how they can be
+used to build with using [Langchain](../examples/langchain/plugin-tool-calling-agent.ts) or using
+the [Vercel AI SDK](../examples/ai-sdk/plugin-tool-calling-agent.ts).
 
-Plugins can be found in [typescript/src/plugins](../typescript/src/plugins)
+Plugins can be found in [packages/core/src/plugins](../packages/core/src/plugins)
 
 ---
 
@@ -232,20 +232,19 @@ To ensure the LLM correctly extracts scheduling parameters:
 
 ## Using Hedera Plugins
 
-Take a look at the example [tool-calling-agent.ts](../typescript/examples/langchain/tool-calling-agent.ts) for a
+Take a look at the example [tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for a
 complete example of how to use the Hedera plugins.
 
-First, you will need to import the core plugins, which contain all the tools you may want to use such as
-`coreAccountPlugin`.
+First, you will need to import the core plugins from the `/plugins` subpath, which contain all the tools you may want to use such as `coreAccountPlugin`.
+
+> **Shortcut:** to register every built-in plugin in one go, import `allCorePlugins` from `@hashgraph/hedera-agent-kit/plugins` and pass it as `plugins`. The example below uses individual plugin imports so you can see the per-plugin granularity.
 
 You also have the option to pick and choose which tools from a Hedera plugin you want to enable. If you choose to do
 this, only the tools specified will be usable.
 
-```javascript
+```typescript
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  AgentMode,
-  Configuration,
-  Context,
   coreAccountPlugin,
   coreAccountQueryPlugin,
   coreConsensusPlugin,
@@ -255,12 +254,14 @@ import {
   coreEVMPlugin,
   coreEVMQueryPlugin,
   coreMiscQueriesPlugin,
-} from 'hedera-agent-kit';
+  coreTransactionQueryPlugin,
+} from '@hashgraph/hedera-agent-kit/plugins';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 ```
 
 You will instantiate the HederaAgentToolkit with your chosen framework, defining the tools and plugins you want to use:
 
-```javascript
+```typescript
 const hederaAgentToolkit = new HederaLangchainToolkit({
   client,
   configuration: {
@@ -270,7 +271,7 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
       TRANSFER_HBAR_TOOL,
       GET_ACCOUNT_QUERY_TOOL,
       // etc.
-    ], // use an empty array if you want to load all tools
+    ], // use an empty array if you want to load all tools from the plugins
     context: {
       mode: AgentMode.AUTONOMOUS,
     },
@@ -284,6 +285,7 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
       coreEVMPlugin,
       coreEVMQueryPlugin,
       coreMiscQueriesPlugin,
+      coreTransactionQueryPlugin,
     ],
   },
 });

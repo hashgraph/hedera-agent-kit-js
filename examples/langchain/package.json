@@ -1,0 +1,29 @@
+{
+  "name": "hedera-agent-toolkit-examples-langchain",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"No tests specified for example package\"",
+    "langchain:structured-chat-agent": "tsx structured-chat-agent.ts",
+    "langchain:tool-calling-agent": "tsx tool-calling-agent.ts",
+    "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
+    "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
+  },
+  "dependencies": {
+    "@hiero-ledger/sdk": "2.81.0",
+    "@langchain/classic": "1.0.17",
+    "@langchain/core": "1.1.24",
+    "@langchain/openai": "1.2.7",
+    "cheerio": "1.1.2",
+    "dotenv": "17.2.3",
+    "@hashgraph/hedera-agent-kit": "file:../../packages/core",
+    "@hashgraph/hedera-agent-kit-langchain": "file:../../packages/langchain",
+    "prompts": "2.4.2"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "description": "",
+  "devDependencies": {
+    "@types/prompts": "2.4.9",
+    "tsx": "4.20.6"
+  }
+}

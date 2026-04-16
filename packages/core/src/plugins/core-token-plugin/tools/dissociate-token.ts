@@ -1,0 +1,91 @@
+import { z } from 'zod';
+import type { Context } from '@/shared/configuration';
+import { BaseTool } from '@/shared/tools';
+import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
+import { Client, Status } from '@hiero-ledger/sdk';
+import {
+  handleTransaction,
+  RawTransactionResponse,
+} from '@/shared/strategies/tx-mode-strategy';
+import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod';
+import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
+import { PromptGenerator } from '@/shared/utils/prompt-generator';
+import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+
+const dissociateTokenPrompt = (context: Context = {}) => {
+  const contextSnippet = PromptGenerator.getContextSnippet(context);
+  const sourceAccountDesc = PromptGenerator.getAccountParameterDescription('accountId', context);
+  const usageInstructions = PromptGenerator.getParameterUsageInstructions();
+
+  return `
+${contextSnippet}
+
+This tool will airdrop a HTS fungible token on Hedera.
+
+Parameters:
+- tokenIds (array of strings, required): A list of Hedera token IDs to dissociate from the account. Example: ["0.0.1234", "0.0.5678"]
+- ${sourceAccountDesc}, account from which to dissociate the token(s)
+- transactionMemo (str, optional): Optional memo for the transaction
+
+Examples:
+- Dissociate a single token: { "tokenIds": ["0.0.1234"] }
+- Dissociate multiple tokens from a specific account: { "tokenIds": ["0.0.1234", "0.0.5678"], "accountId": "0.0.4321" }
+
+${usageInstructions}
+`;
+};
+
+const postProcess = (response: RawTransactionResponse) => {
+  return `Token(s) successfully dissociated with transaction id ${response.transactionId.toString()}`;
+};
+
+export const DISSOCIATE_TOKEN_TOOL = 'dissociate_token_tool';
+
+export class DissociateTokenTool extends BaseTool {
+  method = DISSOCIATE_TOKEN_TOOL;
+  name = 'Dissociate Token';
+  description: string;
+  parameters: ReturnType<typeof dissociateTokenParameters>;
+  outputParser = transactionToolOutputParser;
+
+  constructor(context: Context) {
+    super();
+    this.description = dissociateTokenPrompt(context);
+    this.parameters = dissociateTokenParameters(context);
+  }
+
+  async normalizeParams(
+    params: z.infer<ReturnType<typeof dissociateTokenParameters>>,
+    context: Context,
+    client: Client,
+  ) {
+    return HederaParameterNormaliser.normaliseDissociateTokenParams(params, context, client);
+  }
+
+  async coreAction(normalisedParams: any, context: Context, client: Client) {
+    const tx = HederaBuilder.dissociateToken(normalisedParams);
+    return await handleTransaction(tx, client, context, postProcess);
+  }
+
+  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
+    return false;
+  }
+
+  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
+    return null;
+  }
+
+  async handleError(error: unknown, _context: Context): Promise<any> {
+    const desc = 'Failed to dissociate token';
+    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
+    console.error('[dissociate_token_tool]', message);
+    return {
+      raw: { status: Status.InvalidTransaction, error: message },
+      humanMessage: message,
+    };
+  }
+}
+
+const tool = (context: Context): BaseTool => new DissociateTokenTool(context);
+
+export default tool;
