@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        uses: pnpm/action-setup@078e9d416474b29c0c387560859308974f7e9c53 # v6.0.1
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
