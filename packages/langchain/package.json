@@ -49,7 +49,7 @@
   ],
   "dependencies": {
     "@hashgraph/hedera-agent-kit": "workspace:*",
-    "@langchain/core": "1.1.24",
+    "@langchain/core": "1.1.41",
     "@langchain/mcp-adapters": "1.1.3",
     "@modelcontextprotocol/sdk": "1.27.1",
     "langchain": "1.2.24",
