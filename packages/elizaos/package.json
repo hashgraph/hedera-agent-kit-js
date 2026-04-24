@@ -50,7 +50,7 @@
   "dependencies": {
     "@elizaos/core": "1.7.2",
     "@hashgraph/hedera-agent-kit": "workspace:*",
-    "zod-to-json-schema": "3.24.6"
+    "zod-to-json-schema": "3.25.2"
   },
   "peerDependencies": {
     "@hiero-ledger/sdk": "^2.81.0"
