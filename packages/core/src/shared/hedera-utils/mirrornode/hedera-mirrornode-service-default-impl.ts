@@ -21,10 +21,26 @@ import {
 } from './types';
 import BigNumber from 'bignumber.js';
 
+type Environment = {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+};
+
+const getEnvironmentVariable = (name: string): string | undefined => {
+  return (globalThis as typeof globalThis & Environment).process?.env?.[name];
+};
+
 export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeService {
   private readonly baseUrl: string;
 
   constructor(private readonly ledgerId: LedgerId) {
+    const baseUrlOverride = getEnvironmentVariable('HEDERA_MIRROR_NODE_REST_URL');
+    if (baseUrlOverride) {
+      this.baseUrl = baseUrlOverride.replace(/\/$/, '');
+      return;
+    }
+
     if (!LedgerIdToBaseUrl.has(ledgerId.toString())) {
       throw new Error(`Network type ${ledgerId} not supported`);
     }

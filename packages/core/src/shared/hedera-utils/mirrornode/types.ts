@@ -4,6 +4,7 @@ import BigNumber from 'bignumber.js';
 export const LedgerIdToBaseUrl: Map<string, string> = new Map([
   [LedgerId.MAINNET.toString(), 'https://mainnet-public.mirrornode.hedera.com/api/v1'],
   [LedgerId.TESTNET.toString(), 'https://testnet.mirrornode.hedera.com/api/v1'],
+  ['local-node', 'http://127.0.0.1:38081/api/v1'],
 ]);
 
 export type AccountTokenBalancesQueryParams = {

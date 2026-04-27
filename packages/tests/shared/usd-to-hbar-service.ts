@@ -11,8 +11,10 @@
  * @see OPERATION_FEES.md for Hedera operation costs in USD
  */
 
-import { LedgerId } from '@hiero-ledger/sdk';
 import { HederaMirrornodeServiceDefaultImpl } from '@hashgraph/hedera-agent-kit';
+import { getTestLedgerIdForTests, getTestNetwork } from './setup/client-setup';
+
+const SOLO_FALLBACK_HBAR_USD_RATE = 0.05;
 
 export class UsdToHbarService {
   private static exchangeRate: number | null = null;
@@ -55,7 +57,7 @@ export class UsdToHbarService {
    */
   private static async fetchLiveHbarPrice(): Promise<number> {
     try {
-      const mirrornode = new HederaMirrornodeServiceDefaultImpl(LedgerId.TESTNET);
+      const mirrornode = new HederaMirrornodeServiceDefaultImpl(getTestLedgerIdForTests());
       const resp = await mirrornode.getExchangeRate();
       const currentRate = resp.current_rate;
 
@@ -63,6 +65,10 @@ export class UsdToHbarService {
       // Divide by 100 to get USD per HBAR
       return currentRate.cent_equivalent / currentRate.hbar_equivalent / 100;
     } catch (error) {
+      if (getTestNetwork() === 'local-node') {
+        return SOLO_FALLBACK_HBAR_USD_RATE;
+      }
+
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`Couldn't fetch current HBAR price from mirrornode: ${message}`);
     }

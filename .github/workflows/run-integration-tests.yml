@@ -6,14 +6,10 @@ on:
       node-version:
         description: Node.js version
         required: false
-        default: '20'
+        default: '22'
         type: string
     secrets:
       OPENAI_API_KEY:
-        required: true
-      ACCOUNT_ID:
-        required: true
-      PRIVATE_KEY:
         required: true
     outputs: {}
 
@@ -25,8 +21,10 @@ jobs:
     runs-on: hedera-agent-linux-medium
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      HEDERA_NETWORK: local-node
+      HEDERA_ACCOUNT_ID: '0.0.2'
+      HEDERA_PRIVATE_KEY: '302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137'
+      HEDERA_MIRROR_NODE_REST_URL: 'http://127.0.0.1:38081/api/v1'
       E2E_LLM_PROVIDER: ${{ vars.E2E_LLM_PROVIDER }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -53,7 +51,62 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Install Docker Compose Plugin
+        run: |
+          sudo mkdir -p /usr/local/lib/docker/cli-plugins
+          sudo curl -fLo /usr/local/lib/docker/cli-plugins/docker-compose https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64
+          sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+      - name: Setup Kind
+        uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3 # v1.12.0
+        with:
+          install_only: true
+          node_image: kindest/node:v1.32.5@sha256:e3b2327e3a5ab8c76f5ece68936e4cafaa82edf58486b769727ab0b3b97a5b0d
+          version: v0.29.0
+          kubectl_version: v1.32.5
+          verbosity: 3
+          wait: 120s
+
+      - name: Install Solo
+        run: npm install -g @hashgraph/solo@0.63.0
+
+      - name: Setup Solo local network
+        run: |
+          export SOLO_CLUSTER_NAME=solo
+          export SOLO_NAMESPACE=solo
+          export SOLO_CLUSTER_SETUP_NAMESPACE=solo-cluster
+          export SOLO_DEPLOYMENT=solo-deployment
+          solo one-shot single deploy
+
+      - name: Wait for Solo endpoints
+        run: |
+          for attempt in {1..60}; do
+            if curl --fail --silent --max-time 2 "http://127.0.0.1:38081/api/v1/network/nodes" >/dev/null \
+              && curl --fail --silent --max-time 2 -X POST -H 'Content-Type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' "http://127.0.0.1:37546" >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Solo endpoints were not ready in time"
+          exit 1
+
+      - name: Deploy Solo factory contracts
+        env:
+          HEDERA_ECDSA_PRIVATE_KEY: '0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524'
+        run: |
+          set -o pipefail
+          FACTORY_ENV_FILE=/tmp/hedera-agent-kit-factories.env
+          pnpm --filter @hashgraph/hedera-agent-kit-core-contracts deploy:solo | tee "$FACTORY_ENV_FILE"
+          grep '^HEDERA_.*_FACTORY_ADDRESS=' "$FACTORY_ENV_FILE" >> "$GITHUB_ENV"
+
       - name: Run integration tests (throttled)
         env:
           SLOW_TEST_DELAY_MS: '30000'
         run: pnpm -r test:integration -- --sequence.concurrent=false
+
+      - name: Teardown Solo local network
+        if: always()
+        run: |
+          solo one-shot single destroy || true
+          kind get clusters 2>/dev/null | grep '^solo' | while read cluster; do kind delete cluster -n "$cluster"; done || true
+          sudo rm -rf ~/.solo

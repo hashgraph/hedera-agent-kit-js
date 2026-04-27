@@ -1,69 +1,77 @@
-import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
+import { AccountId, Client, LedgerId, PrivateKey } from '@hiero-ledger/sdk';
 import { z } from 'zod';
+import {
+  CONSENSUS_NODE_ACCOUNT_ID,
+  CONSENSUS_NODE_ENDPOINT,
+  MIRROR_NODE_ENDPOINT,
+} from './constants';
 
-const envSchema = z.object({
-  ACCOUNT_ID: z
+const hederaNetworkSchema = z.enum(['testnet', 'local-node']).default('testnet');
+
+const coreEnvSchema = z.object({
+  HEDERA_NETWORK: hederaNetworkSchema,
+  HEDERA_ACCOUNT_ID: z
     .string()
-    .min(1, 'ACCOUNT_ID is required')
-    .regex(/^0\.0\.\d+$/, 'ACCOUNT_ID must be in format 0.0.12345'),
-  PRIVATE_KEY: z.string().min(1, 'PRIVATE_KEY is required'),
+    .min(1, 'HEDERA_ACCOUNT_ID is required')
+    .regex(/^0\.0\.\d+$/, 'HEDERA_ACCOUNT_ID must be in format 0.0.12345'),
+  HEDERA_PRIVATE_KEY: z.string().min(1, 'HEDERA_PRIVATE_KEY is required'),
 });
+
+export type HederaTestNetwork = z.infer<typeof hederaNetworkSchema>;
+
+export const getTestNetwork = (): HederaTestNetwork => {
+  return hederaNetworkSchema.parse(process.env.HEDERA_NETWORK);
+};
+
+export const getTestLedgerIdForTests = (): LedgerId => {
+  return getTestNetwork() === 'local-node' ? LedgerId.LOCAL_NODE : LedgerId.TESTNET;
+};
+
+const createClientForSelectedNetwork = (accountId: AccountId, privateKey: PrivateKey): Client => {
+  if (getTestNetwork() === 'testnet') {
+    return Client.forTestnet().setOperator(accountId, privateKey);
+  }
+
+  const client = Client.forNetwork({
+    [CONSENSUS_NODE_ENDPOINT]: AccountId.fromString(CONSENSUS_NODE_ACCOUNT_ID),
+  });
+  client.setLedgerId(LedgerId.LOCAL_NODE);
+  client.setMirrorNetwork(MIRROR_NODE_ENDPOINT);
+  return client.setOperator(accountId, privateKey);
+};
 
 /**
  * Creates a Hedera client for testing purposes using environment variables.
  *
- * This function reads operator credentials from environment variables and creates
- * a pre-configured Hedera testnet client. The environment variables should be
- * defined in a `.env.test.local` file.
+ * Reads operator credentials from env and returns a pre-configured Hedera client.
+ * Solo service endpoints (consensus node, mirror node gRPC, etc.) are static
+ * constants in `constants.ts` — not env-configurable. If Solo's port-forward
+ * defaults ever change, update the constants file.
  *
  * Required environment variables:
- * - ACCOUNT_ID: The operator account ID in format "0.0.12345"
- * - PRIVATE_KEY: The operator private key in DER string format
+ * - HEDERA_NETWORK: "local-node" (Solo) or "testnet"
+ * - HEDERA_ACCOUNT_ID: Operator account ID in format "0.0.12345"
+ * - HEDERA_PRIVATE_KEY: Operator private key in DER string format
  *
  * @throws {z.ZodError} When environment variables are missing or invalid
- * @returns {Client} A Hedera testnet client configured with the operator account and private key
- *
- * @example
- * ```typescript
- * // Ensure .env.test.local contains:
- * // ACCOUNT_ID=0.0.12345
- * // PRIVATE_KEY=302e020100300506032b657004220420...
- *
- * const client = getOperatorClientForTests();
- * ```
  */
 export const getOperatorClientForTests = (): Client => {
-  // Validate environment variables with Zod
-  const env = envSchema.parse({
-    ACCOUNT_ID: process.env.ACCOUNT_ID,
-    PRIVATE_KEY: process.env.PRIVATE_KEY,
+  const env = coreEnvSchema.parse({
+    HEDERA_NETWORK: process.env.HEDERA_NETWORK,
+    HEDERA_ACCOUNT_ID: process.env.HEDERA_ACCOUNT_ID,
+    HEDERA_PRIVATE_KEY: process.env.HEDERA_PRIVATE_KEY,
   });
 
-  // Initialize Hedera client
-  const operatorAccountId = AccountId.fromString(env.ACCOUNT_ID);
-  const privateKey = PrivateKey.fromStringDer(env.PRIVATE_KEY); // TODO: handle parsing different key formats
+  const operatorAccountId = AccountId.fromString(env.HEDERA_ACCOUNT_ID);
+  const privateKey = PrivateKey.fromStringECDSA(env.HEDERA_PRIVATE_KEY); // TODO: handle parsing different key formats
 
-  return Client.forTestnet().setOperator(operatorAccountId, privateKey);
+  return createClientForSelectedNetwork(operatorAccountId, privateKey);
 };
 
 /**
- * Creates a custom Hedera testnet client with the provided account credentials.
- *
- * This function allows you to create a Hedera client with specific account
- * credentials rather than reading from environment variables. Useful for
- * testing scenarios that require different operator accounts.
- *
- * @param {AccountId} accountId - The Hedera account ID to use as the operator
- * @param {PrivateKey} privateKey - The private key associated with the account ID
- * @returns {Client} A Hedera testnet client configured with the provided operator account and private key
- *
- * @example
- * ```typescript
- * const accountId = AccountId.fromString("0.0.12345");
- * const privateKey = PrivateKey.fromStringDer("302e020100300506032b657004220420...");
- * const client = getCustomClient(accountId, privateKey);
- * ```
+ * Creates a custom Hedera client with the provided account credentials.
+ * Useful for test scenarios that require different operator accounts than the one in env.
  */
 export const getCustomClient = (accountId: AccountId, privateKey: PrivateKey): Client => {
-  return Client.forTestnet().setOperator(accountId, privateKey);
+  return createClientForSelectedNetwork(accountId, privateKey);
 };

@@ -18,6 +18,8 @@
     "test:unit": "pnpm -r test:unit",
     "test:integration": "pnpm -r test:integration",
     "test:e2e": "pnpm -r test:e2e",
+    "setup:solo": "bash scripts/solo/setup.sh",
+    "check:solo": "bash scripts/solo/check.sh",
     "release:validate": "node scripts/release/validate.js",
     "release:prepare": "node scripts/release/prepare.js"
   },

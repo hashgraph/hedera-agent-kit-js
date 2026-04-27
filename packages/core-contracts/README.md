@@ -6,12 +6,12 @@ Internal Hardhat project for developing, testing, and deploying ERC20/ERC721 fac
 
 ## What's here
 
-| Contract | Purpose |
-|---|---|
-| `BaseERC20Factory.sol` | Deploys customizable ERC20 tokens (name, symbol, decimals, initial supply) |
-| `BaseERC721Factory.sol` | Deploys customizable ERC721 NFT tokens (name, symbol, base URI) |
-| `BaseERC20.sol` | ERC20 token implementation (deployed by the factory) |
-| `BaseERC721.sol` | ERC721 token implementation (deployed by the factory) |
+| Contract                | Purpose                                                                    |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `BaseERC20Factory.sol`  | Deploys customizable ERC20 tokens (name, symbol, decimals, initial supply) |
+| `BaseERC721Factory.sol` | Deploys customizable ERC721 NFT tokens (name, symbol, base URI)            |
+| `BaseERC20.sol`         | ERC20 token implementation (deployed by the factory)                       |
+| `BaseERC721.sol`        | ERC721 token implementation (deployed by the factory)                      |
 
 ## How the SDK uses these contracts
 
@@ -25,11 +25,11 @@ These contracts are **deployed once per Hedera network**. The SDK then calls the
 
 ## Current deployments
 
-| Network | ERC20 Factory | ERC721 Factory |
-|---|---|---|
-| Testnet | `0.0.6471814` | `0.0.6510666` |
-| Mainnet | Not deployed | Not deployed |
-| Previewnet | Not deployed | Not deployed |
+| Network    | ERC20 Factory | ERC721 Factory |
+| ---------- | ------------- | -------------- |
+| Testnet    | `0.0.6471814` | `0.0.6510666`  |
+| Mainnet    | Not deployed  | Not deployed   |
+| Previewnet | Not deployed  | Not deployed   |
 
 ## Development
 
@@ -46,3 +46,11 @@ npm run deploy:testnet
 ```
 
 After deploying, update the addresses and ABIs in `../core/src/shared/constants/contracts.ts`.
+
+For Solo/localnet testing, deploy factories against the local JSON-RPC relay and export the printed addresses:
+
+```bash
+HEDERA_ECDSA_PRIVATE_KEY=0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524 npm run deploy:solo
+```
+
+The command prints `HEDERA_ERC20_FACTORY_ADDRESS` and `HEDERA_ERC721_FACTORY_ADDRESS` values for the test process.

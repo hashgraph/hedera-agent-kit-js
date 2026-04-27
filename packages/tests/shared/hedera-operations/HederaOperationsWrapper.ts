@@ -6,7 +6,6 @@ import {
   ContractInfo,
   ContractInfoQuery,
   ContractCreateFlow,
-  LedgerId,
   NftId,
   TokenAssociateTransaction,
   TokenId,
@@ -18,6 +17,7 @@ import {
   TransferTransaction,
 } from '@hiero-ledger/sdk';
 import BigNumber from 'bignumber.js';
+import { getTestLedgerIdForTests } from '../setup/client-setup';
 import { HederaBuilder } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';
 import {
@@ -68,7 +68,10 @@ class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
   private mirrornode;
   constructor(private client: Client) {
-    this.mirrornode = getMirrornodeService(undefined, LedgerId.TESTNET);
+    this.mirrornode = getMirrornodeService(
+      undefined,
+      this.client.ledgerId ?? getTestLedgerIdForTests(),
+    );
   }
 
   // ACCOUNT OPERATIONS
