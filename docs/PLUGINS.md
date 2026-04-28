@@ -30,6 +30,9 @@ The tools are now organized into plugins, each containing a set functionality re
 
 ## Creating a Plugin
 
+> All commits for your plugin must be [DCO signed](https://wiki.linuxfoundation.org/dco). To avoid having pull requests blocked in the future, always include a sign-off.
+
+
 ### Plugin Interface
 
 Every plugin must implement the Plugin interface:
@@ -250,6 +253,7 @@ Create your plugin index file (index.ts):
 ```
 **Step 4: Register Your Plugin**
 
+
 Add your plugin to the main plugins index (src/plugins/index.ts):
 
 ``` typescript
@@ -372,6 +376,10 @@ if (toolCall) {
 - For migrating existing v3 tools to `BaseTool`, see the [Migration Guide](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking)
 ## Publish and Register Your Plugin
 
+> All commits for your plugin must be [DCO signed](https://wiki.linuxfoundation.org/dco). To avoid having pull requests blocked in the future, always include a sign-off.
+
+
+
 To create a plugin to be used with the Hedera Agent Kit, you will need to create a plugin in your own repository, publish a npm package, and provide a description of the functionality included in that plugin, as well as the required and optional parameters.
 
 Once you have a repository, published npm package, and a README with a description of the functionality included in that plugin in your plugin's repo, as well as the required and optional parameters, you can add it to the Hedera Agent Kit by forking and opening a Pull Request to:
@@ -380,7 +388,13 @@ Once you have a repository, published npm package, and a README with a descripti
 
 2. Include the same information **in the README.md of this repository** under the **Third Party Plugins** section.
 
-3. If you would like to include your plugin functionality in the Hedera plugin built for ElizaOS simply make a PR to [add your plugin name to the `plugins` array in the Hedera ElizaOS plugin](https://github.com/elizaos-plugins/plugin-hedera/blob/1.x/src/adapter-plugin/plugin.ts#L72) where the configuration is initiated. The hedera-agent-kit adaptor architecture means your plugin functionality will be usable with no additional configuration needed.
+3. All commits for your plugin must be [DCO signed](https://wiki.linuxfoundation.org/dco), have the names of the tools & core actions exposed by the plugin, and point to the exact version of the npm packages. To avoid having pull requests blocked in the future, always include a sign-off:
+
+```Bonzo Plugin is a unified SDK to the Bonzo protocol, exposing the core actions (deposit, withdraw, repay, borrow) for decentralised lending and borrowing on Hedera:
+NPM: https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin
+Source: https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin
+✅ Tested/endorsed version: bonzofinancelabs/hak-bonzo-plugin==1.0.1
+```
 
 Feel free to also [reach out to the Hedera Agent Kit maintainers on Discord](https://hedera.com/discord) or another channel so we can test out your plugin, include it in our docs, and let our community know thorough marketing and community channels.
 
