@@ -253,7 +253,6 @@ Create your plugin index file (index.ts):
 ```
 **Step 4: Register Your Plugin**
 
-
 Add your plugin to the main plugins index (src/plugins/index.ts):
 
 ``` typescript
@@ -388,7 +387,7 @@ Once you have a repository, published npm package, and a README with a descripti
 
 2. Include the same information **in the README.md of this repository** under the **Third Party Plugins** section.
 
-3. All commits for your plugin must be [DCO signed](https://wiki.linuxfoundation.org/dco), have the names of the tools & core actions exposed by the plugin, and point to the exact version of the npm packages. To avoid having pull requests blocked in the future, always include a sign-off:
+3. All commits for your plugin **must be [DCO signed](https://wiki.linuxfoundation.org/dco)**, have the names of the tools & core actions exposed by the plugin, and **point to the exact version of the npm packages**. To avoid having pull requests blocked in the future, always include a sign-off:
 
 ```Bonzo Plugin is a unified SDK to the Bonzo protocol, exposing the core actions (deposit, withdraw, repay, borrow) for decentralised lending and borrowing on Hedera:
 NPM: https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin
