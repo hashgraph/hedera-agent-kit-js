@@ -21,8 +21,11 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       HEDERA_NETWORK: local-node
-      HEDERA_ACCOUNT_ID: '0.0.2'
-      HEDERA_PRIVATE_KEY: '302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137'
+      HEDERA_ACCOUNT_ID: '0.0.1002'
+      HEDERA_PRIVATE_KEY: '0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524'
+      HEDERA_ECDSA_PRIVATE_KEY: '0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524'
+      HEDERA_ERC20_FACTORY_ADDRESS: '0.0.1012'
+      HEDERA_ERC721_FACTORY_ADDRESS: '0.0.1013'
       HEDERA_MIRROR_NODE_REST_URL: 'http://127.0.0.1:38081/api/v1'
       E2E_LLM_PROVIDER: ${{ vars.E2E_LLM_PROVIDER }}
     steps:
@@ -78,25 +81,10 @@ jobs:
           solo one-shot single deploy
 
       - name: Wait for Solo endpoints
-        run: |
-          for attempt in {1..60}; do
-            if curl --fail --silent --max-time 2 "http://127.0.0.1:38081/api/v1/network/nodes" >/dev/null \
-              && curl --fail --silent --max-time 2 -X POST -H 'Content-Type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}' "http://127.0.0.1:37546" >/dev/null; then
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "Solo endpoints were not ready in time"
-          exit 1
+        run: pnpm test:solo:check
 
       - name: Deploy Solo factory contracts
-        env:
-          HEDERA_ECDSA_PRIVATE_KEY: '0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524'
-        run: |
-          set -o pipefail
-          FACTORY_ENV_FILE=/tmp/hedera-agent-kit-factories.env
-          pnpm --filter @hashgraph/hedera-agent-kit-core-contracts deploy:solo | tee "$FACTORY_ENV_FILE"
-          grep '^HEDERA_.*_FACTORY_ADDRESS=' "$FACTORY_ENV_FILE" >> "$GITHUB_ENV"
+        run: pnpm test:solo:deploy:contracts
 
       - name: Run E2E tests (throttled)
         env:

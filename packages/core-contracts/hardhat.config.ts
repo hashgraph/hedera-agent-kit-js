@@ -18,17 +18,17 @@ const config: HardhatUserConfig = {
         hederaMainnet: {
             type: "http",
             url: "https://mainnet.hashio.io/api",
-            accounts: accounts(process.env.HEDERA_PRIVATE_KEY),
+            accounts: accounts(process.env.HEDERA_ECDSA_PRIVATE_KEY),
         },
         hederaTestnet: {
             type: "http",
             url: "https://testnet.hashio.io/api",
-            accounts: accounts(process.env.HEDERA_PRIVATE_KEY),
+            accounts: accounts(process.env.HEDERA_ECDSA_PRIVATE_KEY),
         },
         hederaPreviewnet: {
             type: "http",
             url: "https://previewnet.hashio.io/api",
-            accounts: accounts(process.env.HEDERA_PRIVATE_KEY),
+            accounts: accounts(process.env.HEDERA_ECDSA_PRIVATE_KEY),
         },
         hederaSolo: {
             type: "http",

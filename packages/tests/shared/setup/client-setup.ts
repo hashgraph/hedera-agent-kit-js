@@ -37,6 +37,11 @@ const createClientForSelectedNetwork = (accountId: AccountId, privateKey: Privat
   });
   client.setLedgerId(LedgerId.LOCAL_NODE);
   client.setMirrorNetwork(MIRROR_NODE_ENDPOINT);
+  // Single-node Solo: the default 8s "node unhealthy" cooldown turns any transient gRPC
+  // blip into "All nodes are unhealthy" because there is no second node to fail over to.
+  client.setNodeMinReadmitPeriod(100);
+  client.setNodeMaxReadmitPeriod(1000);
+  client.setMaxAttempts(20);
   return client.setOperator(accountId, privateKey);
 };
 
