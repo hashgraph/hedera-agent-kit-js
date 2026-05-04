@@ -54,18 +54,21 @@ probe_relay() {
   return 0
 }
 
-# Probes the relay's contract-execution path (same code path used by
-# `eth_estimateGas`, `eth_call`, and contract deploys). The probe asks the relay to
-# estimate gas for an arbitrary call — we don't care about the result; we only care
-# that the relay can talk to its downstream services. A well-formed JSON-RPC response
-# (including a domain error like INVALID_CONTRACT_ID) proves the relay's pipeline is
-# alive. A downstream 503 ("Request failed with status code 503", "Service Unavailable",
-# or HTTP failure) means simulation is still warming up — that's the case the deploy
-# script used to hit, and the case this gate now waits out.
+# Probes the relay's contract-creation simulation path — the same code path
+# used by contract deploys (e.g. `BaseERC20Factory.deploy()` in
+# deploy-factories.ts). Sends `eth_estimateGas` for a minimal CREATE (init code
+# `0x60006000f3` = "PUSH1 0 PUSH1 0 RETURN", a valid contract that deploys to
+# empty bytecode). The relay must execute the init code in its EVM simulator,
+# which fans out to the mirror-node service for state.
+#
+# A 503-shaped error means the simulator's downstream isn't ready — fail.
+# A gas estimate or any clean domain error means the path is alive — pass.
+# (Probing a precompile address would short-circuit inside the relay and not
+# exercise the simulator, so it's avoided.)
 probe_relay_execution() {
   local body
   body=$(curl --silent --max-time 5 -X POST -H 'Content-Type: application/json' \
-    --data '{"jsonrpc":"2.0","id":1,"method":"eth_estimateGas","params":[{"to":"0x0000000000000000000000000000000000000002","value":"0x1"}]}' \
+    --data '{"jsonrpc":"2.0","id":1,"method":"eth_estimateGas","params":[{"data":"0x60006000f3"}]}' \
     "${JSON_RPC_RELAY_URL}" 2>/dev/null) || {
     relay_exec_marker="✗"
     relay_exec_detail="no response"
@@ -100,7 +103,7 @@ print_endpoints() {
   echo "  · Consensus node (gRPC) : ${CONSENSUS_NODE_ENDPOINT} (${CONSENSUS_NODE_ACCOUNT_ID})  (not probed)"
   echo "  · Mirror node    (gRPC) : ${MIRROR_NODE_ENDPOINT}  (not probed)"
   echo "  ${mirror_rest_marker} Mirror node    (REST) : ${MIRROR_NODE_REST_URL}  (${mirror_rest_detail})"
-  echo "  ${relay_combined_marker} JSON-RPC Relay        : ${JSON_RPC_RELAY_URL}  (eth_blockNumber: ${relay_detail}, eth_estimateGas: ${relay_exec_detail})"
+  echo "  ${relay_combined_marker} JSON-RPC Relay        : ${JSON_RPC_RELAY_URL}  (eth_blockNumber: ${relay_detail}, eth_estimateGas CREATE: ${relay_exec_detail})"
 }
 
 for ((attempt=1; attempt<=ATTEMPTS; attempt++)); do
