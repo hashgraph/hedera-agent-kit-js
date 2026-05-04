@@ -70,7 +70,7 @@ jobs:
           wait: 120s
 
       - name: Install Solo
-        run: npm install -g @hashgraph/solo@0.63.0
+        run: npm install -g @hiero-ledger/solo@0.70.0
 
       - name: Setup Solo local network
         run: |
