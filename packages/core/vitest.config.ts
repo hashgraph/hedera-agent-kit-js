@@ -2,24 +2,22 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 import * as path from 'node:path';
 import baseConfig from '../../vitest.base';
 
-const sharedSetup = path.resolve(__dirname, '../tests/shared/setup');
-const setupFiles: string[] = [
-  path.resolve(sharedSetup, 'usd-to-hbar-setup.ts'),
-];
-if (process.env.SLOW_TEST_DELAY_MS !== undefined) {
-  setupFiles.push(path.resolve(sharedSetup, 'slowdown.ts'));
-}
-
-export default mergeConfig(baseConfig, defineConfig({
-  resolve: {
-    alias: {
-      '@/': path.resolve(__dirname, 'src') + '/',
+/**
+ * Base vitest config for the core package. Used by `pnpm test:unit` directly.
+ * Integration tests extend this via `vitest.integration.config.ts` to add the
+ * TestProfile setup hooks (which require live Hedera credentials in env).
+ */
+export default mergeConfig(
+  baseConfig,
+  defineConfig({
+    resolve: {
+      alias: {
+        '@/': path.resolve(__dirname, 'src') + '/',
+      },
     },
-  },
-  test: {
-    include: ['tests/**/*.test.ts'],
-    exclude: ['node_modules/**', 'dist/**'],
-    globalSetup: [path.resolve(sharedSetup, 'global-setup.ts')],
-    setupFiles,
-  },
-}));
+    test: {
+      include: ['tests/**/*.test.ts'],
+      exclude: ['node_modules/**', 'dist/**'],
+    },
+  }),
+);
