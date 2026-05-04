@@ -1,6 +1,6 @@
 # **ADR 0004: Dynamic USD-to-HBAR Test Account Funding**
 
-**Date:** 2025-12-12  
+**Date:** 2025-12-12 (amended 2026-05-04 — funding now exposed via TestProfile)  
 **Status:** Accepted  
 **Context:** TypeScript test suite for Hedera Agent Kit requires reliable test account funding that remains stable across HBAR price fluctuations.
 
@@ -33,31 +33,39 @@ Implement a **dynamic funding system** that:
 
 ## **2. Decision**
 
-### **2.1 USD-to-HBAR Conversion Service**
+### **2.1 USD-to-HBAR Conversion via TestProfile**
 
-**Decision:** ✅ **Implement `UsdToHbarService` for dynamic conversion**
+**Decision:** ✅ **Expose USD-denominated funding through `TestProfile.balance`**
 
-**Implementation:** `typescript/test/utils/usd-to-hbar-service.ts`
+**Implementation:** `packages/tests/shared/profile/`
 
-The service:
+The active `TestProfile` (selected from `HEDERA_NETWORK`) owns the conversion strategy:
 
-- Fetches the current HBAR/USD exchange rate from the Hedera Mirror Node at test session start
-- Provides a static `usdToHbar(usdAmount)` method for runtime conversion
-- Caches the rate in a static property to avoid repeated API calls during test execution
+- **Testnet**: fetches the live HBAR/USD rate from the Hedera Mirror Node at session start, caches it.
+- **Solo**: uses a fixed `$0.05/HBAR` constant. No mirror call.
+
+Both profiles expose the same interface:
+- `profile.balance.fund(tier)` — HBAR amount for a named tier (the common path)
+- `profile.balance.usdToHbar(usd)` — arbitrary USD → HBAR conversion (escape hatch)
 
 **Usage Pattern:**
 
 ```typescript
-import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 
-// Test account funding
-const executorAccountId = await operatorWrapper
-  .createAccount({
-    key: executorKey.publicKey,
-    initialBalance: UsdToHbarService.usdToHbar(1.00)  // $1.00 worth of HBAR
-  })
-  .then(resp => resp.accountId!);
+const profile = getProfile();
+
+// Tier-based funding (preferred)
+const executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+
+// Or arbitrary USD when a specific dollar amount matters
+const account = await operatorWrapper.createAccount({
+  key: executor.privateKey.publicKey,
+  initialBalance: profile.balance.usdToHbar(0.10),  // $0.10 worth of HBAR
+});
 ```
+
+The previous `UsdToHbarService` and free-floating `BALANCE_TIERS` constant have been removed; tests no longer construct the conversion themselves.
 
 ---
 
@@ -82,37 +90,37 @@ A centralized reference document listing USD costs for all Hedera operations use
 
 ### **2.3 Balance Tiers for Test Accounts**
 
-**Decision:** ✅ **Define standardized funding tiers for test accounts**
+**Decision:** ✅ **Four standardized USD funding tiers, applied via the active TestProfile**
 
-**Implementation:** `typescript/test/utils/setup/langchain-test-config.ts`
+**Implementation:** `packages/tests/shared/profile/{solo,testnet}-profile.ts`
 
-To ensure consistent and predictable test account funding across the test suite, four balance tiers are defined:
+To ensure consistent and predictable test account funding across the test suite, four balance tiers are defined. Each profile multiplies the USD value by a profile-specific factor before converting to HBAR:
 
-| Tier       | USD Amount | Use Case                                                       |
-|------------|------------|----------------------------------------------------------------|
-| `MINIMAL`  | $0.50      | Basic operations (single transfer, simple query)               |
-| `STANDARD` | $5.00      | Most common test scenarios (token operations, multiple transfers) |
-| `ELEVATED` | $10.00     | Complex operations (NFT minting, multiple token operations)    |
-| `MAXIMUM`  | $20.00     | Heavy operations (contract deployments, extensive token operations) |
+| Tier       | Testnet USD | Solo USD (×10) | Use Case                                                       |
+|------------|-------------|-----------------|----------------------------------------------------------------|
+| `MINIMAL`  | $0.50       | $5              | Basic operations (single transfer, simple query)               |
+| `STANDARD` | $5.00       | $50             | Most common test scenarios (token operations, multiple transfers) |
+| `ELEVATED` | $10.00      | $100            | Complex operations (NFT minting, multiple token operations)    |
+| `MAXIMUM`  | $20.00      | $200            | Heavy operations (contract deployments, extensive token operations) |
+
+The Solo multiplier is intentional: Solo's operator has 1M HBAR and there is no real cost, so we fund sub-accounts more generously to give tests headroom across many local runs without redeploying Solo.
 
 **Usage Pattern:**
 
 ```typescript
-import { BALANCE_TIERS } from '../utils/setup/langchain-test-config';
-import { UsdToHbarService } from '../utils/usd-to-hbar-service';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 
-// Minimal tier for simple tests
-const simpleAccountBalance = UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL);
+const profile = getProfile();
 
-// Standard tier for typical token operations
-const tokenTestBalance = UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD);
-
-// Elevated tier for NFT minting tests
-const nftTestBalance = UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED);
-
-// Maximum tier for contract deployment tests
-const contractTestBalance = UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM);
+// Tier names are passed as string literals; the profile internally maps to USD,
+// converts to HBAR via the cached rate, and creates the account.
+const minimal  = await profile.accounts.acquire({ tier: 'MINIMAL' });
+const standard = await profile.accounts.acquire({ tier: 'STANDARD' });   // default if omitted
+const elevated = await profile.accounts.acquire({ tier: 'ELEVATED' });
+const maximum  = await profile.accounts.acquire({ tier: 'MAXIMUM' });
 ```
+
+The tier abstraction subsumes the previous two-step pattern of importing `BALANCE_TIERS` constants and feeding them through `UsdToHbarService.usdToHbar(...)`. Tests express intent (`'STANDARD'`) rather than mechanism (USD → HBAR conversion).
 
 **Tier Selection Guidelines:**
 
@@ -125,85 +133,89 @@ const contractTestBalance = UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM);
 
 ## **3. Implementation Details**
 
-### **3.1 Service Initialization**
+### **3.1 Profile Initialization**
 
-The `UsdToHbarService` is initialized once per test session via Vitest's `globalSetup` hook:
+The active profile's `balance.init()` is called once per test session via Vitest's `globalSetup` hook, then again per worker via a `setupFiles` hook (idempotent):
 
-**File:** `typescript/test/utils/setup/usd-to-hbar-setup.ts`
+**File:** `packages/tests/shared/setup/global-setup.ts`
 
 ```typescript
-import { UsdToHbarService } from '../usd-to-hbar-service';
+import { getProfile } from '../profile';
 
-export async function setup() {
-  await UsdToHbarService.initialize();
+export default async function globalSetup(): Promise<void> {
+  await getProfile().balance.init();
 }
 ```
 
-**Vitest Configuration:** `vitest.config.ts`
-
-```typescript
-export default defineConfig({
-  test: {
-    globalSetup: ['./test/utils/setup/usd-to-hbar-setup.ts'],
-    // ...
-  }
-});
-```
+The profile resolves itself lazily from `HEDERA_NETWORK` and persists for the session. After `init()`, all `balance.fund()` and `balance.usdToHbar()` calls are synchronous.
 
 ### **3.2 Exchange Rate Source**
 
-The service fetches the exchange rate from the Hedera Mirror Node:
+The testnet profile fetches the exchange rate from the Hedera Mirror Node at session start:
 
 ```typescript
-private static async fetchLiveHbarPrice(): Promise<number> {
-  const mirrornode = new HederaMirrornodeServiceDefaultImpl(LedgerId.TESTNET);
-  const resp = await mirrornode.getExchangeRate();
-  const currentRate = resp.current_rate;
-  // cent_equivalent / hbar_equivalent gives cents per HBAR
-  // Divide by 100 to get USD per HBAR
-  return currentRate.cent_equivalent / currentRate.hbar_equivalent / 100;
-}
+const mirrornode = new HederaMirrornodeServiceDefaultImpl(LedgerId.TESTNET);
+const resp = await mirrornode.getExchangeRate();
+const r = resp.current_rate;
+return r.cent_equivalent / r.hbar_equivalent / 100;  // USD per HBAR
 ```
+
+The Solo profile uses a fixed `$0.05/HBAR` constant — no mirror call, no live rate dependency on the local network.
 
 ### **3.3 Conversion Method**
 
+Each profile holds a private `exchangeRate: number | null` set during `init()`. The conversion method asserts initialization, divides, and rounds to 8 decimal places:
+
 ```typescript
-static usdToHbar(usdAmount: number): number {
-  if (!this.isInitialized || this.exchangeRate === null) {
-    throw new Error('UsdToHbarService is not initialized!');
+const usdToHbar = (usd: number): number => {
+  if (exchangeRate === null) {
+    throw new Error('Profile balance not initialized — call profile.balance.init() first');
   }
-  const hbarAmount = usdAmount / this.exchangeRate;
-  return Math.round(hbarAmount * 1e8) / 1e8; // Round to 8 decimal places (tinybars)
-}
+  const hbar = usd / exchangeRate;
+  return Math.round(hbar * 1e8) / 1e8;  // round to tinybars
+};
 ```
 
-### **3.4 Test File Updates**
+### **3.4 Test File Pattern**
 
-All integration test files were updated to use the service:
+Tests acquire identities through the profile rather than constructing them by hand:
 
 **Before:**
 
 ```typescript
+const operatorClient = getOperatorClientForTests();
+const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+const executorKey = PrivateKey.generateED25519();
 const executorAccountId = await operatorWrapper
   .createAccount({
-    initialBalance: 5,  // hardcoded HBAR
-    key: executorKeyPair.publicKey,
+    key: executorKey.publicKey,
+    initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
   })
   .then(resp => resp.accountId!);
+const executorClient = getCustomClient(executorAccountId, executorKey);
+const executorWrapper = new HederaOperationsWrapper(executorClient);
 ```
 
 **After:**
 
 ```typescript
-import { UsdToHbarService } from '../../utils/usd-to-hbar-service';
+import { getProfile, type TestAccount } from '@hashgraph/hedera-agent-kit-tests';
 
-const executorAccountId = await operatorWrapper
-  .createAccount({
-    initialBalance: UsdToHbarService.usdToHbar(1.00),  // $1.00 worth of HBAR
-    key: executorKeyPair.publicKey,
-  })
-  .then(resp => resp.accountId!);
+const profile = getProfile();
+const executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+const { client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor);
 ```
+
+Cleanup mirrors acquisition:
+
+```typescript
+afterAll(async () => {
+  await profile.accounts.release(executor);
+  executorClient.close();
+});
+```
+
+On Solo `release()` is a no-op (the network is destroyed at session end); on testnet it deletes the account and returns HBAR to the operator, falling back to a manual transfer when the account holds tokens.
 
 ---
 
@@ -231,6 +243,8 @@ const executorAccountId = await operatorWrapper
 ## **5. References**
 
 - [OPERATION_FEES.md](file:///typescript/test/utils/OPERATION_FEES.md) — Hedera operation USD costs
-- [usd-to-hbar-service.ts](file:///typescript/test/utils/usd-to-hbar-service.ts) — Conversion service implementation
-- [usd-to-hbar-setup.ts](file:///typescript/test/utils/setup/usd-to-hbar-setup.ts) — Vitest global setup hook
+- `packages/tests/shared/profile/index.ts` — TestProfile type
+- `packages/tests/shared/profile/solo-profile.ts` — Solo adapter (fixed rate, ×10 tier multiplier)
+- `packages/tests/shared/profile/testnet-profile.ts` — Testnet adapter (live rate)
+- `packages/tests/shared/setup/global-setup.ts` — Vitest globalSetup that initializes the active profile
 - [Hedera Pricing](https://hedera.com/fees) — Official Hedera fee schedule

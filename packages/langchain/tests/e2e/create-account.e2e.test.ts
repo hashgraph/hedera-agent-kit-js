@@ -1,17 +1,14 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
+import { Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 
 function extractAccountId(agentResult: any, responseParsingService: ResponseParserService): string {
   const parsedResponse = responseParsingService.parseNewToolMessages(agentResult);
@@ -29,59 +26,37 @@ function extractAccountId(agentResult: any, responseParsingService: ResponsePars
 }
 
 describe('Create Account E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
-  let createdAccountIds: string[] = [];
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-        accountMemo: 'executor account for Create Account E2E Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executor = await profile.accounts.acquire({
+      tier: 'MINIMAL',
+      accountMemo: 'executor account for Create Account E2E Tests',
+    });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      for (const accountId of createdAccountIds) {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          AccountId.fromString(accountId),
-          operatorClient.operatorAccountId!,
-        );
-      }
-    }
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      executorClient.operatorAccountId!,
-      operatorClient.operatorAccountId!,
-    );
-    testSetup.cleanup();
-    operatorClient.close();
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   describe('Tool Matching and Parameter Extraction', () => {
     it(
       'should create an account with default operator public key',
       itWithRetry(async () => {
-        const publicKey = executorClient.operatorPublicKey as PublicKey;
+        const publicKey = executor.privateKey.publicKey as PublicKey;
         const input = `Create a new Hedera account`;
 
         const result = await agent.invoke({
@@ -93,7 +68,6 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
-        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect((info.key as PublicKey).toStringRaw()).toBe(publicKey.toStringRaw());
@@ -114,7 +88,6 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
-        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect(info.accountMemo).toBe('E2E test account');
@@ -139,7 +112,6 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
-        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect((info.key as Key).toString()).toBe(publicKey.toString());
@@ -191,7 +163,6 @@ describe('Create Account E2E Tests', () => {
           ],
         });
         const newAccountId = extractAccountId(result, responseParsingService);
-        createdAccountIds.push(newAccountId);
 
         const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
         expect(balance.toNumber()).toBeGreaterThanOrEqual(0.0001 * 1e8);
@@ -215,7 +186,6 @@ describe('Create Account E2E Tests', () => {
         });
 
         const newAccountId = extractAccountId(result, responseParsingService);
-        createdAccountIds.push(newAccountId);
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect(info.accountMemo).toBe(longMemo);

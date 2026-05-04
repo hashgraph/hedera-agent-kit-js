@@ -1,20 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
+import { Client, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 import airdropFungibleTokenTool from '@/plugins/core-token-plugin/tools/fungible-token/airdrop-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { airdropFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Airdrop Fungible Token Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let context: Context;
@@ -30,33 +31,21 @@ describe('Airdrop Fungible Token Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Airdrop Fungible Token Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     tokenIdFT = await executorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        autoRenewAccountId: executorAccountId.toString(),
+        supplyKey: executor.privateKey.publicKey as PublicKey,
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: executor.accountId.toString(),
+        autoRenewAccountId: executor.accountId.toString(),
       })
       .then(resp => resp.tokenId!);
 
@@ -64,32 +53,20 @@ describe('Airdrop Fungible Token Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   const createRecipientAccount = async (maxAutomaticTokenAssociations: number) => {
-    const recipientKey = PrivateKey.generateED25519();
-    const recipientId = await executorWrapper
-      .createAccount({
-        key: recipientKey.publicKey,
-        initialBalance: 0,
-        maxAutomaticTokenAssociations,
-        accountMemo: 'recipient account for Airdrop Fungible Token Integration Tests',
-      })
-      .then(resp => resp.accountId!);
+    const acquireOpts =
+      maxAutomaticTokenAssociations === 0
+        ? { preset: 'pending-airdrop-recipient' as const }
+        : {};
+    const recipient = await profile.accounts.acquire(acquireOpts);
+    const { client: recipientClient, wrapper: recipientWrapper } =
+      profile.client.connectAs(recipient);
 
-    const recipientClient = getCustomClient(recipientId, recipientKey);
-    const recipientWrapper = new HederaOperationsWrapper(recipientClient);
-
-    return { recipientId, recipientClient, recipientWrapper };
+    return { recipientId: recipient.accountId, recipientClient, recipientWrapper };
   };
 
   it('should airdrop tokens to a single recipient', async () => {
@@ -98,7 +75,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     const tool = airdropFungibleTokenTool(context);
     const params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> = {
       tokenId: tokenIdFT.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       recipients: [
         {
           accountId: recipientId.toString(),
@@ -127,7 +104,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     const tool = airdropFungibleTokenTool(context);
     const params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> = {
       tokenId: tokenIdFT.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       recipients: [
         { accountId: recipient1.recipientId.toString(), amount: 10 },
         { accountId: recipient2.recipientId.toString(), amount: 20 },
@@ -155,7 +132,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     const tool = airdropFungibleTokenTool(context);
     const params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> = {
       tokenId: '0.0.999999999',
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       recipients: [{ accountId: recipientId.toString(), amount: 5 }],
     };
 
@@ -172,7 +149,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     const tool = airdropFungibleTokenTool(context);
     const params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> = {
       tokenId: tokenIdFT.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       recipients: [{ accountId: recipientId.toString(), amount: 999999999 }], // absurdly high
     };
 
@@ -189,7 +166,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     const tool = airdropFungibleTokenTool(context);
     const params: z.infer<ReturnType<typeof airdropFungibleTokenParameters>> = {
       tokenId: tokenIdFT.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       recipients: [{ accountId: recipientId.toString(), amount: 25 }],
     };
 
@@ -198,7 +175,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
 
     expect(result.raw.status).toBe('SUCCESS');
 
-    const outstanding = await executorWrapper.getOutstandingAirdrops(executorAccountId.toString());
+    const outstanding = await executorWrapper.getOutstandingAirdrops(executor.accountId.toString());
     expect(outstanding.airdrops.some(a => a.token_id === tokenIdFT.toString())).toBe(true);
 
     recipientClient.close();

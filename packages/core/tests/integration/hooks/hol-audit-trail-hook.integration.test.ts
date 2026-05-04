@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, TopicCreateTransaction } from '@hiero-ledger/sdk';
+import { Client, TopicCreateTransaction } from '@hiero-ledger/sdk';
 import { brotliDecompressSync } from 'zlib';
 import { randomBytes } from 'crypto';
 
@@ -14,12 +14,9 @@ import { AuditSession } from '@/hooks/hol-audit-trail-hook/audit/audit-session';
 import { HolAuditWriter } from '@/hooks/hol-audit-trail-hook/audit/writers/hol-audit-writer';
 
 import {
-  getOperatorClientForTests,
-  getCustomClient,
+  getProfile,
   HederaOperationsWrapper,
-  UsdToHbarService,
-  BALANCE_TIERS,
-  returnHbarsAndDeleteAccount,
+  type TestAccount,
 } from '@hashgraph/hedera-agent-kit-tests';
 
 const POLL_INTERVAL_MS = 500;
@@ -41,52 +38,23 @@ async function pollTopicMessages(
 }
 
 describe('HolAuditTrailHook Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let recipient: TestAccount;
   let executorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
-  let recipientAccountId: AccountId;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    recipientAccountId = await operatorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      try {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          recipientAccountId,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      } catch (error) {
-        console.warn('Failed to clean up accounts:', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   async function createSessionTopic(client: Client): Promise<string> {
@@ -119,7 +87,7 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const entry = buildAuditEntry({
       tool: TRANSFER_HBAR_TOOL,
-      params: { transfers: [{ accountId: recipientAccountId.toString(), amount: 0.0001 }] },
+      params: { transfers: [{ accountId: recipient.accountId.toString(), amount: 0.0001 }] },
       result: { raw: { status: 'SUCCESS' }, message: 'HBAR successfully transferred.' },
     });
 
@@ -164,13 +132,13 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const entry1 = buildAuditEntry({
       tool: TRANSFER_HBAR_TOOL,
-      params: { transfers: [{ accountId: recipientAccountId.toString(), amount: 0.0001 }] },
+      params: { transfers: [{ accountId: recipient.accountId.toString(), amount: 0.0001 }] },
       result: { raw: { status: 'SUCCESS' }, message: 'first transfer' },
     });
 
     const entry2 = buildAuditEntry({
       tool: TRANSFER_HBAR_TOOL,
-      params: { transfers: [{ accountId: recipientAccountId.toString(), amount: 0.0002 }] },
+      params: { transfers: [{ accountId: recipient.accountId.toString(), amount: 0.0002 }] },
       result: { raw: { status: 'SUCCESS' }, message: 'second transfer' },
     });
 
@@ -254,12 +222,12 @@ describe('HolAuditTrailHook Integration Tests', () => {
     const context: Context = {
       mode: AgentMode.RETURN_BYTES,
       hooks: [hook],
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     const tool = getTransferHbarTool(context);
     const params = {
-      transfers: [{ accountId: recipientAccountId.toString(), amount: 0.0001 }],
+      transfers: [{ accountId: recipient.accountId.toString(), amount: 0.0001 }],
     };
 
     const result = await tool.execute(executorClient, context, params);
@@ -277,7 +245,7 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const tool = getTransferHbarTool(context);
     const params = {
-      transfers: [{ accountId: recipientAccountId.toString(), amount: 0.0001 }],
+      transfers: [{ accountId: recipient.accountId.toString(), amount: 0.0001 }],
     };
 
     const result = await tool.execute(executorClient, context, params);

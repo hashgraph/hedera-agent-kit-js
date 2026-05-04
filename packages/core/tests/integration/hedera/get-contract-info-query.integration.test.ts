@@ -1,39 +1,29 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
-import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import getContractInfoTool from '@/plugins/core-evm-query-plugin/tools/queries/get-contract-info-query';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import type { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
 import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Integration - Hedera Get Contract Info', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let deployedContractId: string;
   let mirrornodeService: IHederaMirrornodeService;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // create an executor account
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
     mirrornodeService = getMirrornodeService(undefined, executorClient.ledgerId!);
 
     // deploy ERC20 contract
@@ -45,7 +35,7 @@ describe('Integration - Hedera Get Contract Info', () => {
 
   it('fetches info for a deployed smart contract', async () => {
     context = {
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
       mirrornodeService,
     };
     const tool = getContractInfoTool(context);
@@ -60,7 +50,7 @@ describe('Integration - Hedera Get Contract Info', () => {
 
   it('Handles non-existing smart contract', async () => {
     context = {
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
       mirrornodeService,
     };
     const tool = getContractInfoTool(context);
@@ -78,14 +68,7 @@ describe('Integration - Hedera Get Contract Info', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 });

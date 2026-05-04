@@ -1,53 +1,33 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { Client, Key, Status } from '@hiero-ledger/sdk';
 import createAccountTool from '@/plugins/core-account-plugin/tools/account/create-account';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Create Account Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        key: executorAccountKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      try {
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      } catch (error) {
-        console.warn('Failed to clean up executor account:', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   describe('Valid Create Account Scenarios', () => {
@@ -70,7 +50,7 @@ describe('Create Account Integration Tests', () => {
 
     it('should create an account with initial balance and memo', async () => {
       const params = {
-        initialBalance: UsdToHbarService.usdToHbar(0.1),
+        initialBalance: profile.balance.usdToHbar(0.1),
         accountMemo: 'Integration test account',
       };
 
@@ -82,7 +62,7 @@ describe('Create Account Integration Tests', () => {
       const newAccountId = result.raw.accountId!.toString();
 
       const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
-      expect(balance.toNumber()).toBeCloseTo(UsdToHbarService.usdToHbar(0.1) * 1e8);
+      expect(balance.toNumber()).toBeCloseTo(profile.balance.usdToHbar(0.1) * 1e8);
 
       const info = await executorWrapper.getAccountInfo(newAccountId);
       expect(info.accountMemo).toBe('Integration test account');

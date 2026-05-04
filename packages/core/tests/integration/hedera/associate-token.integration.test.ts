@@ -1,25 +1,25 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TokenSupplyType } from '@hiero-ledger/sdk';
+import { Client, PublicKey, TokenSupplyType } from '@hiero-ledger/sdk';
 import associateTokenTool from '@/plugins/core-token-plugin/tools/associate-token';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Associate Token Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let tokenExecutor: TestAccount;
   let executorClient: Client;
   let tokenExecutorClient: Client;
-  let executorAccountId: AccountId;
-  let tokenExecutorAccountId: AccountId;
-  let operatorWrapper: HederaOperationsWrapper;
-  let tokenExecutorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let tokenExecutorWrapper: HederaOperationsWrapper;
   let context: Context;
 
   const FT_PARAMS = {
@@ -33,69 +33,36 @@ describe('Associate Token Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        accountMemo: 'executor account for Associate Token Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    const tokenExecutorKey = PrivateKey.generateED25519();
-    tokenExecutorAccountId = await operatorWrapper
-      .createAccount({
-        key: tokenExecutorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        accountMemo: 'token executor account for Associate Token Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    tokenExecutorClient = getCustomClient(tokenExecutorAccountId, tokenExecutorKey);
-    tokenExecutorWrapper = new HederaOperationsWrapper(tokenExecutorClient);
+    tokenExecutor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: tokenExecutorClient, wrapper: tokenExecutorWrapper } =
+      profile.client.connectAs(tokenExecutor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-    }
-    if (tokenExecutorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        tokenExecutorWrapper,
-        tokenExecutorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      tokenExecutorClient.close();
-    }
-    operatorClient.close();
+    await profile.accounts.release(executor);
+    await profile.accounts.release(tokenExecutor);
+    executorClient?.close();
+    tokenExecutorClient?.close();
   });
 
   it('should associate token to the executor account', async () => {
     let tokenIdFT = await tokenExecutorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: tokenExecutorAccountId.toString(),
-        autoRenewAccountId: tokenExecutorAccountId.toString(),
+        supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        adminKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: tokenExecutor.accountId.toString(),
+        autoRenewAccountId: tokenExecutor.accountId.toString(),
       })
       .then(resp => resp.tokenId!);
     const tool = associateTokenTool(context);
@@ -107,7 +74,7 @@ describe('Associate Token Integration Tests', () => {
     await wait(MIRROR_NODE_WAITING_TIME);
 
     const balances = await executorWrapper.getAccountBalances(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
     const associated = balances.tokens.some(t => t.token_id === tokenIdFT.toString());
 
@@ -128,10 +95,10 @@ describe('Associate Token Integration Tests', () => {
         decimals: 0,
         maxSupply: 1000,
         supplyType: TokenSupplyType.Finite,
-        supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: tokenExecutorAccountId.toString(),
-        autoRenewAccountId: tokenExecutorAccountId.toString(),
+        supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        adminKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: tokenExecutor.accountId.toString(),
+        autoRenewAccountId: tokenExecutor.accountId.toString(),
       })
       .then(resp => resp.tokenId!);
     // Create a second token
@@ -144,10 +111,10 @@ describe('Associate Token Integration Tests', () => {
         decimals: 0,
         maxSupply: 1000,
         supplyType: TokenSupplyType.Finite,
-        supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: tokenExecutorAccountId.toString(),
-        autoRenewAccountId: tokenExecutorAccountId.toString(),
+        supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        adminKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: tokenExecutor.accountId.toString(),
+        autoRenewAccountId: tokenExecutor.accountId.toString(),
       })
       .then(resp => resp.tokenId!);
 
@@ -162,7 +129,7 @@ describe('Associate Token Integration Tests', () => {
     await wait(MIRROR_NODE_WAITING_TIME);
 
     const balances = await executorWrapper.getAccountBalances(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
     const associatedFirst = balances.tokens.some(t => t.token_id === tokenIdFT1.toString());
     const associatedSecond = balances.tokens.some(t => t.token_id === tokenIdFT2.toString());

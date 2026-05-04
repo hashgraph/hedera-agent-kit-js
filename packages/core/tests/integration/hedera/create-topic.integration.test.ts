@@ -2,29 +2,27 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import createTopicTool from '@/plugins/core-consensus-plugin/tools/consensus/create-topic';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
 
 describe('Create Topic Integration Tests', () => {
+  const profile = getProfile();
   let client: Client;
   let context: Context;
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    ({ client, wrapper: hederaOperationsWrapper } = profile.client.connectAs(profile.operator));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: client.operatorAccountId!.toString(),
+      accountId: profile.operator.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      client.close();
-    }
+    client?.close();
   });
 
   describe('Valid Create Topic Scenarios', () => {

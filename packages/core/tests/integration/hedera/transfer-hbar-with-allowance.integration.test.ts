@@ -1,88 +1,45 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Hbar, HbarAllowance, HbarUnit, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client, Hbar, HbarAllowance, HbarUnit } from '@hiero-ledger/sdk';
 import transferHbarWithAllowanceTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar-with-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 import {
-  getCustomClient,
-  getOperatorClientForTests,
+  getProfile,
   HederaOperationsWrapper,
+  type TestAccount,
   verifyHbarBalanceChange,
 } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer HBAR With Allowance Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let owner: TestAccount;
+  let spender: TestAccount;
+  let recipient: TestAccount;
   let ownerClient: Client;
+  let ownerWrapper: HederaOperationsWrapper;
   let spenderClient: Client;
   let context: Context;
-  let recipientAccountId: AccountId;
-  let ownerWrapper: HederaOperationsWrapper;
-  let spenderWrapper: HederaOperationsWrapper;
-  let ownerAccountId: AccountId;
-  let spenderAccountId: AccountId;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    owner = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: ownerClient, wrapper: ownerWrapper } = profile.client.connectAs(owner));
 
-    // Operator creates an owner account
-    const ownerKeyPair = PrivateKey.generateED25519();
-    ownerAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: ownerKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    ownerClient = getCustomClient(ownerAccountId, ownerKeyPair);
-    ownerWrapper = new HederaOperationsWrapper(ownerClient);
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: spenderClient } = profile.client.connectAs(spender));
 
-    // Operator creates a spender account
-    const spenderKeyPair = PrivateKey.generateED25519();
-    spenderAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: spenderKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    spenderClient = getCustomClient(spenderAccountId, spenderKeyPair);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
-
-    // Operator creates recipient
-    recipientAccountId = await operatorWrapper
-      .createAccount({ key: ownerClient.operatorPublicKey as Key })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: spenderAccountId.toString(), // spender executes the transfer
+      accountId: spender.accountId.toString(), // spender executes the transfer
     };
   });
 
   afterAll(async () => {
-    try {
-      await returnHbarsAndDeleteAccount(
-        spenderWrapper,
-        spenderAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        ownerWrapper,
-        recipientAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        ownerWrapper,
-        ownerAccountId,
-        operatorClient.operatorAccountId!,
-      );
-    } catch (err) {
-      console.warn('Cleanup failed:', err);
-    }
+    await profile.accounts.release(spender);
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(owner);
     ownerClient?.close();
     spenderClient?.close();
-    operatorClient?.close();
   });
 
   describe('Valid Allowance Transfer Scenarios', () => {
@@ -91,8 +48,8 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       await ownerWrapper.approveHbarAllowance({
         hbarApprovals: [
           new HbarAllowance({
-            ownerAccountId: ownerAccountId,
-            spenderAccountId: spenderAccountId,
+            ownerAccountId: owner.accountId,
+            spenderAccountId: spender.accountId,
             amount: Hbar.from(3, HbarUnit.Hbar),
           }),
         ],
@@ -100,12 +57,12 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
 
       // Get balance before
       const recipientBalanceBefore = await ownerWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient.accountId.toString(),
       );
 
       const params = {
-        sourceAccountId: ownerAccountId.toString(),
-        transfers: [{ accountId: recipientAccountId.toString(), amount: 2 }],
+        sourceAccountId: owner.accountId.toString(),
+        transfers: [{ accountId: recipient.accountId.toString(), amount: 2 }],
         transactionMemo: 'Allowance transfer',
       };
 
@@ -118,7 +75,7 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
 
       // Verify balance changes correctly
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient.accountId.toString(),
         recipientBalanceBefore,
         2,
         ownerWrapper,
@@ -129,18 +86,18 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       await ownerWrapper.approveHbarAllowance({
         hbarApprovals: [
           new HbarAllowance({
-            ownerAccountId: ownerAccountId,
-            spenderAccountId: spenderAccountId,
+            ownerAccountId: owner.accountId,
+            spenderAccountId: spender.accountId,
             amount: Hbar.from(5, HbarUnit.Hbar),
           }),
         ],
       });
 
       const params = {
-        sourceAccountId: ownerAccountId.toString(),
+        sourceAccountId: owner.accountId.toString(),
         transfers: [
-          { accountId: recipientAccountId.toString(), amount: 1 },
-          { accountId: operatorClient.operatorAccountId!.toString(), amount: 1 },
+          { accountId: recipient.accountId.toString(), amount: 1 },
+          { accountId: profile.operator.accountId.toString(), amount: 1 },
         ],
         transactionMemo: 'Multi-recipient allowance transfer',
       };
@@ -156,8 +113,8 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
   describe('Invalid Allowance Transfer Scenarios', () => {
     it('should fail if no allowance approved', async () => {
       const params = {
-        sourceAccountId: operatorClient.operatorAccountId!.toString(),
-        transfers: [{ accountId: recipientAccountId.toString(), amount: 1 }],
+        sourceAccountId: profile.operator.accountId.toString(),
+        transfers: [{ accountId: recipient.accountId.toString(), amount: 1 }],
       };
       const tool = transferHbarWithAllowanceTool(context);
       const result = await tool.execute(spenderClient, context, params);
@@ -170,16 +127,16 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       await ownerWrapper.approveHbarAllowance({
         hbarApprovals: [
           new HbarAllowance({
-            ownerAccountId: ownerAccountId,
-            spenderAccountId: spenderAccountId,
+            ownerAccountId: owner.accountId,
+            spenderAccountId: spender.accountId,
             amount: Hbar.from(1, HbarUnit.Hbar),
           }),
         ],
       });
 
       const params = {
-        sourceAccountId: ownerAccountId.toString(),
-        transfers: [{ accountId: recipientAccountId.toString(), amount: 5 }],
+        sourceAccountId: owner.accountId.toString(),
+        transfers: [{ accountId: recipient.accountId.toString(), amount: 5 }],
       };
 
       const tool = transferHbarWithAllowanceTool(context);
@@ -193,8 +150,8 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       const invalids = [0, -1];
       for (const amt of invalids) {
         const params = {
-          sourceAccountId: ownerAccountId.toString(),
-          transfers: [{ accountId: recipientAccountId.toString(), amount: amt }],
+          sourceAccountId: owner.accountId.toString(),
+          transfers: [{ accountId: recipient.accountId.toString(), amount: amt }],
         };
         const tool = transferHbarWithAllowanceTool(context);
         const result = await tool.execute(spenderClient, context, params);
@@ -209,16 +166,16 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       await ownerWrapper.approveHbarAllowance({
         hbarApprovals: [
           new HbarAllowance({
-            ownerAccountId: ownerAccountId,
-            spenderAccountId: spenderAccountId,
+            ownerAccountId: owner.accountId,
+            spenderAccountId: spender.accountId,
             amount: Hbar.from(2, HbarUnit.Tinybar),
           }),
         ],
       });
 
       const params = {
-        sourceAccountId: ownerAccountId.toString(),
-        transfers: [{ accountId: recipientAccountId.toString(), amount: 0.00000001 }],
+        sourceAccountId: owner.accountId.toString(),
+        transfers: [{ accountId: recipient.accountId.toString(), amount: 0.00000001 }],
         transactionMemo: 'Tinybar allowance test',
       };
 

@@ -1,43 +1,34 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { AccountId, Client, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import transferERC20Tool from '@/plugins/core-evm-plugin/tools/erc20/transfer-erc20';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer ERC20 Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let testTokenAddress: string;
+  let recipient: TestAccount | undefined;
   let recipientAccountId: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating tokens and transfers
-        key: executorAccountKey.publicKey,
-        accountMemo: 'executor account for Transfer ERC20 Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     // Create a test ERC20 token with initial supply
@@ -58,37 +49,22 @@ describe('Transfer ERC20 Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   describe('Valid Transfer ERC20 Scenarios', () => {
     afterEach(async () => {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        AccountId.fromString(recipientAccountId),
-        executorClient.operatorAccountId!,
-      );
+      if (recipient) {
+        await profile.accounts.release(recipient);
+        recipient = undefined;
+      }
     });
 
     it('should transfer tokens to another account using Hedera address', async () => {
       // Create a recipient account
-      recipientAccountId = await operatorWrapper
-        .createAccount({
-          initialBalance: 5,
-          key: executorClient.operatorPublicKey as PublicKey,
-          accountMemo: 'should transfer tokens to another account using Hedera address',
-        })
-        .then(resp => resp.accountId!.toString());
+      recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
+      recipientAccountId = recipient.accountId.toString();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
@@ -107,13 +83,8 @@ describe('Transfer ERC20 Integration Tests', () => {
 
     it('should transfer tokens using EVM addresses', async () => {
       // Create a recipient account and get its EVM address
-      recipientAccountId = await operatorWrapper
-        .createAccount({
-          initialBalance: 5,
-          key: executorClient.operatorPublicKey as PublicKey,
-          accountMemo: 'should transfer tokens using EVM addresses',
-        })
-        .then(resp => resp.accountId!.toString());
+      recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
+      recipientAccountId = recipient.accountId.toString();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
@@ -136,14 +107,8 @@ describe('Transfer ERC20 Integration Tests', () => {
 
     it('should schedule transfer of ERC20 tokens to another account using Hedera address', async () => {
       // Create a recipient account
-      recipientAccountId = await operatorWrapper
-        .createAccount({
-          initialBalance: 5,
-          key: executorClient.operatorPublicKey as PublicKey,
-          accountMemo:
-            'account for should schedule transfer of ERC20 tokens to another account using Hedera address',
-        })
-        .then(resp => resp.accountId!.toString());
+      recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
+      recipientAccountId = recipient.accountId.toString();
 
       await wait(MIRROR_NODE_WAITING_TIME);
 
@@ -165,6 +130,13 @@ describe('Transfer ERC20 Integration Tests', () => {
   });
 
   describe('Invalid Transfer ERC20 Scenarios', () => {
+    afterEach(async () => {
+      if (recipient) {
+        await profile.accounts.release(recipient);
+        recipient = undefined;
+      }
+    });
+
     it('should fail when required params are missing', async () => {
       const params: any = {}; // no contractId, recipientAddress, amount
 
@@ -191,13 +163,8 @@ describe('Transfer ERC20 Integration Tests', () => {
     });
 
     it('should fail when amount is negative', async () => {
-      recipientAccountId = await operatorWrapper
-        .createAccount({
-          initialBalance: 0,
-          key: executorClient.operatorPublicKey as PublicKey,
-          accountMemo: 'account for should fail when amount is negative',
-        })
-        .then(resp => resp.accountId!.toString());
+      recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
+      recipientAccountId = recipient.accountId.toString();
 
       const params: any = {
         contractId: testTokenAddress,

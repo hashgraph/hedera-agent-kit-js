@@ -1,24 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hiero-ledger/sdk';
+import { Client, TopicId, PublicKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  wait,
+  MIRROR_NODE_WAITING_TIME,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Get Topic Messages Query E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let createdTopicId: TopicId;
   let topicAdminKey: PublicKey;
@@ -27,28 +24,16 @@ describe('Get Topic Messages Query E2E Tests', () => {
   let responseParsingService: ResponseParserService;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Operator creates executor account
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Executor creates topic
-    topicAdminKey = executorClient.operatorPublicKey!;
+    topicAdminKey = executor.privateKey.publicKey;
     createdTopicId = await executorWrapper
       .createTopic({
         isSubmitKey: false,
         adminKey: topicAdminKey,
-        autoRenewAccountId: executorAccountId.toString(),
+        autoRenewAccountId: executor.accountId.toString(),
       })
       .then(resp => resp.topicId!);
 
@@ -78,15 +63,9 @@ describe('Get Topic Messages Query E2E Tests', () => {
   });
 
   afterAll(async () => {
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      executorClient.operatorAccountId!,
-      operatorClient.operatorAccountId!,
-    );
-
-    operatorClient.close();
-    executorClient.close();
-    testSetup.cleanup();
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(

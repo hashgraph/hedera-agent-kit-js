@@ -1,24 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { Client, PrivateKey, TokenId, AccountId, TokenSupplyType, PublicKey } from '@hiero-ledger/sdk';
+import { Client, PrivateKey, TokenId, TokenSupplyType, PublicKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  wait,
+  MIRROR_NODE_WAITING_TIME,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Get Token Info Query E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
@@ -37,33 +34,23 @@ describe('Get Token Info Query E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'MAXIMUM' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
   beforeEach(async () => {
     tokenIdFT = await executorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        metadataKey: operatorClient.operatorPublicKey! as PublicKey,
+        supplyKey: executor.privateKey.publicKey as PublicKey,
+        autoRenewAccountId: executor.accountId.toString(),
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: executor.accountId.toString(),
+        metadataKey: profile.operator.privateKey.publicKey as PublicKey,
       })
       .then(resp => resp.tokenId!);
 
@@ -71,22 +58,16 @@ describe('Get Token Info Query E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'should change token keys using passed values',
     itWithRetry(async () => {
       const newSupplyKey = PrivateKey.generateED25519().publicKey.toString();
-      const newAdminKey = executorClient.operatorPublicKey!.toString();
+      const newAdminKey = executor.privateKey.publicKey.toString();
       await agent.invoke({
         messages: [
           {
@@ -118,7 +99,7 @@ describe('Get Token Info Query E2E Tests', () => {
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
       expect((tokenDetails.metadataKey as PublicKey).toStringDer()).toBe(
-        executorClient.operatorPublicKey!.toStringDer(),
+        executor.privateKey.publicKey.toStringDer(),
       );
       expect(tokenDetails.tokenMemo).toBe('just updated');
     }),
@@ -179,8 +160,8 @@ describe('Get Token Info Query E2E Tests', () => {
     itWithRetry(async () => {
       const secondaryAccountId = await executorWrapper
         .createAccount({
-          key: executorClient.operatorPublicKey!,
-          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+          key: executor.privateKey.publicKey,
+          initialBalance: profile.balance.fund('MINIMAL'),
         })
         .then(resp => resp.accountId!);
       await agent.invoke({
@@ -194,12 +175,6 @@ describe('Get Token Info Query E2E Tests', () => {
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
 
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        secondaryAccountId,
-        operatorClient.operatorAccountId!,
-      );
-
       expect(tokenDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
     }),
   );
@@ -207,22 +182,16 @@ describe('Get Token Info Query E2E Tests', () => {
   it(
     'should reject updates by an unauthorized operator',
     itWithRetry(async () => {
-      const secondaryAccount = PrivateKey.generateED25519();
-      const secondaryAccountId = await executorWrapper
-        .createAccount({
-          key: secondaryAccount.publicKey,
-          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        })
-        .then(resp => resp.accountId!);
+      const secondary = await profile.accounts.acquire({ tier: 'STANDARD' });
+      const { client: secondaryClient, wrapper: secondaryWrapper } =
+        profile.client.connectAs(secondary);
 
-      const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccount);
-      const secondaryWrapper = new HederaOperationsWrapper(secondaryClient);
       const tokenId = await secondaryWrapper
         .createFungibleToken({
           ...FT_PARAMS,
-          supplyKey: secondaryClient.operatorPublicKey! as PublicKey,
-          adminKey: secondaryClient.operatorPublicKey! as PublicKey,
-          treasuryAccountId: secondaryAccountId.toString(),
+          supplyKey: secondary.privateKey.publicKey as PublicKey,
+          adminKey: secondary.privateKey.publicKey as PublicKey,
+          treasuryAccountId: secondary.accountId.toString(),
         })
         .then(resp => resp.tokenId!);
 
@@ -246,11 +215,8 @@ describe('Get Token Info Query E2E Tests', () => {
         'You do not have permission to update this token.',
       );
 
-      await returnHbarsAndDeleteAccount(
-        secondaryWrapper,
-        secondaryAccountId,
-        operatorClient.operatorAccountId!,
-      );
+      await profile.accounts.release(secondary);
+      secondaryClient.close();
     }),
   );
 });

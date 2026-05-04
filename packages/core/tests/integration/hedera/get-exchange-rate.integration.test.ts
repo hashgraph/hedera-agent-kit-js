@@ -2,18 +2,19 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Client } from '@hiero-ledger/sdk';
 import { GetExchangeRateQueryTool } from '@/plugins/core-misc-query-plugin/tools/queries/get-exchange-rate-query';
 import type { Context } from '@/shared/configuration';
-import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 
 describe('Get Exchange Rate', () => {
+  const profile = getProfile();
   let client: Client;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
+    ({ client } = profile.client.connectAs(profile.operator));
   });
 
   afterAll(async () => {
-    if (client) client.close();
+    client?.close();
   });
 
   it('should fetch the current exchange rate when no timestamp is provided', async () => {

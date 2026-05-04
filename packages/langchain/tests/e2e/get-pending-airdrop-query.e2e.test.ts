@@ -1,30 +1,27 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
+import { Client, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  wait,
+  MIRROR_NODE_WAITING_TIME,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Get Pending Airdrop Query E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let recipientId: AccountId;
+  let recipient: TestAccount;
 
   const FT_PARAMS = {
     tokenName: 'AirdropE2EToken',
@@ -37,47 +34,30 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
 
     tokenIdFT = await executorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
+        supplyKey: executor.privateKey.publicKey as PublicKey,
+        autoRenewAccountId: executor.accountId.toString(),
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: executor.accountId.toString(),
       })
       .then(resp => resp.tokenId!);
 
     // Recipient with no auto-assoc to create pending airdrop
-    const recipientKey = PrivateKey.generateED25519();
-    recipientId = await operatorWrapper
-      .createAccount({
-        key: recipientKey.publicKey,
-        initialBalance: 0,
-        maxAutomaticTokenAssociations: 0,
-      })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ preset: 'pending-airdrop-recipient' });
 
     await executorWrapper.airdropToken({
       tokenTransfers: [
-        { tokenId: tokenIdFT.toString(), accountId: recipientId.toString(), amount: 10 },
-        { tokenId: tokenIdFT.toString(), accountId: executorAccountId.toString(), amount: -10 },
+        { tokenId: tokenIdFT.toString(), accountId: recipient.accountId.toString(), amount: 10 },
+        { tokenId: tokenIdFT.toString(), accountId: executor.accountId.toString(), amount: -10 },
       ],
     });
 
@@ -85,21 +65,16 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'should return pending airdrops for recipient via natural language',
     itWithRetry(async () => {
-      const input = `Show pending airdrops for account ${recipientId.toString()}`;
+      const input = `Show pending airdrops for account ${recipient.accountId.toString()}`;
       const result = await agent.invoke({
         messages: [
           {
@@ -112,7 +87,7 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        `pending airdrops for account **${recipientId.toString()}**`,
+        `pending airdrops for account **${recipient.accountId.toString()}**`,
       );
       expect(Array.isArray(parsedResponse[0].parsedData.raw.pendingAirdrops.airdrops)).toBe(true);
       expect(parsedResponse[0].parsedData.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);

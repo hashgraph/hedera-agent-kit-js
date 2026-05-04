@@ -6,18 +6,6 @@ import type { RawTransactionResponse } from '@/shared/strategies/tx-mode-strateg
 import * as sdk from '@hiero-ledger/sdk';
 import { Client } from '@hiero-ledger/sdk';
 
-// Mock UsdToHbarService to prevent it from making network requests during global setup
-vi.mock('../../utils/usd-to-hbar-service', () => {
-  return {
-    UsdToHbarService: {
-      getIsInitialized: () => true,
-      initialize: vi.fn().mockResolvedValue(undefined),
-      getExchangeRate: () => 0.1,
-      usdToHbar: (usd: number) => usd / 0.1,
-    },
-  };
-});
-
 // Mock Hashgraph SDK minimally
 vi.mock('@hiero-ledger/sdk', () => {
   const TopicMessageSubmitTransactionMock = vi.fn().mockImplementation(function () {

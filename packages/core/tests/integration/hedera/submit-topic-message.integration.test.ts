@@ -2,33 +2,33 @@ import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import submitTopicMessageTool from '@/plugins/core-consensus-plugin/tools/consensus/submit-topic-message';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Submit Topic Message Integration Tests', () => {
+  const profile = getProfile();
   let operatorClient: Client;
   let operatorWrapper: HederaOperationsWrapper;
   let context: Context;
   let topicId: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    ({ client: operatorClient, wrapper: operatorWrapper } = profile.client.connectAs(
+      profile.operator,
+    ));
   });
 
   afterAll(async () => {
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    operatorClient?.close();
   });
 
   beforeEach(async () => {
     // create a topic for each test so tests are isolated
     const created = await operatorWrapper.createTopic({
-      autoRenewAccountId: operatorClient.operatorAccountId!.toString(),
+      autoRenewAccountId: profile.operator.accountId.toString(),
       isSubmitKey: false,
       topicMemo: 'integration-test-topic',
     });
@@ -36,7 +36,7 @@ describe('Submit Topic Message Integration Tests', () => {
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: operatorClient.operatorAccountId!.toString(),
+      accountId: profile.operator.accountId.toString(),
     };
   });
 

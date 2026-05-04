@@ -1,46 +1,29 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { transferHbarParametersNormalised } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Sign Schedule Transaction E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
-  let executorWrapper: HederaOperationsWrapper;
-  let recipientAccountId: AccountId;
+  let recipient: TestAccount;
 
   beforeAll(async () => {
-    // operator client creation
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // execution account and client creation
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKeyPair.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient } = profile.client.connectAs(executor));
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
@@ -49,58 +32,49 @@ describe('Sign Schedule Transaction E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      testSetup.cleanup();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   beforeEach(async () => {
     // Create a recipient account
-    recipientAccountId = await executorWrapper
-      .createAccount({
-        key: executorClient.operatorPublicKey as Key,
-        initialBalance: 0,
-      })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
   });
 
   afterEach(async () => {
-    await executorWrapper.deleteAccount({
-      accountId: recipientAccountId,
-      transferAccountId: executorClient.operatorAccountId!,
-    });
+    await profile.accounts.release(recipient);
   });
 
   it(
     'should sign a scheduled transaction',
     itWithRetry(async () => {
-      // First, create a scheduled transaction
+      // First, create a scheduled transaction using the operator
       const transferAmount = 0.1;
+      const operatorClient = profile.client.connectAs(profile.operator).client;
+      const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
       const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
         hbarTransfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipient.accountId,
             amount: transferAmount,
           },
           {
-            accountId: executorClient.operatorAccountId!,
+            accountId: executor.accountId,
             amount: -transferAmount,
           },
         ],
         schedulingParams: {
           isScheduled: true,
-          adminKey: operatorClient.operatorPublicKey as PublicKey,
+          adminKey: profile.operator.privateKey.publicKey as PublicKey,
         },
       };
 
       const scheduleTx = await operatorWrapper.transferHbar(transferParams);
       const scheduleId = scheduleTx.scheduleId!.toString();
+      operatorClient.close();
+
       // Now sign the scheduled transaction using the agent
       const input = `Sign the scheduled transaction with ID ${scheduleId}`;
 

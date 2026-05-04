@@ -1,81 +1,54 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import updateAccountTool from '@/plugins/core-account-plugin/tools/account/update-account';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 import { parseHederaTimestamp, wait } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Schedule Transaction Integration tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let updateAccount: TestAccount;
+  let operatorWrapper: HederaOperationsWrapper;
   let executorClient: Client;
+  let executorWrapper: HederaOperationsWrapper;
   let updateAccountClient: Client;
 
   let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
-  let executorWrapper: HederaOperationsWrapper;
-  let updateAccountWrapper: HederaOperationsWrapper;
-  let executorAccountId: AccountId;
-  let updateAccountId: AccountId;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    operatorWrapper = profile.client.connectAs(profile.operator).wrapper;
   });
 
   afterAll(async () => {
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    // operator client is shared via profile.client; nothing to close here.
   });
 
   beforeEach(async () => {
-    const executorKeyPair = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKeyPair.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Schedule Transaction Integration tests',
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const updateAccountKeyPair = PrivateKey.generateED25519();
-    updateAccountId = await operatorWrapper
-      .createAccount({
-        key: updateAccountKeyPair.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'update account for Schedule Transaction Integration tests',
-      })
-      .then(resp => resp.accountId!);
-    updateAccountClient = getCustomClient(updateAccountId, updateAccountKeyPair);
-    updateAccountWrapper = new HederaOperationsWrapper(updateAccountClient);
+    updateAccount = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: updateAccountClient } = profile.client.connectAs(updateAccount));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterEach(async () => {
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      executorClient.operatorAccountId!,
-      operatorClient.operatorAccountId!,
-    );
-    await returnHbarsAndDeleteAccount(
-      updateAccountWrapper,
-      updateAccountId,
-      operatorClient.operatorAccountId!,
-    );
-    executorClient.close();
-    updateAccountClient.close();
+    await profile.accounts.release(executor);
+    await profile.accounts.release(updateAccount);
+    executorClient?.close();
+    updateAccountClient?.close();
   });
 
   it('should fail with invalid account id', async () => {
@@ -86,7 +59,7 @@ describe('Schedule Transaction Integration tests', () => {
       schedulingParams: {
         isScheduled: true,
         waitForExpiry: true,
-        adminKey: executorClient.operatorPublicKey!.toStringRaw(),
+        adminKey: executor.privateKey.publicKey.toStringRaw(),
       },
     } as any;
 
@@ -96,13 +69,13 @@ describe('Schedule Transaction Integration tests', () => {
 
   it('should successfully schedule an another account update', async () => {
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'updated via scheduled transaction',
       maxAutomaticTokenAssociations: 4,
       schedulingParams: {
         isScheduled: true,
         waitForExpiry: false,
-        adminKey: executorClient.operatorPublicKey!.toStringRaw(),
+        adminKey: executor.privateKey.publicKey.toStringRaw(),
       },
     };
 
@@ -117,7 +90,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.scheduleId).toBeDefined();
 
     // the scheduled transaction should not have been executed yet
-    const accountDetails = await operatorWrapper.getAccountInfo(updateAccountId.toString());
+    const accountDetails = await operatorWrapper.getAccountInfo(updateAccount.accountId.toString());
     expect(accountDetails.accountMemo).not.toContain(params.accountMemo);
 
     await wait(MIRROR_NODE_WAITING_TIME);
@@ -126,12 +99,12 @@ describe('Schedule Transaction Integration tests', () => {
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
     );
-    expect(scheduledTxDetails.admin_key?.key).toBe(executorClient.operatorPublicKey!.toStringRaw());
+    expect(scheduledTxDetails.admin_key?.key).toBe(executor.privateKey.publicKey.toStringRaw());
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
     expect(scheduledTxDetails.executed_timestamp).toBe(null);
-    expect(scheduledTxDetails.payer_account_id).toBe(executorClient.operatorAccountId!.toString());
+    expect(scheduledTxDetails.payer_account_id).toBe(executor.accountId.toString());
     expect(scheduledTxDetails.expiration_time).toBe(null);
     expect(scheduledTxDetails.deleted).toBe(false);
     expect(scheduledTxDetails.wait_for_expiry).toBe(false);
@@ -139,7 +112,7 @@ describe('Schedule Transaction Integration tests', () => {
 
   it('should schedule transaction with adminKey: true (using operator key)', async () => {
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'admin key test - true',
       schedulingParams: {
         isScheduled: true,
@@ -159,15 +132,15 @@ describe('Schedule Transaction Integration tests', () => {
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
     );
-    expect(scheduledTxDetails.admin_key?.key).toBe(executorClient.operatorPublicKey!.toStringRaw());
+    expect(scheduledTxDetails.admin_key?.key).toBe(executor.privateKey.publicKey.toStringRaw());
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
   });
 
   it('should schedule transaction with adminKey: false (no admin key)', async () => {
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'admin key test - false',
       schedulingParams: {
         isScheduled: true,
@@ -189,17 +162,17 @@ describe('Schedule Transaction Integration tests', () => {
     );
     expect(scheduledTxDetails.admin_key).toBeNull();
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
   });
 
   it('should schedule transaction with custom payerAccountId', async () => {
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'custom payer test',
       schedulingParams: {
         isScheduled: true,
-        payerAccountId: operatorClient.operatorAccountId!.toString(),
+        payerAccountId: profile.operator.accountId.toString(),
         waitForExpiry: false,
         adminKey: false,
       },
@@ -216,9 +189,9 @@ describe('Schedule Transaction Integration tests', () => {
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
     );
-    expect(scheduledTxDetails.payer_account_id).toBe(operatorClient.operatorAccountId!.toString());
+    expect(scheduledTxDetails.payer_account_id).toBe(profile.operator.accountId.toString());
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
   });
 
@@ -228,7 +201,7 @@ describe('Schedule Transaction Integration tests', () => {
     const expirationTimeISO = futureTime.toISOString();
 
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'expiration time test',
       schedulingParams: {
         isScheduled: true,
@@ -261,7 +234,7 @@ describe('Schedule Transaction Integration tests', () => {
 
   it('should schedule transaction with waitForExpiry: false', async () => {
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'wait for expiry false test',
       schedulingParams: {
         isScheduled: true,
@@ -283,13 +256,13 @@ describe('Schedule Transaction Integration tests', () => {
     );
     expect(scheduledTxDetails.wait_for_expiry).toBe(false);
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
   });
 
   it('should schedule transaction with minimal params (only isScheduled: true)', async () => {
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'minimal scheduling params',
       schedulingParams: {
         waitForExpiry: false,
@@ -313,9 +286,9 @@ describe('Schedule Transaction Integration tests', () => {
     // Verify defaults are applied correctly
     expect(scheduledTxDetails.admin_key).toBeNull(); // adminKey defaults to false
     expect(scheduledTxDetails.wait_for_expiry).toBe(false); // waitForExpiry defaults to false
-    expect(scheduledTxDetails.payer_account_id).toBe(executorClient.operatorAccountId!.toString());
+    expect(scheduledTxDetails.payer_account_id).toBe(executor.accountId.toString());
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
   });
 
@@ -325,13 +298,13 @@ describe('Schedule Transaction Integration tests', () => {
     const expirationTimeISO = futureTime.toISOString();
 
     const params: z.infer<ReturnType<typeof updateAccountParameters>> = {
-      accountId: updateAccountId.toString(),
+      accountId: updateAccount.accountId.toString(),
       accountMemo: 'all params combined test',
       maxAutomaticTokenAssociations: 10,
       schedulingParams: {
         isScheduled: true,
-        adminKey: executorClient.operatorPublicKey!.toStringRaw(),
-        payerAccountId: operatorClient.operatorAccountId!.toString(),
+        adminKey: executor.privateKey.publicKey.toStringRaw(),
+        payerAccountId: profile.operator.accountId.toString(),
         expirationTime: expirationTimeISO,
         waitForExpiry: true,
       },
@@ -351,12 +324,12 @@ describe('Schedule Transaction Integration tests', () => {
     );
 
     // Verify all parameters are set correctly
-    expect(scheduledTxDetails.admin_key?.key).toBe(executorClient.operatorPublicKey!.toStringRaw());
-    expect(scheduledTxDetails.payer_account_id).toBe(operatorClient.operatorAccountId!.toString());
+    expect(scheduledTxDetails.admin_key?.key).toBe(executor.privateKey.publicKey.toStringRaw());
+    expect(scheduledTxDetails.payer_account_id).toBe(profile.operator.accountId.toString());
     expect(scheduledTxDetails.wait_for_expiry).toBe(true);
     expect(scheduledTxDetails.expiration_time).toBeDefined();
     expect(scheduledTxDetails.creator_account_id).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
     expect(scheduledTxDetails.executed_timestamp).toBeNull();
 

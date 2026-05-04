@@ -1,9 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
-  AccountId,
   Client,
-  Key,
-  PrivateKey,
   PublicKey,
   TokenId,
   TokenMintTransaction,
@@ -12,14 +9,15 @@ import {
 } from '@hiero-ledger/sdk';
 import approveNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Approve NFT Allowance tool
@@ -31,45 +29,28 @@ import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
  */
 
 describe('Approve NFT Allowance Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let spender: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let spenderAccountId: AccountId;
-  let operatorWrapper: HederaOperationsWrapper;
+  let spenderClient: Client;
   let executorWrapper: HederaOperationsWrapper;
+  let spenderWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   // NFT setup
   let nftTokenId: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    // Create an executor account that will be the NFT treasury/owner
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED), // cover fees for token creation/minting/approvals
-        key: executorKeyPair.publicKey,
-        accountMemo: 'executor account for Approve NFT Allowance Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    // Create a spender account using the executor's public key, so the executor can sign association if needed
-    spenderAccountId = await executorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorClient.operatorPublicKey as Key,
-        accountMemo: 'spender account for Approve NFT Allowance Integration Tests',
-      })
-      .then(resp => resp.accountId!);
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: spenderClient, wrapper: spenderWrapper } = profile.client.connectAs(spender));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     // Create an NFT token with executor as treasury and supply/admin keys
@@ -80,10 +61,10 @@ describe('Approve NFT Allowance Integration Tests', () => {
       tokenType: TokenType.NonFungibleUnique,
       supplyType: TokenSupplyType.Finite,
       maxSupply: 100,
-      adminKey: executorClient.operatorPublicKey! as PublicKey,
-      supplyKey: executorClient.operatorPublicKey! as PublicKey,
-      treasuryAccountId: executorAccountId.toString(),
-      autoRenewAccountId: executorAccountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
     });
     nftTokenId = createNftResp.tokenId!.toString();
 
@@ -102,40 +83,23 @@ describe('Approve NFT Allowance Integration Tests', () => {
     await wait(MIRROR_NODE_WAITING_TIME);
 
     // Associate spender with the NFT token to ensure they can receive transfers later if needed
-    await executorWrapper.associateToken({
-      accountId: spenderAccountId.toString(),
+    await spenderWrapper.associateToken({
+      accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      try {
-        // Best-effort cleanup: return HBARs from spender and executor back to operator and delete if possible
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          spenderAccountId,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      } catch (error) {
-        console.warn('Failed cleanup (accounts might still hold NFTs or tokens):', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(spender);
+    await profile.accounts.release(executor);
+    executorClient?.close();
+    spenderClient?.close();
   });
 
   it('approves NFT allowance with explicit owner and memo for a single serial', async () => {
     const params: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
       ownerAccountId: context.accountId!,
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenId: nftTokenId,
       serialNumbers: [1],
       transactionMemo: 'Approve NFT allowance (single) integration test',
@@ -152,7 +116,7 @@ describe('Approve NFT Allowance Integration Tests', () => {
 
   it('approves NFT allowance using default owner (from context) for multiple serials', async () => {
     const params: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenId: nftTokenId,
       serialNumbers: [2, 3],
     };

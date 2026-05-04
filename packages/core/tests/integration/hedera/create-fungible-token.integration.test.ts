@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client } from '@hiero-ledger/sdk';
 import createFungibleTokenTool from '@/plugins/core-token-plugin/tools/fungible-token/create-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
@@ -10,24 +10,22 @@ import { wait } from '@hashgraph/hedera-agent-kit-tests';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Create Fungible Token Integration Tests', () => {
+  const profile = getProfile();
   let client: Client;
   let context: Context;
   let hederaOperationsWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    ({ client, wrapper: hederaOperationsWrapper } = profile.client.connectAs(profile.operator));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: client.operatorAccountId!.toString(),
+      accountId: profile.operator.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (client) {
-      client.close();
-    }
+    client?.close();
   });
 
   describe('Valid Create Fungible Token Scenarios', () => {

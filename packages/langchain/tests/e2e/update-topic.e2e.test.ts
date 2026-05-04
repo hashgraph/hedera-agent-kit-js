@@ -1,24 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TopicId } from '@hiero-ledger/sdk';
+import { Client, PrivateKey, PublicKey, TopicId } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  wait,
+  MIRROR_NODE_WAITING_TIME,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Update Topic E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let topicId: TopicId;
   let testSetup: LangchainTestSetup;
@@ -26,32 +23,22 @@ describe('Update Topic E2E Tests', () => {
   let responseParsingService: ResponseParserService;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
   beforeEach(async () => {
     // Create a topic with admin and submit keys so most tests can run updates
     topicId = await executorWrapper
       .createTopic({
-        autoRenewAccountId: executorAccountId.toString(),
+        autoRenewAccountId: executor.accountId.toString(),
         isSubmitKey: true,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        submitKey: executorClient.operatorPublicKey! as PublicKey,
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        submitKey: executor.privateKey.publicKey as PublicKey,
         topicMemo: 'initial-topic-memo',
       })
       .then(resp => resp.topicId!);
@@ -61,15 +48,9 @@ describe('Update Topic E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
@@ -88,7 +69,7 @@ describe('Update Topic E2E Tests', () => {
 
       const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
       expect((topicDetails.adminKey as PublicKey).toString()).toBe(
-        executorClient.operatorPublicKey!.toString(),
+        executor.privateKey.publicKey.toString(),
       );
       expect((topicDetails.submitKey as PublicKey).toString()).toBe(newSubmitKey);
     }),
@@ -109,7 +90,7 @@ describe('Update Topic E2E Tests', () => {
 
       const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
       expect((topicDetails.submitKey as PublicKey).toStringDer()).toBe(
-        executorClient.operatorPublicKey!.toStringDer(),
+        executor.privateKey.publicKey.toStringDer(),
       );
       expect(topicDetails.topicMemo).toBe('just updated');
     }),
@@ -121,9 +102,9 @@ describe('Update Topic E2E Tests', () => {
       // Create a topic without a submitKey
       const topicWithoutSubmit = await executorWrapper
         .createTopic({
-          autoRenewAccountId: executorAccountId.toString(),
+          autoRenewAccountId: executor.accountId.toString(),
           isSubmitKey: false,
-          adminKey: executorClient.operatorPublicKey! as PublicKey,
+          adminKey: executor.privateKey.publicKey as PublicKey,
           topicMemo: 'no-submit',
         })
         .then(resp => resp.topicId!);
@@ -156,7 +137,7 @@ describe('Update Topic E2E Tests', () => {
     itWithRetry(async () => {
       // To set some account as the auto-renew account, it must have the same public key as the operator of the agent
       const secondaryAccountId = await executorWrapper
-        .createAccount({ key: executorClient.operatorPublicKey!, initialBalance: 0 })
+        .createAccount({ key: executor.privateKey.publicKey, initialBalance: 0 })
         .then(resp => resp.accountId!);
 
       await agent.invoke({
@@ -177,22 +158,16 @@ describe('Update Topic E2E Tests', () => {
   it(
     'should reject updates by an unauthorized operator',
     itWithRetry(async () => {
-      const secondaryAccountKey = PrivateKey.generateED25519();
-      const secondaryAccountId = await executorWrapper
-        .createAccount({
-          key: secondaryAccountKey.publicKey,
-          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        })
-        .then(resp => resp.accountId!);
+      const secondary = await profile.accounts.acquire({ tier: 'STANDARD' });
+      const { client: secondaryClient, wrapper: secondaryWrapper } =
+        profile.client.connectAs(secondary);
 
-      const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccountKey);
-      const secondaryWrapper = new HederaOperationsWrapper(secondaryClient);
       const topicIdBySecondary = await secondaryWrapper
         .createTopic({
-          autoRenewAccountId: secondaryClient.operatorAccountId!.toString(),
+          autoRenewAccountId: secondary.accountId.toString(),
           isSubmitKey: true,
-          adminKey: secondaryClient.operatorPublicKey! as PublicKey,
-          submitKey: secondaryClient.operatorPublicKey! as PublicKey,
+          adminKey: secondary.privateKey.publicKey as PublicKey,
+          submitKey: secondary.privateKey.publicKey as PublicKey,
           topicMemo: 'secondary-topic',
         })
         .then(resp => resp.topicId!);
@@ -218,12 +193,7 @@ describe('Update Topic E2E Tests', () => {
         'You do not have permission to update this topic.',
       );
 
-      await returnHbarsAndDeleteAccount(
-        secondaryWrapper,
-        secondaryAccountId,
-        operatorClient.operatorAccountId!,
-      );
-
+      await profile.accounts.release(secondary);
       secondaryClient.close();
     }),
   );

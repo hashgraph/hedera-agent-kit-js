@@ -1,108 +1,58 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  wait,
+  MIRROR_NODE_WAITING_TIME,
+  itWithRetry,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@hashgraph/hedera-agent-kit';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
-  let targetAccount1: AccountId;
-  let targetAccount2: AccountId;
-  let account1Balance: number;
-  let account2Balance: number;
+  let targetAccount1: TestAccount;
+  let targetAccount2: TestAccount;
 
   beforeAll(async () => {
-    // operator client and wrapper
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // executor account creation
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // LangChain setup using executor client
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    account1Balance = 2;
-    account2Balance = 0;
-
-    // create test accounts using executorWrapper
-    targetAccount1 = await executorWrapper
-      .createAccount({
-        key: executorClient.operatorPublicKey as Key,
-        initialBalance: account1Balance,
-      })
-      .then(resp => resp.accountId!);
-
-    targetAccount2 = await executorWrapper
-      .createAccount({
-        key: executorClient.operatorPublicKey as Key,
-        initialBalance: account2Balance,
-      })
-      .then(resp => resp.accountId!);
+    // create test accounts
+    targetAccount1 = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    targetAccount2 = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
-    if (testSetup && executorWrapper && operatorClient) {
-      // delete accounts using executor wrapper
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        targetAccount1,
-        executorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        targetAccount2,
-        executorClient.operatorAccountId!,
-      );
-
-      // delete an executor account and transfer remaining balance to operator
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      testSetup.cleanup();
-      operatorClient.close();
-      executorClient.close();
-    }
+    await profile.accounts.release(targetAccount1);
+    await profile.accounts.release(targetAccount2);
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'should return balance when asking for default executor account',
     itWithRetry(async () => {
-      const executorId = executorClient.operatorAccountId!.toString();
-      const executorBalance = await operatorWrapper.getAccountHbarBalance(executorId); // operator will pay for the query and we wont need to wait for mirror node to update
+      const executorId = executor.accountId.toString();
+      const executorBalance = await executorWrapper.getAccountHbarBalance(executorId);
 
       const input = `What is the HBAR balance of ${executorId}?`;
       const result = await agent.invoke({
@@ -129,7 +79,11 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
   it(
     'should return balance for specific account with non-zero balance',
     itWithRetry(async () => {
-      const input = `What is the HBAR balance of ${targetAccount1.toString()}?`;
+      const accountId = targetAccount1.accountId.toString();
+      const balance = await executorWrapper.getAccountHbarBalance(accountId);
+      const expectedDisplay = toDisplayUnit(balance, 8).toNumber();
+
+      const input = `What is the HBAR balance of ${accountId}?`;
       const result = await agent.invoke({
         messages: [
           {
@@ -141,18 +95,22 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
 
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(parsedResponse[0].parsedData.raw.accountId).toBe(targetAccount1.toString());
+      expect(parsedResponse[0].parsedData.raw.accountId).toBe(accountId);
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        `Account ${targetAccount1.toString()} has a balance of ${account1Balance}`,
+        `Account ${accountId} has a balance of ${expectedDisplay}`,
       );
-      expect(parsedResponse[0].parsedData.raw.hbarBalance).toBe(account1Balance.toString());
+      expect(parsedResponse[0].parsedData.raw.hbarBalance).toBe(expectedDisplay.toString());
     }),
   );
 
   it(
     'should return balance for specific account with zero balance',
     itWithRetry(async () => {
-      const input = `What is the HBAR balance of ${targetAccount2.toString()}?`;
+      const accountId = targetAccount2.accountId.toString();
+      const balance = await executorWrapper.getAccountHbarBalance(accountId);
+      const expectedDisplay = toDisplayUnit(balance, 8).toNumber();
+
+      const input = `What is the HBAR balance of ${accountId}?`;
       const result = await agent.invoke({
         messages: [
           {
@@ -164,11 +122,11 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
 
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(parsedResponse[0].parsedData.raw.accountId).toBe(targetAccount2.toString());
+      expect(parsedResponse[0].parsedData.raw.accountId).toBe(accountId);
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        `Account ${targetAccount2.toString()} has a balance of ${account2Balance}`,
+        `Account ${accountId} has a balance of ${expectedDisplay}`,
       );
-      expect(parsedResponse[0].parsedData.raw.hbarBalance).toBe(account2Balance.toString());
+      expect(parsedResponse[0].parsedData.raw.hbarBalance).toBe(expectedDisplay.toString());
     }),
   );
 });

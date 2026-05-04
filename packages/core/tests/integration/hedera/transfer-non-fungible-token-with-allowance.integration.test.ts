@@ -1,8 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
-  AccountId,
   Client,
-  PrivateKey,
   PublicKey,
   TokenId,
   TokenType,
@@ -11,62 +9,40 @@ import {
   Long,
 } from '@hiero-ledger/sdk';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import transferNonFungibleTokenWithAllowance from '@/plugins/core-token-plugin/tools/non-fungible-token/transfer-non-fungible-token-with-allowance';
 import { mintNonFungibleTokenParametersNormalised } from '@/shared/parameter-schemas/token.zod';
 import { z } from 'zod';
 import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer NFT With Allowance Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let owner: TestAccount;
+  let spender: TestAccount;
   let ownerClient: Client;
   let spenderClient: Client;
   let ownerWrapper: HederaOperationsWrapper;
-  let ownerAccountId: AccountId;
-  let spenderAccountId: AccountId;
   let spenderWrapper: HederaOperationsWrapper;
   let nftTokenId: string;
   let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    ownerWrapper = new HederaOperationsWrapper(operatorClient);
+    owner = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: ownerClient, wrapper: ownerWrapper } = profile.client.connectAs(owner));
 
-    // Create an owner (a treasury) account
-    const ownerKey = PrivateKey.generateED25519();
-    ownerAccountId = await ownerWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        key: ownerKey.publicKey,
-        accountMemo: 'owner account for Transfer NFT With Allowance Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-    ownerClient = getCustomClient(ownerAccountId, ownerKey);
-    ownerWrapper = new HederaOperationsWrapper(ownerClient);
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: spenderClient, wrapper: spenderWrapper } = profile.client.connectAs(spender));
 
-    // Create a spender account
-    const spenderKey = PrivateKey.generateECDSA();
-    spenderAccountId = await ownerWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: spenderKey.publicKey,
-        accountMemo: 'spender account for Transfer NFT With Allowance Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-    spenderClient = getCustomClient(spenderAccountId, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
-
-    // Context for tool execution (spender executes)
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: spenderAccountId.toString(),
+      accountId: spender.accountId.toString(),
     };
 
-    // Create NFT token
     const tokenCreate = await ownerWrapper.createNonFungibleToken({
       tokenName: 'TestNFT',
       tokenSymbol: 'TNFT',
@@ -74,14 +50,13 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
       tokenType: TokenType.NonFungibleUnique,
       supplyType: TokenSupplyType.Finite,
       maxSupply: 10,
-      treasuryAccountId: ownerAccountId.toString(),
-      adminKey: ownerClient.operatorPublicKey! as PublicKey,
-      supplyKey: ownerClient.operatorPublicKey! as PublicKey,
-      autoRenewAccountId: ownerAccountId.toString(),
+      treasuryAccountId: owner.accountId.toString(),
+      adminKey: owner.privateKey.publicKey as PublicKey,
+      supplyKey: owner.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: owner.accountId.toString(),
     });
     nftTokenId = tokenCreate.tokenId!.toString();
 
-    // Mint NFTs via the mintNft method instead of SDK directly
     const mintParams: z.infer<ReturnType<typeof mintNonFungibleTokenParametersNormalised>> = {
       tokenId: nftTokenId,
       metadata: [new TextEncoder().encode('ipfs://meta-a.json')],
@@ -89,44 +64,28 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
 
     await ownerWrapper.mintNft(mintParams);
 
-    // Associate spender with token
     await spenderWrapper.associateToken({
-      accountId: spenderAccountId.toString(),
+      accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
   });
 
   afterAll(async () => {
-    try {
-      // Cleanup accounts and HBARs
-      await returnHbarsAndDeleteAccount(
-        spenderWrapper,
-        spenderAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        ownerWrapper,
-        ownerAccountId,
-        operatorClient.operatorAccountId!,
-      );
-    } catch (err) {
-      console.warn('Cleanup failed:', err);
-    }
+    await profile.accounts.release(spender);
+    await profile.accounts.release(owner);
     ownerClient?.close();
     spenderClient?.close();
-    operatorClient?.close();
   });
 
   it('should transfer NFT via approved allowance', async () => {
-    // Approve NFT allowance using normalized tokenApprovals
     await ownerWrapper.approveNftAllowance({
       nftApprovals: [
         new TokenNftAllowance({
           delegatingSpender: null,
           serialNumbers: [Long.fromNumber(1)],
           tokenId: TokenId.fromString(nftTokenId),
-          ownerAccountId,
-          spenderAccountId,
+          ownerAccountId: owner.accountId,
+          spenderAccountId: spender.accountId,
           allSerials: false,
         }),
       ],
@@ -134,9 +93,9 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
     });
 
     const params = {
-      sourceAccountId: ownerAccountId.toString(),
+      sourceAccountId: owner.accountId.toString(),
       tokenId: nftTokenId,
-      recipients: [{ recipientId: spenderAccountId.toString(), serialNumber: 1 }],
+      recipients: [{ recipientId: spender.accountId.toString(), serialNumber: 1 }],
       transactionMemo: 'NFT allowance transfer',
     };
 
@@ -148,7 +107,7 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
       'Non-fungible tokens successfully transferred with allowance. Transaction ID:',
     );
     await wait(MIRROR_NODE_WAITING_TIME);
-    const spenderNfts = await spenderWrapper.getAccountNfts(spenderAccountId.toString());
+    const spenderNfts = await spenderWrapper.getAccountNfts(spender.accountId.toString());
     expect(
       spenderNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 1),
     ).toBeTruthy();

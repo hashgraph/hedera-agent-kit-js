@@ -1,72 +1,44 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import signScheduleTransactionTool from '@/plugins/core-account-plugin/tools/account/sign-schedule-transaction';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 import {
   signScheduleTransactionParameters,
   transferHbarParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Sign Schedule Transaction Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let recipient: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let recipientAccountId: AccountId;
   let operatorWrapper: HederaOperationsWrapper;
-  let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    operatorWrapper = profile.client.connectAs(profile.operator).wrapper;
 
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorKeyPair.publicKey,
-        accountMemo: 'executor account for Sign Schedule Transaction Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient } = profile.client.connectAs(executor));
 
-    // Operator creates recipient to preserve executor balance
-    recipientAccountId = await operatorWrapper
-      .createAccount({
-        key: executorClient.operatorPublicKey as Key,
-        accountMemo: 'recipient account for Sign Schedule Transaction Integration Tests',
-      })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      // Transfer remaining balance back to operator and delete an executor account
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        recipientAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
   describe('Valid Sign Schedule Transaction Scenarios', () => {
     it('should successfully sign a scheduled transaction', async () => {
@@ -75,11 +47,11 @@ describe('Sign Schedule Transaction Integration Tests', () => {
       const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
         hbarTransfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipient.accountId,
             amount: transferAmount,
           },
           {
-            accountId: executorClient.operatorAccountId!,
+            accountId: executor.accountId,
             amount: -transferAmount,
           },
         ],
@@ -112,11 +84,11 @@ describe('Sign Schedule Transaction Integration Tests', () => {
       const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
         hbarTransfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipient.accountId,
             amount: transferAmount,
           },
           {
-            accountId: executorClient.operatorAccountId!,
+            accountId: executor.accountId,
             amount: -transferAmount,
           },
         ],
@@ -190,11 +162,11 @@ describe('Sign Schedule Transaction Integration Tests', () => {
       const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
         hbarTransfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipient.accountId,
             amount: transferAmount,
           },
           {
-            accountId: executorClient.operatorAccountId!,
+            accountId: executor.accountId,
             amount: -transferAmount,
           },
         ],

@@ -1,22 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
+import { Client, AccountId, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 import getPendingAirdropTool from '@/plugins/core-token-query-plugin/tools/queries/get-pending-airdrop-query';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitFor } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Pending Airdrop Query Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let recipient: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let tokenIdFT: TokenId;
   let recipientId: AccountId;
 
@@ -31,68 +32,51 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Get Pending Airdrop Query Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     tokenIdFT = await executorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        autoRenewAccountId: executorAccountId.toString(),
+        supplyKey: executor.privateKey.publicKey as PublicKey,
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: executor.accountId.toString(),
+        autoRenewAccountId: executor.accountId.toString(),
       })
       .then(resp => resp.tokenId!);
 
     // Create recipient with 0 auto-associations to ensure airdrop is pending
-    const recipientKey = PrivateKey.generateED25519();
-    recipientId = await executorWrapper
-      .createAccount({
-        key: recipientKey.publicKey,
-        initialBalance: 0,
-        maxAutomaticTokenAssociations: 0,
-        accountMemo: 'recipient account for Get Pending Airdrop Query Integration Tests',
-      })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ preset: 'pending-airdrop-recipient' });
+    recipientId = recipient.accountId;
 
     // Airdrop tokens to recipient so they appear as pending
     await executorWrapper.airdropToken({
       tokenTransfers: [
         { tokenId: tokenIdFT.toString(), accountId: recipientId.toString(), amount: 100 },
-        { tokenId: tokenIdFT.toString(), accountId: executorAccountId.toString(), amount: -100 },
+        { tokenId: tokenIdFT.toString(), accountId: executor.accountId.toString(), amount: -100 },
       ],
     });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    // Poll mirror until the airdrop has been ingested as pending — adaptive wait
+    // (returns as soon as data is visible; bounded by timeoutMs).
+    await waitFor(
+      async () => {
+        const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
+        return pending.airdrops.length > 0 ? pending : null;
+      },
+      { timeoutMs: 10000, intervalMs: 250, description: 'pending airdrop to appear in mirror' },
+    );
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('should return pending airdrops for a recipient account', async () => {
