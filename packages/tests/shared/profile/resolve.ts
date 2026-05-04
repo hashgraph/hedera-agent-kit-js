@@ -19,7 +19,7 @@ const envSchema = z.object({
 
 /**
  * Reads HEDERA_NETWORK from env and returns the matching enum value.
- * Defaults to 'testnet' when unset. Use sparingly — most callers should use
+ * Defaults to 'testnet' when unset. Use sparingly. Most callers should use
  * `getProfile()` instead of branching on the network themselves.
  */
 export const getTestNetwork = (): TestNetwork =>

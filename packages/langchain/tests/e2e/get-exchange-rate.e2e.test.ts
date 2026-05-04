@@ -54,7 +54,7 @@ describe('Get Exchange Rate E2E Tests', () => {
   it(
     'handles invalid timestamp',
     async () => {
-      // Use epoch 0 (Jan 1 1970) — syntactically valid so the LLM forwards it to the
+      // Use epoch 0 (Jan 1 1970). Syntactically valid so the LLM forwards it to the
       // tool, but no network has exchange-rate data that far back, so mirror returns
       // 404. Avoids the LLM intercepting obviously-bad input (e.g. "not-a-valid-...")
       // and refusing to call the tool, which would yield an empty parsed response.
@@ -74,7 +74,7 @@ describe('Get Exchange Rate E2E Tests', () => {
   it(
     'returns exchange rate for a valid epoch seconds timestamp',
     async () => {
-      // Derive a timestamp from the live rate so the test works on any network — Solo
+      // Derive a timestamp from the live rate so the test works on any network. Solo
       // has no historical exchange-rate data (only the active window), and testnet
       // prunes old buckets. The current bucket's `expiration_time - 1` is a value the
       // mirror is guaranteed to have right now.

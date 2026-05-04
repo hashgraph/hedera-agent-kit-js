@@ -1,6 +1,6 @@
 /**
  * Adaptive polling utilities used by tests to wait for asynchronous, eventually-consistent
- * state — primarily mirror-node ingestion. Test-level retry on flaky LLM responses is
+ * state, primarily mirror-node ingestion. Test-level retry on flaky LLM responses is
  * handled by vitest's `retry` config (see `vitest.base.ts`), not here.
  */
 
@@ -48,7 +48,7 @@ export async function waitFor<T>(
 
 /**
  * Polls mirror node until the given transaction is ingested. Use after any SDK call
- * or tool execution that returns a transaction ID — once the tx is in mirror, all
+ * or tool execution that returns a transaction ID. Once the tx is in mirror, all
  * downstream entity state (balances, tokens, accounts, allowances) is also visible.
  *
  * @param wrapper - HederaOperationsWrapper bound to any client (mirror endpoint comes from its ledger).

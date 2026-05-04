@@ -6,7 +6,7 @@ import { waitForMirrorTx } from '../retry-util';
 
 const SOLO_USD_PER_HBAR = 0.05;
 const SOLO_TIER_USD: Record<Tier, number> = {
-  MINIMAL: 5,    // 10× testnet's $0.50 — cheap on Solo, gives tests room to breathe
+  MINIMAL: 5,    // 10× testnet's $0.50; cheap on Solo, gives tests room to breathe
   STANDARD: 50,  // 10× testnet's $5
   ELEVATED: 100, // 10× testnet's $10
   MAXIMUM: 200,  // 10× testnet's $20
@@ -19,7 +19,7 @@ const TIER_PRESET_MEMO: Record<string, string> = {
 /**
  * Build a Hedera SDK Client targeting Solo's local-node endpoints, with the retry tuning
  * needed for single-node Solo (default 8s "node unhealthy" cooldown is unrecoverable when
- * there's only one node — readmit faster and try harder).
+ * there's only one node, so we readmit faster and try harder).
  */
 const buildSoloClient = (account: TestAccount): Client => {
   const client = Client.forNetwork({
@@ -42,7 +42,7 @@ export const createSoloProfile = (operator: TestAccount): TestProfile => {
   const usdToHbar = (usd: number): number => {
     if (exchangeRate === null) {
       throw new Error(
-        'Solo profile balance not initialized — call profile.balance.init() first (vitest globalSetup).',
+        'Solo profile balance not initialized. Call profile.balance.init() first (vitest globalSetup).',
       );
     }
     const hbar = usd / exchangeRate;

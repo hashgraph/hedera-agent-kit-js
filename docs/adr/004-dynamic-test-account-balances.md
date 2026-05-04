@@ -1,6 +1,6 @@
 # **ADR 0004: Dynamic USD-to-HBAR Test Account Funding**
 
-**Date:** 2025-12-12 (amended 2026-05-04 — funding now exposed via TestProfile)  
+**Date:** 2025-12-12 (amended 2026-05-04 - funding now exposed via TestProfile)  
 **Status:** Accepted  
 **Context:** TypeScript test suite for Hedera Agent Kit requires reliable test account funding that remains stable across HBAR price fluctuations.
 
@@ -45,8 +45,8 @@ The active `TestProfile` (selected from `HEDERA_NETWORK`) owns the conversion st
 - **Solo**: uses a fixed `$0.05/HBAR` constant. No mirror call.
 
 Both profiles expose the same interface:
-- `profile.balance.fund(tier)` — HBAR amount for a named tier (the common path)
-- `profile.balance.usdToHbar(usd)` — arbitrary USD → HBAR conversion (escape hatch)
+- `profile.balance.fund(tier)` - HBAR amount for a named tier (the common path)
+- `profile.balance.usdToHbar(usd)` - arbitrary USD → HBAR conversion (escape hatch)
 
 **Usage Pattern:**
 
@@ -160,7 +160,7 @@ const r = resp.current_rate;
 return r.cent_equivalent / r.hbar_equivalent / 100;  // USD per HBAR
 ```
 
-The Solo profile uses a fixed `$0.05/HBAR` constant — no mirror call, no live rate dependency on the local network.
+The Solo profile uses a fixed `$0.05/HBAR` constant - no mirror call, no live rate dependency on the local network.
 
 ### **3.3 Conversion Method**
 
@@ -169,7 +169,7 @@ Each profile holds a private `exchangeRate: number | null` set during `init()`. 
 ```typescript
 const usdToHbar = (usd: number): number => {
   if (exchangeRate === null) {
-    throw new Error('Profile balance not initialized — call profile.balance.init() first');
+    throw new Error('Profile balance not initialized - call profile.balance.init() first');
   }
   const hbar = usd / exchangeRate;
   return Math.round(hbar * 1e8) / 1e8;  // round to tinybars
@@ -242,9 +242,9 @@ On Solo `release()` is a no-op (the network is destroyed at session end); on tes
 
 ## **5. References**
 
-- [OPERATION_FEES.md](file:///typescript/test/utils/OPERATION_FEES.md) — Hedera operation USD costs
-- `packages/tests/shared/profile/index.ts` — TestProfile type
-- `packages/tests/shared/profile/solo-profile.ts` — Solo adapter (fixed rate, ×10 tier multiplier)
-- `packages/tests/shared/profile/testnet-profile.ts` — Testnet adapter (live rate)
-- `packages/tests/shared/setup/global-setup.ts` — Vitest globalSetup that initializes the active profile
-- [Hedera Pricing](https://hedera.com/fees) — Official Hedera fee schedule
+- [OPERATION_FEES.md](file:///typescript/test/utils/OPERATION_FEES.md) - Hedera operation USD costs
+- `packages/tests/shared/profile/index.ts` - TestProfile type
+- `packages/tests/shared/profile/solo-profile.ts` - Solo adapter (fixed rate, ×10 tier multiplier)
+- `packages/tests/shared/profile/testnet-profile.ts` - Testnet adapter (live rate)
+- `packages/tests/shared/setup/global-setup.ts` - Vitest globalSetup that initializes the active profile
+- [Hedera Pricing](https://hedera.com/fees) - Official Hedera fee schedule

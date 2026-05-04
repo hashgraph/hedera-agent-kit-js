@@ -33,7 +33,7 @@ async function pollTopicMessages(
     if (response.messages.length >= expectedCount) return response;
     await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
   }
-  // Final attempt — let the assertion in the test produce the failure
+  // Final attempt; let the assertion in the test produce the failure.
   return wrapper.getTopicMessages(topicId);
 }
 
@@ -184,7 +184,7 @@ describe('HolAuditTrailHook Integration Tests', () => {
     const registerMsg = JSON.parse(decodeMessage(sessionMessages.messages[0].message));
     const entryTopicId = registerMsg.t_id;
 
-    // Poll for chunk messages — expect more than 1
+    // Poll for chunk messages; expect more than 1.
     const entryMessages = await pollTopicMessages(executorWrapper, entryTopicId, 2);
     expect(entryMessages.messages.length).toBeGreaterThan(1);
 

@@ -35,11 +35,11 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    // intentionally empty — accounts created per-test
+    // intentionally empty; accounts created per-test
   });
 
   afterAll(async () => {
-    // intentionally empty — per-test cleanup happens in afterEach
+    // intentionally empty; per-test cleanup happens in afterEach
   });
 
   beforeEach(async () => {

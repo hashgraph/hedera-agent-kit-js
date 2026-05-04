@@ -48,7 +48,7 @@ describe('Get Exchange Rate', () => {
     };
     const tool = new GetExchangeRateQueryTool(localContext);
 
-    // Derive a timestamp the mirror node definitely has — works on any network
+    // Derive a timestamp the mirror node definitely has, so this works on any network
     // (local-node/Solo doesn't have pre-deploy history; testnet prunes old timestamps).
     const currentRes: any = await tool.execute(client, localContext, {});
     const timestamp = String(currentRes.raw.current_rate.expiration_time - 1);

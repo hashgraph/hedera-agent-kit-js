@@ -1,5 +1,5 @@
 /**
- * TestProfile — single source of truth for "what does running tests on this Hedera
+ * TestProfile. Single source of truth for "what does running tests on this Hedera
  * environment look like?"
  *
  * Two adapters (`soloProfile`, `testnetProfile`) implement the interface; tests get the

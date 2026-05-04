@@ -59,7 +59,7 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
 
   // Pulls the numeric balance out of the agent's natural-language reply.
   // Tolerant comparisons against this protect tests from per-call Hedera fees that the
-  // executor pays whenever the agent queries on its behalf — comparing pre-call balance
+  // executor pays whenever the agent queries on its behalf. Comparing pre-call balance
   // snapshots to post-call mirror reads will always drift by the fee otherwise.
   const extractReportedBalance = (humanMessage: string, accountId: string): number => {
     const re = new RegExp(
@@ -85,7 +85,7 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
       const expectedBalance = toDisplayUnit(executorBalance, 8).toNumber();
 
       expect(parsedResponse[0].parsedData.raw.accountId).toBe(executorId);
-      // Tolerate ~0.05 HBAR — the executor pays fees for the agent's mirror queries.
+      // Tolerate ~0.05 HBAR. The executor pays fees for the agent's mirror queries.
       expect(
         extractReportedBalance(parsedResponse[0].parsedData.humanMessage, executorId),
       ).toBeCloseTo(expectedBalance, 1);

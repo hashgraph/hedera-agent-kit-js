@@ -34,7 +34,7 @@ export const createTestnetProfile = (operator: TestAccount): TestProfile => {
   const usdToHbar = (usd: number): number => {
     if (exchangeRate === null) {
       throw new Error(
-        'Testnet profile balance not initialized — call profile.balance.init() first (vitest globalSetup).',
+        'Testnet profile balance not initialized. Call profile.balance.init() first (vitest globalSetup).',
       );
     }
     const hbar = usd / exchangeRate;

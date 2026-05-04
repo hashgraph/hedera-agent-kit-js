@@ -1,5 +1,5 @@
 /**
- * Vitest worker setup — initializes the active TestProfile's balance subsystem
+ * Vitest worker setup. Initializes the active TestProfile's balance subsystem
  * so tests can call `profile.balance.fund(tier)` / `usdToHbar(usd)` synchronously.
  * The profile reads the cached rate set by the session-level globalSetup.
  */

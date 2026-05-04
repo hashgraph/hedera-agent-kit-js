@@ -1,4 +1,4 @@
-// Active TestProfile — single source of truth for network-aware test environment.
+// Active TestProfile: single source of truth for network-aware test environment.
 export * from './profile';
 
 // Hedera operations

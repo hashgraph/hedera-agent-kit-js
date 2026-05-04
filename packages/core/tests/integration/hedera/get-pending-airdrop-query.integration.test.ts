@@ -62,7 +62,7 @@ describe('Get Pending Airdrop Query Integration Tests', () => {
       ],
     });
 
-    // Poll mirror until the airdrop has been ingested as pending — adaptive wait
+    // Poll mirror until the airdrop has been ingested as pending. Adaptive wait
     // (returns as soon as data is visible; bounded by timeoutMs).
     await waitFor(
       async () => {

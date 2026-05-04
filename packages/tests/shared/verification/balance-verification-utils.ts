@@ -6,10 +6,11 @@ import BigNumber from 'bignumber.js';
 /**
  * Verifies an account's HBAR balance changed by exactly `expectedChange` (in HBAR).
  *
- * Use this on the *recipient* side of a transfer. The recipient doesn't pay the
- * transaction fee, so the post-transfer balance equals `balanceBefore + expectedChange`
- * exactly. For sender-side checks the assertion would need a fee tolerance — don't
- * call this on the payer.
+ * The verified account must NOT be the fee payer of the tx that produced the change.
+ * This is true for: transfer recipients, allowance owners (spender pays the fee), and
+ * any passive party that doesn't sign the SDK call. For an account that signs the tx
+ * AND has its balance change measured, the post-balance is `before + change - fee`,
+ * so snapshot a different account or assert the fee directly via the transaction record.
  */
 export async function verifyHbarBalanceChange(
   accountId: string,
