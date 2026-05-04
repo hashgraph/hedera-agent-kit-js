@@ -71,15 +71,10 @@ jobs:
           wait: 120s
 
       - name: Install Solo
-        run: npm install -g @hiero-ledger/solo@0.70.0
+        run: pnpm test:solo:install
 
       - name: Setup Solo local network
-        run: |
-          export SOLO_CLUSTER_NAME=solo
-          export SOLO_NAMESPACE=solo
-          export SOLO_CLUSTER_SETUP_NAMESPACE=solo-cluster
-          export SOLO_DEPLOYMENT=solo-deployment
-          solo one-shot single deploy
+        run: pnpm test:solo:deploy
 
       - name: Wait for Solo endpoints
         run: pnpm test:solo:check
@@ -92,7 +87,4 @@ jobs:
 
       - name: Teardown Solo local network
         if: always()
-        run: |
-          solo one-shot single destroy || true
-          kind get clusters 2>/dev/null | grep '^solo' | while read cluster; do kind delete cluster -n "$cluster"; done || true
-          sudo rm -rf ~/.solo
+        run: pnpm test:solo:destroy

@@ -6,7 +6,7 @@ CONSENSUS_NODE_ACCOUNT_ID="0.0.3"
 MIRROR_NODE_ENDPOINT="127.0.0.1:5600"
 MIRROR_NODE_REST_URL="${HEDERA_MIRROR_NODE_REST_URL:-http://127.0.0.1:38081/api/v1}"
 JSON_RPC_RELAY_URL="${HEDERA_JSON_RPC_RELAY_URL:-http://127.0.0.1:37546}"
-# Long-zero EVM address for Hedera system account 0.0.2 — exists on every Hedera
+# Long-zero EVM address for Hedera system account 0.0.2. Exists on every Hedera
 # network including a fresh Solo. Used as both `from` and `to` in the web3 probe;
 # mirror's simulator runs the call (a no-op empty-calldata transfer) end-to-end
 # and returns a 200 with a gas estimate. The same code path the relay forwards
@@ -34,7 +34,7 @@ elif command -v gtimeout >/dev/null 2>&1; then
   TIMEOUT_BIN="gtimeout"
 fi
 
-# TCP-level liveness check using bash's built-in /dev/tcp redirection — no
+# TCP-level liveness check using bash's built-in /dev/tcp redirection. No
 # external deps. We don't speak gRPC here; just confirm the listener is up so
 # SDK clients won't hang at connect time. When `timeout`/`gtimeout` is available
 # we use it as a safety net for unroutable hosts; on localhost the kernel
@@ -79,7 +79,7 @@ probe_mirror_rest() {
   return 1
 }
 
-# Probes mirror's web3 simulator — the endpoint the relay forwards
+# Probes mirror's web3 simulator. This is the endpoint the relay forwards
 # `eth_sendRawTransaction` simulation calls to. The deploy step's 503s come from
 # this exact endpoint (`/contracts/call`) being not-yet-warm even after mirror's
 # REST listener and the relay are both up. Sends a no-op call (empty calldata,
@@ -129,12 +129,12 @@ probe_relay() {
 
 print_endpoints() {
   echo "  ${consensus_grpc_marker} Consensus node (gRPC) : ${CONSENSUS_NODE_ENDPOINT} (${CONSENSUS_NODE_ACCOUNT_ID})  (${consensus_grpc_detail})"
-  # Mirror gRPC :5600 is a ClusterIP-only service in Solo's one-shot deploy — not
-  # exposed to the host without an explicit `kubectl port-forward`. HCS topic
+  # Mirror gRPC :5600 is a ClusterIP-only service in Solo's one-shot deploy. It's
+  # not exposed to the host without an explicit `kubectl port-forward`. HCS topic
   # subscriptions need it, but our default local setup doesn't forward it, so we
   # don't probe it here. If you run HCS-subscription tests locally, add a
   # port-forward for svc/mirror-1-grpc:5600 manually.
-  echo "  · Mirror node    (gRPC) : ${MIRROR_NODE_ENDPOINT}  (cluster-internal — not probed)"
+  echo "  · Mirror node    (gRPC) : ${MIRROR_NODE_ENDPOINT}  (cluster-internal, not probed)"
   echo "  ${mirror_rest_marker} Mirror node    (REST) : ${MIRROR_NODE_REST_URL}/network/nodes  (${mirror_rest_detail})"
   echo "  ${mirror_web3_marker} Mirror node    (Web3) : ${MIRROR_NODE_REST_URL}/contracts/call  (${mirror_web3_detail})"
   echo "  ${relay_marker} JSON-RPC Relay        : ${JSON_RPC_RELAY_URL}  (eth_blockNumber: ${relay_detail})"

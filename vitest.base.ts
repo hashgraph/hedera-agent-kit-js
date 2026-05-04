@@ -21,11 +21,6 @@ export default defineConfig({
     testTimeout: 120000,
     hookTimeout: 120000,
     retry: 3,
-    // CI-class runners default to ~3 workers (one per vCPU minus one), which leaves
-    // Solo idle most of the time — our tests are network-bound on the agent's LLM
-    // round-trips and Hedera consensus, not CPU-bound. Bumping to 6 lets vitest
-    // schedule more files in flight; Solo's single consensus node serializes the
-    // actual transactions but the LLM/mirror waits overlap cleanly across workers.
-    maxWorkers: 6,
+    maxWorkers: 8,
   },
 });
