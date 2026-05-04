@@ -1,4 +1,4 @@
-name: Run Integration Tests
+name: "800: [CALL] Run Integration Tests"
 
 on:
   workflow_call:
@@ -88,7 +88,7 @@ jobs:
         run: pnpm test:solo:deploy:contracts
 
       - name: Run integration tests
-        run: pnpm -r test:integration -- --sequence.concurrent=false
+        run: pnpm -r test:integration
 
       - name: Teardown Solo local network
         if: always()
