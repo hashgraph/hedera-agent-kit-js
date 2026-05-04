@@ -86,10 +86,8 @@ jobs:
       - name: Deploy Solo factory contracts
         run: pnpm test:solo:deploy:contracts
 
-      - name: Run E2E tests (throttled)
-        env:
-          SLOW_TEST_DELAY_MS: '30000'
-        run: pnpm -r test:e2e -- --sequence.concurrent=false
+      - name: Run E2E tests
+        run: pnpm -r test:e2e
 
       - name: Teardown Solo local network
         if: always()

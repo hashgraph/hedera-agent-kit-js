@@ -9,17 +9,13 @@ import baseConfig from './vitest.config';
  * HEDERA_PRIVATE_KEY at resolution time).
  */
 const sharedSetup = path.resolve(__dirname, '../tests/shared/setup');
-const setupFiles: string[] = [path.resolve(sharedSetup, 'usd-to-hbar-setup.ts')];
-if (process.env.SLOW_TEST_DELAY_MS !== undefined) {
-  setupFiles.push(path.resolve(sharedSetup, 'slowdown.ts'));
-}
 
 export default mergeConfig(
   baseConfig,
   defineConfig({
     test: {
       globalSetup: [path.resolve(sharedSetup, 'global-setup.ts')],
-      setupFiles,
+      setupFiles: [path.resolve(sharedSetup, 'usd-to-hbar-setup.ts')],
     },
   }),
 );
