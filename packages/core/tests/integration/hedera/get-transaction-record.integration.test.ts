@@ -8,8 +8,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import type { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Integration - Hedera getTransactionRecord', () => {
   const profile = getProfile();
@@ -41,7 +40,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
 
     const txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${txIdSdkStyle.validStart!.nanos!.toString()}`;
 
-    await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transaction to be indexed by mirrornode
+    await waitForMirrorTx(executorWrapper, rawResponse.transactionId!); // waiting for the transaction to be indexed by mirrornode
 
     const tool = new GetTransactionRecordQueryTool(context);
     const result = await tool.execute(executorClient, context, {

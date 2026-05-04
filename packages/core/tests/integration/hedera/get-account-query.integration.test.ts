@@ -9,8 +9,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitFor } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Account Query Integration Tests', () => {
   const profile = getProfile();
@@ -30,7 +29,18 @@ describe('Get Account Query Integration Tests', () => {
     customAccount = await profile.accounts.acquire({ tier: 'MINIMAL' });
     createdAccountId = customAccount.accountId;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    // Adaptive wait: poll mirror until the new account is visible
+    await waitFor(
+      async () => {
+        try {
+          await hederaOperationsWrapper.getAccountBalances(createdAccountId.toString());
+          return true;
+        } catch {
+          return null;
+        }
+      },
+      { timeoutMs: 10000, intervalMs: 250, description: 'new account to appear in mirror' },
+    );
 
     ({ client: customClient } = profile.client.connectAs(customAccount));
 

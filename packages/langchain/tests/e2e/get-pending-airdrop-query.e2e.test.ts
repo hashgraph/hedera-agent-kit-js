@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitFor,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -41,15 +40,14 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
     // Recipient with no auto-assoc to create pending airdrop
     recipient = await profile.accounts.acquire({ preset: 'pending-airdrop-recipient' });
@@ -61,7 +59,14 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
       ],
     });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    // Adaptive wait for the pending airdrop to appear in mirror
+    await waitFor(
+      async () => {
+        const pending = await executorWrapper.getPendingAirdrops(recipient.accountId.toString());
+        return pending.airdrops.length > 0 ? pending : null;
+      },
+      { timeoutMs: 10000, intervalMs: 250, description: 'pending airdrop to appear in mirror' },
+    );
   });
 
   afterAll(async () => {

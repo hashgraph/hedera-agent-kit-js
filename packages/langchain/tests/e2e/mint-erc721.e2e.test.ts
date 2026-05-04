@@ -3,9 +3,9 @@ import { ReactAgent } from 'langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import {
   getProfile,
+  HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -18,13 +18,14 @@ describe('Mint ERC721 Token E2E Tests', () => {
   let responseParsingService: ResponseParserService;
   let executor: TestAccount;
   let executorClient: Client;
+  let executorWrapper: HederaOperationsWrapper;
   let recipient: TestAccount;
   let testTokenAddress: string;
   let recipientAccountId: string;
 
   beforeAll(async () => {
     executor = await profile.accounts.acquire({ tier: 'STANDARD' });
-    ({ client: executorClient } = profile.client.connectAs(executor));
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
     recipientAccountId = recipient.accountId.toString();
@@ -33,8 +34,6 @@ describe('Mint ERC721 Token E2E Tests', () => {
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     // Create a test ERC721 token
     const createInput = 'Create an ERC721 token named MintTest with symbol MNT';
@@ -53,7 +52,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
     }
 
     testTokenAddress = createParsedResponse[0].parsedData.raw.erc721Address;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createParsedResponse[0].parsedData.raw.transactionId);
   });
 
   afterAll(async () => {

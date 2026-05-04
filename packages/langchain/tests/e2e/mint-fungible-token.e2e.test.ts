@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -40,17 +39,16 @@ describe('Mint Fungible Token E2E Tests', () => {
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -80,7 +78,7 @@ describe('Mint Fungible Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const supplyAfter = await executorWrapper
         .getTokenInfo(tokenIdFT.toString())

@@ -9,8 +9,6 @@ import {
   type TestAccount,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer ERC20 Integration Tests', () => {
   const profile = getProfile();
@@ -66,8 +64,6 @@ describe('Transfer ERC20 Integration Tests', () => {
       recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
       recipientAccountId = recipient.accountId.toString();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
-
       const params = {
         contractId: testTokenAddress,
         recipientAddress: recipientAccountId,
@@ -85,8 +81,6 @@ describe('Transfer ERC20 Integration Tests', () => {
       // Create a recipient account and get its EVM address
       recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
       recipientAccountId = recipient.accountId.toString();
-
-      await wait(MIRROR_NODE_WAITING_TIME);
 
       // Get EVM address for the recipient
       const recipientInfo = await executorWrapper.getAccountInfo(recipientAccountId);
@@ -109,8 +103,6 @@ describe('Transfer ERC20 Integration Tests', () => {
       // Create a recipient account
       recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
       recipientAccountId = recipient.accountId.toString();
-
-      await wait(MIRROR_NODE_WAITING_TIME);
 
       const params = {
         contractId: testTokenAddress,

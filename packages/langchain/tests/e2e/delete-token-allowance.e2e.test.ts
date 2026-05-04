@@ -12,8 +12,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
@@ -47,17 +46,16 @@ describe('Delete Token Allowance E2E Tests', () => {
     ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Create fungible token under executor
-    tokenId = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        treasuryAccountId: executor.accountId.toString(),
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      treasuryAccountId: executor.accountId.toString(),
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenId = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);

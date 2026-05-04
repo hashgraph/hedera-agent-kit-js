@@ -16,8 +16,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Approve NFT Allowance tool
@@ -80,7 +79,7 @@ describe('Approve NFT Allowance Integration Tests', () => {
     await mintResp.getReceipt(executorClient);
 
     // Give mirror node a moment where needed in case subsequent queries happen
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, mintResp.transactionId.toString());
 
     // Associate spender with the NFT token to ensure they can receive transfers later if needed
     await spenderWrapper.associateToken({

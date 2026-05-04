@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -43,18 +42,17 @@ describe('Get Token Info Query E2E Tests', () => {
   });
 
   beforeEach(async () => {
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        metadataKey: profile.operator.privateKey.publicKey as PublicKey,
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      metadataKey: profile.operator.privateKey.publicKey as PublicKey,
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -186,16 +184,15 @@ describe('Get Token Info Query E2E Tests', () => {
       const { client: secondaryClient, wrapper: secondaryWrapper } =
         profile.client.connectAs(secondary);
 
-      const tokenId = await secondaryWrapper
-        .createFungibleToken({
-          ...FT_PARAMS,
-          supplyKey: secondary.privateKey.publicKey as PublicKey,
-          adminKey: secondary.privateKey.publicKey as PublicKey,
-          treasuryAccountId: secondary.accountId.toString(),
-        })
-        .then(resp => resp.tokenId!);
+      const createSecondaryTokenResp = await secondaryWrapper.createFungibleToken({
+        ...FT_PARAMS,
+        supplyKey: secondary.privateKey.publicKey as PublicKey,
+        adminKey: secondary.privateKey.publicKey as PublicKey,
+        treasuryAccountId: secondary.accountId.toString(),
+      });
+      const tokenId = createSecondaryTokenResp.tokenId!;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(secondaryWrapper, createSecondaryTokenResp.transactionId!);
 
       const queryResult = await agent.invoke({
         messages: [

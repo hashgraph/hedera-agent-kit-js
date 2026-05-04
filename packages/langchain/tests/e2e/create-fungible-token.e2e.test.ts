@@ -4,8 +4,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { Client, TokenId } from '@hiero-ledger/sdk';
@@ -28,8 +27,6 @@ describe('Create Fungible Token E2E Tests', () => {
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-
-    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -65,7 +62,7 @@ describe('Create Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       // Verify on-chain
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
@@ -98,7 +95,7 @@ describe('Create Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('GoldCoin');

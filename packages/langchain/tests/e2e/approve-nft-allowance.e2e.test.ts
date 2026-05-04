@@ -17,8 +17,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
@@ -90,12 +89,12 @@ describe('Approve NFT Allowance E2E', () => {
       accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
-    await recipientWrapper.associateToken({
+    const recipAssocResp = await recipientWrapper.associateToken({
       accountId: recipient.accountId.toString(),
       tokenId: nftTokenId,
     });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, recipAssocResp.transactionId!);
   }, 180_000);
 
   afterAll(async () => {
@@ -124,7 +123,7 @@ describe('Approve NFT Allowance E2E', () => {
       expect(approveResult.raw.status).toBe('SUCCESS');
 
       // Give the network a moment to process the allowance
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, approveResult.raw.transactionId!);
 
       // Now, using a spender client, perform an approved NFT transfer from owner to recipient via SDK directly
       const nft = new NftId(TokenId.fromString(nftTokenId), serialToUse);

@@ -10,8 +10,7 @@ import {
   type TestAccount,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { mintERC721Parameters, createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Mint ERC721 Integration Tests', () => {
   const profile = getProfile();
@@ -45,7 +44,7 @@ describe('Mint ERC721 Integration Tests', () => {
     }
 
     testTokenAddress = createResult.erc721Address;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
   });
 
   afterAll(async () => {

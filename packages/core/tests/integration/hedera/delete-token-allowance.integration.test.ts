@@ -10,8 +10,7 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
 } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Delete Token Allowance Integration Tests', () => {
   const profile = getProfile();
@@ -39,17 +38,14 @@ describe('Delete Token Allowance Integration Tests', () => {
     spender = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     // create token
-    tokenId = (
-      await executorWrapper
-        .createFungibleToken({
-          ...FT_PARAMS,
-          treasuryAccountId: executor.accountId.toString(),
-          autoRenewAccountId: executor.accountId.toString(),
-        })
-        .then(resp => resp.tokenId!)
-    ).toString();
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenId = createTokenResp.tokenId!.toString();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -79,8 +75,6 @@ describe('Delete Token Allowance Integration Tests', () => {
       tokenIds: [tokenId],
     };
 
-    await wait(MIRROR_NODE_WAITING_TIME);
-
     const tool = deleteTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);
 
@@ -94,8 +88,6 @@ describe('Delete Token Allowance Integration Tests', () => {
       spenderAccountId: spender.accountId.toString(),
       tokenIds: [tokenId],
     };
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = deleteTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);

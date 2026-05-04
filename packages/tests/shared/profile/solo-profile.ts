@@ -2,6 +2,7 @@ import { AccountId, Client, LedgerId, PrivateKey } from '@hiero-ledger/sdk';
 import type { AcquireOpts, ConnectedClient, TestAccount, TestProfile, Tier } from './index';
 import HederaOperationsWrapper from '../hedera-operations/HederaOperationsWrapper';
 import { CONSENSUS_NODE_ACCOUNT_ID, CONSENSUS_NODE_ENDPOINT, MIRROR_NODE_ENDPOINT } from '../setup/constants';
+import { waitForMirrorTx } from '../retry-util';
 
 const SOLO_USD_PER_HBAR = 0.05;
 const SOLO_TIER_USD: Record<Tier, number> = {
@@ -66,6 +67,10 @@ export const createSoloProfile = (operator: TestAccount): TestProfile => {
           accountMemo,
           ...(maxAutomaticTokenAssociations !== undefined && { maxAutomaticTokenAssociations }),
         });
+
+        // Block until mirror has ingested the account so callers can immediately use
+        // the returned identity in mirror-backed lookups (EVM relay, getAccountInfo, etc.).
+        await waitForMirrorTx(operatorWrapper, resp.transactionId!);
 
         return { accountId: resp.accountId!, privateKey };
       },

@@ -9,8 +9,7 @@ import {
 import transferNonFungibleToken from '@/plugins/core-token-plugin/tools/non-fungible-token/transfer-non-fungible-token';
 import { mintNonFungibleTokenParametersNormalised } from '@/shared/parameter-schemas/token.zod';
 import { z } from 'zod';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer NFT Integration Tests', () => {
   const profile = getProfile();
@@ -89,7 +88,7 @@ describe('Transfer NFT Integration Tests', () => {
       'Non-fungible tokens successfully transferred. Transaction ID:',
     );
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, result.raw.transactionId);
     const recipientNfts = await recipientWrapper.getAccountNfts(recipient.accountId.toString());
     expect(
       recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 1),
@@ -108,7 +107,7 @@ describe('Transfer NFT Integration Tests', () => {
 
     expect(result.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, result.raw.transactionId);
     const recipientNfts = await recipientWrapper.getAccountNfts(recipient.accountId.toString());
     expect(
       recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 2),

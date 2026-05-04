@@ -17,8 +17,7 @@ import {
 import transferNonFungibleTokenWithAllowance from '@/plugins/core-token-plugin/tools/non-fungible-token/transfer-non-fungible-token-with-allowance';
 import { mintNonFungibleTokenParametersNormalised } from '@/shared/parameter-schemas/token.zod';
 import { z } from 'zod';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer NFT With Allowance Integration Tests', () => {
   const profile = getProfile();
@@ -106,7 +105,7 @@ describe('Transfer NFT With Allowance Integration Tests', () => {
     expect(result.humanMessage).toContain(
       'Non-fungible tokens successfully transferred with allowance. Transaction ID:',
     );
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(spenderWrapper, result.raw.transactionId);
     const spenderNfts = await spenderWrapper.getAccountNfts(spender.accountId.toString());
     expect(
       spenderNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 1),

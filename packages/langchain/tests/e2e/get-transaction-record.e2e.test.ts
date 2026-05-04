@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -49,7 +48,7 @@ describe('Get Transaction Record E2E Tests', () => {
     )}`;
 
     // Wait for the mirror node to index the transaction
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, rawResponse.transactionId!);
   });
 
   afterAll(async () => {

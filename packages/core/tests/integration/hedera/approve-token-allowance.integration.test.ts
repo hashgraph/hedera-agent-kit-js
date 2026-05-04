@@ -14,8 +14,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Approve Token Allowance tool
@@ -51,17 +50,16 @@ describe('Approve Token Allowance Integration Tests', () => {
       accountId: executor.accountId.toString(),
     };
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -77,8 +75,6 @@ describe('Approve Token Allowance Integration Tests', () => {
       tokenApprovals: [{ tokenId: tokenIdFT.toString(), amount: 25 }],
       transactionMemo: 'Integration token approve',
     };
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = approveTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);
@@ -97,8 +93,6 @@ describe('Approve Token Allowance Integration Tests', () => {
         { tokenId: tokenIdFT.toString(), amount: 2 },
       ],
     };
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = approveTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);

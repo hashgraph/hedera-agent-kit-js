@@ -2,6 +2,7 @@ import { Client, Hbar, HbarUnit, PrivateKey } from '@hiero-ledger/sdk';
 import type { AcquireOpts, ConnectedClient, TestAccount, TestProfile, Tier } from './index';
 import HederaOperationsWrapper from '../hedera-operations/HederaOperationsWrapper';
 import { HederaMirrornodeServiceDefaultImpl, toBaseUnit } from '@hashgraph/hedera-agent-kit';
+import { waitForMirrorTx } from '../retry-util';
 
 const TESTNET_TIER_USD: Record<Tier, number> = {
   MINIMAL: 0.5,
@@ -58,6 +59,10 @@ export const createTestnetProfile = (operator: TestAccount): TestProfile => {
           accountMemo,
           ...(maxAutomaticTokenAssociations !== undefined && { maxAutomaticTokenAssociations }),
         });
+
+        // Block until mirror has ingested the account so callers can immediately use
+        // the returned identity in mirror-backed lookups (EVM relay, getAccountInfo, etc.).
+        await waitForMirrorTx(operatorWrapper, resp.transactionId!);
 
         return { accountId: resp.accountId!, privateKey };
       },

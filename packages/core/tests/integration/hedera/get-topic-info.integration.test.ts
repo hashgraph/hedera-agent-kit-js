@@ -7,8 +7,7 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
 } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Topic Info Query Integration Tests', () => {
   const profile = getProfile();
@@ -32,22 +31,21 @@ describe('Get Topic Info Query Integration Tests', () => {
   beforeEach(async () => {
     // Executor creates topic
     topicAdminKey = executor.privateKey.publicKey;
-    createdTopicId = await executorWrapper
-      .createTopic({
-        isSubmitKey: false,
-        adminKey: topicAdminKey,
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.topicId!);
+    const createTopicResp = await executorWrapper.createTopic({
+      isSubmitKey: false,
+      adminKey: topicAdminKey,
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    createdTopicId = createTopicResp.topicId!;
 
     // Submit a message to ensure topic exists on mirror
-    await executorWrapper.submitMessage({
+    const submitResp = await executorWrapper.submitMessage({
       topicId: createdTopicId.toString(),
       message: 'Hello',
     });
 
     // Wait for mirror node indexing
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, submitResp.transactionId!);
   });
 
   it('should fetch topic info', async () => {

@@ -9,8 +9,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { airdropFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Airdrop Fungible Token Integration Tests', () => {
   const profile = getProfile();
@@ -39,17 +38,16 @@ describe('Airdrop Fungible Token Integration Tests', () => {
       accountId: executor.accountId.toString(),
     };
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -85,7 +83,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     };
 
     const result: any = await tool.execute(executorClient, context, params);
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     expect(result).toBeDefined();
     expect(result.raw.status).toBe('SUCCESS');
@@ -112,7 +110,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     };
 
     const result: any = await tool.execute(executorClient, context, params);
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     expect(result.raw.status).toBe('SUCCESS');
 
@@ -171,7 +169,7 @@ describe('Airdrop Fungible Token Integration Tests', () => {
     };
 
     const result: any = await tool.execute(executorClient, context, params);
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     expect(result.raw.status).toBe('SUCCESS');
 

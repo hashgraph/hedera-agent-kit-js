@@ -12,8 +12,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -135,7 +134,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround
@@ -164,7 +163,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround

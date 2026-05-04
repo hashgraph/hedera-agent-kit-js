@@ -6,8 +6,6 @@ import { getProfile, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit
 import { z } from 'zod';
 import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Create Fungible Token Integration Tests', () => {
   const profile = getProfile();
@@ -107,7 +105,6 @@ describe('Create Fungible Token Integration Tests', () => {
         },
       } as any;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
       const tool = createFungibleTokenTool(context);
       const result: any = await tool.execute(client, context, params);
 

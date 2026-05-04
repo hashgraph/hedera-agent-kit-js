@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -90,11 +89,11 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   it(
     'should dissociate the executor account from the given token',
     itWithRetry(async () => {
-      await executorWrapper.associateToken({
+      const assocResp = await executorWrapper.associateToken({
         accountId: executor.accountId.toString(),
         tokenId: tokenIdFT.toString(),
       });
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, assocResp.transactionId!);
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executor.accountId.toString(),
       );
@@ -114,7 +113,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('successfully dissociated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
         executor.accountId.toString(),
@@ -130,12 +129,12 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         accountId: executor.accountId.toString(),
         tokenId: tokenIdFT.toString(),
       });
-      await executorWrapper.associateToken({
+      const assoc2Resp = await executorWrapper.associateToken({
         accountId: executor.accountId.toString(),
         tokenId: tokenIdFT2.toString(),
       });
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, assoc2Resp.transactionId!);
 
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executor.accountId.toString(),
@@ -157,7 +156,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('successfully dissociated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenBalancesAfter = await executorWrapper.getAccountTokenBalances(
         executor.accountId.toString(),
@@ -171,7 +170,6 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     'should fail dissociating not associated token',
     itWithRetry(async () => {
       // check if the account is not associate with the token
-      await wait(MIRROR_NODE_WAITING_TIME);
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executor.accountId.toString(),
       );

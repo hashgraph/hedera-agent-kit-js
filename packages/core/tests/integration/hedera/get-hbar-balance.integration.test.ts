@@ -9,9 +9,8 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
   const profile = getProfile();
@@ -26,14 +25,13 @@ describe('Get HBAR Balance Integration Tests (Executor Account)', () => {
     ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Create a recipient account via executor
-    recipientAccountId = await executorWrapper
-      .createAccount({
-        key: executor.privateKey.publicKey as Key,
-        initialBalance: profile.balance.usdToHbar(0.1),
-      })
-      .then(resp => resp.accountId!);
+    const createAcctResp = await executorWrapper.createAccount({
+      key: executor.privateKey.publicKey as Key,
+      initialBalance: profile.balance.usdToHbar(0.1),
+    });
+    recipientAccountId = createAcctResp.accountId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirror node indexing
+    await waitForMirrorTx(executorWrapper, createAcctResp.transactionId!); // wait for mirror node indexing
 
     context = {
       mode: AgentMode.AUTONOMOUS,

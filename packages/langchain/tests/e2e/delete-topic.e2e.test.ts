@@ -4,8 +4,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -73,7 +72,7 @@ describe('Delete Topic E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Topic with id');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
     }),
   );
 });

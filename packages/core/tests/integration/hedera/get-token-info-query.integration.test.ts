@@ -15,9 +15,8 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Token Info Query Integration Tests', () => {
   const profile = getProfile();
@@ -57,27 +56,25 @@ describe('Get Token Info Query Integration Tests', () => {
       accountId: executor.accountId.toString(),
     };
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createFtResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createFtResp.tokenId!;
 
-    tokenIdNFT = await executorWrapper
-      .createNonFungibleToken({
-        ...NFT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createNftResp = await executorWrapper.createNonFungibleToken({
+      ...NFT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdNFT = createNftResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createNftResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -171,26 +168,25 @@ describe('Get Token Info Query Integration Tests', () => {
 
   it('should handle deleted token correctly', async () => {
     // Create a temporary token to delete
-    const tempTokenId = await executorWrapper
-      .createFungibleToken({
-        tokenName: 'TempToken',
-        tokenSymbol: 'TEMP',
-        tokenMemo: 'Temporary token',
-        initialSupply: 50,
-        decimals: 0,
-        supplyType: TokenSupplyType.Finite,
-        maxSupply: 100,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTempResp = await executorWrapper.createFungibleToken({
+      tokenName: 'TempToken',
+      tokenSymbol: 'TEMP',
+      tokenMemo: 'Temporary token',
+      initialSupply: 50,
+      decimals: 0,
+      supplyType: TokenSupplyType.Finite,
+      maxSupply: 100,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    const tempTokenId = createTempResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTempResp.transactionId!);
 
-    await executorWrapper.deleteToken({ tokenId: tempTokenId.toString() });
-    await wait(MIRROR_NODE_WAITING_TIME);
+    const deleteResp = await executorWrapper.deleteToken({ tokenId: tempTokenId.toString() });
+    await waitForMirrorTx(executorWrapper, deleteResp.transactionId!);
 
     const tool = getTokenInfoQueryTool(context);
     const params: z.infer<ReturnType<typeof tokenInfoQueryParameters>> = {

@@ -7,7 +7,7 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -29,13 +29,12 @@ describe('Get Topic Messages Query E2E Tests', () => {
 
     // Executor creates topic
     topicAdminKey = executor.privateKey.publicKey;
-    createdTopicId = await executorWrapper
-      .createTopic({
-        isSubmitKey: false,
-        adminKey: topicAdminKey,
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.topicId!);
+    const createTopicResp = await executorWrapper.createTopic({
+      isSubmitKey: false,
+      adminKey: topicAdminKey,
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    createdTopicId = createTopicResp.topicId!;
 
     // Submit some messages
     await executorWrapper.submitMessage({
@@ -48,13 +47,13 @@ describe('Get Topic Messages Query E2E Tests', () => {
       message: 'E2E Message 2',
     });
     await wait(1000);
-    await executorWrapper.submitMessage({
+    const submit3Resp = await executorWrapper.submitMessage({
       topicId: createdTopicId.toString(),
       message: 'E2E Message 3',
     });
 
     // Wait for mirror node indexing
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, submit3Resp.transactionId!);
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);

@@ -6,9 +6,8 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
+  waitForMirrorTx,
   COMPILED_ERC20_BYTECODE,
-  MIRROR_NODE_WAITING_TIME,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -31,7 +30,7 @@ describe('Get Contract Info E2E Tests', () => {
     const deployment = await executorWrapper.deployERC20(COMPILED_ERC20_BYTECODE);
     deployedContractId = deployment.contractId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirror node sync
+    await waitForMirrorTx(executorWrapper, deployment.transactionId!); // wait for mirror node sync
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);

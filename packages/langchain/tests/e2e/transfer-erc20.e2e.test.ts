@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -53,7 +52,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
     }
 
     testTokenAddress = createResult.erc20Address;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
   });
 
   afterAll(async () => {
@@ -82,7 +81,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
     }),
   );
 

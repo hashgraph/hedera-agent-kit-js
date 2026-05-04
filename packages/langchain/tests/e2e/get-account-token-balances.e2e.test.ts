@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -59,7 +58,7 @@ describe('Get Account Token Balances E2E Tests', () => {
     testAccountClient.close();
 
     // Transfer some balance to the test account
-    await executorWrapper.transferFungible({
+    const transferResp = await executorWrapper.transferFungible({
       amount: 25, // given in base units. Equals to 0.25 in display units
       to: testAccountId,
       from: executor.accountId.toString(),
@@ -67,7 +66,7 @@ describe('Get Account Token Balances E2E Tests', () => {
     });
 
     // wait for mirror node indexing
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, transferResp.transactionId!);
   });
 
   it(

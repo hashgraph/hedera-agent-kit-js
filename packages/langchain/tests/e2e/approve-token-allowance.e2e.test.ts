@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -46,23 +45,22 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
     responseParsingService = testSetup.responseParser;
 
     // create test fungible token
-    tokenId = await executorWrapper
-      .createFungibleToken({
-        tokenName: 'E2EAllowToken',
-        tokenSymbol: 'E2EALW',
-        tokenMemo: 'FT',
-        initialSupply: 1000,
-        decimals: 2,
-        maxSupply: 100000,
-        supplyType: TokenSupplyType.Finite,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      tokenName: 'E2EAllowToken',
+      tokenSymbol: 'E2EALW',
+      tokenMemo: 'FT',
+      initialSupply: 1000,
+      decimals: 2,
+      maxSupply: 100000,
+      supplyType: TokenSupplyType.Finite,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenId = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -101,7 +99,7 @@ describe('Approve Token Allowance E2E Tests with Intermediate Execution Account'
       'Fungible token allowance(s) approved successfully. Transaction ID:',
     );
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     const allowances = await executorWrapper.getTokenAllowances(
       ownerAccountId.toString(),

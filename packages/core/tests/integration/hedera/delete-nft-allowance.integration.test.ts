@@ -23,8 +23,7 @@ import {
   approveNftAllowanceParameters,
   deleteNftAllowanceParameters,
 } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Delete NFT Allowance tool
@@ -92,7 +91,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const mintResp = await mintTx.execute(executorClient);
     await mintResp.getReceipt(executorClient);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, mintResp.transactionId.toString());
 
     // Associate spender and recipient with the NFT token
     await spenderWrapper.associateToken({
@@ -128,7 +127,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const approveResult = await approveTool.execute(executorClient, context, approveParams);
     expect(approveResult.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, approveResult.raw.transactionId);
 
     // Now delete the allowance
     const deleteParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> = {
@@ -159,7 +158,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const approveResult = await approveTool.execute(executorClient, context, approveParams);
     expect(approveResult.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, approveResult.raw.transactionId);
 
     // Now delete the allowances
     const deleteParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> = {
@@ -186,9 +185,9 @@ describe('Delete NFT Allowance Integration Tests', () => {
     };
 
     const approveTool = approveNftAllowanceTool(context);
-    await approveTool.execute(executorClient, context, approveParams);
+    const approveResult = await approveTool.execute(executorClient, context, approveParams);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, approveResult.raw.transactionId);
 
     // Delete the allowance
     const deleteParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> = {
@@ -201,7 +200,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const deleteResult = await deleteTool.execute(executorClient, context, deleteParams);
     expect(deleteResult.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, deleteResult.raw.transactionId);
 
     // Attempt transfer with spender - should fail
     const nft = new NftId(TokenId.fromString(nftTokenId), 1);

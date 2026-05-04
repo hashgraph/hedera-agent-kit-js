@@ -21,8 +21,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
@@ -94,12 +93,12 @@ describe('Delete NFT Allowance E2E', () => {
       accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
-    await recipientWrapper.associateToken({
+    const recipAssocResp = await recipientWrapper.associateToken({
       accountId: recipient.accountId.toString(),
       tokenId: nftTokenId,
     });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, recipAssocResp.transactionId!);
   }, 180_000);
 
   afterAll(async () => {
@@ -127,7 +126,7 @@ describe('Delete NFT Allowance E2E', () => {
       const approveResult = await approveTool.execute(ownerClient, {}, approveParams);
       expect(approveResult.raw.status).toBe('SUCCESS');
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, approveResult.raw.transactionId!);
 
       // 2) Delete NFT allowance for serial 1
       const deleteTool = deleteNftAllowanceTool({});
@@ -140,7 +139,7 @@ describe('Delete NFT Allowance E2E', () => {
       const deleteResult = await deleteTool.execute(ownerClient, {}, deleteParams);
       expect(deleteResult.raw.status).toBe('SUCCESS');
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, deleteResult.raw.transactionId!);
 
       // 3) Verify spender can no longer transfer the NFT
       const nft = new NftId(TokenId.fromString(nftTokenId), serialToUse);
@@ -176,7 +175,7 @@ describe('Delete NFT Allowance E2E', () => {
       const approveResult = await approveTool.execute(ownerClient, {}, approveParams);
       expect(approveResult.raw.status).toBe('SUCCESS');
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, approveResult.raw.transactionId!);
 
       // 2) Delete NFT allowances for serials 1 and 2
       const deleteTool = deleteNftAllowanceTool({});
@@ -189,7 +188,7 @@ describe('Delete NFT Allowance E2E', () => {
       const deleteResult = await deleteTool.execute(ownerClient, {}, deleteParams);
       expect(deleteResult.raw.status).toBe('SUCCESS');
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, deleteResult.raw.transactionId!);
 
       // 3) Verify spender can no longer transfer serial 1
       const nft1 = new NftId(TokenId.fromString(nftTokenId), 1);

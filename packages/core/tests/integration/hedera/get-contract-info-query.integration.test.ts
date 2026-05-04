@@ -8,8 +8,8 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import type { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { COMPILED_ERC20_BYTECODE, MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
+import { COMPILED_ERC20_BYTECODE } from '@hashgraph/hedera-agent-kit-tests';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 
 describe('Integration - Hedera Get Contract Info', () => {
@@ -30,7 +30,7 @@ describe('Integration - Hedera Get Contract Info', () => {
     const deployment = await executorWrapper.deployERC20(COMPILED_ERC20_BYTECODE);
     deployedContractId = deployment.contractId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirrornode sync
+    await waitForMirrorTx(executorWrapper, deployment.transactionId!); // wait for mirrornode sync
   });
 
   it('fetches info for a deployed smart contract', async () => {
@@ -54,8 +54,6 @@ describe('Integration - Hedera Get Contract Info', () => {
       mirrornodeService,
     };
     const tool = getContractInfoTool(context);
-
-    await wait(MIRROR_NODE_WAITING_TIME); // wait for mirrornode sync
 
     const nonExistingContract = 'non-existing-contract-id';
     const result = await tool.execute(executorClient, context, {

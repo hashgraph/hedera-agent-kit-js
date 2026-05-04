@@ -14,8 +14,7 @@ import {
 import transferFungibleTokenWithAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token-with-allowance';
 import { z } from 'zod';
 import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   const profile = getProfile();
@@ -153,7 +152,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     );
     expect(result.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     // FIXME: the <xyz>Wrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround
@@ -188,7 +187,6 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       },
     };
 
-    await wait(MIRROR_NODE_WAITING_TIME);
     const result: any = await tool.execute(spenderClient, context, params);
 
     expect(result.humanMessage).toContain('Scheduled allowance transfer created successfully.');

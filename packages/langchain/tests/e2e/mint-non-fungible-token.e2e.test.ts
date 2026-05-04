@@ -12,8 +12,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -45,17 +44,16 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    nftTokenId = await executorWrapper
-      .createNonFungibleToken({
-        ...NFT_PARAMS,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createNftResp = await executorWrapper.createNonFungibleToken({
+      ...NFT_PARAMS,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    nftTokenId = createNftResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createNftResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -81,7 +79,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const supplyAfter = await executorWrapper
         .getTokenInfo(nftTokenId.toString())
@@ -112,7 +110,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const supplyAfter = await executorWrapper
         .getTokenInfo(nftTokenId.toString())

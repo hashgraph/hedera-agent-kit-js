@@ -4,8 +4,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitFor,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup, type LangchainTestSetup, TOOLKIT_OPTIONS } from '../../utils';
 import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
@@ -66,11 +65,14 @@ describe('HcsAuditTrailHook E2E Tests', () => {
       ],
     });
 
-    // Wait for the mirror node to index the HCS message
-    await wait(MIRROR_NODE_WAITING_TIME);
-
-    // Verify that the message was published to the HCS topic
-    const mirrorNodeMessages = await executorWrapper.getTopicMessages(topicId);
+    // Wait adaptively for the mirror node to index the HCS audit message published by the hook
+    const mirrorNodeMessages = await waitFor(
+      async () => {
+        const m = await executorWrapper.getTopicMessages(topicId);
+        return m.messages.length > 0 ? m : null;
+      },
+      { timeoutMs: 10000, intervalMs: 250, description: 'HCS audit message in mirror' },
+    );
     console.log('mirrorNodeMessages', mirrorNodeMessages);
 
     expect(mirrorNodeMessages.messages.length).toBeGreaterThan(0);

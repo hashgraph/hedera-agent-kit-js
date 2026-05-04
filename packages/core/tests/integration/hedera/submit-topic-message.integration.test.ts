@@ -5,8 +5,7 @@ import { AgentMode, type Context } from '@/shared/configuration';
 import { getProfile, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Submit Topic Message Integration Tests', () => {
   const profile = getProfile();
@@ -50,7 +49,7 @@ describe('Submit Topic Message Integration Tests', () => {
 
     const result: any = await tool.execute(operatorClient, context, params);
 
-    await wait(MIRROR_NODE_WAITING_TIME); // wait for the message to be processed by mirror node
+    await waitForMirrorTx(operatorWrapper, result.raw.transactionId); // wait for the message to be processed by mirror node
 
     const mirrornodeMessages = await operatorWrapper.getTopicMessages(topicId);
 

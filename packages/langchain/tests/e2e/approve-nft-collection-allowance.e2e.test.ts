@@ -16,8 +16,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -83,12 +82,12 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
-    await recipientWrapper.associateToken({
+    const recipAssocResp = await recipientWrapper.associateToken({
       accountId: recipient.accountId.toString(),
       tokenId: nftTokenId,
     });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, recipAssocResp.transactionId!);
   }, 180_000);
 
   afterAll(async () => {
@@ -122,7 +121,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       // Wait for mirror node/allowance propagation
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       // Mint a new serial AFTER approval to ensure future serials are covered
       const mintTx = new TokenMintTransaction()

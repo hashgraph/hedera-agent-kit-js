@@ -36,10 +36,9 @@ export type WaitForOptions = {
 /**
  * Polls `condition` until it returns a truthy value, or `timeoutMs` elapses.
  *
- * Replaces fixed `wait(MIRROR_NODE_WAITING_TIME)` sleeps with adaptive waits:
- * returns as soon as the mirror has the data (often <500ms on Solo) and only
- * burns the full budget on actual lag. Throws on timeout, including the last
- * predicate error if any.
+ * Adaptive wait: returns as soon as the predicate is satisfied (often <500ms on
+ * Solo) and only burns the full budget on actual lag. Throws on timeout,
+ * including the last predicate error if any.
  */
 export async function waitFor<T>(
   condition: () => Promise<T | null | undefined | false> | T | null | undefined | false,
@@ -66,10 +65,8 @@ export async function waitFor<T>(
 }
 
 /**
- * Polls mirror node until the given transaction is ingested.
- *
- * Drop-in replacement for `await wait(MIRROR_NODE_WAITING_TIME)` whenever the previous
- * SDK call or tool execution returned a transaction ID. Once the tx is in mirror, all
+ * Polls mirror node until the given transaction is ingested. Use after any SDK call
+ * or tool execution that returns a transaction ID — once the tx is in mirror, all
  * downstream entity state (balances, tokens, accounts, allowances) is also visible.
  *
  * @param wrapper - HederaOperationsWrapper bound to any client (mirror endpoint comes from its ledger).

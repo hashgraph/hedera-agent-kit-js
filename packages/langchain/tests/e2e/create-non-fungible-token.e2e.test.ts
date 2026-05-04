@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -28,8 +27,6 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-
-    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -64,7 +61,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       // Verify on-chain
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
@@ -96,7 +93,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('ArtCollection');
@@ -128,7 +125,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('GameItems');
@@ -180,7 +177,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('InfiniteCollection');

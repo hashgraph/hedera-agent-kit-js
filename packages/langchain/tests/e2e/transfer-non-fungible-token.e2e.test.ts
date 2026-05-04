@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
@@ -102,7 +101,7 @@ describe('Transfer NFT E2E Tests', () => {
     );
 
     // Wait for mirror node update
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     const recipientNfts = await ownerWrapper.getAccountNfts(recipient.accountId.toString());
     expect(
@@ -130,7 +129,7 @@ describe('Transfer NFT E2E Tests', () => {
     );
 
     // Wait for mirror node update
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     const recipientNfts = await ownerWrapper.getAccountNfts(recipient.accountId.toString());
     expect(

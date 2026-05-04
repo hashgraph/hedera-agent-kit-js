@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ReactAgent } from 'langchain';
@@ -47,17 +46,16 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     responseParsingService = testSetup.responseParser;
 
     // Deploy fungible token
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -93,7 +91,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully airdropped');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
@@ -119,7 +117,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 

@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -28,8 +27,6 @@ describe('Create ERC20 Token E2E Tests', () => {
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-
-    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
@@ -60,7 +57,7 @@ describe('Create ERC20 Token E2E Tests', () => {
       );
       expect(erc20Address).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       // Verify on-chain contract info
       const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
@@ -92,7 +89,7 @@ describe('Create ERC20 Token E2E Tests', () => {
       );
       expect(erc20Address).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
       expect(contractInfo).toBeDefined();

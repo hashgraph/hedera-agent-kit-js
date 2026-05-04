@@ -4,8 +4,7 @@ import { ReactAgent } from 'langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 
 describe('Get Account Query E2E Tests', () => {
@@ -31,15 +30,14 @@ describe('Get Account Query E2E Tests', () => {
     'should return account info for a newly created account',
     itWithRetry(async () => {
       const privateKey = PrivateKey.generateED25519();
-      const accountId = await hederaOps
-        .createAccount({
-          key: privateKey.publicKey as Key,
-          initialBalance: 0.1,
-        })
-        .then(resp => resp.accountId!);
+      const createAcctResp = await hederaOps.createAccount({
+        key: privateKey.publicKey as Key,
+        initialBalance: 0.1,
+      });
+      const accountId = createAcctResp.accountId!;
 
       // Give the mirror node a chance to sync
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(hederaOps, createAcctResp.transactionId!);
 
       const queryResult = await agent.invoke({
         messages: [

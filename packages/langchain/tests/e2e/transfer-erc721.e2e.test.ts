@@ -5,8 +5,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -39,8 +38,6 @@ describe('Transfer ERC721 Token E2E Tests', () => {
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
-
     // 5. Create a test ERC721 token
     const createParams: z.infer<ReturnType<typeof createERC721Parameters>> = {
       tokenName: 'TestNFT',
@@ -56,7 +53,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
 
     testTokenAddress = createResult.erc721Address;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
   });
 
   afterAll(async () => {
@@ -67,11 +64,11 @@ describe('Transfer ERC721 Token E2E Tests', () => {
   });
 
   const mintTokenForTransfer = async (): Promise<number> => {
-    await executorWrapper.mintERC721({
+    const mintResp = await executorWrapper.mintERC721({
       contractId: testTokenAddress,
       toAddress: executor.accountId.toString(),
     });
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, mintResp.raw.transactionId);
     return nextTokenId;
   };
 

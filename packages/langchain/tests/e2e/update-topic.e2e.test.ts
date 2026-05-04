@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -33,18 +32,17 @@ describe('Update Topic E2E Tests', () => {
 
   beforeEach(async () => {
     // Create a topic with admin and submit keys so most tests can run updates
-    topicId = await executorWrapper
-      .createTopic({
-        autoRenewAccountId: executor.accountId.toString(),
-        isSubmitKey: true,
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        submitKey: executor.privateKey.publicKey as PublicKey,
-        topicMemo: 'initial-topic-memo',
-      })
-      .then(resp => resp.topicId!);
+    const createTopicResp = await executorWrapper.createTopic({
+      autoRenewAccountId: executor.accountId.toString(),
+      isSubmitKey: true,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      submitKey: executor.privateKey.publicKey as PublicKey,
+      topicMemo: 'initial-topic-memo',
+    });
+    topicId = createTopicResp.topicId!;
 
     // Give mirror node time to index
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTopicResp.transactionId!);
   });
 
   afterAll(async () => {
@@ -100,16 +98,15 @@ describe('Update Topic E2E Tests', () => {
     'should fail due to topic being originally created without submitKey',
     itWithRetry(async () => {
       // Create a topic without a submitKey
-      const topicWithoutSubmit = await executorWrapper
-        .createTopic({
-          autoRenewAccountId: executor.accountId.toString(),
-          isSubmitKey: false,
-          adminKey: executor.privateKey.publicKey as PublicKey,
-          topicMemo: 'no-submit',
-        })
-        .then(resp => resp.topicId!);
+      const createTopicWithoutSubmitResp = await executorWrapper.createTopic({
+        autoRenewAccountId: executor.accountId.toString(),
+        isSubmitKey: false,
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        topicMemo: 'no-submit',
+      });
+      const topicWithoutSubmit = createTopicWithoutSubmitResp.topicId!;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, createTopicWithoutSubmitResp.transactionId!);
 
       const queryResult = await agent.invoke({
         messages: [
@@ -162,17 +159,16 @@ describe('Update Topic E2E Tests', () => {
       const { client: secondaryClient, wrapper: secondaryWrapper } =
         profile.client.connectAs(secondary);
 
-      const topicIdBySecondary = await secondaryWrapper
-        .createTopic({
-          autoRenewAccountId: secondary.accountId.toString(),
-          isSubmitKey: true,
-          adminKey: secondary.privateKey.publicKey as PublicKey,
-          submitKey: secondary.privateKey.publicKey as PublicKey,
-          topicMemo: 'secondary-topic',
-        })
-        .then(resp => resp.topicId!);
+      const createSecondaryTopicResp = await secondaryWrapper.createTopic({
+        autoRenewAccountId: secondary.accountId.toString(),
+        isSubmitKey: true,
+        adminKey: secondary.privateKey.publicKey as PublicKey,
+        submitKey: secondary.privateKey.publicKey as PublicKey,
+        topicMemo: 'secondary-topic',
+      });
+      const topicIdBySecondary = createSecondaryTopicResp.topicId!;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(secondaryWrapper, createSecondaryTopicResp.transactionId!);
 
       const queryResult = await agent.invoke({
         messages: [

@@ -9,8 +9,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { updateAccountParameters } from '@/shared/parameter-schemas/account.zod';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { parseHederaTimestamp, wait } from '@hashgraph/hedera-agent-kit-tests';
+import { parseHederaTimestamp, waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Schedule Transaction Integration tests', () => {
   const profile = getProfile();
@@ -93,7 +92,7 @@ describe('Schedule Transaction Integration tests', () => {
     const accountDetails = await operatorWrapper.getAccountInfo(updateAccount.accountId.toString());
     expect(accountDetails.accountMemo).not.toContain(params.accountMemo);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     // the scheduled transaction details should match the input
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
@@ -127,7 +126,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.scheduleId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
@@ -155,7 +154,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.scheduleId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
@@ -184,7 +183,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.scheduleId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
@@ -217,7 +216,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.scheduleId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
@@ -249,7 +248,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.scheduleId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
@@ -277,7 +276,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.scheduleId).toBeDefined();
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,
@@ -317,7 +316,7 @@ describe('Schedule Transaction Integration tests', () => {
     expect(result.raw.scheduleId).toBeDefined();
     expect(result.humanMessage).toContain('Scheduled account update created successfully.');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const scheduledTxDetails = await executorWrapper.getScheduledTransactionDetails(
       result.raw.scheduleId,

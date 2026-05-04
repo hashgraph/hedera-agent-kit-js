@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitForMirrorTx,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@hashgraph/hedera-agent-kit';
@@ -52,27 +51,25 @@ describe('Get Token Info Query E2E Tests', () => {
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createFtResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createFtResp.tokenId!;
 
-    tokenIdNFT = await executorWrapper
-      .createNonFungibleToken({
-        ...NFT_PARAMS,
-        supplyKey: executor.privateKey.publicKey as PublicKey,
-        autoRenewAccountId: executor.accountId.toString(),
-        adminKey: executor.privateKey.publicKey as PublicKey,
-        treasuryAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createNftResp = await executorWrapper.createNonFungibleToken({
+      ...NFT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdNFT = createNftResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createNftResp.transactionId!);
   });
 
   afterAll(async () => {

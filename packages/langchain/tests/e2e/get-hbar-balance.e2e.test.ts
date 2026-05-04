@@ -6,8 +6,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  wait,
-  MIRROR_NODE_WAITING_TIME,
+  waitFor,
   itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@hashgraph/hedera-agent-kit';
@@ -37,7 +36,18 @@ describe('Get HBAR Balance E2E Tests with Intermediate Execution Account', () =>
     targetAccount1 = await profile.accounts.acquire({ tier: 'MINIMAL' });
     targetAccount2 = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    // Adaptive wait: poll mirror until the new accounts are visible
+    await waitFor(
+      async () => {
+        try {
+          await executorWrapper.getAccountBalances(targetAccount2.accountId.toString());
+          return true;
+        } catch {
+          return null;
+        }
+      },
+      { timeoutMs: 10000, intervalMs: 250, description: 'new accounts to appear in mirror' },
+    );
   });
 
   afterAll(async () => {

@@ -9,8 +9,6 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Create Non-Fungible Token Integration Tests', () => {
   const profile = getProfile();
@@ -109,7 +107,6 @@ describe('Create Non-Fungible Token Integration Tests', () => {
         },
       };
 
-      await wait(MIRROR_NODE_WAITING_TIME);
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
 

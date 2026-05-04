@@ -9,8 +9,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { wait, waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Topic Messages Query Integration Tests', () => {
   const profile = getProfile();
@@ -39,13 +38,12 @@ describe('Get Topic Messages Query Integration Tests', () => {
   beforeEach(async () => {
     // Executor creates topic
     topicAdminKey = executor.privateKey.publicKey;
-    createdTopicId = await executorWrapper
-      .createTopic({
-        isSubmitKey: false,
-        adminKey: topicAdminKey,
-        autoRenewAccountId: executor.accountId.toString(),
-      })
-      .then(resp => resp.topicId!);
+    const createTopicResp = await executorWrapper.createTopic({
+      isSubmitKey: false,
+      adminKey: topicAdminKey,
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    createdTopicId = createTopicResp.topicId!;
 
     // Submit some messages to the topic
     await executorWrapper.submitMessage({
@@ -58,13 +56,13 @@ describe('Get Topic Messages Query Integration Tests', () => {
       message: 'Message 2',
     });
     await wait(1000);
-    await executorWrapper.submitMessage({
+    const submit3Resp = await executorWrapper.submitMessage({
       topicId: createdTopicId.toString(),
       message: 'Message 3',
     });
 
     // Wait for mirror node indexing
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, submit3Resp.transactionId!);
   });
 
   it('should fetch all topic messages', async () => {

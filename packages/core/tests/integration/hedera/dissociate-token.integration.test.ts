@@ -9,8 +9,7 @@ import {
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Dissociate Token Integration Tests', () => {
   const profile = getProfile();
@@ -108,7 +107,7 @@ describe('Dissociate Token Integration Tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.humanMessage).toContain('successfully dissociated');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const balances = await executorWrapper.getAccountTokenBalances(executor.accountId.toString());
     expect(balances.find(b => b.tokenId === tokenIdFT.toString())).toBeFalsy();
@@ -127,7 +126,7 @@ describe('Dissociate Token Integration Tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.humanMessage).toContain('successfully dissociated');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     const balances = await executorWrapper.getAccountTokenBalances(executor.accountId.toString());
     expect(balances.find(b => b.tokenId === tokenIdFT.toString())).toBeFalsy();
