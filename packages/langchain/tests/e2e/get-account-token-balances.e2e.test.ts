@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client, TokenSupplyType } from '@hiero-ledger/sdk';
@@ -71,7 +70,7 @@ describe('Get Account Token Balances E2E Tests', () => {
 
   it(
     'should fetch token balances for a valid account',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get the token balances for account ${testAccountId}`;
 
       const result = await agent.invoke({
@@ -89,12 +88,12 @@ describe('Get Account Token Balances E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token Balances');
       expect(parsedResponse[0].parsedData.humanMessage).toContain(`Token: ${tokenId}`);
       expect(parsedResponse[0].parsedData.humanMessage).toContain(`Balance: 0.25`);
-    }),
+    },
   );
 
   it(
     'should default to operator account when no account is passed',
-    itWithRetry(async () => {
+    async () => {
       const input = `Show me my token balances`;
 
       const result = await agent.invoke({
@@ -111,12 +110,12 @@ describe('Get Account Token Balances E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token Balances');
       expect(parsedResponse[0].parsedData.humanMessage).toContain(executor.accountId.toString());
-    }),
+    },
   );
 
   it(
     'should handle non-existent account gracefully',
-    itWithRetry(async () => {
+    async () => {
       const nonExistentAccountId = '0.0.999999999';
       const input = `Get the token balances for account ${nonExistentAccountId}`;
 
@@ -133,12 +132,12 @@ describe('Get Account Token Balances E2E Tests', () => {
 
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to fetch');
-    }),
+    },
   );
 
   it(
     'should handle invalid account ID format',
-    itWithRetry(async () => {
+    async () => {
       const invalidAccountId = 'invalid-account-id';
       const input = `Get the token balances for account ${invalidAccountId}`;
 
@@ -157,7 +156,7 @@ describe('Get Account Token Balances E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.error).toContain(
         'Failed to fetch balance for account',
       );
-    }),
+    },
   );
 
   afterAll(async () => {

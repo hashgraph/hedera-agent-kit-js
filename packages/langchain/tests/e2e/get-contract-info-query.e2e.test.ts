@@ -8,7 +8,6 @@ import {
   type TestAccount,
   waitForMirrorTx,
   COMPILED_ERC20_BYTECODE,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -46,7 +45,7 @@ describe('Get Contract Info E2E Tests', () => {
 
   it(
     'should fetch contract info for a deployed contract via LangChain agent',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get the contract info for contract ID ${deployedContractId}`;
       const queryResult = await agent.invoke({
         messages: [
@@ -63,12 +62,12 @@ describe('Get Contract Info E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         `details for contract **${deployedContractId}**`,
       );
-    }),
+    },
   );
 
   it(
     'should handle non-existent contract gracefully via LangChain agent',
-    itWithRetry(async () => {
+    async () => {
       const fakeContractId = '0.0.999999999';
       const input = `Get the contract info for contract ID ${fakeContractId}`;
       const queryResult = await agent.invoke({
@@ -83,6 +82,6 @@ describe('Get Contract Info E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get contract info');
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to get contract info');
-    }),
+    },
   );
 });

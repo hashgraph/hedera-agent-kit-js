@@ -73,7 +73,6 @@ describe('HcsAuditTrailHook E2E Tests', () => {
       },
       { timeoutMs: 10000, intervalMs: 250, description: 'HCS audit message in mirror' },
     );
-    console.log('mirrorNodeMessages', mirrorNodeMessages);
 
     expect(mirrorNodeMessages.messages.length).toBeGreaterThan(0);
 

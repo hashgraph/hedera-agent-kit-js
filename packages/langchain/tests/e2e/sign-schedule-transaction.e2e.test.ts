@@ -6,7 +6,6 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { transferHbarParametersNormalised } from '@hashgraph/hedera-agent-kit';
@@ -48,7 +47,7 @@ describe('Sign Schedule Transaction E2E Tests', () => {
 
   it(
     'should sign a scheduled transaction',
-    itWithRetry(async () => {
+    async () => {
       // First, create a scheduled transaction using the operator
       const transferAmount = 0.1;
       const operatorClient = profile.client.connectAs(profile.operator).client;
@@ -92,12 +91,12 @@ describe('Sign Schedule Transaction E2E Tests', () => {
         'Transaction successfully signed',
       );
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Transaction ID');
-    }),
+    },
   );
 
   it(
     'should handle invalid schedule ID',
-    itWithRetry(async () => {
+    async () => {
       const invalidScheduleId = '0.0.999999';
       const input = `Sign the scheduled transaction with ID ${invalidScheduleId}`;
 
@@ -114,6 +113,6 @@ describe('Sign Schedule Transaction E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to sign scheduled transaction',
       );
-    }),
+    },
   );
 });

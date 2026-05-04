@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -88,7 +87,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
   it(
     'should dissociate the executor account from the given token',
-    itWithRetry(async () => {
+    async () => {
       const assocResp = await executorWrapper.associateToken({
         accountId: executor.accountId.toString(),
         tokenId: tokenIdFT.toString(),
@@ -119,12 +118,12 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         executor.accountId.toString(),
       );
       expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
-    }),
+    },
   );
 
   it(
     'should dissociate 2 tokens at once',
-    itWithRetry(async () => {
+    async () => {
       await executorWrapper.associateToken({
         accountId: executor.accountId.toString(),
         tokenId: tokenIdFT.toString(),
@@ -163,12 +162,12 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       );
       expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT.toString())).toBeFalsy();
       expect(tokenBalancesAfter.find(t => t.tokenId === tokenIdFT2.toString())).toBeFalsy();
-    }),
+    },
   );
 
   it(
     'should fail dissociating not associated token',
-    itWithRetry(async () => {
+    async () => {
       // check if the account is not associate with the token
       const tokenBalancesBefore = await executorWrapper.getAccountTokenBalances(
         executor.accountId.toString(),
@@ -189,12 +188,12 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to dissociate');
       expect(parsedResponse[0].parsedData.raw.status).not.toBe('SUCCESS');
-    }),
+    },
   );
 
   it(
     'should fail dissociating not existing token',
-    itWithRetry(async () => {
+    async () => {
       const queryResult = await agent.invoke({
         messages: [
           {
@@ -208,6 +207,6 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to dissociate');
       expect(parsedResponse[0].parsedData.raw.status).not.toBe('SUCCESS');
-    }),
+    },
   );
 });

@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitFor,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -78,7 +77,7 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
 
   it(
     'should return pending airdrops for recipient via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Show pending airdrops for account ${recipient.accountId.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -96,6 +95,6 @@ describe('Get Pending Airdrop Query E2E Tests', () => {
       );
       expect(Array.isArray(parsedResponse[0].parsedData.raw.pendingAirdrops.airdrops)).toBe(true);
       expect(parsedResponse[0].parsedData.raw.pendingAirdrops.airdrops.length).toBeGreaterThan(0);
-    }),
+    },
   );
 });

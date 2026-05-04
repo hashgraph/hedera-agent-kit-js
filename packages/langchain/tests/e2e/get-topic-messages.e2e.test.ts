@@ -8,7 +8,6 @@ import {
   type TestAccount,
   wait,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -69,7 +68,7 @@ describe('Get Topic Messages Query E2E Tests', () => {
 
   it(
     'should fetch all messages from a topic via LangChain agent',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get all messages from topic ${createdTopicId.toString()}`;
 
       const queryResult = await agent.invoke({
@@ -89,12 +88,12 @@ describe('Get Topic Messages Query E2E Tests', () => {
       ).toEqual(['E2E Message 1', 'E2E Message 2', 'E2E Message 3']);
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Messages for topic');
       expect(parsedResponse[0].parsedData.humanMessage).toContain('E2E Message 1');
-    }),
+    },
   );
 
   it(
     'should fetch messages after a specific timestamp via LangChain agent',
-    itWithRetry(async () => {
+    async () => {
       // Fetch all messages first to get timestamp
       const allMessages = await agent.invoke({
         messages: [
@@ -124,12 +123,12 @@ describe('Get Topic Messages Query E2E Tests', () => {
       expect(
         parsedResponse[0].parsedData.raw.messages.reverse().map((m: any) => m.message),
       ).toEqual(['E2E Message 2', 'E2E Message 3']);
-    }),
+    },
   );
 
   it(
     'should handle non-existent topic gracefully via LangChain agent',
-    itWithRetry(async () => {
+    async () => {
       const fakeTopicId = '0.0.999999999';
       const input = `Get messages from topic ${fakeTopicId}`;
 
@@ -144,6 +143,6 @@ describe('Get Topic Messages Query E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('No messages found for topic');
-    }),
+    },
   );
 });

@@ -22,7 +22,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 
@@ -113,7 +112,7 @@ describe('Delete NFT Allowance E2E', () => {
 
   it(
     'should delete specific serial NFT allowance and prevent spender from transferring',
-    itWithRetry(async () => {
+    async () => {
       // 1) Approve NFT allowance for serial 1
       const approveTool = approveNftAllowanceTool({});
       const approveParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
@@ -154,13 +153,13 @@ describe('Delete NFT Allowance E2E', () => {
         const exec = await tx.execute(spenderClient);
         await exec.getReceipt(spenderClient);
       }).rejects.toThrow(/SPENDER_DOES_NOT_HAVE_ALLOWANCE|INVALID_ALLOWANCE_OWNER_ID/);
-    }),
+    },
     180_000,
   );
 
   it(
     'should delete multiple serial NFT allowances',
-    itWithRetry(async () => {
+    async () => {
       const serialsToUse = [1, 2];
 
       // 1) Approve NFT allowances for serials 1 and 2
@@ -202,7 +201,7 @@ describe('Delete NFT Allowance E2E', () => {
         const exec = await tx1.execute(spenderClient);
         await exec.getReceipt(spenderClient);
       }).rejects.toThrow(/SPENDER_DOES_NOT_HAVE_ALLOWANCE|INVALID_ALLOWANCE_OWNER_ID/);
-    }),
+    },
     180_000,
   );
 });

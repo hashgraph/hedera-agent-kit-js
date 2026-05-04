@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ReactAgent } from 'langchain';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -78,7 +77,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
   it(
     'should airdrop tokens to a single recipient successfully',
-    itWithRetry(async () => {
+    async () => {
       const recipientId = await createRecipientAccount();
 
       const queryResult = await agent.invoke({
@@ -98,12 +97,12 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
       expect(pending.airdrops.length).toBeGreaterThan(0);
-    }),
+    },
   );
 
   it(
     'should airdrop tokens to multiple recipients in one transaction',
-    itWithRetry(async () => {
+    async () => {
       const recipient1 = await createRecipientAccount();
       const recipient2 = await createRecipientAccount();
 
@@ -126,12 +125,12 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       expect(pending1.airdrops.length).toBeGreaterThan(0);
       expect(pending2.airdrops.length).toBeGreaterThan(0);
-    }),
+    },
   );
 
   it(
     'should fail gracefully for non-existent token',
-    itWithRetry(async () => {
+    async () => {
       const recipientId = await createRecipientAccount();
       const fakeTokenId = '0.0.999999999';
 
@@ -149,6 +148,6 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to get token info for a token',
       );
-    }),
+    },
   );
 });

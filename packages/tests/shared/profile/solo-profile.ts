@@ -109,5 +109,9 @@ export const createSoloProfile = (operator: TestAccount): TestProfile => {
       },
       usdToHbar,
     },
+
+    async dispose(): Promise<void> {
+      operatorClient.close();
+    },
   };
 };

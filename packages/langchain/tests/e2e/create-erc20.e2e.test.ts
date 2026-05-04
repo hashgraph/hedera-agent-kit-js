@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client } from '@hiero-ledger/sdk';
@@ -37,7 +36,7 @@ describe('Create ERC20 Token E2E Tests', () => {
 
   it(
     'creates an ERC20 token with minimal params via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = 'Create an ERC20 token named MyERC20 with symbol M20';
 
       const result = await agent.invoke({
@@ -62,12 +61,12 @@ describe('Create ERC20 Token E2E Tests', () => {
       // Verify on-chain contract info
       const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
       expect(contractInfo).toBeDefined();
-    }),
+    },
   );
 
   it(
     'creates an ERC20 token with decimals and initial supply',
-    itWithRetry(async () => {
+    async () => {
       const input =
         'Create an ERC20 token GoldToken with symbol GLD, decimals 2, initial supply 1000';
 
@@ -93,12 +92,12 @@ describe('Create ERC20 Token E2E Tests', () => {
 
       const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
       expect(contractInfo).toBeDefined();
-    }),
+    },
   );
 
   it(
     'should schedule creation of erc20 token',
-    itWithRetry(async () => {
+    async () => {
       const name = `MyERC20-${new Date().getTime().toString()}`;
       const input = `Create an ERC20 token named "${name}" with symbol M20. Schedule this transaction instead of executing it immediately.`;
 
@@ -119,6 +118,6 @@ describe('Create ERC20 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Scheduled creation of ERC20 successfully.',
       );
-    }),
+    },
   );
 });

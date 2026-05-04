@@ -5,7 +5,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
@@ -51,7 +50,7 @@ describe('Delete Topic E2E Tests', () => {
 
   it(
     'deletes topic via natural language',
-    itWithRetry(async () => {
+    async () => {
       // create a topic to be deleted
       const createParams: any = { adminKey: executor.privateKey.publicKey };
       const createResult: any = await executorWrapper.createTopic(createParams);
@@ -73,6 +72,6 @@ describe('Delete Topic E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
-    }),
+    },
   );
 });

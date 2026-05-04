@@ -6,7 +6,6 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 
@@ -55,7 +54,7 @@ describe('Create Account E2E Tests', () => {
   describe('Tool Matching and Parameter Extraction', () => {
     it(
       'should create an account with default operator public key',
-      itWithRetry(async () => {
+      async () => {
         const publicKey = executor.privateKey.publicKey as PublicKey;
         const input = `Create a new Hedera account`;
 
@@ -71,12 +70,12 @@ describe('Create Account E2E Tests', () => {
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect((info.key as PublicKey).toStringRaw()).toBe(publicKey.toStringRaw());
-      }),
+      },
     );
 
     it(
       'should create an account with initial balance and memo',
-      itWithRetry(async () => {
+      async () => {
         const input = `Create an account with initial balance 0.05 HBAR and memo "E2E test account"`;
 
         const result = await agent.invoke({
@@ -94,12 +93,12 @@ describe('Create Account E2E Tests', () => {
 
         const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
         expect(balance.toNumber()).toBeGreaterThanOrEqual(0.05 * 1e8);
-      }),
+      },
     );
 
     it(
       'should create an account with explicit public key',
-      itWithRetry(async () => {
+      async () => {
         const publicKey = PrivateKey.generateED25519().publicKey as Key;
         const input = `Create a new account with public key ${publicKey.toString()}`;
 
@@ -115,12 +114,12 @@ describe('Create Account E2E Tests', () => {
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect((info.key as Key).toString()).toBe(publicKey.toString());
-      }),
+      },
     );
 
     it(
       'should schedule a create account transaction with explicit public key',
-      itWithRetry(async () => {
+      async () => {
         const publicKey = PrivateKey.generateED25519().publicKey as Key;
         const input = `Schedule creating a new Hedera account using public key ${publicKey.toString()}`;
 
@@ -144,14 +143,14 @@ describe('Create Account E2E Tests', () => {
 
         // We don’t expect accountId yet since it’s not executed immediately
         expect(parsedResponse[0].parsedData.raw.accountId).toBeNull();
-      }),
+      },
     );
   });
 
   describe('Edge Cases', () => {
     it(
       'should create an account with very small initial balance',
-      itWithRetry(async () => {
+      async () => {
         const input = `Create an account with initial balance 0.0001 HBAR`;
 
         const result = await agent.invoke({
@@ -166,13 +165,13 @@ describe('Create Account E2E Tests', () => {
 
         const balance = await executorWrapper.getAccountHbarBalance(newAccountId);
         expect(balance.toNumber()).toBeGreaterThanOrEqual(0.0001 * 1e8);
-      }),
+      },
     );
 
     // LLM hallucinates that 60 is more than 100 and fails to even call the tool. Skipping for now
     it.skip(
       'should handle long memos correctly',
-      itWithRetry(async () => {
+      async () => {
         const longMemo = 'A'.repeat(60);
         const input = `Create an account with memo "${longMemo}"`;
 
@@ -189,7 +188,7 @@ describe('Create Account E2E Tests', () => {
 
         const info = await executorWrapper.getAccountInfo(newAccountId);
         expect(info.accountMemo).toBe(longMemo);
-      }),
+      },
     );
   });
 });

@@ -56,6 +56,13 @@ export type TestProfile = {
     /** HBAR amount for an arbitrary USD value. Use `fund(tier)` when you can. */
     usdToHbar(usd: number): number;
   };
+
+  /**
+   * Releases session-scoped resources (the internal operator client used by
+   * `accounts.acquire()`/`release()`). Called from vitest's globalSetup teardown so
+   * gRPC sockets don't outlive the test run and block process exit.
+   */
+  dispose(): Promise<void>;
 };
 
 export { getProfile } from './resolve';

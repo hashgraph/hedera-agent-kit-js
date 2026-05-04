@@ -3,8 +3,6 @@ import { ReactAgent } from 'langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { coreTokenQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests';
-
 const { GET_PENDING_AIRDROP_TOOL } = coreTokenQueryPluginToolNames;
 
 describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
@@ -24,7 +22,7 @@ describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
 
   it(
     'should match get pending airdrops tool for "pending airdrops" query',
-    itWithRetry(async () => {
+    async () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
@@ -44,12 +42,12 @@ describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
         GET_PENDING_AIRDROP_TOOL,
         expect.objectContaining({ accountId }),
       );
-    }),
+    },
   );
 
   it(
     'should match get pending airdrops tool for "get pending airdrops" phrase',
-    itWithRetry(async () => {
+    async () => {
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi
         .spyOn(hederaAPI, 'run')
@@ -69,6 +67,6 @@ describe('Get Pending Airdrop Tool Matching Integration Tests', () => {
         GET_PENDING_AIRDROP_TOOL,
         expect.objectContaining({ accountId }),
       );
-    }),
+    },
   );
 });

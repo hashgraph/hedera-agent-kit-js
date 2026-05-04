@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -63,7 +62,7 @@ describe('Mint Fungible Token E2E Tests', () => {
 
   it(
     'should mint additional supply successfully',
-    itWithRetry(async () => {
+    async () => {
       const supplyBefore = await executorWrapper
         .getTokenInfo(tokenIdFT.toString())
         .then(info => info.totalSupply.toInt());
@@ -87,12 +86,12 @@ describe('Mint Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully minted');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(supplyAfter).toBe(supplyBefore + 500); // 5 * 10^decimals
-    }),
+    },
   );
 
   it(
     'should schedule minting additional supply successfully',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -107,12 +106,12 @@ describe('Mint Fungible Token E2E Tests', () => {
         'Scheduled mint transaction created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'should fail gracefully when minting more than max supply',
-    itWithRetry(async () => {
+    async () => {
       const queryResult = await agent.invoke({
         messages: [
           {
@@ -126,12 +125,12 @@ describe('Mint Fungible Token E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.raw).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.error).toContain('TOKEN_MAX_SUPPLY_REACHED');
-    }),
+    },
   );
 
   it(
     'should fail gracefully for a non-existent token',
-    itWithRetry(async () => {
+    async () => {
       const fakeTokenId = '0.0.999999999';
 
       const queryResult = await agent.invoke({
@@ -153,6 +152,6 @@ describe('Mint Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.error).toContain(
         `Failed to get token info for a token ${fakeTokenId}`,
       );
-    }),
+    },
   );
 });

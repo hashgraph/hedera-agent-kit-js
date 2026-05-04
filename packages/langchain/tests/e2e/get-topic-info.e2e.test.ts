@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -59,7 +58,7 @@ describe('Get Topic Info Query E2E Tests', () => {
 
   it(
     'should fetch topic info via LangChain agent',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get topic info for ${createdTopicId.toString()}`;
 
       const queryResult = await agent.invoke({
@@ -76,6 +75,6 @@ describe('Get Topic Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.topicId).toBe(createdTopicId.toString());
       expect(parsedResponse[0].parsedData.raw.topicInfo.topic_id).toBe(createdTopicId.toString());
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Here are the details for topic');
-    }),
+    },
   );
 });

@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client } from '@hiero-ledger/sdk';
@@ -64,7 +63,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
 
   it(
     'transfers ERC20 tokens to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}`;
 
       const result = await agent.invoke({
@@ -82,12 +81,12 @@ describe('Transfer ERC20 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
-    }),
+    },
   );
 
   it(
     'handles various natural language variations for transfers',
-    itWithRetry(async () => {
+    async () => {
       const variations = [
         `Transfer 1 ERC20 token ${testTokenAddress} to ${recipientAccountId}`,
         `Send 5 ERC20 tokens ${testTokenAddress} to recipient ${recipientAccountId}`,
@@ -109,12 +108,12 @@ describe('Transfer ERC20 Token E2E Tests', () => {
         expect(parsedResponse[0].parsedData.raw.status.toString()).toBe('SUCCESS');
         expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
       }
-    }),
+    },
   );
 
   it(
     'schedules transfer of ERC20 tokens to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Transfer 10 ERC20 tokens ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
 
       const result = await agent.invoke({
@@ -133,6 +132,6 @@ describe('Transfer ERC20 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Scheduled transfer of ERC20 successfully.',
       );
-    }),
+    },
   );
 });

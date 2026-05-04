@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -49,7 +48,7 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
 
   it(
     'should submit a message to a pre-created topic via agent',
-    itWithRetry(async () => {
+    async () => {
       const message = '"submitted via agent"';
       const res = await agent.invoke({
         messages: [
@@ -75,12 +74,12 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
       const mirrornodeMessages = await executorWrapper.getTopicMessages(targetTopicId);
 
       expect(mirrornodeMessages.messages.length).toBeGreaterThan(0);
-    }),
+    },
   );
 
   it(
     'should fail to submit to a non-existent topic via agent',
-    itWithRetry(async () => {
+    async () => {
       const fakeTopicId = '0.0.999999999';
       const res = await agent.invoke({
         messages: [
@@ -95,6 +94,6 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_TOPIC_ID|NOT_FOUND|ACCOUNT_DELETED|INVALID_ARGUMENT/i,
       );
-    }),
+    },
   );
 });

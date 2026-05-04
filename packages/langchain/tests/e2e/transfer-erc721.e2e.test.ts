@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client } from '@hiero-ledger/sdk';
@@ -74,7 +73,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
 
   it(
     'transfers ERC721 token to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const tokenId = await mintTokenForTransfer();
       nextTokenId = tokenId + 1;
       const input = `Transfer ERC721 token ${testTokenAddress} with id ${tokenId} from ${executor.accountId.toString()} to ${recipientAccountId}`;
@@ -92,12 +91,12 @@ describe('Transfer ERC721 Token E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.status.toString()).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'transfers token with explicit from address',
-    itWithRetry(async () => {
+    async () => {
       const tokenId = await mintTokenForTransfer();
       nextTokenId = tokenId + 1;
       const input = `Transfer erc721 ${tokenId} of contract ${testTokenAddress} to address ${recipientAccountId}`;
@@ -115,12 +114,12 @@ describe('Transfer ERC721 Token E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.status.toString()).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'schedules transfer of ERC721 token to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const tokenId = await mintTokenForTransfer();
       nextTokenId = tokenId + 1;
       const input = `Transfer ERC721 token ${testTokenAddress} with id ${tokenId} from ${executor.accountId.toString()} to ${recipientAccountId}. Schedule this transaction.`;
@@ -141,12 +140,12 @@ describe('Transfer ERC721 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Scheduled transfer of ERC721 successfully.',
       );
-    }),
+    },
   );
 
   it(
     'fails gracefully with non-existent token ID',
-    itWithRetry(async () => {
+    async () => {
       const input = `Transfer ERC721 token 999999 from ${testTokenAddress} to ${recipientAccountId}`;
 
       const result = await agent.invoke({
@@ -161,6 +160,6 @@ describe('Transfer ERC721 Token E2E Tests', () => {
 
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to transfer ERC721');
-    }),
+    },
   );
 });

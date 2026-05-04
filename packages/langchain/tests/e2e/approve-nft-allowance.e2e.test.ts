@@ -18,7 +18,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 
@@ -109,7 +108,7 @@ describe('Approve NFT Allowance E2E', () => {
 
   it(
     'should approve NFT allowance and allow spender to transfer via approved transfer',
-    itWithRetry(async () => {
+    async () => {
       // Approve NFT allowance (explicit tool invocation for determinism)
       const approveTool = approveNftAllowanceTool({});
       const approveParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
@@ -141,7 +140,7 @@ describe('Approve NFT Allowance E2E', () => {
       expect(nftInfo).toBeDefined();
       // @ts-ignore checked above
       expect(nftInfo.at(0).accountId?.toString()).toBe(recipient.accountId.toString());
-    }),
+    },
     180_000,
   );
 });

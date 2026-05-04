@@ -118,5 +118,9 @@ export const createTestnetProfile = (operator: TestAccount): TestProfile => {
       },
       usdToHbar,
     },
+
+    async dispose(): Promise<void> {
+      operatorClient.close();
+    },
   };
 };

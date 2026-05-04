@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@hashgraph/hedera-agent-kit';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -80,7 +79,7 @@ describe('Get Token Info Query E2E Tests', () => {
 
   it(
     'should return token info for a newly created fungible token',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get token information for ${tokenIdFT.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -122,12 +121,12 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.tokenInfo.treasury_account_id).toBe(
         executor.accountId.toString(),
       );
-    }),
+    },
   );
 
   it(
     'should return token info with formatted supply amounts',
-    itWithRetry(async () => {
+    async () => {
       const input = `Show me details for token ${tokenIdFT.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -158,12 +157,12 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.tokenInfo.supply_type?.toUpperCase()).toBe(
         FT_PARAMS.supplyType.toString().toUpperCase(),
       );
-    }),
+    },
   );
 
   it(
     'should fail gracefully for non-existent token',
-    itWithRetry(async () => {
+    async () => {
       const fakeTokenId = '0.0.999999999';
 
       const input = `Get token info for ${fakeTokenId}`;
@@ -180,12 +179,12 @@ describe('Get Token Info Query E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to get token info');
       expect(parsedResponse[0].parsedData.raw.error).toBeDefined();
-    }),
+    },
   );
 
   it(
     'should handle tokens with different key configurations',
-    itWithRetry(async () => {
+    async () => {
       const input = `Query information for token ${tokenIdNFT.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -221,6 +220,6 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.tokenInfo.max_supply).toBe(
         String(NFT_PARAMS.maxSupply),
       );
-    }),
+    },
   );
 });

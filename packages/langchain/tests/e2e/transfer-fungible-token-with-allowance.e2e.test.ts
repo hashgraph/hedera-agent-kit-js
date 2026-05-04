@@ -13,7 +13,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { ReactAgent } from 'langchain';
@@ -182,7 +181,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
 
   it(
     'should schedule allowing spender to transfer tokens to themselves using allowance',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -197,7 +196,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
         'Scheduled allowance transfer created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 
   it('should fail gracefully when trying to transfer more than allowance', async () => {

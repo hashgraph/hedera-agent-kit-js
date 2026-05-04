@@ -6,7 +6,6 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -47,7 +46,7 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
   it(
     'should update memo of a pre-created account via agent',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -62,12 +61,12 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
       const info = await executionWrapper.getAccountInfo(targetAccount.toString());
       expect(info.accountMemo).toBe('updated via agent');
-    }),
+    },
   );
 
   it(
     'should update maxAutomaticTokenAssociations via agent',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -82,12 +81,12 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
       const info = await executionWrapper.getAccountInfo(targetAccount.toString());
       expect(info.maxAutomaticTokenAssociations.toNumber()).toBe(10);
-    }),
+    },
   );
 
   it(
     'should update declineStakingReward flag via agent',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -102,12 +101,12 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
 
       const info = await executionWrapper.getAccountInfo(targetAccount.toString());
       expect(info.stakingInfo?.declineStakingReward).toBeTruthy();
-    }),
+    },
   );
 
   it(
     'should schedule account update',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -122,12 +121,12 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
         'Scheduled account update created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'should fail to update a non-existent account',
-    itWithRetry(async () => {
+    async () => {
       const fakeAccountId = '0.0.999999999';
       const updateResult = await agent.invoke({
         messages: [
@@ -142,6 +141,6 @@ describe('Update Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
       );
-    }),
+    },
   );
 });

@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client, TransactionId } from '@hiero-ledger/sdk';
@@ -59,7 +58,7 @@ describe('Get Transaction Record E2E Tests', () => {
 
   it(
     'fetches transaction record - SDK transactionId notation',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
       const result = await agent.invoke({
         messages: [
@@ -75,12 +74,12 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         `Transaction Details for ${txIdMirrorNodeStyle}`,
       );
-    }),
+    },
   );
 
   it(
     'fetches transaction record - Mirror Node transactionId notation',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
       const result = await agent.invoke({
         messages: [
@@ -96,12 +95,12 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         `Transaction Details for ${txIdMirrorNodeStyle}`,
       );
-    }),
+    },
   );
 
   it(
     'handles non-existent transaction ID',
-    itWithRetry(async () => {
+    async () => {
       const invalidTxId = '0.0.1-1756968265-043000618';
       const input = `Get the transaction record for transaction ${invalidTxId}`;
 
@@ -122,12 +121,12 @@ describe('Get Transaction Record E2E Tests', () => {
         'Failed to get transaction record',
       );
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Not Found');
-    }),
+    },
   );
 
   it(
     'handles invalid transaction ID format',
-    itWithRetry(async () => {
+    async () => {
       const invalidTxId = 'invalid-tx-id';
       const input = `Get the transaction record for transaction ${invalidTxId}`;
 
@@ -149,6 +148,6 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to get transaction record',
       );
-    }),
+    },
   );
 });

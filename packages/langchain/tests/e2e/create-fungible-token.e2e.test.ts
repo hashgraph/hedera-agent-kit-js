@@ -5,7 +5,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { Client, TokenId } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
@@ -41,7 +40,7 @@ describe('Create Fungible Token E2E Tests', () => {
 
   it(
     'creates a fungible token with minimal params via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Create a fungible token named MyToken with symbol MTK`;
 
       const result = await agent.invoke({
@@ -69,12 +68,12 @@ describe('Create Fungible Token E2E Tests', () => {
       expect(tokenInfo.name).toBe('MyToken');
       expect(tokenInfo.symbol).toBe('MTK');
       expect(tokenInfo.decimals).toBe(0);
-    }),
+    },
   );
 
   it(
     'creates a fungible token with supply, decimals, and finite supply type',
-    itWithRetry(async () => {
+    async () => {
       const input =
         'Create a fungible token GoldCoin with symbol GLD, initial supply 1000, decimals 2, finite supply with max supply 5000';
 
@@ -103,12 +102,12 @@ describe('Create Fungible Token E2E Tests', () => {
       expect(tokenInfo.decimals).toBe(2);
       expect(tokenInfo.totalSupply.toInt()).toBeGreaterThan(0);
       expect(tokenInfo.maxSupply?.toInt()).toBe(500000); // accounts for 2 decimals
-    }),
+    },
   );
 
   it(
     'should schedule creation of a FT successfully',
-    itWithRetry(async () => {
+    async () => {
       const input = `Create a fungible token named MyToken with symbol MTK. Schedule the transaction instead of executing it immediately.`;
 
       const result = await agent.invoke({
@@ -127,6 +126,6 @@ describe('Create Fungible Token E2E Tests', () => {
         'Scheduled transaction created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 });

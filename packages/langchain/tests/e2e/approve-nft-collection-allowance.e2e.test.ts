@@ -17,7 +17,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -102,7 +101,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
 
   it(
     'approves allowance for all serials and transfers a newly minted serial',
-    itWithRetry(async () => {
+    async () => {
       // Approve for all serials
       const input = `Approve NFT allowance for all serials of token ${nftTokenId} from ${owner.accountId.toString()} to ${spender.accountId.toString()}`;
 
@@ -151,7 +150,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       expect(info).toBeDefined();
       // @ts-ignore validated existence above
       expect(info.at(0).accountId?.toString()).toBe(recipient.accountId.toString());
-    }),
+    },
     180_000,
   );
 });

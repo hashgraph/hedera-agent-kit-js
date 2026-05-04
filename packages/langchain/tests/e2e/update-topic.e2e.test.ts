@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -53,7 +52,7 @@ describe('Update Topic E2E Tests', () => {
 
   it(
     'should change topic keys using passed values',
-    itWithRetry(async () => {
+    async () => {
       const newSubmitKey = PrivateKey.generateED25519().publicKey.toString();
 
       await agent.invoke({
@@ -70,12 +69,12 @@ describe('Update Topic E2E Tests', () => {
         executor.privateKey.publicKey.toString(),
       );
       expect((topicDetails.submitKey as PublicKey).toString()).toBe(newSubmitKey);
-    }),
+    },
   );
 
   it(
     'should change topic keys using default values (my key)',
-    itWithRetry(async () => {
+    async () => {
       await agent.invoke({
         messages: [
           {
@@ -91,12 +90,12 @@ describe('Update Topic E2E Tests', () => {
         executor.privateKey.publicKey.toStringDer(),
       );
       expect(topicDetails.topicMemo).toBe('just updated');
-    }),
+    },
   );
 
   it(
     'should fail due to topic being originally created without submitKey',
-    itWithRetry(async () => {
+    async () => {
       // Create a topic without a submitKey
       const createTopicWithoutSubmitResp = await executorWrapper.createTopic({
         autoRenewAccountId: executor.accountId.toString(),
@@ -126,12 +125,12 @@ describe('Update Topic E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.error).toContain(
         'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
       );
-    }),
+    },
   );
 
   it(
     'should update autoRenewAccountId',
-    itWithRetry(async () => {
+    async () => {
       // To set some account as the auto-renew account, it must have the same public key as the operator of the agent
       const secondaryAccountId = await executorWrapper
         .createAccount({ key: executor.privateKey.publicKey, initialBalance: 0 })
@@ -149,12 +148,12 @@ describe('Update Topic E2E Tests', () => {
       const topicDetails = await executorWrapper.getTopicInfo(topicId.toString());
 
       expect(topicDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
-    }),
+    },
   );
 
   it(
     'should reject updates by an unauthorized operator',
-    itWithRetry(async () => {
+    async () => {
       const secondary = await profile.accounts.acquire({ tier: 'STANDARD' });
       const { client: secondaryClient, wrapper: secondaryWrapper } =
         profile.client.connectAs(secondary);
@@ -191,6 +190,6 @@ describe('Update Topic E2E Tests', () => {
 
       await profile.accounts.release(secondary);
       secondaryClient.close();
-    }),
+    },
   );
 });

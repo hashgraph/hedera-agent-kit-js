@@ -6,7 +6,6 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import {
@@ -41,7 +40,7 @@ describe('Schedule Delete E2E Tests', () => {
 
   it(
     'deletes a scheduled transaction by admin',
-    itWithRetry(async () => {
+    async () => {
       const transferAmount = 0.05;
       const operatorClient = profile.client.connectAs(profile.operator).client;
       const operatorWrapper = new HederaOperationsWrapper(operatorClient);
@@ -77,6 +76,6 @@ describe('Schedule Delete E2E Tests', () => {
       expect(result.raw.status).toBe('SUCCESS');
 
       operatorClient.close();
-    }),
+    },
   );
 });

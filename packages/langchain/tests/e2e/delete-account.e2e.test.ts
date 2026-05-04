@@ -6,7 +6,6 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -47,7 +46,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
 
   it(
     'deletes a pre-created account via agent (default transfer to operator)',
-    itWithRetry(async () => {
+    async () => {
       const resp = await createTestAccount();
       const targetAccountId = resp.accountId!.toString();
 
@@ -64,12 +63,12 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
 
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-    }),
+    },
   );
 
   it(
     'should delete second pre-created account via agent (explicit transfer account)',
-    itWithRetry(async () => {
+    async () => {
       const resp = await createTestAccount();
       const targetAccountId = resp.accountId!.toString();
 
@@ -86,12 +85,12 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
 
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-    }),
+    },
   );
 
   it(
     'should fail to delete a non-existent account',
-    itWithRetry(async () => {
+    async () => {
       const fakeAccountId = '0.0.999999999';
 
       const deleteResult = await agent.invoke({
@@ -107,12 +106,12 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
       );
-    }),
+    },
   );
 
   it(
     'should handle natural language variations',
-    itWithRetry(async () => {
+    async () => {
       const resp = await createTestAccount(5);
       const targetAccountId = resp.accountId!.toString();
 
@@ -137,6 +136,6 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
       expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy();
-    }),
+    },
   );
 });

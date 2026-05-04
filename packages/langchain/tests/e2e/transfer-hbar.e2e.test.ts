@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   verifyHbarBalanceChange,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
@@ -53,7 +52,7 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
 
   it(
     'should transfer HBAR to a recipient',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
         recipient.accountId.toString(),
       );
@@ -75,14 +74,12 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
         amountToTransfer,
         executorWrapper,
       );
-      const balanceAfter = await executorWrapper.getAccountHbarBalance(recipient.accountId.toString());
-      expect(balanceAfter.toNumber()).toBeGreaterThan(balanceBefore.toNumber());
-    }),
+    },
   );
 
   it(
     'should transfer HBAR with memo',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
         recipient.accountId.toString(),
       );
@@ -106,12 +103,12 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
         amountToTransfer,
         executorWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should handle very small amount (1 tinybar)',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
         recipient.accountId.toString(),
       );
@@ -134,12 +131,12 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
         amountToTransfer,
         executorWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should handle long memo strings',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
         recipient.accountId.toString(),
       );
@@ -163,12 +160,12 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
         amountToTransfer,
         executorWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should schedule an HBAR transfer',
-    itWithRetry(async () => {
+    async () => {
       const amountToTransfer = 0.2;
       const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()}. Schedule the transaction instead of executing it immediately.`;
       const updateResult = await agent.invoke({
@@ -185,6 +182,6 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
         'Scheduled HBAR transfer created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 });

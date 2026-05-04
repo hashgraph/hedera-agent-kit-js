@@ -6,7 +6,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client } from '@hiero-ledger/sdk';
@@ -64,7 +63,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
 
   it(
     'mints ERC721 token to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}`;
 
       const result = await agent.invoke({
@@ -80,12 +79,12 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'mints token to default (context) account when toAddress missing',
-    itWithRetry(async () => {
+    async () => {
       const input = `Mint ERC721 token ${testTokenAddress}`;
 
       const result = await agent.invoke({
@@ -102,12 +101,12 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
-    }),
+    },
   );
 
   it.skip(
     'handles various natural language variations for minting',
-    itWithRetry(async () => {
+    async () => {
       const variations = [
         `Mint NFT (ERC-721) from ${testTokenAddress} to ${recipientAccountId}`,
         `Create EVM compatible NFT from contract ${testTokenAddress} to ${recipientAccountId}`,
@@ -129,12 +128,12 @@ describe('Mint ERC721 Token E2E Tests', () => {
         expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
         expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
       }
-    }),
+    },
   );
 
   it(
     'schedules minting ERC721 token to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Mint ERC721 token from contract: ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
 
       const result = await agent.invoke({
@@ -154,6 +153,6 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Scheduled minting of ERC721 successfully.',
       );
-    }),
+    },
   );
 });

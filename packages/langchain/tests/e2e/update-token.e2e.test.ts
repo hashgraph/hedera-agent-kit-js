@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -63,7 +62,7 @@ describe('Get Token Info Query E2E Tests', () => {
 
   it(
     'should change token keys using passed values',
-    itWithRetry(async () => {
+    async () => {
       const newSupplyKey = PrivateKey.generateED25519().publicKey.toString();
       const newAdminKey = executor.privateKey.publicKey.toString();
       await agent.invoke({
@@ -79,12 +78,12 @@ describe('Get Token Info Query E2E Tests', () => {
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
       expect((tokenDetails.adminKey as PublicKey).toString()).toBe(newAdminKey);
       expect((tokenDetails.supplyKey as PublicKey).toString()).toBe(newSupplyKey);
-    }),
+    },
   );
 
   it(
     'should change token keys using default values',
-    itWithRetry(async () => {
+    async () => {
       await agent.invoke({
         messages: [
           {
@@ -100,12 +99,12 @@ describe('Get Token Info Query E2E Tests', () => {
         executor.privateKey.publicKey.toStringDer(),
       );
       expect(tokenDetails.tokenMemo).toBe('just updated');
-    }),
+    },
   );
 
   it(
     'should fail due to token being originally created without KYC key',
-    itWithRetry(async () => {
+    async () => {
       const queryResult = await agent.invoke({
         messages: [
           {
@@ -124,12 +123,12 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.error).toContain(
         'Failed to update token: Cannot update kycKey: token was created without a kycKey',
       );
-    }),
+    },
   );
 
   it(
     'should update metadata and token memo',
-    itWithRetry(async () => {
+    async () => {
       const metadataString = 'hello-world';
 
       await agent.invoke({
@@ -147,7 +146,7 @@ describe('Get Token Info Query E2E Tests', () => {
       // metadata comes back as a base64 string in the mirror node
       const decoded = Buffer.from(tokenDetails.metadata as Uint8Array).toString('utf8');
       expect(decoded).toBe(metadataString);
-    }),
+    },
   );
 
   // to set some account as the auto-renew account,
@@ -155,7 +154,7 @@ describe('Get Token Info Query E2E Tests', () => {
   // so in this case we create a new account with a public key of an executor account
   it(
     'should update autoRenewAccountId',
-    itWithRetry(async () => {
+    async () => {
       const secondaryAccountId = await executorWrapper
         .createAccount({
           key: executor.privateKey.publicKey,
@@ -174,12 +173,12 @@ describe('Get Token Info Query E2E Tests', () => {
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
 
       expect(tokenDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
-    }),
+    },
   );
 
   it(
     'should reject updates by an unauthorized operator',
-    itWithRetry(async () => {
+    async () => {
       const secondary = await profile.accounts.acquire({ tier: 'STANDARD' });
       const { client: secondaryClient, wrapper: secondaryWrapper } =
         profile.client.connectAs(secondary);
@@ -214,6 +213,6 @@ describe('Get Token Info Query E2E Tests', () => {
 
       await profile.accounts.release(secondary);
       secondaryClient.close();
-    }),
+    },
   );
 });

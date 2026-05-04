@@ -13,7 +13,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -64,7 +63,7 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
 
   it(
     'should mint a single NFT successfully',
-    itWithRetry(async () => {
+    async () => {
       const supplyBefore = await executorWrapper
         .getTokenInfo(nftTokenId.toString())
         .then(info => info.totalSupply.toInt());
@@ -87,12 +86,12 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully minted.');
       expect(supplyAfter).toBe(supplyBefore + 1);
-    }),
+    },
   );
 
   it(
     'should mint multiple NFTs successfully',
-    itWithRetry(async () => {
+    async () => {
       const uris = ['ipfs://meta2.json', 'ipfs://meta3.json', 'ipfs://meta4.json'];
       const supplyBefore = await executorWrapper
         .getTokenInfo(nftTokenId.toString())
@@ -118,12 +117,12 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully minted.');
       expect(supplyAfter).toBe(supplyBefore + uris.length);
-    }),
+    },
   );
 
   it(
     'should schedule minting a single NFT successfully',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -138,12 +137,12 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         'Scheduled mint transaction created successfully',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'should fail gracefully for a non-existent NFT token',
-    itWithRetry(async () => {
+    async () => {
       const fakeTokenId = '0.0.999999999';
 
       const queryResult = await agent.invoke({
@@ -158,6 +157,6 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
       expect(parsedResponse[0].parsedData.humanMessage).toMatch(/INVALID_TOKEN_ID|Failed to mint/i);
-    }),
+    },
   );
 });

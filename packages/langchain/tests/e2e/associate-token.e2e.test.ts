@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 
@@ -56,7 +55,7 @@ describe('Associate Token E2E Tests', () => {
 
   it(
     'should associate token successfully via agent',
-    itWithRetry(async () => {
+    async () => {
       const createTokenResp = await tokenExecutorWrapper.createFungibleToken({
         ...FT_PARAMS,
         supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
@@ -85,12 +84,12 @@ describe('Associate Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully associated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(associated).toBe(true);
-    }),
+    },
   );
 
   it(
     'should associate two tokens successfully via agent',
-    itWithRetry(async () => {
+    async () => {
       const createToken1Resp = await tokenExecutorWrapper.createFungibleToken({
         ...FT_PARAMS,
         supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
@@ -137,6 +136,6 @@ describe('Associate Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(associatedFirst).toBe(true);
       expect(associatedSecond).toBe(true);
-    }),
+    },
   );
 });

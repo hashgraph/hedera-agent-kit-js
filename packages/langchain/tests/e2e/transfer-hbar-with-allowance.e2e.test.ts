@@ -7,7 +7,6 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   verifyHbarBalanceChange,
-  itWithRetry,
 } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer HBAR With Allowance E2E Tests', () => {
@@ -77,7 +76,7 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
 
   it(
     'should transfer HBAR using allowance',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await ownerWrapper.getAccountHbarBalance(recipient.accountId.toString());
       const amountToTransfer = 0.2;
 
@@ -97,12 +96,12 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
         amountToTransfer,
         ownerWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should transfer HBAR with allowance and memo',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await ownerWrapper.getAccountHbarBalance(recipient.accountId.toString());
       const amountToTransfer = 0.1;
       const memo = 'Allowance-based HBAR transfer test';
@@ -123,12 +122,12 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
         amountToTransfer,
         ownerWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should handle small amounts via allowance (1 tinybar)',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await ownerWrapper.getAccountHbarBalance(recipient.accountId.toString());
       const amountToTransfer = 0.00000001;
 
@@ -148,12 +147,12 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
         amountToTransfer,
         ownerWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should handle long memo with allowance',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await ownerWrapper.getAccountHbarBalance(recipient.accountId.toString());
       const longMemo = 'A'.repeat(90);
       const amountToTransfer = 0.05;
@@ -174,12 +173,12 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
         amountToTransfer,
         ownerWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should support multiple recipients with allowance',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore1 = await ownerWrapper.getAccountHbarBalance(recipient.accountId.toString());
       const balanceBefore2 = await ownerWrapper.getAccountHbarBalance(
         recipient2.accountId.toString(),
@@ -207,6 +206,6 @@ describe('Transfer HBAR With Allowance E2E Tests', () => {
         0.05,
         ownerWrapper,
       );
-    }),
+    },
   );
 });
