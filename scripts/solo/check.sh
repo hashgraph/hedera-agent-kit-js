@@ -14,6 +14,8 @@ mirror_rest_marker="·"
 mirror_rest_detail="not probed yet"
 relay_marker="·"
 relay_detail="not probed yet"
+relay_exec_marker="·"
+relay_exec_detail="not probed yet"
 
 probe_mirror_rest() {
   local err
@@ -52,19 +54,70 @@ probe_relay() {
   return 0
 }
 
+# Probes the relay's contract-execution path (same code path used by
+# `eth_estimateGas`, `eth_call`, and contract deploys). The probe asks the relay to
+# estimate gas for an arbitrary call — we don't care about the result; we only care
+# that the relay can talk to its downstream services. A well-formed JSON-RPC response
+# (including a domain error like INVALID_CONTRACT_ID) proves the relay's pipeline is
+# alive. A downstream 503 ("Request failed with status code 503", "Service Unavailable",
+# or HTTP failure) means simulation is still warming up — that's the case the deploy
+# script used to hit, and the case this gate now waits out.
+probe_relay_execution() {
+  local body
+  body=$(curl --silent --max-time 5 -X POST -H 'Content-Type: application/json' \
+    --data '{"jsonrpc":"2.0","id":1,"method":"eth_estimateGas","params":[{"to":"0x0000000000000000000000000000000000000002","value":"0x1"}]}' \
+    "${JSON_RPC_RELAY_URL}" 2>/dev/null) || {
+    relay_exec_marker="✗"
+    relay_exec_detail="no response"
+    return 1
+  }
+  # Look for downstream-service failure markers in the response body.
+  if printf '%s' "$body" | grep -qE 'status code 5[0-9]{2}|Service Unavailable|ECONNREFUSED'; then
+    relay_exec_marker="✗"
+    relay_exec_detail="downstream not ready: $(printf '%s' "$body" | jq -c '.error // .' 2>/dev/null || printf '%s' "$body")"
+    return 1
+  fi
+  # Any other well-formed JSON-RPC response (success OR a clean domain error) means
+  # the relay's execution path is alive.
+  if printf '%s' "$body" | jq -e '.result // .error' >/dev/null 2>&1; then
+    relay_exec_marker="✓"
+    relay_exec_detail="ready"
+    return 0
+  fi
+  relay_exec_marker="✗"
+  relay_exec_detail="malformed response: ${body}"
+  return 1
+}
+
 print_endpoints() {
+  # Combine the relay's two probe results into one row with a comma-separated detail list.
+  local relay_combined_marker="✓"
+  if [[ "$relay_marker" == "✗" || "$relay_exec_marker" == "✗" ]]; then
+    relay_combined_marker="✗"
+  elif [[ "$relay_marker" == "·" || "$relay_exec_marker" == "·" ]]; then
+    relay_combined_marker="·"
+  fi
   echo "  · Consensus node (gRPC) : ${CONSENSUS_NODE_ENDPOINT} (${CONSENSUS_NODE_ACCOUNT_ID})  (not probed)"
   echo "  · Mirror node    (gRPC) : ${MIRROR_NODE_ENDPOINT}  (not probed)"
   echo "  ${mirror_rest_marker} Mirror node    (REST) : ${MIRROR_NODE_REST_URL}  (${mirror_rest_detail})"
-  echo "  ${relay_marker} JSON-RPC Relay        : ${JSON_RPC_RELAY_URL}  (${relay_detail})"
+  echo "  ${relay_combined_marker} JSON-RPC Relay        : ${JSON_RPC_RELAY_URL}  (eth_blockNumber: ${relay_detail}, eth_estimateGas: ${relay_exec_detail})"
 }
 
 for ((attempt=1; attempt<=ATTEMPTS; attempt++)); do
   mirror_ok=true
   relay_ok=true
+  relay_exec_ok=true
   probe_mirror_rest || mirror_ok=false
   probe_relay || relay_ok=false
-  if $mirror_ok && $relay_ok; then
+  # Only probe execution once the basic relay handshake is up — saves noise on cold start.
+  if $relay_ok; then
+    probe_relay_execution || relay_exec_ok=false
+  else
+    relay_exec_marker="·"
+    relay_exec_detail="skipped (relay not ready)"
+    relay_exec_ok=false
+  fi
+  if $mirror_ok && $relay_ok && $relay_exec_ok; then
     echo "Solo endpoints ready:"
     print_endpoints
     exit 0
