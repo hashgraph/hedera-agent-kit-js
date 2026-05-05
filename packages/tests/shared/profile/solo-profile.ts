@@ -4,7 +4,7 @@ import HederaOperationsWrapper from '../hedera-operations/HederaOperationsWrappe
 import { CONSENSUS_NODE_ACCOUNT_ID, CONSENSUS_NODE_ENDPOINT, MIRROR_NODE_ENDPOINT } from '../setup/constants';
 import { waitForMirrorTx } from '../retry-util';
 
-const SOLO_USD_PER_HBAR = 0.05;
+const SOLO_USD_PER_HBAR = 0.12;
 const SOLO_TIER_USD: Record<Tier, number> = {
   MINIMAL: 5,    // 10× testnet's $0.50; cheap on Solo, gives tests room to breathe
   STANDARD: 50,  // 10× testnet's $5

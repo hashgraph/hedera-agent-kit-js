@@ -42,7 +42,7 @@ Implement a **dynamic funding system** that:
 The active `TestProfile` (selected from `HEDERA_NETWORK`) owns the conversion strategy:
 
 - **Testnet**: fetches the live HBAR/USD rate from the Hedera Mirror Node at session start, caches it.
-- **Solo**: uses a fixed `$0.05/HBAR` constant. No mirror call.
+- **Solo**: uses a fixed `$0.12/HBAR` constant matching Solo's genesis exchange-rate file. No mirror call.
 
 Both profiles expose the same interface:
 - `profile.balance.fund(tier)` - HBAR amount for a named tier (the common path)
@@ -160,7 +160,7 @@ const r = resp.current_rate;
 return r.cent_equivalent / r.hbar_equivalent / 100;  // USD per HBAR
 ```
 
-The Solo profile uses a fixed `$0.05/HBAR` constant - no mirror call, no live rate dependency on the local network.
+The Solo profile uses a fixed `$0.12/HBAR` constant matching Solo's genesis exchange-rate file - no mirror call, no live rate dependency on the local network.
 
 ### **3.3 Conversion Method**
 
