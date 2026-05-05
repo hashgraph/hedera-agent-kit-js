@@ -42,44 +42,10 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ---
 
 ### Third Party Plugins
-The Hedera Agent Kit is extensible with third party plugins by other projects. See how you can build and submit your own plugin to listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/hedera-agent-kit-js/plugins) and README in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md) 
+The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
-- [Memejob Plugin](https://www.npmjs.com/package/@buidlerlabs/hak-memejob-plugin) provides a streamlined interface to the [**memejob**](https://memejob.fun/) protocol, exposing the core actions (`create`, `buy`, `sell`) for interacting with meme tokens on Hedera:
+## [Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)
 
-  Github repository: https://github.com/buidler-labs/hak-memejob-plugin
-
-- [Bonzo Plugin](https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin) is a unified SDK to the [**Bonzo**](https://bonzo.finance) protocol, exposing the core actions (`deposit`, `withdraw`, `repay`, `borrow`) for decentralised lending and borrowing on Hedera:
-
-  Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
-
-
-- [SaucerSwap Plugin](https://www.npmjs.com/package/saucer-swap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`get_swap_quote_v2_tool`, `swap_v2_tool`) for executing swaps and obtaining swap quotes.
-
-  NPM: https://www.npmjs.com/package/saucer-swap-plugin
-
-  Source: https://github.com/saucerswaplabs/hedera-agent-kit-saucer-swap-plugin
-
-  Tested/endorsed version: saucer-swap-plugin@0.2.0 (migrated to HAK V4)
-
-
-- [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
-
-  Github repository: [https://github.com/jmgomezl/hak-pyth-plugin](https://github.com/jmgomezl/hak-pyth-plugin).
-  Tested/endorsed version of plugin: hak-pyth-plugin@0.1.1
-
-- [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
-
-  Github repository: [https://github.com/henrytongv/coincap-hedera-plugin](https://github.com/henrytongv/coincap-hedera-plugin). Tested/endorsed version of plugin: coincap-hedera-plugin@1.0.4
-
-- [Chainlink price feed Plugin](https://www.npmjs.com/package/chainlink-pricefeed-plugin) provides access to the [**Chainlink price feeds**](https://docs.chain.link/data-feeds/price-feeds) to get data aggregated from many data sources. It exposes the action (`get price feed`) that allows you to get the current price for ETH, BTC, HBAR, LINK, USDC, UST or DAI.
-
-  Github repository: [https://github.com/henrytongv/chainlink-price-plugin-js](https://github.com/henrytongv/chainlink-price-plugin-js). Tested/endorsed version of plugin: chainlink-pricefeed-plugin@1.0.4
-
-- [Hedera T3N Plugin](https://www.npmjs.com/package/@terminal3/hedera-t3n-plugin) provides access to [Terminal 3 Network (T3N)](https://docs.terminal3.io/t3n/) to enable identity verification, authentication, and last mile-delivery or selective disclosure of private and sensitive information for AI-driven applications, ensuring compliant and auditable interactions.
-
-  Github repository: [https://github.com/Terminal-3/hedera-t3n-plugin](https://github.com/Terminal-3/hedera-t3n-plugin)
-
-_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 ---
 
 ## Developer Examples
