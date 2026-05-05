@@ -12,7 +12,8 @@ yarn-error.log*
 **/*.env
 .env.local
 .env.development.local
-.env.test.local
+packages/core/.env.test.local
+*/.env.test.local
 .env.production.local
 
 # Build outputs
@@ -66,4 +67,4 @@ tmp/
 temp/
 
 # coverage report
-typescript/coverage/
+coverage/

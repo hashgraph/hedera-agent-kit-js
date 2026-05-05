@@ -1,0 +1,22 @@
+{
+  "name": "@hashgraph/hedera-agent-kit-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared test utilities for Hedera Agent Kit.",
+  "main": "./shared/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:e2e": "echo 'E2E tests moved to packages/langchain'"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@hashgraph/hedera-agent-kit": "workspace:*",
+    "@hiero-ledger/sdk": "2.81.0",
+    "bignumber.js": "9.3.1",
+    "typescript": "5.8.3",
+    "vitest": "4.0.16",
+    "zod": "3.25.76"
+  }
+}

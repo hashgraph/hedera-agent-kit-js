@@ -1,0 +1,333 @@
+name: "000: [USER] Release"
+
+# The run-name (the title shown in the runs list, the dispatch button, and PR
+# checks) makes the mode unmissable: every run is labelled either [DRY RUN] or
+# [LIVE]. Push-trigger runs are always [LIVE] because the push event can't
+# carry a dry-run input.
+run-name: >-
+  Release
+  ${{ inputs.dry-run-enabled && '[DRY RUN]' || '[LIVE]' }}
+  ${{ inputs.tag || github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      dry-run-enabled:
+        description: 'Dry run (no actual publish to npm)'
+        type: boolean
+        required: false
+        default: false
+      tag:
+        description: 'Existing tag to publish (e.g. v4.1.0). Leave empty for a subpackage-only release.'
+        type: string
+        required: false
+        default: ''
+
+# One release at a time per ref. Do not cancel in-progress runs — we never
+# want a half-published set.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  NODE_VERSION: '22'
+  NPM_VERSION: '11.11.0'
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # 1. Prepare release
+  #    Two distinct steps: first validate the release request (yes/no, no
+  #    output), then prepare the publish matrix the rest of the workflow
+  #    consumes. The split keeps each script focused on one job.
+  # ----------------------------------------------------------------------------
+  prepare-release:
+    name: Prepare release
+    runs-on: hedera-agent-linux-medium
+    outputs:
+      publishMatrix: ${{ steps.prepare.outputs.publishMatrix }}
+      hasPublishWork: ${{ steps.prepare.outputs.hasPublishWork }}
+      tag: ${{ steps.prepare.outputs.tag }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      # Surfaces the run mode as a colored annotation at the top of the run
+      # page in the GitHub UI. The run-name on the workflow already carries
+      # the same label in the runs list, but this banner is what reviewers see
+      # the moment they open the run.
+      - name: Announce release mode
+        run: |
+          if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+            echo "::notice title=DRY RUN::This is a dry run. Nothing will be published to npm and no GitHub Release will be created."
+          else
+            echo "::warning title=LIVE RELEASE::This is a LIVE release. Packages WILL be published to the public npm registry."
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve effective tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "value=${GITHUB_REF_NAME}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "value=${{ inputs.tag }}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      # Pure pass/fail. Checks every package's semver, validates the tag
+      # against packages/core, and refuses subpackage-only mode if core needs
+      # publishing. No JSON, no matrix.
+      - name: Validate release request
+        run: |
+          ARGS=()
+          if [[ -n "${{ steps.tag.outputs.value }}" ]]; then
+            ARGS+=(--tag "${{ steps.tag.outputs.value }}")
+          fi
+          node scripts/release/validate.js "${ARGS[@]}"
+
+      # Builds the publish matrix the rest of the workflow consumes. Trusts
+      # the previous step has already validated everything.
+      #
+      # Calls prepare.js twice on purpose:
+      #   1. Without --json: prints the human-readable table to the run log
+      #      so reviewers can see at a glance which packages will be released.
+      #   2. With --json: captures the matrix and slices it into workflow
+      #      outputs with jq.
+      - name: Prepare release plan
+        id: prepare
+        run: |
+          ARGS=()
+          if [[ -n "${{ steps.tag.outputs.value }}" ]]; then
+            ARGS+=(--tag "${{ steps.tag.outputs.value }}")
+          fi
+          if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+            ARGS+=(--dry-run)
+          fi
+
+          # 1. Human-readable table — echoed to the run log AND the run
+          #    Summary page (GITHUB_STEP_SUMMARY), so reviewers see the plan
+          #    at the top of the run without opening the logs. In dry-run mode
+          #    a banner is prepended so no one mistakes the plan for a live run.
+          TABLE=$(node scripts/release/prepare.js "${ARGS[@]}")
+          echo "${TABLE}"
+          {
+            echo "#### Release plan"
+            if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+              echo "> **[!] DRY RUN** - no packages will be published to npm. This is a simulation."
+              echo ""
+            fi
+            echo '```text'
+            echo "${TABLE}"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          # 2. JSON for the workflow outputs.
+          PLAN=$(node scripts/release/prepare.js "${ARGS[@]}" --json)
+          {
+            echo "publishMatrix=$(echo "${PLAN}" | jq -c '{include: .publishMatrix}')"
+            echo "hasPublishWork=$(echo "${PLAN}" | jq -r '.hasPublishWork')"
+            echo "tag=$(echo "${PLAN}" | jq -r '.tag // ""')"
+          } >> "${GITHUB_OUTPUT}"
+
+  # ----------------------------------------------------------------------------
+  # 2. Safety checks
+  #    Build the entire monorepo. PR CI is the test gate; this job exists only
+  #    to confirm the repo at this ref still compiles cleanly.
+  # ----------------------------------------------------------------------------
+  safety-checks:
+    name: Safety checks
+    runs-on: hedera-agent-linux-medium
+    needs: [prepare-release]
+    if: needs.prepare-release.outputs.hasPublishWork == 'true'
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+  # ----------------------------------------------------------------------------
+  # 3. Build release packages
+  #    For every package in the publish matrix: build the monorepo, pnpm pack
+  #    that package, upload the resulting tarball as an artifact.
+  # ----------------------------------------------------------------------------
+  build-release-package:
+    name: Build ${{ matrix.name }}
+    runs-on: hedera-agent-linux-medium
+    needs: [prepare-release, safety-checks]
+    if: needs.prepare-release.outputs.hasPublishWork == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-release.outputs.publishMatrix) }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Pack ${{ matrix.name }}
+        working-directory: ${{ matrix.dir }}
+        run: pnpm pack
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ${{ matrix.artifactName }}
+          path: ${{ matrix.dir }}/${{ matrix.tarball }}
+          if-no-files-found: error
+          retention-days: 7
+
+  # ----------------------------------------------------------------------------
+  # 4. GitHub Release
+  #    Create a single GitHub Release at the tag with auto-generated notes.
+  #    Skipped on subpackage-only dispatches (no tag) and on dry-runs.
+  # ----------------------------------------------------------------------------
+  github-release:
+    name: GitHub release
+    runs-on: hedera-agent-linux-medium
+    needs: [prepare-release, build-release-package]
+    if: >-
+      needs.prepare-release.outputs.hasPublishWork == 'true'
+      && needs.prepare-release.outputs.tag != ''
+      && inputs.dry-run-enabled != true
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.prepare-release.outputs.tag }}
+
+      - name: Create GitHub Release
+        uses: step-security/release-action@03a57407052f15d1537fd5469a6fbbc536aba326 # v1.20.0
+        with:
+          tag: ${{ needs.prepare-release.outputs.tag }}
+          generateReleaseNotes: true
+          skipIfReleaseExists: true
+          draft: false
+
+  # ----------------------------------------------------------------------------
+  # 5. Publish
+  #    For every package in the publish matrix: download its tarball artifact
+  #    and run `npm publish <tarball>` with the right flags. The `release`
+  #    environment can be configured with manual approval if desired.
+  # ----------------------------------------------------------------------------
+  publish-release:
+    name: Publish ${{ matrix.name }}
+    # Runs on a GitHub-managed runner (not the self-hosted hedera-agent
+    # fleet) per CI team policy: this is the only job that touches the npm
+    # token, so it's isolated from shared self-hosted infrastructure.
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    needs:
+      - prepare-release
+      - build-release-package
+    if: needs.prepare-release.outputs.hasPublishWork == 'true'
+    strategy:
+      # Don't abort sibling publishes if one fails — partial publishes are
+      # recoverable on the next run (the npm registry check skips what's done).
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-release.outputs.publishMatrix) }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      # npm OIDC trusted publishing requires npm >= 11.5.1. Node 22 ships with
+      # npm 10.9.x, so upgrade the CLI before publishing.
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install --global npm@${{ env.NPM_VERSION }}
+
+      - name: Download tarball artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ matrix.artifactName }}
+          path: ${{ matrix.dir }}
+
+      - name: Publish ${{ matrix.name }}
+        working-directory: ${{ matrix.dir }}
+        # Authentication is OIDC trusted publishing (configured per package on npmjs.com).
+        # publishArgs is built by scripts/release/validate.js and already includes
+        # --access public, --no-git-checks, optional --dry-run, and optional --tag beta.
+        run: npm publish ${{ matrix.tarball }} ${{ matrix.publishArgs }}

@@ -1,0 +1,60 @@
+{
+    "name": "@hashgraph/hedera-agent-kit-adk",
+    "version": "1.0.0",
+    "description": "Google ADK integration for Hedera Agent Kit.",
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.mjs",
+    "types": "./dist/cjs/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/esm/index.d.mts",
+                "default": "./dist/esm/index.mjs"
+            },
+            "require": {
+                "types": "./dist/cjs/index.d.ts",
+                "default": "./dist/cjs/index.js"
+            }
+        }
+    },
+    "scripts": {
+        "build": "tsup",
+        "clean": "rm -rf dist",
+        "format": "pnpm format:check",
+        "format:check": "prettier --check \"src/**/*.{ts,tsx,js,json,md}\"",
+        "format:fix": "prettier --write \"src/**/*.{ts,tsx,js,json,md}\"",
+        "lint": "pnpm lint:check",
+        "lint:check": "eslint src/",
+        "lint:fix": "eslint src/ --fix",
+        "test": "vitest run"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "author": "Hashgraph",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/hashgraph/hedera-agent-kit-js.git",
+        "directory": "packages/adk"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "dist/**/*"
+    ],
+    "dependencies": {
+        "@hashgraph/hedera-agent-kit": "workspace:*",
+        "@google/adk": "0.6.1"
+    },
+    "peerDependencies": {
+        "@hiero-ledger/sdk": "^2.81.0"
+    },
+    "devDependencies": {
+        "@hiero-ledger/sdk": "2.81.0",
+        "tsup": "8.5.0",
+        "typescript": "5.8.3",
+        "vitest": "4.0.16"
+    }
+}

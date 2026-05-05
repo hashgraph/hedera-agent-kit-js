@@ -1,0 +1,35 @@
+{
+  "name": "@hashgraph/hedera-agent-kit-root",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "pnpm --filter @hashgraph/hedera-agent-kit build && pnpm --filter '!@hashgraph/hedera-agent-kit' -r build",
+    "clean": "pnpm -r clean",
+    "format": "pnpm -r format",
+    "format:check": "pnpm -r format:check",
+    "format:fix": "pnpm -r format:fix",
+    "lint": "pnpm -r lint",
+    "lint:check": "pnpm -r lint:check",
+    "lint:fix": "pnpm -r lint:fix",
+    "test": "pnpm -r test",
+    "test:unit": "pnpm -r test:unit",
+    "test:integration": "pnpm -r test:integration",
+    "test:e2e": "pnpm -r test:e2e",
+    "release:validate": "node scripts/release/validate.js",
+    "release:prepare": "node scripts/release/prepare.js"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "8.37.0",
+    "@typescript-eslint/parser": "8.37.0",
+    "dotenv": "17.2.1",
+    "eslint": "9.31.0",
+    "globals": "16.3.0",
+    "prettier": "3.6.2",
+    "semver": "7.7.2",
+    "typescript": "5.8.3",
+    "vitest": "4.0.16"
+  }
+}

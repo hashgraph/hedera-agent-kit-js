@@ -69,7 +69,7 @@ Make sure the name and email match the identity you’ve set in Git. GitHub Acti
 
 **Create a different Tool Calling Agent with another LLM**
 
-1. Using `typescript/examples/langchain/tool-calling-agent.ts` as a template, create a new file `typescript/examples/langchain/tool-calling-agent-anthropic.ts` and make the following changes:
+1. Using `examples/langchain-v1/plugin-tool-calling-agent.ts` as a template, create a new file `typescript/examples/langchain/tool-calling-agent-anthropic.ts` and make the following changes:
 
 ```js
   // Change import

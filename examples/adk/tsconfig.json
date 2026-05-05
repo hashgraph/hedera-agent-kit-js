@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "target": "ES2020",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+        "skipDefaultLibCheck": true,
+        "disableSizeLimit": true,
+        "noErrorTruncation": true,
+        "maxNodeModuleJsDepth": 2,
+        "verbatimModuleSyntax": false,
+        "types": [
+            "node"
+        ],
+        "strict": true,
+        "baseUrl": ".",
+        "paths": {
+            "@hiero-ledger/sdk": [
+                "../../packages/adk/node_modules/@hiero-ledger/sdk"
+            ],
+            "@hiero-ledger/sdk/*": [
+                "../../packages/adk/node_modules/@hiero-ledger/sdk/*"
+            ]
+        }
+    }
+}
