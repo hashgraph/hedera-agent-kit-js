@@ -38,12 +38,24 @@ body:
         - label: Other
     validations:
       required: true
+  
+   - type: checkboxes
+    id: feedback-applies-to
+    attributes:
+      label: What does this feedback apply to?
+      options:
+        - label: Hedera Agent Kit JS
+        - label: Hedera Agent Kit Python
+        - label: Feature Request
+        - label: Other
+    validations:
+      required: true
 
   - type: textarea
     id: expected-vs-actual
     attributes:
       label: What you expected vs what you experienced
-      description: Optional. If this is a bug or unexpected behavior, tell us what you expected and what happened instead. Otherwise, describe the feedback in your own words.
+      description: Optional. If this is a bug or unexpected behavior, tell us what you expected and what happened instead.
       placeholder: |
         Expected:
         Actual:
