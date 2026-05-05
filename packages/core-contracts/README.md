@@ -18,7 +18,7 @@ Internal Hardhat project for developing, testing, and deploying ERC20/ERC721 fac
 These contracts are **deployed once per Hedera network**. The SDK then calls them by address:
 
 1. Compiled ABIs are hardcoded in `../core/src/shared/constants/contracts.ts`
-2. Deployed addresses are stored in the same file
+2. Deployed addresses are passed in via the `HEDERA_ERC20_FACTORY_ADDRESS` / `HEDERA_ERC721_FACTORY_ADDRESS` env vars; testnet defaults are listed in the table below
 3. SDK tools (`create_erc20_tool`, `create_erc721_tool`) call the factories on-chain
 
 **End users never interact with this directory.** They use the SDK tools which call the pre-deployed contracts.
@@ -45,7 +45,7 @@ cp .env.example .env  # configure operator credentials
 npm run deploy:testnet
 ```
 
-After deploying, update the addresses and ABIs in `../core/src/shared/constants/contracts.ts`.
+After deploying, update the address row in the table above.
 
 For Solo/localnet testing, deploy factories against the local JSON-RPC relay and export the printed addresses:
 

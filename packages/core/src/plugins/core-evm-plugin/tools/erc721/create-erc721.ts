@@ -66,7 +66,7 @@ export class CreateErc721Tool extends BaseTool {
     context: Context,
     client: Client,
   ) {
-    const factoryAddress = getERC721FactoryAddress(client.ledgerId!);
+    const factoryAddress = getERC721FactoryAddress();
     return await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,
       factoryAddress,

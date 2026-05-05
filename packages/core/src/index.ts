@@ -42,8 +42,6 @@ export type { TransferHbarInput, TokenTransferMinimalParams } from './shared/hed
 
 // Constants
 export {
-  ERC20_FACTORY_ADDRESSES,
-  ERC721_FACTORY_ADDRESSES,
   ERC20_FACTORY_ABI,
   ERC721_FACTORY_ABI,
   ERC20_TRANSFER_FUNCTION_NAME,

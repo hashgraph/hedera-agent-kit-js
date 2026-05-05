@@ -94,3 +94,7 @@ Set `HEDERA_NETWORK=testnet` plus testnet credentials in `.env.test.local` and t
 TestProfile resolves to the testnet adapter. Slower (~5 to 10s per Hedera consensus
 round-trip vs sub-second on Solo) but useful for verifying behavior on a real
 network. No `solo:*` scripts needed in this mode.
+
+For ERC20/ERC721 tests on testnet, also set `HEDERA_ERC20_FACTORY_ADDRESS=0.0.6471814`
+and `HEDERA_ERC721_FACTORY_ADDRESS=0.0.6510666` (see `packages/core-contracts/README.md`
+for current deployments).

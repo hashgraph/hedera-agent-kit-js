@@ -26,6 +26,7 @@ vi.mock('@hiero-ledger/sdk', () => {
     TESTNET: { toString: () => 'testnet' },
     MAINNET: { toString: () => 'mainnet' },
     PREVIEWNET: { toString: () => 'previewnet' },
+    LOCAL_NODE: { toString: () => 'local-node' },
   };
 
   return {

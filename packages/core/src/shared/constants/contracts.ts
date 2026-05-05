@@ -1,57 +1,3 @@
-import { LedgerId } from '@hiero-ledger/sdk';
-
-const TESTNET_ERC20_FACTORY_ADDRESS = '0.0.6471814';
-const TESTNET_ERC721_FACTORY_ADDRESS = '0.0.6510666'; // TODO: Update with actual deployed address
-const LOCAL_NODE_LEDGER_ID = 'local-node';
-const LOCAL_ERC20_FACTORY_ADDRESS_ENV = 'HEDERA_ERC20_FACTORY_ADDRESS';
-const LOCAL_ERC721_FACTORY_ADDRESS_ENV = 'HEDERA_ERC721_FACTORY_ADDRESS';
-
-type Environment = {
-  process?: {
-    env?: Record<string, string | undefined>;
-  };
-};
-
-const getEnvironmentVariable = (name: string): string | undefined => {
-  return (globalThis as typeof globalThis & Environment).process?.env?.[name];
-};
-
-const getConfiguredFactoryAddress = (
-  ledgerId: LedgerId,
-  addresses: Map<string, string>,
-  localEnvironmentVariable: string,
-  factoryName: string,
-): string => {
-  if (ledgerId.toString() === LOCAL_NODE_LEDGER_ID) {
-    const localAddress = getEnvironmentVariable(localEnvironmentVariable);
-    if (localAddress) {
-      return localAddress;
-    }
-  }
-
-  const address = addresses.get(ledgerId.toString());
-  if (!address) {
-    const localMessage =
-      ledgerId.toString() === LOCAL_NODE_LEDGER_ID
-        ? `. Set ${localEnvironmentVariable} to a factory contract deployed on the Solo network.`
-        : '';
-    throw new Error(
-      `Network type ${ledgerId} not supported for ${factoryName} factory${localMessage}`,
-    );
-  }
-  return address;
-};
-
-// ERC20 Factory contract addresses for different networks
-export const ERC20_FACTORY_ADDRESSES: Map<string, string> = new Map([
-  [LedgerId.TESTNET.toString(), TESTNET_ERC20_FACTORY_ADDRESS], // Current testnet address
-]);
-
-// ERC721 Factory contract addresses for different networks
-export const ERC721_FACTORY_ADDRESSES: Map<string, string> = new Map([
-  [LedgerId.TESTNET.toString(), TESTNET_ERC721_FACTORY_ADDRESS], // Current testnet address
-]);
-
 // ERC20 Factory contract ABI
 export const ERC20_FACTORY_ABI = [
   'function deployToken(string memory name_, string memory symbol_, uint8 decimals_, uint256 initialSupply_) external returns (address)',
@@ -76,31 +22,29 @@ export const ERC721_MINT_FUNCTION_NAME = 'safeMint';
 export const ERC721_MINT_FUNCTION_ABI = ['function safeMint(address to) external returns (bool)'];
 
 /**
- * Get the ERC20 factory contract address for the specified network
- * @param ledgerId - The Hedera network ledger ID
- * @returns The factory contract address for the network
- * @throws Error if the network is not supported
+ * Get the ERC20 factory contract address from the HEDERA_ERC20_FACTORY_ADDRESS env var.
+ * @throws Error if the env var is not set
  */
-export function getERC20FactoryAddress(ledgerId: LedgerId): string {
-  return getConfiguredFactoryAddress(
-    ledgerId,
-    ERC20_FACTORY_ADDRESSES,
-    LOCAL_ERC20_FACTORY_ADDRESS_ENV,
-    'ERC20',
-  );
+export function getERC20FactoryAddress(): string {
+  const address = process.env.HEDERA_ERC20_FACTORY_ADDRESS;
+  if (!address) {
+    throw new Error(
+      'HEDERA_ERC20_FACTORY_ADDRESS is not set. See packages/core-contracts/README.md for the deployed testnet address, or run `pnpm test:solo:deploy:contracts` for Solo.',
+    );
+  }
+  return address;
 }
 
 /**
- * Get the ERC721 factory contract address for the specified network
- * @param ledgerId - The Hedera network ledger ID
- * @returns The factory contract address for the network
- * @throws Error if the network is not supported
+ * Get the ERC721 factory contract address from the HEDERA_ERC721_FACTORY_ADDRESS env var.
+ * @throws Error if the env var is not set
  */
-export function getERC721FactoryAddress(ledgerId: LedgerId): string {
-  return getConfiguredFactoryAddress(
-    ledgerId,
-    ERC721_FACTORY_ADDRESSES,
-    LOCAL_ERC721_FACTORY_ADDRESS_ENV,
-    'ERC721',
-  );
+export function getERC721FactoryAddress(): string {
+  const address = process.env.HEDERA_ERC721_FACTORY_ADDRESS;
+  if (!address) {
+    throw new Error(
+      'HEDERA_ERC721_FACTORY_ADDRESS is not set. See packages/core-contracts/README.md for the deployed testnet address, or run `pnpm test:solo:deploy:contracts` for Solo.',
+    );
+  }
+  return address;
 }
