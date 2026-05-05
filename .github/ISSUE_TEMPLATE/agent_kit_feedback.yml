@@ -1,13 +1,13 @@
-name: Agent Lab Feedback Form
-description: Share feedback, report bugs, or request features for the AI Lab at portal.hedera.com/agent-lab
-title: "Agent Lab Feedback: "
-labels: ["AI Lab"]
-assignees: []
+name: Hedera Agent Kit Feedback Form
+description: Share feedback, report bugs, or request features for the Hedera Agent Kit
+title: " Agent Kit Feedback:"
+labels: ["feedback"]
+assignees: ["walkerlj0"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to share feedback on the AI Lab.
+        Thanks for taking the time to share feedback on the Hedera Agent Kit.
         
   - type: input
     id: contact-username
@@ -43,7 +43,7 @@ body:
     id: expected-vs-actual
     attributes:
       label: What you expected vs what you experienced
-      description: Optional. If this is a bug or unexpected behavior, tell us what you expected and what happened instead.
+      description: Optional. If this is a bug or unexpected behavior, tell us what you expected and what happened instead. Otherwise, describe the feedback in your own words.
       placeholder: |
         Expected:
         Actual:
