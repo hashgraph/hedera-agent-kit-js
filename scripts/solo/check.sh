@@ -7,11 +7,23 @@ MIRROR_NODE_ENDPOINT="127.0.0.1:5600"
 MIRROR_NODE_REST_URL="${HEDERA_MIRROR_NODE_REST_URL:-http://127.0.0.1:38081/api/v1}"
 JSON_RPC_RELAY_URL="${HEDERA_JSON_RPC_RELAY_URL:-http://127.0.0.1:37546}"
 # Long-zero EVM address for Hedera system account 0.0.2. Exists on every Hedera
-# network including a fresh Solo. Used as both `from` and `to` in the web3 probe;
-# mirror's simulator runs the call (a no-op empty-calldata transfer) end-to-end
-# and returns a 200 with a gas estimate. The same code path the relay forwards
-# `eth_sendRawTransaction` simulation calls through.
+# network including a fresh Solo. Used as `from` in the web3 probe so the
+# simulator has a funded sender to attribute the call to.
 SYSTEM_ACCOUNT_ADDRESS="0x0000000000000000000000000000000000000002"
+
+# Minimal valid CREATE init code: deploys a contract whose runtime is a single
+# STOP opcode. Used as the probe payload so we exercise mirror's full EVM
+# execution path (the same one `eth_estimateGas` hits during contract
+# deployment) rather than the cheaper transfer-style gas estimate.
+#   60 01    PUSH1 0x01      ; runtime length
+#   60 0C    PUSH1 0x0C      ; runtime offset within init code (12)
+#   60 00    PUSH1 0x00      ; memory destination
+#   39       CODECOPY        ; copy runtime into memory
+#   60 01    PUSH1 0x01      ; return length
+#   60 00    PUSH1 0x00      ; return offset
+#   F3       RETURN
+#   00       (runtime: STOP)
+MINIMAL_CREATE_INIT_CODE="0x6001600C60003960016000F300"
 
 ATTEMPTS=10
 SLEEP_SECONDS=5
@@ -80,17 +92,18 @@ probe_mirror_rest() {
 }
 
 # Probes mirror's web3 simulator. This is the endpoint the relay forwards
-# `eth_sendRawTransaction` simulation calls to. The deploy step's 503s come from
+# contract-deployment simulation calls to. The deploy step's 502s come from
 # this exact endpoint (`/contracts/call`) being not-yet-warm even after mirror's
-# REST listener and the relay are both up. Sends a no-op call (empty calldata,
-# no value) between two well-known system addresses; mirror runs the simulation
-# end-to-end and returns 200 with a gas estimate. Anything but 200 means the
-# simulator isn't fully ready.
+# REST listener and the relay are both up. Sends a CREATE simulation (no `to`,
+# real init code) so we exercise the same EVM-execution path `eth_estimateGas`
+# hits during `hardhat run deploy-factories.ts`. A no-op transfer probe is too
+# lenient — mirror can answer transfer estimates while the create path is still
+# cold. Anything but 200 means the simulator isn't fully ready.
 probe_mirror_web3() {
   local status
   status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 5 \
     -X POST -H 'Content-Type: application/json' \
-    --data "{\"from\":\"${SYSTEM_ACCOUNT_ADDRESS}\",\"to\":\"${SYSTEM_ACCOUNT_ADDRESS}\",\"data\":\"0x\",\"estimate\":true}" \
+    --data "{\"from\":\"${SYSTEM_ACCOUNT_ADDRESS}\",\"data\":\"${MINIMAL_CREATE_INIT_CODE}\",\"estimate\":true}" \
     "${MIRROR_NODE_REST_URL}/contracts/call" 2>/dev/null) || status="000"
   if [[ "$status" == "200" ]]; then
     mirror_web3_marker="✓"
@@ -136,7 +149,7 @@ print_endpoints() {
   # port-forward for svc/mirror-1-grpc:5600 manually.
   echo "  · Mirror node    (gRPC) : ${MIRROR_NODE_ENDPOINT}  (cluster-internal, not probed)"
   echo "  ${mirror_rest_marker} Mirror node    (REST) : ${MIRROR_NODE_REST_URL}/network/nodes  (${mirror_rest_detail})"
-  echo "  ${mirror_web3_marker} Mirror node    (Web3) : ${MIRROR_NODE_REST_URL}/contracts/call  (${mirror_web3_detail})"
+  echo "  ${mirror_web3_marker} Mirror node    (Web3) : ${MIRROR_NODE_REST_URL}/contracts/call (CREATE sim)  (${mirror_web3_detail})"
   echo "  ${relay_marker} JSON-RPC Relay        : ${JSON_RPC_RELAY_URL}  (eth_blockNumber: ${relay_detail})"
 }
 
