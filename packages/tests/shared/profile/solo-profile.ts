@@ -55,7 +55,7 @@ export const createSoloProfile = (operator: TestAccount): TestProfile => {
     accounts: {
       async acquire(opts: AcquireOpts = {}): Promise<TestAccount> {
         const tier = opts.tier ?? 'STANDARD';
-        const privateKey = PrivateKey.generateED25519();
+        const privateKey = PrivateKey.generateECDSA();
         const accountMemo =
           opts.accountMemo ?? (opts.preset ? TIER_PRESET_MEMO[opts.preset] : 'test account');
         const maxAutomaticTokenAssociations =
