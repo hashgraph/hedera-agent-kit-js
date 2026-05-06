@@ -73,7 +73,14 @@ jobs:
         run: pnpm test:solo:deploy
 
       - name: Wait for Solo endpoints
-        run: pnpm test:solo:check
+        # The 5s sleep is a belt-and-braces buffer: even though `test:solo:check`
+        # probes consensus, mirror REST, mirror Web3, and the JSON-RPC relay until
+        # they all respond, we still occasionally hit "endpoint not ready" during
+        # the next step (contract deployment). Letting the relay settle for a few
+        # extra seconds before the probe starts has been enough to eliminate it.
+        run: |
+          sleep 5
+          pnpm test:solo:check
 
       - name: Deploy Solo factory contracts
         run: pnpm test:solo:deploy:contracts
