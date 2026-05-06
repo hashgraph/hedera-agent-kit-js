@@ -25,13 +25,25 @@ const getContractIdFromMirrorNode = async (evmAddress: string): Promise<string> 
     throw new Error(`Contract ${evmAddress} was not available from mirror node ${MIRROR_NODE_REST_URL}`);
 };
 
-async function main() {
-    if (!process.env.HEDERA_ECDSA_PRIVATE_KEY) {
-        throw new Error("HEDERA_ECDSA_PRIVATE_KEY is required for Solo factory deployment");
+const ECDSA_HEX_PRIVATE_KEY_PATTERN = /^0x[0-9a-fA-F]{64}$/;
+
+function assertEcdsaHexPrivateKey(value: string | undefined): asserts value is string {
+    if (!value) {
+        throw new Error("HEDERA_PRIVATE_KEY is required for factory deployment");
     }
+    if (!ECDSA_HEX_PRIVATE_KEY_PATTERN.test(value)) {
+        throw new Error(
+            "HEDERA_PRIVATE_KEY must be a hex encoded ECDSA secp256k1 key (0x + 64 hex chars).",
+        );
+    }
+}
+
+async function main() {
+    const privateKey = process.env.HEDERA_PRIVATE_KEY;
+    assertEcdsaHexPrivateKey(privateKey);
 
     const provider = new JsonRpcProvider(JSON_RPC_URL, 298, { staticNetwork: true });
-    const signer = new Wallet(process.env.HEDERA_ECDSA_PRIVATE_KEY, provider);
+    const signer = new Wallet(privateKey, provider);
     const erc20FactoryArtifact = await hre.artifacts.readArtifact("BaseERC20Factory");
     const erc721FactoryArtifact = await hre.artifacts.readArtifact("BaseERC721Factory");
 

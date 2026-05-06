@@ -13,6 +13,7 @@ import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { getERC20FactoryAddress, ERC20_FACTORY_ABI } from '@/shared/constants/contracts';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
 
 const createERC20Prompt = (context: Context = {}) => `
 ${PromptGenerator.getContextSnippet(context)}
@@ -63,6 +64,7 @@ export class CreateErc20Tool extends BaseTool {
     context: Context,
     client: Client,
   ) {
+    assertEcdsaOperator(client);
     const factoryAddress = getERC20FactoryAddress();
     return await HederaParameterNormaliser.normaliseCreateERC20Params(
       params,

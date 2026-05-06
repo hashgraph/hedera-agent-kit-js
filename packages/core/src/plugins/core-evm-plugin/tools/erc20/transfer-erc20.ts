@@ -16,6 +16,7 @@ import {
   ERC20_TRANSFER_FUNCTION_NAME,
 } from '@/shared/constants/contracts';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
 
 const transferERC20Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -66,6 +67,7 @@ export class TransferErc20Tool extends BaseTool {
     context: Context,
     client: Client,
   ) {
+    assertEcdsaOperator(client);
     const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
     return await HederaParameterNormaliser.normaliseTransferERC20Params(
       params,

@@ -50,7 +50,7 @@ After deploying, update the address row in the table above.
 For Solo/localnet testing, deploy factories against the local JSON-RPC relay and export the printed addresses:
 
 ```bash
-HEDERA_ECDSA_PRIVATE_KEY=0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524 npm run deploy:solo
+HEDERA_PRIVATE_KEY=0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524 npm run deploy:solo
 ```
 
 The command prints `HEDERA_ERC20_FACTORY_ADDRESS` and `HEDERA_ERC721_FACTORY_ADDRESS` values for the test process.
