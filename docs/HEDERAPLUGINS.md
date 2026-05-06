@@ -125,19 +125,6 @@ This plugin provides tools for fetching **Token Service (HTS)** related informat
 
 This plugin provides tools for interacting with EVM smart contracts on Hedera, including creating and managing ERC-20 and ERC-721 tokens via on-chain factory contracts and standard function calls.
 
-#### Configuration
-
-The ERC-20 and ERC-721 deployment tools call on-chain factory contracts whose addresses must be supplied via environment variables. Create / Mint tools require:
-
-| Variable                       | Used by                                                    | Notes                                                                                            |
-|--------------------------------|------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `HEDERA_ERC20_FACTORY_ADDRESS` | `CREATE_ERC20_TOOL`                                        | Hedera contract ID (`0.0.N`) of the deployed `BaseERC20Factory`.                                 |
-| `HEDERA_ERC721_FACTORY_ADDRESS`| `CREATE_ERC721_TOOL`, `MINT_ERC721_TOOL`                   | Hedera contract ID (`0.0.N`) of the deployed `BaseERC721Factory`.                                |
-
-To deploy your own factory contracts on any Hedera network, see the [`packages/core-contracts`](../packages/core-contracts/README.md) package for instructions and currently deployed addresses.
-
-> **Operator key requirement**: all EVM tools sign through the Hedera SDK client's operator key, which must be hex encoded **ECDSA (secp256k1)**. ED25519 operator keys are rejected upfront, the network would otherwise reject the contract call with `INVALID_SIGNATURE`.
-
 | Tool Name                                                             | Description                                           | Details                                                                  |
 |-----------------------------------------------------------------------|-------------------------------------------------------|--------------------------------------------------------------------------|
 | [`CREATE_ERC20_TOOL`](./HEDERATOOLS.md#create_erc20_tool)             | Deploys a new ERC-20 token via the BaseERC20Factory   | [View Parameters & Examples](./HEDERATOOLS.md#create_erc20_tool)         |

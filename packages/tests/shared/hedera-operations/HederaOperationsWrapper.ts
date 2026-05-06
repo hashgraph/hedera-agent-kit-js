@@ -341,7 +341,7 @@ class HederaOperationsWrapper {
   }
 
   async createERC20(params: z.infer<ReturnType<typeof createERC20Parameters>>) {
-    const factoryContractAddress = getERC20FactoryAddress();
+    const factoryContractAddress = getERC20FactoryAddress(this.client.ledgerId!);
     const normalisedParams = await HederaParameterNormaliser.normaliseCreateERC20Params(
       params,
       factoryContractAddress,
@@ -361,7 +361,7 @@ class HederaOperationsWrapper {
   }
 
   async createERC721(params: z.infer<ReturnType<typeof createERC721Parameters>>) {
-    const factoryContractAddress = getERC721FactoryAddress();
+    const factoryContractAddress = getERC721FactoryAddress(this.client.ledgerId!);
     const normalisedParams = await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,
       factoryContractAddress,

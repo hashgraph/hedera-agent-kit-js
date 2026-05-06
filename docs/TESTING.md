@@ -78,9 +78,11 @@ fresh deploy that's normal. The mirror's contract-simulation path warms up after
 the REST listener. Just re-run after a few seconds.
 
 **`Failed to fetch account 0x: 400 Bad Request` during the deploy step**
-Almost always means `pnpm test:solo:deploy:contracts` hasn't been run yet (or its
-output wasn't applied to the test env). The ERC factory contract IDs need to be in
-your `.env.test.local` as `HEDERA_ERC20_FACTORY_ADDRESS` / `HEDERA_ERC721_FACTORY_ADDRESS`.
+Almost always means `pnpm test:solo:deploy:contracts` hasn't been run yet. Solo's
+deterministic contract IDs (`0.0.1012` for ERC20, `0.0.1013` for ERC721) are
+hardcoded in `packages/core/src/shared/constants/contracts.ts`; if the deploy
+produces different IDs (e.g. you reset the local-node mid-session), destroy and
+deploy Solo once again than deploy contracts using `pnpm test:solo:deploy:contracts`.
 
 **Endpoints unreachable from the host**
 `solo one-shot single deploy` creates the kind cluster with the port mappings the
@@ -95,6 +97,5 @@ TestProfile resolves to the testnet adapter. Slower (~5 to 10s per Hedera consen
 round-trip vs sub-second on Solo) but useful for verifying behavior on a real
 network. No `solo:*` scripts needed in this mode.
 
-For ERC20/ERC721 tests on testnet, also set `HEDERA_ERC20_FACTORY_ADDRESS=0.0.6471814`
-and `HEDERA_ERC721_FACTORY_ADDRESS=0.0.6510666` (see `packages/core-contracts/README.md`
-for current deployments).
+ERC20/ERC721 factory addresses for both `testnet` and `local-node` are baked into
+the SDK (`packages/core/src/shared/constants/contracts.ts`); no extra config needed.

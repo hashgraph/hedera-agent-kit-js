@@ -25,12 +25,6 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   private readonly baseUrl: string;
 
   constructor(private readonly ledgerId: LedgerId) {
-    const baseUrlOverride = process.env.HEDERA_MIRROR_NODE_REST_URL;
-    if (baseUrlOverride) {
-      this.baseUrl = baseUrlOverride.replace(/\/$/, '');
-      return;
-    }
-
     if (!LedgerIdToBaseUrl.has(ledgerId.toString())) {
       throw new Error(`Network type ${ledgerId} not supported`);
     }

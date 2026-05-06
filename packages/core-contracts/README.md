@@ -18,7 +18,7 @@ Internal Hardhat project for developing, testing, and deploying ERC20/ERC721 fac
 These contracts are **deployed once per Hedera network**. The SDK then calls them by address:
 
 1. Compiled ABIs are hardcoded in `../core/src/shared/constants/contracts.ts`
-2. Deployed addresses are passed in via the `HEDERA_ERC20_FACTORY_ADDRESS` / `HEDERA_ERC721_FACTORY_ADDRESS` env vars; testnet defaults are listed in the table below
+2. Deployed addresses are kept in `ERC20_FACTORY_ADDRESSES` / `ERC721_FACTORY_ADDRESSES` maps in the same file, keyed by `LedgerId` (the SDK derives the network from `client.ledgerId`)
 3. SDK tools (`create_erc20_tool`, `create_erc721_tool`) call the factories on-chain
 
 **End users never interact with this directory.** They use the SDK tools which call the pre-deployed contracts.
@@ -28,8 +28,11 @@ These contracts are **deployed once per Hedera network**. The SDK then calls the
 | Network    | ERC20 Factory | ERC721 Factory |
 | ---------- | ------------- | -------------- |
 | Testnet    | `0.0.6471814` | `0.0.6510666`  |
+| Local-node | `0.0.1012`    | `0.0.1013`     |
 | Mainnet    | Not deployed  | Not deployed   |
 | Previewnet | Not deployed  | Not deployed   |
+
+The local-node addresses are the deterministic IDs assigned by Solo when the factories are deployed as the first contracts on a fresh network (`pnpm test:solo:up`).
 
 ## Development
 
@@ -53,4 +56,4 @@ For Solo/localnet testing, deploy factories against the local JSON-RPC relay and
 HEDERA_PRIVATE_KEY=0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524 npm run deploy:solo
 ```
 
-The command prints `HEDERA_ERC20_FACTORY_ADDRESS` and `HEDERA_ERC721_FACTORY_ADDRESS` values for the test process.
+The command prints the resulting `0.0.X` ERC20 and ERC721 factory contract IDs. Update the `ERC20_FACTORY_ADDRESSES` / `ERC721_FACTORY_ADDRESSES` maps in `packages/core/src/shared/constants/contracts.ts` if the addresses change.

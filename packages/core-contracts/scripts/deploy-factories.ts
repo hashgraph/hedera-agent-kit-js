@@ -60,8 +60,8 @@ async function main() {
     const erc20FactoryContractId = await getContractIdFromMirrorNode(erc20FactoryAddress);
     const erc721FactoryContractId = await getContractIdFromMirrorNode(erc721FactoryAddress);
 
-    console.log(`HEDERA_ERC20_FACTORY_ADDRESS=${erc20FactoryContractId}`);
-    console.log(`HEDERA_ERC721_FACTORY_ADDRESS=${erc721FactoryContractId}`);
+    console.log(`ERC20 factory contract id:  ${erc20FactoryContractId}`);
+    console.log(`ERC721 factory contract id: ${erc721FactoryContractId}`);
 }
 
 main().catch((error: unknown) => {

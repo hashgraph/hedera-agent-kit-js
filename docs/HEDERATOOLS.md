@@ -1024,13 +1024,6 @@ Show pending airdrops for account 0.0.12345
 
 ## EVM Tools
 
-> **Configuration required.** ERC-20 and ERC-721 deployment / mint tools resolve their factory contract from environment variables:
->
-> - `HEDERA_ERC20_FACTORY_ADDRESS` - used by `CREATE_ERC20_TOOL`
-> - `HEDERA_ERC721_FACTORY_ADDRESS` - used by `CREATE_ERC721_TOOL` and `MINT_ERC721_TOOL`
->
-> Both expect a Hedera contract ID in `0.0.N` format. To deploy your own factory contracts on any Hedera network, see the [`packages/core-contracts`](../packages/core-contracts/README.md) package for instructions and currently deployed addresses. EVM tools also require a hex encoded ECDSA (secp256k1) operator key. ED25519 keys are rejected upfront.
-
 ### CREATE_ERC20_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes

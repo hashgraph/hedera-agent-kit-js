@@ -1,4 +1,22 @@
-import { ContractId } from '@hiero-ledger/sdk';
+import { LedgerId } from '@hiero-ledger/sdk';
+
+const TESTNET_ERC20_FACTORY_ADDRESS = '0.0.6471814';
+const TESTNET_ERC721_FACTORY_ADDRESS = '0.0.6510666';
+
+const LOCAL_NODE_ERC20_FACTORY_ADDRESS = '0.0.1012';
+const LOCAL_NODE_ERC721_FACTORY_ADDRESS = '0.0.1013';
+
+// ERC20 Factory contract addresses for different networks
+export const ERC20_FACTORY_ADDRESSES: Map<string, string> = new Map([
+  [LedgerId.TESTNET.toString(), TESTNET_ERC20_FACTORY_ADDRESS],
+  [LedgerId.LOCAL_NODE.toString(), LOCAL_NODE_ERC20_FACTORY_ADDRESS],
+]);
+
+// ERC721 Factory contract addresses for different networks
+export const ERC721_FACTORY_ADDRESSES: Map<string, string> = new Map([
+  [LedgerId.TESTNET.toString(), TESTNET_ERC721_FACTORY_ADDRESS],
+  [LedgerId.LOCAL_NODE.toString(), LOCAL_NODE_ERC721_FACTORY_ADDRESS],
+]);
 
 // ERC20 Factory contract ABI
 export const ERC20_FACTORY_ABI = [
@@ -23,80 +41,30 @@ export const ERC721_TRANSFER_FUNCTION_ABI = [
 export const ERC721_MINT_FUNCTION_NAME = 'safeMint';
 export const ERC721_MINT_FUNCTION_ABI = ['function safeMint(address to) external returns (bool)'];
 
-// Deprecated testnet defaults retained for backwards compatibility; remove once
-// HEDERA_ERC20_FACTORY_ADDRESS / HEDERA_ERC721_FACTORY_ADDRESS adoption is complete.
-const TESTNET_ERC20_FACTORY_ADDRESS = '0.0.6471814';
-const TESTNET_ERC721_FACTORY_ADDRESS = '0.0.6510666';
-
 /**
- * Get the ERC20 factory contract address from the HEDERA_ERC20_FACTORY_ADDRESS env var.
- * Falls back to a deprecated hardcoded testnet address when the env var is unset
- * and HEDERA_NETWORK=testnet.
- * @throws Error if the env var is malformed, or unset on non-testnet networks
+ * Get the ERC20 factory contract address for the specified network
+ * @param ledgerId - The Hedera network ledger ID
+ * @returns The factory contract address for the network
+ * @throws Error if the network is not supported
  */
-export function getERC20FactoryAddress(): string {
-  const address = process.env.HEDERA_ERC20_FACTORY_ADDRESS;
-
-  if (address) {
-    if (!isValidHederaContractId(address)) {
-      throw new Error(
-        `HEDERA_ERC20_FACTORY_ADDRESS is set to "${address}" which is not a valid Hedera contract ID. Expected format: 0.0.N (e.g., 0.0.6471814).`,
-      );
-    }
-
-    return address;
+export function getERC20FactoryAddress(ledgerId: LedgerId): string {
+  const address = ERC20_FACTORY_ADDRESSES.get(ledgerId.toString());
+  if (!address) {
+    throw new Error(`Network type ${ledgerId} not supported for ERC20 factory`);
   }
-
-  if (process.env.HEDERA_NETWORK === 'testnet') {
-    console.warn(
-      '[deprecated] Falling back to hardcoded testnet ERC20 factory address. Set HEDERA_ERC20_FACTORY_ADDRESS to silence this warning. See packages/core-contracts/README.md.',
-    );
-
-    return TESTNET_ERC20_FACTORY_ADDRESS;
-  }
-
-  throw new Error(
-    'HEDERA_ERC20_FACTORY_ADDRESS is not set. See packages/core-contracts/README.md for the deployed testnet address, or run `pnpm test:solo:deploy:contracts` for Solo.',
-  );
+  return address;
 }
 
 /**
- * Get the ERC721 factory contract address from the HEDERA_ERC721_FACTORY_ADDRESS env var.
- * Falls back to a deprecated hardcoded testnet address when the env var is unset
- * and HEDERA_NETWORK=testnet.
- * @throws Error if the env var is malformed, or unset on non-testnet networks
+ * Get the ERC721 factory contract address for the specified network
+ * @param ledgerId - The Hedera network ledger ID
+ * @returns The factory contract address for the network
+ * @throws Error if the network is not supported
  */
-export function getERC721FactoryAddress(): string {
-  const address = process.env.HEDERA_ERC721_FACTORY_ADDRESS;
-
-  if (address) {
-    if (!isValidHederaContractId(address)) {
-      throw new Error(
-        `HEDERA_ERC721_FACTORY_ADDRESS is set to "${address}" which is not a valid Hedera contract ID. Expected format: 0.0.N (e.g., 0.0.6510666).`,
-      );
-    }
-
-    return address;
+export function getERC721FactoryAddress(ledgerId: LedgerId): string {
+  const address = ERC721_FACTORY_ADDRESSES.get(ledgerId.toString());
+  if (!address) {
+    throw new Error(`Network type ${ledgerId} not supported for ERC721 factory`);
   }
-
-  if (process.env.HEDERA_NETWORK === 'testnet') {
-    console.warn(
-      '[deprecated] Falling back to hardcoded testnet ERC721 factory address. Set HEDERA_ERC721_FACTORY_ADDRESS to silence this warning.',
-    );
-
-    return TESTNET_ERC721_FACTORY_ADDRESS;
-  }
-
-  throw new Error(
-    'HEDERA_ERC721_FACTORY_ADDRESS is not set. See packages/core-contracts/README.md for the deployed testnet address, or run `pnpm test:solo:deploy:contracts` for Solo.',
-  );
-}
-
-function isValidHederaContractId(value: string): boolean {
-  try {
-    ContractId.fromString(value);
-    return true;
-  } catch {
-    return false;
-  }
+  return address;
 }

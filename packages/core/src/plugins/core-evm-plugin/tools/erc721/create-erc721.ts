@@ -68,7 +68,7 @@ export class CreateErc721Tool extends BaseTool {
     client: Client,
   ) {
     assertEcdsaOperator(client);
-    const factoryAddress = getERC721FactoryAddress();
+    const factoryAddress = getERC721FactoryAddress(client.ledgerId!);
     return await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,
       factoryAddress,

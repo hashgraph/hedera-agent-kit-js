@@ -23,9 +23,6 @@ jobs:
       HEDERA_NETWORK: local-node
       HEDERA_ACCOUNT_ID: '0.0.1002'
       HEDERA_PRIVATE_KEY: '0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524'
-      HEDERA_ERC20_FACTORY_ADDRESS: '0.0.1012'
-      HEDERA_ERC721_FACTORY_ADDRESS: '0.0.1013'
-      HEDERA_MIRROR_NODE_REST_URL: 'http://127.0.0.1:38081/api/v1'
       E2E_LLM_PROVIDER: ${{ vars.E2E_LLM_PROVIDER }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
