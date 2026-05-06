@@ -55,11 +55,11 @@ The Hedera Agent Kit is extensible with third party plugins by other projects. S
 
   Github repository: [https://github.com/Bonzo-Labs/bonzoPlugin](https://github.com/Bonzo-Labs/bonzoPlugin)
 
-- [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights:
+- [SaucerSwap Plugin](https://www.npmjs.com/package/hak-saucerswap-plugin) provides a streamlined interface to the [**SaucerSwap**](https://saucerswap.finance) DEX, exposing the core actions (`saucerswap_get_swap_quote`, `saucerswap_swap_tokens`, `saucerswap_get_pools`, `saucerswap_add_liquidity`, `saucerswap_remove_liquidity`, `saucerswap_get_farms`) for swaps, liquidity, and farming insights. Supports native API key authentication, built-in mainnet/testnet contract address defaults, and full `BaseTool` + `handleTransaction` lifecycle compatibility:
 
   NPM: https://www.npmjs.com/package/hak-saucerswap-plugin
   Source: https://github.com/jmgomezl/hak-saucerswap-plugin
-  Tested/endorsed version: hak-saucerswap-plugin@1.0.1
+  Tested/endorsed version: hak-saucerswap-plugin@2.1.0
 
 - [Pyth Plugin](https://www.npmjs.com/package/hak-pyth-plugin) provides access to the [**Pyth Network**](https://www.pyth.network/) price feeds via the Hermes API, exposing tools to list feeds and fetch latest prices:
 
