@@ -16,9 +16,9 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Github repository: https://github.com/buidler-labs/hak-memejob-plugin
 
-  Version: @buidlerlabs/hak-memejob-plugin@1.0.2
+  Version: @buidlerlabs/hak-memejob-plugin@1.1.0
 
-  Status: Not validated by HAK team, v3-compatible release  
+  Status: Validated by HAK team, v4-compatible release 
 
 
 - [Bonzo Plugin](https://www.npmjs.com/package/@bonzofinancelabs/hak-bonzo-plugin) is a unified SDK to the [**Bonzo**](https://bonzo.finance) protocol, exposing the core actions (`deposit`, `withdraw`, `repay`, `borrow`) for decentralised lending and borrowing on Hedera:
