@@ -32,7 +32,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
     const executorAccountId = await operatorWrapper
       .createAccount({
         key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
+        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
       })
       .then(resp => resp.accountId!);
 
