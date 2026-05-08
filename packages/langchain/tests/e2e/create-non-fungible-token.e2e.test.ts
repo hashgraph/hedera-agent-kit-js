@@ -20,7 +20,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
   let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
     ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
