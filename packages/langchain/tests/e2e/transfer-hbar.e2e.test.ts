@@ -140,7 +140,7 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
         recipient.accountId.toString(),
       );
-      const longMemo = 'A'.repeat(90);
+      const longMemo = 'Invoice INV-2025-10847 - subscription renewal Q1-2026';
       const amountToTransfer = 0.01;
 
       const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()} with memo "${longMemo}"`;
