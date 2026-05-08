@@ -1,35 +1,32 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-  AccountId,
   Client,
-  Key,
-  PrivateKey,
   PublicKey,
   TokenId,
   TokenSupplyType,
 } from '@hiero-ledger/sdk';
 import approveTokenAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/approve-token-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { approveTokenAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Approve Token Allowance tool
  */
 
 describe('Approve Token Allowance Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let spender: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let spenderAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
-  let operatorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let tokenIdFT: TokenId;
 
   const FT_PARAMS = {
@@ -43,77 +40,41 @@ describe('Approve Token Allowance Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        accountMemo: 'executor account for Approve Token Allowance Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    spenderAccountId = await operatorWrapper
-      .createAccount({
-        key: executorClient.operatorPublicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'spender account for Approve Token Allowance Integration Tests',
-      })
-      .then(resp => resp.accountId!);
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        autoRenewAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
-    try {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        spenderAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-    } catch (e) {
-      console.warn('Failed to clean up accounts:', e);
-    }
-    if (executorClient) {
-      executorClient.close();
-    }
-    if (operatorClient) operatorClient.close();
+    await profile.accounts.release(spender);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('approves token allowance with explicit owner and memo', async () => {
     const params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> = {
       ownerAccountId: context.accountId!,
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenApprovals: [{ tokenId: tokenIdFT.toString(), amount: 25 }],
       transactionMemo: 'Integration token approve',
     };
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = approveTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);
@@ -126,14 +87,12 @@ describe('Approve Token Allowance Integration Tests', () => {
 
   it('approves multiple token allowances (single token repeated for test) with default owner', async () => {
     const params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> = {
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenApprovals: [
         { tokenId: tokenIdFT.toString(), amount: 1 },
         { tokenId: tokenIdFT.toString(), amount: 2 },
       ],
     };
-
-    await wait(MIRROR_NODE_WAITING_TIME);
 
     const tool = approveTokenAllowanceTool(context);
     const result = await tool.execute(executorClient, context, params);

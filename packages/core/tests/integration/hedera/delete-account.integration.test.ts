@@ -1,65 +1,47 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { AccountId, Client, Key } from '@hiero-ledger/sdk';
 import deleteAccountTool from '@/plugins/core-account-plugin/tools/account/delete-account';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 import {
   deleteAccountParameters,
   createAccountParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 
 describe('Delete Account Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let hederaOperationsWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let hederaOperationsWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(operatorClient);
+    hederaOperationsWrapper = profile.client.connectAs(profile.operator).wrapper;
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await hederaOperationsWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorAccountKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      // Transfer remaining balance back to operator and delete an executor account
-      try {
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      } catch (error) {
-        console.warn('Failed to clean up executor account:', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   const createTempAccount = async (): Promise<AccountId> => {
     const params: z.infer<ReturnType<typeof createAccountParametersNormalised>> = {
-      key: executorClient.operatorPublicKey as Key,
-      initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+      key: executor.privateKey.publicKey as Key,
+      initialBalance: profile.balance.fund('MINIMAL'),
     };
     // Operator creates the temp account to preserve executor balance
     const resp = await hederaOperationsWrapper.createAccount(params);
@@ -87,7 +69,7 @@ describe('Delete Account Integration Tests', () => {
 
     it('should delete an account and transfer remaining balance to a specified account', async () => {
       const accountId = await createTempAccount();
-      const transferTo = operatorClient.operatorAccountId!.toString();
+      const transferTo = profile.operator.accountId.toString();
 
       const tool = deleteAccountTool(context);
       const params: z.infer<ReturnType<typeof deleteAccountParameters>> = {

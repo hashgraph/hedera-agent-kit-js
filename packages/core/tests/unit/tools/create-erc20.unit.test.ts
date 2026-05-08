@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -78,7 +78,8 @@ const mockedBuilder = vi.mocked(HederaBuilder, { deep: false });
 const mockedTxStrategy = vi.mocked(TxModeStrategy, { deep: false });
 
 // ---- HELPERS ---
-const makeClient = () => Client.forTestnet();
+const makeClient = () =>
+  Client.forTestnet().setOperator(AccountId.fromString('0.0.1001'), PrivateKey.generateECDSA());
 
 // ---- TESTS ----
 describe('createERC20 tool (unit)', () => {

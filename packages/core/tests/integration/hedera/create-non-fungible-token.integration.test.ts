@@ -1,36 +1,28 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, TokenType } from '@hiero-ledger/sdk';
+import { Client, TokenType } from '@hiero-ledger/sdk';
 import createNonFungibleTokenTool from '@/plugins/core-token-plugin/tools/non-fungible-token/create-non-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Create Non-Fungible Token Integration Tests', () => {
+  const profile = getProfile();
   let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    ({ client: operatorClient } = profile.client.connectAs(profile.operator));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating NFTs
-        key: executorAccountKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
@@ -38,15 +30,9 @@ describe('Create Non-Fungible Token Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (operatorClient && executorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      operatorClient.close();
-      executorClient.close();
-    }
+    await profile.accounts.release(executor);
+    operatorClient?.close();
+    executorClient?.close();
   });
 
   describe('Valid Create Non-Fungible Token Scenarios', () => {
@@ -93,7 +79,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
         tokenName: 'TreasuryNFT',
         tokenSymbol: 'TRFNFT',
-        treasuryAccountId: executorClient.operatorAccountId!.toString(),
+        treasuryAccountId: executor.accountId.toString(),
         maxSupply: 200,
       } as any;
 
@@ -112,7 +98,7 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const params: z.infer<ReturnType<typeof createNonFungibleTokenParameters>> = {
         tokenName: 'TreasuryNFT',
         tokenSymbol: 'TRFNFT',
-        treasuryAccountId: executorClient.operatorAccountId!.toString(),
+        treasuryAccountId: executor.accountId.toString(),
         maxSupply: 200,
         schedulingParams: {
           isScheduled: true,
@@ -121,7 +107,6 @@ describe('Create Non-Fungible Token Integration Tests', () => {
         },
       };
 
-      await wait(MIRROR_NODE_WAITING_TIME);
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
 

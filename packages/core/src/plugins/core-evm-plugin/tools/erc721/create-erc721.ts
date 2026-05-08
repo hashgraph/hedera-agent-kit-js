@@ -16,6 +16,7 @@ import {
   ERC721_FACTORY_ABI,
 } from '@/shared/constants/contracts';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
 
 const createERC721Prompt = (context: Context = {}) => `
 ${PromptGenerator.getContextSnippet(context)}
@@ -66,6 +67,7 @@ export class CreateErc721Tool extends BaseTool {
     context: Context,
     client: Client,
   ) {
+    assertEcdsaOperator(client);
     const factoryAddress = getERC721FactoryAddress(client.ledgerId!);
     return await HederaParameterNormaliser.normaliseCreateERC721Params(
       params,

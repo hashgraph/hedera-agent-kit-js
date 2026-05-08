@@ -6,7 +6,6 @@ import {
   ContractInfo,
   ContractInfoQuery,
   ContractCreateFlow,
-  LedgerId,
   NftId,
   TokenAssociateTransaction,
   TokenId,
@@ -18,6 +17,7 @@ import {
   TransferTransaction,
 } from '@hiero-ledger/sdk';
 import BigNumber from 'bignumber.js';
+import { getTestLedgerIdForTests } from '../profile/resolve';
 import { HederaBuilder } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';
 import {
@@ -68,7 +68,10 @@ class HederaOperationsWrapper {
   private executeStrategy = new ExecuteStrategy();
   private mirrornode;
   constructor(private client: Client) {
-    this.mirrornode = getMirrornodeService(undefined, LedgerId.TESTNET);
+    this.mirrornode = getMirrornodeService(
+      undefined,
+      this.client.ledgerId ?? getTestLedgerIdForTests(),
+    );
   }
 
   // ACCOUNT OPERATIONS
@@ -445,6 +448,18 @@ class HederaOperationsWrapper {
   async getAccountBalances(accountId: string) {
     const accountResponse = await this.mirrornode.getAccount(accountId);
     return accountResponse.balance;
+  }
+
+  /**
+   * Returns the mirror node's transaction record for the given transaction ID.
+   * Accepts either SDK format (`0.0.1234@1234567890.123456789`) or mirror format
+   * (`0.0.1234-1234567890-123456789`). Throws if the transaction is not yet ingested.
+   */
+  async getTransactionRecord(transactionId: string) {
+    const mirrorFormat = transactionId.includes('@')
+      ? transactionId.replace('@', '-').replace(/\.(\d+)$/, '-$1')
+      : transactionId;
+    return await this.mirrornode.getTransactionRecord(mirrorFormat);
   }
 }
 

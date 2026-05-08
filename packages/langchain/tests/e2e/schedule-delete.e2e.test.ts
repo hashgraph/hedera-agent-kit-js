@@ -1,95 +1,64 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import { scheduleDeleteTool } from '@hashgraph/hedera-agent-kit/plugins';
 import { Context, AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import {
   scheduleDeleteTransactionParameters,
   transferHbarParametersNormalised,
 } from '@hashgraph/hedera-agent-kit';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Schedule Delete E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
+  let recipient: TestAccount;
   let context: Context;
-  let recipientAccountId: AccountId;
-  let operatorWrapper: HederaOperationsWrapper;
-  let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient } = profile.client.connectAs(executor));
 
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    recipientAccountId = await executorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: operatorClient.operatorAccountId!.toString(),
+      accountId: profile.operator.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      try {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          recipientAccountId,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      } catch (error) {
-        console.warn('Failed to clean up accounts:', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it(
     'deletes a scheduled transaction by admin',
-    itWithRetry(async () => {
+    async () => {
       const transferAmount = 0.05;
+      const operatorClient = profile.client.connectAs(profile.operator).client;
+      const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+
       const transferParams: z.infer<ReturnType<typeof transferHbarParametersNormalised>> = {
         hbarTransfers: [
           {
-            accountId: recipientAccountId,
+            accountId: recipient.accountId,
             amount: transferAmount,
           },
           {
-            accountId: executorClient.operatorAccountId!,
+            accountId: executor.accountId,
             amount: -transferAmount,
           },
         ],
         schedulingParams: {
           isScheduled: true,
-          adminKey: operatorClient.operatorPublicKey as PublicKey,
+          adminKey: profile.operator.privateKey.publicKey as PublicKey,
         },
       };
 
@@ -105,6 +74,8 @@ describe('Schedule Delete E2E Tests', () => {
 
       expect(result.humanMessage).toContain('successfully deleted');
       expect(result.raw.status).toBe('SUCCESS');
-    }),
+
+      operatorClient.close();
+    },
   );
 });

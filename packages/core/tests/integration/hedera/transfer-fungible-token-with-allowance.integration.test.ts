@@ -1,25 +1,27 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import {
   Client,
-  PrivateKey,
-  AccountId,
   TokenId,
   TokenSupplyType,
   TokenAllowance,
   Long,
 } from '@hiero-ledger/sdk';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import transferFungibleTokenWithAllowanceTool from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token-with-allowance';
 import { z } from 'zod';
 import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer Fungible Token With Allowance Tool Integration', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let spender: TestAccount;
+  let receiver: TestAccount;
+
   let executorClient: Client;
   let spenderClient: Client;
   let receiverClient: Client;
@@ -27,13 +29,6 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   let executorWrapper: HederaOperationsWrapper;
   let spenderWrapper: HederaOperationsWrapper;
   let receiverWrapper: HederaOperationsWrapper;
-
-  let executorAccountId: AccountId;
-  let spenderAccountId: AccountId;
-  let receiverAccountId: AccountId;
-
-  let spenderKey: PrivateKey;
-  let receiverKey: PrivateKey;
 
   let tokenId: TokenId;
 
@@ -48,80 +43,40 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Executor account (token owner)
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
-        accountMemo: 'executor account for Transfer Fungible Token With Allowance Tool Integration',
-      })
-      .then(r => r.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MAXIMUM' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Create fungible token
     tokenId = await executorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        treasuryAccountId: executorAccountId.toString(),
-        supplyKey: executorClient.operatorPublicKey!,
-        adminKey: executorClient.operatorPublicKey!,
-        autoRenewAccountId: executorAccountId.toString(),
+        treasuryAccountId: executor.accountId.toString(),
+        supplyKey: executor.privateKey.publicKey,
+        adminKey: executor.privateKey.publicKey,
+        autoRenewAccountId: executor.accountId.toString(),
       })
       .then(r => r.tokenId!);
   });
 
   afterAll(async () => {
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      executorAccountId,
-      operatorClient.operatorAccountId!,
-    );
-    if (executorClient && operatorClient) {
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   beforeEach(async () => {
-    // Spender account
-    spenderKey = PrivateKey.generateED25519();
-    spenderAccountId = await executorWrapper
-      .createAccount({
-        key: spenderKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'spender account for Transfer Fungible Token With Allowance Tool Integration',
-      })
-      .then(r => r.accountId!);
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: spenderClient, wrapper: spenderWrapper } = profile.client.connectAs(spender));
 
-    spenderClient = getCustomClient(spenderAccountId, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
-
-    // Receiver account
-    receiverKey = PrivateKey.generateED25519();
-    receiverAccountId = await executorWrapper
-      .createAccount({
-        key: receiverKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'receiver account for Transfer Fungible Token With Allowance Tool Integration',
-      })
-      .then(r => r.accountId!);
-
-    receiverClient = getCustomClient(receiverAccountId, receiverKey);
-    receiverWrapper = new HederaOperationsWrapper(receiverClient);
+    receiver = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: receiverClient, wrapper: receiverWrapper } = profile.client.connectAs(receiver));
 
     // Associate token
     await spenderWrapper.associateToken({
-      accountId: spenderAccountId.toString(),
+      accountId: spender.accountId.toString(),
       tokenId: tokenId.toString(),
     });
     await receiverWrapper.associateToken({
-      accountId: receiverAccountId.toString(),
+      accountId: receiver.accountId.toString(),
       tokenId: tokenId.toString(),
     });
 
@@ -130,8 +85,8 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       tokenApprovals: [
         new TokenAllowance({
           tokenId,
-          ownerAccountId: executorAccountId,
-          spenderAccountId,
+          ownerAccountId: executor.accountId,
+          spenderAccountId: spender.accountId,
           amount: Long.fromNumber(200),
         }),
       ],
@@ -139,12 +94,10 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
   });
 
   afterEach(async () => {
-    if (spenderAccountId) {
-      await returnHbarsAndDeleteAccount(spenderWrapper, spenderAccountId, executorAccountId);
-    }
-    if (receiverAccountId) {
-      await returnHbarsAndDeleteAccount(receiverWrapper, receiverAccountId, executorAccountId);
-    }
+    await profile.accounts.release(spender);
+    await profile.accounts.release(receiver);
+    spenderClient?.close();
+    receiverClient?.close();
   });
 
   it.skip('should allow spender to transfer tokens to themselves using allowance', async () => {
@@ -153,10 +106,10 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     const params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>> = {
       tokenId: tokenId.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       transfers: [
         {
-          accountId: spenderAccountId.toString(),
+          accountId: spender.accountId.toString(),
           amount: 50,
         },
       ],
@@ -173,7 +126,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     const spenderBalance = await spenderWrapper.getAccountTokenBalance(
       tokenId.toString(),
-      spenderAccountId.toString(),
+      spender.accountId.toString(),
     );
 
     expect(spenderBalance.balance).toBe(50);
@@ -185,10 +138,10 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     const params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>> = {
       tokenId: tokenId.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       transfers: [
-        { accountId: spenderAccountId.toString(), amount: 30 },
-        { accountId: receiverAccountId.toString(), amount: 70 },
+        { accountId: spender.accountId.toString(), amount: 30 },
+        { accountId: receiver.accountId.toString(), amount: 70 },
       ],
     };
 
@@ -199,16 +152,16 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     );
     expect(result.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
     // FIXME: the <xyz>Wrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround
     const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
-      spenderAccountId.toString(),
+      spender.accountId.toString(),
       tokenId.toString(),
     );
     const receiverBalance = await receiverWrapper.getAccountTokenBalanceFromMirrornode(
-      receiverAccountId.toString(),
+      receiver.accountId.toString(),
       tokenId.toString(),
     );
 
@@ -222,10 +175,10 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     const params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>> = {
       tokenId: tokenId.toString(),
-      sourceAccountId: executorAccountId.toString(),
+      sourceAccountId: executor.accountId.toString(),
       transfers: [
-        { accountId: spenderAccountId.toString(), amount: 30 },
-        { accountId: receiverAccountId.toString(), amount: 70 },
+        { accountId: spender.accountId.toString(), amount: 30 },
+        { accountId: receiver.accountId.toString(), amount: 70 },
       ],
       schedulingParams: {
         isScheduled: true,
@@ -234,7 +187,6 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
       },
     };
 
-    await wait(MIRROR_NODE_WAITING_TIME);
     const result: any = await tool.execute(spenderClient, context, params);
 
     expect(result.humanMessage).toContain('Scheduled allowance transfer created successfully.');
@@ -247,8 +199,8 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     const params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>> = {
       tokenId: tokenId.toString(),
-      sourceAccountId: executorAccountId.toString(),
-      transfers: [{ accountId: spenderAccountId.toString(), amount: 300 }],
+      sourceAccountId: executor.accountId.toString(),
+      transfers: [{ accountId: spender.accountId.toString(), amount: 300 }],
     };
 
     const result: any = await tool.execute(spenderClient, context, params);

@@ -1,16 +1,19 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
-import { Client, PrivateKey, Key, AccountId } from '@hiero-ledger/sdk';
+import { Client, AccountId } from '@hiero-ledger/sdk';
 import getAccountQueryTool from '@/plugins/core-account-query-plugin/tools/queries/get-account-query';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitFor } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Account Query Integration Tests', () => {
+  const profile = getProfile();
+  let customAccount: TestAccount;
   let customClient: Client;
   let client: Client;
   let context: Context;
@@ -18,27 +21,32 @@ describe('Get Account Query Integration Tests', () => {
   let createdAccountId: AccountId;
 
   beforeAll(async () => {
-    client = getOperatorClientForTests();
-    hederaOperationsWrapper = new HederaOperationsWrapper(client);
+    ({ client, wrapper: hederaOperationsWrapper } = profile.client.connectAs(profile.operator));
   });
 
   beforeEach(async () => {
-    // Create a fresh account for each test
-    const privateKey = PrivateKey.generateED25519();
-    createdAccountId = await hederaOperationsWrapper
-      .createAccount({
-        key: privateKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
+    // Acquire a fresh account for each test
+    customAccount = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    createdAccountId = customAccount.accountId;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    // Adaptive wait: poll mirror until the new account is visible
+    await waitFor(
+      async () => {
+        try {
+          await hederaOperationsWrapper.getAccountBalances(createdAccountId.toString());
+          return true;
+        } catch {
+          return null;
+        }
+      },
+      { timeoutMs: 10000, intervalMs: 250, description: 'new account to appear in mirror' },
+    );
 
-    customClient = getCustomClient(createdAccountId, privateKey);
+    ({ client: customClient } = profile.client.connectAs(customAccount));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: customClient.operatorAccountId!.toString(),
+      accountId: customAccount.accountId.toString(),
     };
   });
 
@@ -56,7 +64,7 @@ describe('Get Account Query Integration Tests', () => {
     expect(result.raw.account.accountId).toBe(createdAccountId.toString());
     expect(result.raw.account.evmAddress).toBeDefined();
     expect(result.raw.account.accountPublicKey).toEqual(
-      customClient.operatorPublicKey?.toStringRaw(),
+      customAccount.privateKey.publicKey.toStringRaw(),
     );
 
     expect(result.humanMessage).toContain(`Details for ${createdAccountId.toString()}`);
@@ -98,12 +106,7 @@ describe('Get Account Query Integration Tests', () => {
   });
 
   afterEach(async () => {
-    // Cleanup: delete the temporary account
-    const customHederaOps = new HederaOperationsWrapper(customClient);
-    await customHederaOps.deleteAccount({
-      accountId: customClient.operatorAccountId!,
-      transferAccountId: client.operatorAccountId!,
-    });
-    customClient.close();
+    await profile.accounts.release(customAccount);
+    customClient?.close();
   });
 });

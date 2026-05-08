@@ -1,16 +1,21 @@
 import { LedgerId } from '@hiero-ledger/sdk';
 
 const TESTNET_ERC20_FACTORY_ADDRESS = '0.0.6471814';
-const TESTNET_ERC721_FACTORY_ADDRESS = '0.0.6510666'; // TODO: Update with actual deployed address
+const TESTNET_ERC721_FACTORY_ADDRESS = '0.0.6510666';
+
+const LOCAL_NODE_ERC20_FACTORY_ADDRESS = '0.0.1012';
+const LOCAL_NODE_ERC721_FACTORY_ADDRESS = '0.0.1013';
 
 // ERC20 Factory contract addresses for different networks
 export const ERC20_FACTORY_ADDRESSES: Map<string, string> = new Map([
-  [LedgerId.TESTNET.toString(), TESTNET_ERC20_FACTORY_ADDRESS], // Current testnet address
+  [LedgerId.TESTNET.toString(), TESTNET_ERC20_FACTORY_ADDRESS],
+  [LedgerId.LOCAL_NODE.toString(), LOCAL_NODE_ERC20_FACTORY_ADDRESS],
 ]);
 
 // ERC721 Factory contract addresses for different networks
 export const ERC721_FACTORY_ADDRESSES: Map<string, string> = new Map([
-  [LedgerId.TESTNET.toString(), TESTNET_ERC721_FACTORY_ADDRESS], // Current testnet address
+  [LedgerId.TESTNET.toString(), TESTNET_ERC721_FACTORY_ADDRESS],
+  [LedgerId.LOCAL_NODE.toString(), LOCAL_NODE_ERC721_FACTORY_ADDRESS],
 ]);
 
 // ERC20 Factory contract ABI

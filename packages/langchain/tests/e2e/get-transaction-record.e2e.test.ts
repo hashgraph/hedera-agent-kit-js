@@ -1,62 +1,41 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { ReactAgent } from 'langchain';
-import {
-  getOperatorClientForTests,
-  getCustomClient,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { Client, TransactionId, PrivateKey } from '@hiero-ledger/sdk';
+import { Client, TransactionId } from '@hiero-ledger/sdk';
 import Long from 'long';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Get Transaction Record E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
   let txIdSdkStyle: TransactionId;
   let txIdMirrorNodeStyle: string;
 
-  // The operator account (from env variables) funds the setup process.
-  // 1. An executor account is created using the operator account as the source of HBARs.
-  // 2. The executor account is used to perform all Hedera operations required for the tests.
-  // 3. LangChain is configured to run with the executor account as its client.
-  // 4. After all tests are complete, the executor account is deleted and its remaining balance
-  //    is transferred back to the operator account.
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
 
     // Create a self-transfer to produce a transaction id
-    const operatorAccountId = executorClient.operatorAccountId!.toString();
+    const accountId = executor.accountId.toString();
     const rawResponse = await executorWrapper.transferHbar({
       hbarTransfers: [
-        { accountId: operatorAccountId, amount: 0.00000001 },
-        { accountId: operatorAccountId, amount: -0.00000001 },
+        { accountId, amount: 0.00000001 },
+        { accountId, amount: -0.00000001 },
       ],
     });
 
@@ -68,24 +47,18 @@ describe('Get Transaction Record E2E Tests', () => {
     )}`;
 
     // Wait for the mirror node to index the transaction
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, rawResponse.transactionId!);
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      testSetup.cleanup();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'fetches transaction record - SDK transactionId notation',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get the transaction record for transaction ID ${txIdSdkStyle}`;
       const result = await agent.invoke({
         messages: [
@@ -101,12 +74,12 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         `Transaction Details for ${txIdMirrorNodeStyle}`,
       );
-    }),
+    },
   );
 
   it(
     'fetches transaction record - Mirror Node transactionId notation',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get the transaction record for transaction ${txIdMirrorNodeStyle}`;
       const result = await agent.invoke({
         messages: [
@@ -122,12 +95,12 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         `Transaction Details for ${txIdMirrorNodeStyle}`,
       );
-    }),
+    },
   );
 
   it(
     'handles non-existent transaction ID',
-    itWithRetry(async () => {
+    async () => {
       const invalidTxId = '0.0.1-1756968265-043000618';
       const input = `Get the transaction record for transaction ${invalidTxId}`;
 
@@ -148,12 +121,12 @@ describe('Get Transaction Record E2E Tests', () => {
         'Failed to get transaction record',
       );
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Not Found');
-    }),
+    },
   );
 
   it(
     'handles invalid transaction ID format',
-    itWithRetry(async () => {
+    async () => {
       const invalidTxId = 'invalid-tx-id';
       const input = `Get the transaction record for transaction ${invalidTxId}`;
 
@@ -175,6 +148,6 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to get transaction record',
       );
-    }),
+    },
   );
 });

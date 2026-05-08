@@ -59,7 +59,7 @@
     "lint:fix": "eslint src/ --fix",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration",
+    "test:integration": "vitest run --config vitest.integration.config.ts tests/integration",
     "test:e2e": "echo 'No e2e tests for @hashgraph/hedera-agent-kit (core)'"
   },
   "engines": {

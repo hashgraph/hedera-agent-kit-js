@@ -1,43 +1,32 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import mintERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/mint-erc721';
 import createERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { mintERC721Parameters, createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Mint ERC721 Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let testTokenAddress: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating tokens and minting
-        key: executorAccountKey.publicKey,
-        maxAutomaticTokenAssociations: -1,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     // Create a test ERC721 token
@@ -55,26 +44,19 @@ describe('Mint ERC721 Integration Tests', () => {
     }
 
     testTokenAddress = createResult.erc721Address;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
   });
 
   afterAll(async () => {
-    if (operatorClient && executorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      operatorClient.close();
-      executorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   describe('Valid Mint ERC721 Scenarios', () => {
     it('should mint token to a Hedera address', async () => {
       const params: z.infer<ReturnType<typeof mintERC721Parameters>> = {
         contractId: testTokenAddress,
-        toAddress: executorClient.operatorAccountId!.toString(),
+        toAddress: executor.accountId.toString(),
       };
 
       const tool = mintERC721Tool(context);
@@ -86,7 +68,7 @@ describe('Mint ERC721 Integration Tests', () => {
 
     it('should mint token to an EVM address', async () => {
       const recipientInfo = await executorWrapper.getAccountInfo(
-        operatorClient.operatorAccountId!.toString(),
+        profile.operator.accountId.toString(),
       );
       const recipientEvmAddress = recipientInfo.contractAccountId!;
 
@@ -117,7 +99,7 @@ describe('Mint ERC721 Integration Tests', () => {
     it('should schedule minting a token to a Hedera address', async () => {
       const params: z.infer<ReturnType<typeof mintERC721Parameters>> = {
         contractId: testTokenAddress,
-        toAddress: executorClient.operatorAccountId!.toString(),
+        toAddress: executor.accountId.toString(),
         schedulingParams: {
           isScheduled: true,
           adminKey: false,

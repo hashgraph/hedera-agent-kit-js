@@ -71,8 +71,6 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
 
       const r = await agent.invoke({ messages: [{ role: 'user', content: input }] });
 
-      console.log(JSON.stringify(r, null, 2));
-
       expect(spy).toHaveBeenCalledTimes(1);
 
       expect(spy).toHaveBeenCalledWith(

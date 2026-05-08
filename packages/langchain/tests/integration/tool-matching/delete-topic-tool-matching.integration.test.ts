@@ -36,7 +36,6 @@ describe.skip('Delete Topic Tool Matching Integration Tests', () => {
     const resp = await agent.invoke({
       messages: [{ role: 'user', content: input }],
     });
-    console.log(JSON.stringify(resp, null, 2));
 
     expect(spy).toHaveBeenCalledOnce();
     expect(spy).toHaveBeenCalledWith(

@@ -4,8 +4,13 @@ import { expect } from 'vitest';
 import BigNumber from 'bignumber.js';
 
 /**
- * Helper function to verify HBAR balance changes after transactions
- * Note: HBAR has 8 decimal places
+ * Verifies an account's HBAR balance changed by exactly `expectedChange` (in HBAR).
+ *
+ * The verified account must NOT be the fee payer of the tx that produced the change.
+ * This is true for: transfer recipients, allowance owners (spender pays the fee), and
+ * any passive party that doesn't sign the SDK call. For an account that signs the tx
+ * AND has its balance change measured, the post-balance is `before + change - fee`,
+ * so snapshot a different account or assert the fee directly via the transaction record.
  */
 export async function verifyHbarBalanceChange(
   accountId: string,
@@ -13,20 +18,12 @@ export async function verifyHbarBalanceChange(
   expectedChange: number,
   hederaOperationsWrapper: HederaOperationsWrapper,
 ): Promise<void> {
-  const balanceBefore = toDisplayUnit(balanceBeforeRaw, 8); // HBAR has 8 decimal places
+  const balanceBefore = toDisplayUnit(balanceBeforeRaw, 8);
   const balanceAfter = toDisplayUnit(
     await hederaOperationsWrapper.getAccountHbarBalance(accountId),
     8,
   );
-
   const expectedBalance = balanceBefore.plus(new BigNumber(expectedChange));
 
-  console.log(
-    `Verifying balance change for account ${accountId}. It was ${balanceBefore.toFixed(8)} HBAR before, should be ${expectedBalance.toFixed(8)} HBAR after. Fetched balance is ${balanceAfter.toFixed(8)} HBAR.`,
-  );
-
-  // Use BigNumber comparison with proper decimal precision (8 places for HBAR)
-  expect(balanceAfter.decimalPlaces(8).isGreaterThanOrEqualTo(balanceBefore.decimalPlaces(8))).toBe(
-    true,
-  );
+  expect(balanceAfter.decimalPlaces(8).isEqualTo(expectedBalance.decimalPlaces(8))).toBe(true);
 }

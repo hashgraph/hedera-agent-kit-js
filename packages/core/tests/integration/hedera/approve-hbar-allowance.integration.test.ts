@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import approveHbarAllowanceTool from '@/plugins/core-account-plugin/tools/account/approve-hbar-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile, type TestAccount } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { approveHbarAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Approve HBAR Allowance tool
@@ -18,65 +16,34 @@ import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
  */
 
 describe('Approve HBAR Allowance Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let spender: TestAccount;
   let executorClient: Client;
   let context: Context;
-  let spenderAccountId: AccountId;
-  let operatorWrapper: HederaOperationsWrapper;
-  let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient } = profile.client.connectAs(executor));
 
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    // Operator creates a spender account to preserve executor balance
-    spenderAccountId = await operatorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
-      .then(resp => resp.accountId!);
+    spender = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      try {
-        await executorWrapper.deleteAccount({
-          accountId: spenderAccountId,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-        await executorWrapper.deleteAccount({
-          accountId: executorClient.operatorAccountId!,
-          transferAccountId: operatorClient.operatorAccountId!,
-        });
-      } catch (error) {
-        // best-effort cleanup in tests
-        console.warn('Failed to clean up accounts:', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(spender);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('approves allowance with explicit owner and memo', async () => {
     const params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>> = {
       ownerAccountId: context.accountId!,
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       amount: 1.25,
       transactionMemo: 'Integration approve test',
     };
@@ -92,7 +59,7 @@ describe('Approve HBAR Allowance Integration Tests', () => {
 
   it('approves allowance with default owner (from context) and sub-1 HBAR amount', async () => {
     const params: z.infer<ReturnType<typeof approveHbarAllowanceParameters>> = {
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       amount: 0.00000001, // 1 tinybar
     };
 

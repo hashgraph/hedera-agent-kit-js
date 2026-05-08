@@ -18,6 +18,13 @@
     "test:unit": "pnpm -r test:unit",
     "test:integration": "pnpm -r test:integration",
     "test:e2e": "pnpm -r test:e2e",
+    "test:solo:install": "bash scripts/solo/install.sh",
+    "test:solo:deploy": "bash scripts/solo/deploy.sh",
+    "test:solo:check": "bash scripts/solo/check.sh",
+    "test:solo:deploy:contracts": "pnpm --filter @hashgraph/hedera-agent-kit-core-contracts deploy:solo",
+    "test:solo:destroy": "bash scripts/solo/destroy.sh",
+    "test:solo:up": "pnpm test:solo:deploy && pnpm test:solo:check && pnpm test:solo:deploy:contracts",
+    "test:solo:down": "pnpm test:solo:destroy",
     "release:validate": "node scripts/release/validate.js",
     "release:prepare": "node scripts/release/prepare.js"
   },

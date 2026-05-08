@@ -1,29 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TokenSupplyType, PublicKey } from '@hiero-ledger/sdk';
+import { Client, TokenSupplyType, PublicKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Associate Token E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let tokenExecutorClient: Client;
-  let tokenExecutorAccountId: AccountId;
-  let operatorWrapper: HederaOperationsWrapper;
-  let tokenExecutorWrapper: HederaOperationsWrapper;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
+  let tokenExecutor: TestAccount;
+  let tokenExecutorClient: Client;
+  let tokenExecutorWrapper: HederaOperationsWrapper;
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
@@ -39,30 +33,12 @@ describe('Associate Token E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    const tokenExecutorKey = PrivateKey.generateED25519();
-    tokenExecutorAccountId = await operatorWrapper
-      .createAccount({
-        key: tokenExecutorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    tokenExecutorClient = getCustomClient(tokenExecutorAccountId, tokenExecutorKey);
-    tokenExecutorWrapper = new HederaOperationsWrapper(tokenExecutorClient);
+    tokenExecutor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: tokenExecutorClient, wrapper: tokenExecutorWrapper } =
+      profile.client.connectAs(tokenExecutor));
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
@@ -70,40 +46,26 @@ describe('Associate Token E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (tokenExecutorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        tokenExecutorWrapper,
-        tokenExecutorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      tokenExecutorClient.close();
-    }
-
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(tokenExecutor);
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
+    tokenExecutorClient?.close();
   });
 
   it(
     'should associate token successfully via agent',
-    itWithRetry(async () => {
-      const tokenIdFT1 = await tokenExecutorWrapper
-        .createFungibleToken({
-          ...FT_PARAMS,
-          supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-          adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-          treasuryAccountId: tokenExecutorAccountId.toString(),
-          autoRenewAccountId: tokenExecutorAccountId.toString(),
-        })
-        .then(resp => resp.tokenId!);
+    async () => {
+      const createTokenResp = await tokenExecutorWrapper.createFungibleToken({
+        ...FT_PARAMS,
+        supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        adminKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: tokenExecutor.accountId.toString(),
+        autoRenewAccountId: tokenExecutor.accountId.toString(),
+      });
+      const tokenIdFT1 = createTokenResp.tokenId!;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(tokenExecutorWrapper, createTokenResp.transactionId!);
       const queryResult = await agent.invoke({
         messages: [
           {
@@ -114,47 +76,45 @@ describe('Associate Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
-      const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
+      const balances = await executorWrapper.getAccountBalances(executor.accountId.toString());
       const associated = balances.tokens.some(t => t.token_id === tokenIdFT1.toString()); // presence implies associated
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Tokens successfully associated');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(associated).toBe(true);
-    }),
+    },
   );
 
   it(
     'should associate two tokens successfully via agent',
-    itWithRetry(async () => {
-      const tokenIdFT1 = await tokenExecutorWrapper
-        .createFungibleToken({
-          ...FT_PARAMS,
-          supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-          adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-          treasuryAccountId: tokenExecutorAccountId.toString(),
-          autoRenewAccountId: tokenExecutorAccountId.toString(),
-        })
-        .then(resp => resp.tokenId!);
+    async () => {
+      const createToken1Resp = await tokenExecutorWrapper.createFungibleToken({
+        ...FT_PARAMS,
+        supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        adminKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: tokenExecutor.accountId.toString(),
+        autoRenewAccountId: tokenExecutor.accountId.toString(),
+      });
+      const tokenIdFT1 = createToken1Resp.tokenId!;
       // Create an extra token
-      const tokenIdFT2 = await tokenExecutorWrapper
-        .createFungibleToken({
-          tokenName: 'AssocToken2',
-          tokenSymbol: 'ASSOC2',
-          tokenMemo: 'FT2',
-          initialSupply: 0,
-          decimals: 0,
-          maxSupply: 1000,
-          supplyType: TokenSupplyType.Finite,
-          supplyKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-          adminKey: tokenExecutorClient.operatorPublicKey! as PublicKey,
-          treasuryAccountId: tokenExecutorAccountId.toString(),
-          autoRenewAccountId: tokenExecutorAccountId.toString(),
-        })
-        .then(resp => resp.tokenId!);
+      const createToken2Resp = await tokenExecutorWrapper.createFungibleToken({
+        tokenName: 'AssocToken2',
+        tokenSymbol: 'ASSOC2',
+        tokenMemo: 'FT2',
+        initialSupply: 0,
+        decimals: 0,
+        maxSupply: 1000,
+        supplyType: TokenSupplyType.Finite,
+        supplyKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        adminKey: tokenExecutor.privateKey.publicKey as PublicKey,
+        treasuryAccountId: tokenExecutor.accountId.toString(),
+        autoRenewAccountId: tokenExecutor.accountId.toString(),
+      });
+      const tokenIdFT2 = createToken2Resp.tokenId!;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(tokenExecutorWrapper, createToken2Resp.transactionId!);
 
       const queryResult = await agent.invoke({
         messages: [
@@ -166,9 +126,9 @@ describe('Associate Token E2E Tests', () => {
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
-      const balances = await executorWrapper.getAccountBalances(executorAccountId.toString());
+      const balances = await executorWrapper.getAccountBalances(executor.accountId.toString());
       const associatedFirst = balances.tokens.some(t => t.token_id === tokenIdFT1.toString());
       const associatedSecond = balances.tokens.some(t => t.token_id === tokenIdFT2.toString());
 
@@ -176,6 +136,6 @@ describe('Associate Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(associatedFirst).toBe(true);
       expect(associatedSecond).toBe(true);
-    }),
+    },
   );
 });

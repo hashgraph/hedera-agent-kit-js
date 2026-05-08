@@ -1,53 +1,40 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import transferERC721Tool from '@/plugins/core-evm-plugin/tools/erc721/transfer-erc721';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import {
   transferERC721Parameters,
   createERC721Parameters,
 } from '@/shared/parameter-schemas/evm.zod';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer ERC721 Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let recipient: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let testTokenAddress: string;
   let recipientAccountId: string;
   let nextTokenId: number = 0;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating tokens and transfers
-        key: executorAccountKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    recipientAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-        key: executorClient.operatorPublicKey as PublicKey,
-      })
-      .then(resp => resp.accountId!.toString());
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    recipientAccountId = recipient.accountId.toString();
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     const createParams: z.infer<ReturnType<typeof createERC721Parameters>> = {
@@ -64,24 +51,13 @@ describe('Transfer ERC721 Integration Tests', () => {
 
     testTokenAddress = createResult.erc721Address;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
   });
 
   afterAll(async () => {
-    if (operatorClient && executorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        AccountId.fromString(recipientAccountId),
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      operatorClient.close();
-      executorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   const mintTokenForTransfer = async (): Promise<number> => {

@@ -1,24 +1,19 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { Client, PrivateKey, TokenId, AccountId, TokenSupplyType, PublicKey } from '@hiero-ledger/sdk';
+import { Client, PrivateKey, TokenId, TokenSupplyType, PublicKey } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Get Token Info Query E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
@@ -37,56 +32,39 @@ describe('Get Token Info Query E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'MAXIMUM' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
   beforeEach(async () => {
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        metadataKey: operatorClient.operatorPublicKey! as PublicKey,
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      metadataKey: profile.operator.privateKey.publicKey as PublicKey,
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'should change token keys using passed values',
-    itWithRetry(async () => {
+    async () => {
       const newSupplyKey = PrivateKey.generateED25519().publicKey.toString();
-      const newAdminKey = executorClient.operatorPublicKey!.toString();
+      const newAdminKey = executor.privateKey.publicKey.toString();
       await agent.invoke({
         messages: [
           {
@@ -100,12 +78,12 @@ describe('Get Token Info Query E2E Tests', () => {
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
       expect((tokenDetails.adminKey as PublicKey).toString()).toBe(newAdminKey);
       expect((tokenDetails.supplyKey as PublicKey).toString()).toBe(newSupplyKey);
-    }),
+    },
   );
 
   it(
     'should change token keys using default values',
-    itWithRetry(async () => {
+    async () => {
       await agent.invoke({
         messages: [
           {
@@ -118,15 +96,15 @@ describe('Get Token Info Query E2E Tests', () => {
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
       expect((tokenDetails.metadataKey as PublicKey).toStringDer()).toBe(
-        executorClient.operatorPublicKey!.toStringDer(),
+        executor.privateKey.publicKey.toStringDer(),
       );
       expect(tokenDetails.tokenMemo).toBe('just updated');
-    }),
+    },
   );
 
   it(
     'should fail due to token being originally created without KYC key',
-    itWithRetry(async () => {
+    async () => {
       const queryResult = await agent.invoke({
         messages: [
           {
@@ -145,12 +123,12 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.error).toContain(
         'Failed to update token: Cannot update kycKey: token was created without a kycKey',
       );
-    }),
+    },
   );
 
   it(
     'should update metadata and token memo',
-    itWithRetry(async () => {
+    async () => {
       const metadataString = 'hello-world';
 
       await agent.invoke({
@@ -168,7 +146,7 @@ describe('Get Token Info Query E2E Tests', () => {
       // metadata comes back as a base64 string in the mirror node
       const decoded = Buffer.from(tokenDetails.metadata as Uint8Array).toString('utf8');
       expect(decoded).toBe(metadataString);
-    }),
+    },
   );
 
   // to set some account as the auto-renew account,
@@ -176,11 +154,11 @@ describe('Get Token Info Query E2E Tests', () => {
   // so in this case we create a new account with a public key of an executor account
   it(
     'should update autoRenewAccountId',
-    itWithRetry(async () => {
+    async () => {
       const secondaryAccountId = await executorWrapper
         .createAccount({
-          key: executorClient.operatorPublicKey!,
-          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
+          key: executor.privateKey.publicKey,
+          initialBalance: profile.balance.fund('MINIMAL'),
         })
         .then(resp => resp.accountId!);
       await agent.invoke({
@@ -194,39 +172,26 @@ describe('Get Token Info Query E2E Tests', () => {
 
       const tokenDetails = await executorWrapper.getTokenInfo(tokenIdFT.toString());
 
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        secondaryAccountId,
-        operatorClient.operatorAccountId!,
-      );
-
       expect(tokenDetails.autoRenewAccountId?.toString()).toBe(secondaryAccountId.toString());
-    }),
+    },
   );
 
   it(
     'should reject updates by an unauthorized operator',
-    itWithRetry(async () => {
-      const secondaryAccount = PrivateKey.generateED25519();
-      const secondaryAccountId = await executorWrapper
-        .createAccount({
-          key: secondaryAccount.publicKey,
-          initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        })
-        .then(resp => resp.accountId!);
+    async () => {
+      const secondary = await profile.accounts.acquire({ tier: 'STANDARD' });
+      const { client: secondaryClient, wrapper: secondaryWrapper } =
+        profile.client.connectAs(secondary);
 
-      const secondaryClient = getCustomClient(secondaryAccountId, secondaryAccount);
-      const secondaryWrapper = new HederaOperationsWrapper(secondaryClient);
-      const tokenId = await secondaryWrapper
-        .createFungibleToken({
-          ...FT_PARAMS,
-          supplyKey: secondaryClient.operatorPublicKey! as PublicKey,
-          adminKey: secondaryClient.operatorPublicKey! as PublicKey,
-          treasuryAccountId: secondaryAccountId.toString(),
-        })
-        .then(resp => resp.tokenId!);
+      const createSecondaryTokenResp = await secondaryWrapper.createFungibleToken({
+        ...FT_PARAMS,
+        supplyKey: secondary.privateKey.publicKey as PublicKey,
+        adminKey: secondary.privateKey.publicKey as PublicKey,
+        treasuryAccountId: secondary.accountId.toString(),
+      });
+      const tokenId = createSecondaryTokenResp.tokenId!;
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(secondaryWrapper, createSecondaryTokenResp.transactionId!);
 
       const queryResult = await agent.invoke({
         messages: [
@@ -246,11 +211,8 @@ describe('Get Token Info Query E2E Tests', () => {
         'You do not have permission to update this token.',
       );
 
-      await returnHbarsAndDeleteAccount(
-        secondaryWrapper,
-        secondaryAccountId,
-        operatorClient.operatorAccountId!,
-      );
-    }),
+      await profile.accounts.release(secondary);
+      secondaryClient.close();
+    },
   );
 });

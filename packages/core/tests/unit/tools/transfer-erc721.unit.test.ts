@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
 import toolFactory, { TRANSFER_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/transfer-erc721';
 import { transferERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -61,7 +61,8 @@ const mockedTxStrategy = vi.mocked(TxModeStrategy, { deep: false });
 const mockedMirrornodeUtils = vi.mocked(MirrornodeUtils, { deep: false });
 
 // ---- HELPERS ---
-const makeClient = () => Client.forTestnet();
+const makeClient = () =>
+  Client.forTestnet().setOperator(AccountId.fromString('0.0.1001'), PrivateKey.generateECDSA());
 
 // ---- TESTS ----
 describe('transferERC721 tool (unit)', () => {

@@ -1,48 +1,38 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import {
   Client,
-  PrivateKey,
-  AccountId,
   PublicKey,
   TokenId,
   TokenSupplyType,
   TokenAllowance,
   Long,
 } from '@hiero-ledger/sdk';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { ReactAgent } from 'langchain';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Transfer Fungible Token With Allowance E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorWrapper: HederaOperationsWrapper;
 
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
 
+  let spender: TestAccount;
   let spenderClient: Client;
-  let spenderAccountId: AccountId;
-  let spenderKey: PrivateKey;
   let spenderWrapper: HederaOperationsWrapper;
 
+  let receiver: TestAccount;
   let receiverClient: Client;
-  let receiverAccountId: AccountId;
-  let receiverKey: PrivateKey;
   let receiverWrapper: HederaOperationsWrapper;
 
   let tokenId: TokenId;
@@ -58,78 +48,42 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Create an executor account (token owner)
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(r => r.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Create fungible token under executor
     tokenId = await executorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        treasuryAccountId: executorAccountId.toString(),
-        supplyKey: executorClient.operatorPublicKey as PublicKey,
-        adminKey: executorClient.operatorPublicKey as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
+        treasuryAccountId: executor.accountId.toString(),
+        supplyKey: executor.privateKey.publicKey as PublicKey,
+        adminKey: executor.privateKey.publicKey as PublicKey,
+        autoRenewAccountId: executor.accountId.toString(),
       })
       .then(r => r.tokenId!);
   });
 
   afterAll(async () => {
-    // Cleanup executor
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   beforeEach(async () => {
     // Spender account
-    spenderKey = PrivateKey.generateECDSA();
-    spenderAccountId = await operatorWrapper
-      .createAccount({
-        key: spenderKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(r => r.accountId!);
-
-    spenderClient = getCustomClient(spenderAccountId, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
+    spender = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: spenderClient, wrapper: spenderWrapper } = profile.client.connectAs(spender));
 
     // Receiver account
-    receiverKey = PrivateKey.generateECDSA();
-    receiverAccountId = await operatorWrapper
-      .createAccount({
-        key: receiverKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(r => r.accountId!);
+    receiver = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: receiverClient, wrapper: receiverWrapper } = profile.client.connectAs(receiver));
 
-    receiverClient = getCustomClient(receiverAccountId, receiverKey);
-    receiverWrapper = new HederaOperationsWrapper(receiverClient);
-
-    // Associate token to spender and receiver
+    // Associate token to spender and receiver (each must sign their own associate)
     await spenderWrapper.associateToken({
-      accountId: spenderAccountId.toString(),
+      accountId: spender.accountId.toString(),
       tokenId: tokenId.toString(),
     });
     await receiverWrapper.associateToken({
-      accountId: receiverAccountId.toString(),
+      accountId: receiver.accountId.toString(),
       tokenId: tokenId.toString(),
     });
 
@@ -138,8 +92,8 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
       tokenApprovals: [
         new TokenAllowance({
           tokenId,
-          ownerAccountId: executorAccountId,
-          spenderAccountId,
+          ownerAccountId: executor.accountId,
+          spenderAccountId: spender.accountId,
           amount: Long.fromNumber(200),
         }),
       ],
@@ -152,19 +106,18 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   });
 
   afterEach(async () => {
-    if (spenderAccountId) {
-      await returnHbarsAndDeleteAccount(spenderWrapper, spenderAccountId, executorAccountId);
-    }
-    if (receiverAccountId) {
-      await returnHbarsAndDeleteAccount(receiverWrapper, receiverAccountId, executorAccountId);
-    }
+    await profile.accounts.release(spender);
+    await profile.accounts.release(receiver);
+    testSetup?.cleanup();
+    spenderClient?.close();
+    receiverClient?.close();
   });
 
   it('should allow spender to transfer tokens to themselves using allowance', async () => {
     console.log(
-      `Account ids: ${executorAccountId.toString()}, ${spenderAccountId.toString()}, ${receiverAccountId.toString()}`,
+      `Account ids: ${executor.accountId.toString()}, ${spender.accountId.toString()}, ${receiver.accountId.toString()}`,
     );
-    const input = `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;
+    const input = `Use allowance from account ${executor.accountId.toString()} to send 50 ${tokenId.toString()} to account ${spender.accountId.toString()}`;
     const result = await agent.invoke({
       messages: [
         {
@@ -180,12 +133,12 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround
     const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
-      spenderAccountId.toString(),
+      spender.accountId.toString(),
       tokenId.toString(),
     );
 
@@ -193,7 +146,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
   });
 
   it('should allow spender to transfer tokens to both themselves and receiver in one allowance call', async () => {
-    const input = `Use allowance from account ${executorAccountId.toString()} to send 30 ${tokenId.toString()} to account ${spenderAccountId.toString()} and 70 ${tokenId.toString()} to account ${receiverAccountId.toString()}`;
+    const input = `Use allowance from account ${executor.accountId.toString()} to send 30 ${tokenId.toString()} to account ${spender.accountId.toString()} and 70 ${tokenId.toString()} to account ${receiver.accountId.toString()}`;
     const result = await agent.invoke({
       messages: [
         {
@@ -209,16 +162,16 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
     // FIXME: the xyzWrapper.getAccountTokenBalance() calls are failing with INVALID_ACCOUNT_ID and tx id 0.0.0@...
     // using mirrornode instead is a workaround
     const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
-      spenderAccountId.toString(),
+      spender.accountId.toString(),
       tokenId.toString(),
     );
     const receiverBalance = await receiverWrapper.getAccountTokenBalanceFromMirrornode(
-      receiverAccountId.toString(),
+      receiver.accountId.toString(),
       tokenId.toString(),
     );
 
@@ -228,12 +181,12 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
 
   it(
     'should schedule allowing spender to transfer tokens to themselves using allowance',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
             role: 'user',
-            content: `Use allowance from account ${executorAccountId.toString()} to send 50 ${tokenId.toString()} to account ${spenderAccountId.toString()}. Schedule the transaction instead of executing it immediately.`,
+            content: `Use allowance from account ${executor.accountId.toString()} to send 50 ${tokenId.toString()} to account ${spender.accountId.toString()}. Schedule the transaction instead of executing it immediately.`,
           },
         ],
       });
@@ -243,11 +196,11 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
         'Scheduled allowance transfer created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 
   it('should fail gracefully when trying to transfer more than allowance', async () => {
-    const input = `Use allowance from account ${executorAccountId.toString()} to send 300 ${tokenId.toString()} to account ${spenderAccountId.toString()}`;
+    const input = `Use allowance from account ${executor.accountId.toString()} to send 300 ${tokenId.toString()} to account ${spender.accountId.toString()}`;
     const result = await agent.invoke({
       messages: [
         {

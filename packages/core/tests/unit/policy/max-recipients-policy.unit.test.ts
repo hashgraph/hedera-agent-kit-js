@@ -117,7 +117,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
           hbarTransfers: [
             { accountId: '0.0.100', amount: Hbar.fromTinybars(-1) }, // sender
             { accountId: '0.0.1', amount: Hbar.fromTinybars(1) }, // recipient
-            { accountId: '0.0.2', amount: Hbar.fromTinybars(0) }, // zero — not a recipient
+            { accountId: '0.0.2', amount: Hbar.fromTinybars(0) }, // zero, not a recipient
           ],
         },
       };

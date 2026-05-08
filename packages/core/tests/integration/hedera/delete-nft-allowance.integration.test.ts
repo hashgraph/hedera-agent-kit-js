@@ -2,9 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   AccountId,
   Client,
-  Key,
   NftId,
-  PrivateKey,
   PublicKey,
   TokenId,
   TokenMintTransaction,
@@ -15,17 +13,17 @@ import {
 import approveNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/approve-non-fungible-token-allowance';
 import deleteNftAllowanceTool from '@/plugins/core-token-plugin/tools/non-fungible-token/delete-non-fungible-token-allowance';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import {
   approveNftAllowanceParameters,
   deleteNftAllowanceParameters,
 } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 /**
  * Integration tests for Delete NFT Allowance tool
@@ -37,67 +35,34 @@ import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
  */
 
 describe('Delete NFT Allowance Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let spender: TestAccount;
+  let recipient: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let spenderAccountId: AccountId;
-  let spenderKey: PrivateKey;
-  let spenderClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let spenderClient: Client;
   let spenderWrapper: HederaOperationsWrapper;
+  let recipientClient: Client;
+  let recipientWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   // NFT setup
   let nftTokenId: string;
 
-  // Recipient for transfer attempts
-  let recipientAccountId: AccountId;
-  let recipientClient: Client;
-  let recipientWrapper: HederaOperationsWrapper;
-
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    // Create an executor account that will be the NFT treasury/owner
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        key: executorKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: spenderClient, wrapper: spenderWrapper } = profile.client.connectAs(spender));
 
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    // Create a spender account with its own key
-    spenderKey = PrivateKey.generateED25519();
-    spenderAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: spenderKey.publicKey as Key,
-      })
-      .then(resp => resp.accountId!);
-
-    spenderClient = getCustomClient(spenderAccountId, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
-
-    // Create a recipient account
-    const recipientKey = PrivateKey.generateED25519();
-    recipientAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: recipientKey.publicKey as Key,
-      })
-      .then(resp => resp.accountId!);
-
-    recipientClient = getCustomClient(recipientAccountId, recipientKey);
-    recipientWrapper = new HederaOperationsWrapper(recipientClient);
+    recipient = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: recipientClient, wrapper: recipientWrapper } = profile.client.connectAs(recipient));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     // Create an NFT token with executor as treasury and supply/admin keys
@@ -108,10 +73,10 @@ describe('Delete NFT Allowance Integration Tests', () => {
       tokenType: TokenType.NonFungibleUnique,
       supplyType: TokenSupplyType.Finite,
       maxSupply: 100,
-      adminKey: executorClient.operatorPublicKey! as PublicKey,
-      supplyKey: executorClient.operatorPublicKey! as PublicKey,
-      treasuryAccountId: executorAccountId.toString(),
-      autoRenewAccountId: executorAccountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
     });
     nftTokenId = createNftResp.tokenId!.toString();
 
@@ -126,58 +91,33 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const mintResp = await mintTx.execute(executorClient);
     await mintResp.getReceipt(executorClient);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, mintResp.transactionId.toString());
 
     // Associate spender and recipient with the NFT token
     await spenderWrapper.associateToken({
-      accountId: spenderAccountId.toString(),
+      accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
     await recipientWrapper.associateToken({
-      accountId: recipientAccountId.toString(),
+      accountId: recipient.accountId.toString(),
       tokenId: nftTokenId,
     });
   });
 
   afterAll(async () => {
-    try {
-      // Best-effort cleanup
-      if (recipientWrapper && recipientAccountId) {
-        await returnHbarsAndDeleteAccount(
-          recipientWrapper,
-          recipientAccountId,
-          operatorClient.operatorAccountId!,
-        );
-      }
-      if (spenderWrapper && spenderAccountId) {
-        await returnHbarsAndDeleteAccount(
-          spenderWrapper,
-          spenderAccountId,
-          operatorClient.operatorAccountId!,
-        );
-      }
-      if (executorWrapper && executorClient) {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      }
-    } catch (error) {
-      console.warn('Failed cleanup (accounts might still hold NFTs or tokens):', error);
-    } finally {
-      executorClient?.close();
-      spenderClient?.close();
-      recipientClient?.close();
-      operatorClient?.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(spender);
+    await profile.accounts.release(executor);
+    executorClient?.close();
+    spenderClient?.close();
+    recipientClient?.close();
   });
 
   it('deletes NFT allowance with explicit owner and memo for a single serial', async () => {
     // First approve the allowance
     const approveParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
       ownerAccountId: context.accountId!,
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenId: nftTokenId,
       serialNumbers: [1],
       transactionMemo: 'Approve for delete test',
@@ -187,7 +127,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const approveResult = await approveTool.execute(executorClient, context, approveParams);
     expect(approveResult.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, approveResult.raw.transactionId);
 
     // Now delete the allowance
     const deleteParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> = {
@@ -209,7 +149,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
   it('deletes NFT allowance using default owner (from context) for multiple serials', async () => {
     // First approve the allowances
     const approveParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenId: nftTokenId,
       serialNumbers: [2, 3],
     };
@@ -218,7 +158,7 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const approveResult = await approveTool.execute(executorClient, context, approveParams);
     expect(approveResult.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, approveResult.raw.transactionId);
 
     // Now delete the allowances
     const deleteParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> = {
@@ -239,15 +179,15 @@ describe('Delete NFT Allowance Integration Tests', () => {
     // First approve the allowance
     const approveParams: z.infer<ReturnType<typeof approveNftAllowanceParameters>> = {
       ownerAccountId: context.accountId!,
-      spenderAccountId: spenderAccountId.toString(),
+      spenderAccountId: spender.accountId.toString(),
       tokenId: nftTokenId,
       serialNumbers: [1],
     };
 
     const approveTool = approveNftAllowanceTool(context);
-    await approveTool.execute(executorClient, context, approveParams);
+    const approveResult = await approveTool.execute(executorClient, context, approveParams);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, approveResult.raw.transactionId);
 
     // Delete the allowance
     const deleteParams: z.infer<ReturnType<typeof deleteNftAllowanceParameters>> = {
@@ -260,14 +200,14 @@ describe('Delete NFT Allowance Integration Tests', () => {
     const deleteResult = await deleteTool.execute(executorClient, context, deleteParams);
     expect(deleteResult.raw.status).toBe('SUCCESS');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, deleteResult.raw.transactionId);
 
     // Attempt transfer with spender - should fail
     const nft = new NftId(TokenId.fromString(nftTokenId), 1);
     const tx = new TransferTransaction().addApprovedNftTransfer(
       nft,
       AccountId.fromString(context.accountId!),
-      recipientAccountId,
+      recipient.accountId,
     );
 
     await expect(async () => {

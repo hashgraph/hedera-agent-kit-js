@@ -1,41 +1,33 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import {
   Client,
-  PrivateKey,
-  AccountId,
   PublicKey,
   TokenId,
   TokenSupplyType,
   TokenAllowance,
   Long,
 } from '@hiero-ledger/sdk';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { ReactAgent } from 'langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Delete Token Allowance E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
 
-  let spenderAccountId: AccountId;
-  let spenderKey: PrivateKey;
+  let spender: TestAccount;
   let spenderClient: Client;
-  let spenderWrapper: HederaOperationsWrapper;
 
   let tokenId: TokenId;
 
@@ -50,33 +42,20 @@ describe('Delete Token Allowance E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Create executor (owner)
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Create fungible token under executor
-    tokenId = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        treasuryAccountId: executorAccountId.toString(),
-        supplyKey: executorClient.operatorPublicKey as PublicKey,
-        adminKey: executorClient.operatorPublicKey as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      treasuryAccountId: executor.accountId.toString(),
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenId = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
 
     // LangChain setup
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
@@ -85,39 +64,19 @@ describe('Delete Token Allowance E2E Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   beforeEach(async () => {
-    // Create spender account before each test
-    spenderKey = PrivateKey.generateED25519();
-    spenderAccountId = await executorWrapper
-      .createAccount({
-        key: spenderKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    spenderClient = getCustomClient(spenderAccountId, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
+    spender = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: spenderClient } = profile.client.connectAs(spender));
   });
 
   afterEach(async () => {
-    if (spenderAccountId) {
-      await returnHbarsAndDeleteAccount(
-        spenderWrapper,
-        spenderAccountId,
-        operatorClient.operatorAccountId!,
-      );
-    }
+    await profile.accounts.release(spender);
+    spenderClient?.close();
   });
 
   it('should delete an existing token allowance successfully', async () => {
@@ -126,8 +85,8 @@ describe('Delete Token Allowance E2E Tests', () => {
       tokenApprovals: [
         new TokenAllowance({
           tokenId: TokenId.fromString(tokenId.toString()),
-          ownerAccountId: executorAccountId,
-          spenderAccountId: spenderAccountId,
+          ownerAccountId: executor.accountId,
+          spenderAccountId: spender.accountId,
           amount: Long.fromNumber(10),
         }),
       ],
@@ -135,7 +94,7 @@ describe('Delete Token Allowance E2E Tests', () => {
     await executorWrapper.approveTokenAllowance(approveParams);
 
     // Step 2: Delete the token allowance via natural language input
-    const input = `Delete token allowance given from ${executorAccountId.toString()} to account ${spenderAccountId.toString()} for token ${tokenId.toString()}`;
+    const input = `Delete token allowance given from ${executor.accountId.toString()} to account ${spender.accountId.toString()} for token ${tokenId.toString()}`;
     const queryResult = await agent.invoke({
       messages: [
         {
@@ -156,7 +115,7 @@ describe('Delete Token Allowance E2E Tests', () => {
 
   it('should handle deleting a non-existent token allowance gracefully', async () => {
     // No prior approve step
-    const input = `Delete token allowance given from ${executorAccountId.toString()} to account ${spenderAccountId.toString()} for token ${tokenId.toString()}`;
+    const input = `Delete token allowance given from ${executor.accountId.toString()} to account ${spender.accountId.toString()} for token ${tokenId.toString()}`;
     const queryResult = await agent.invoke({
       messages: [
         {

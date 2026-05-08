@@ -5,51 +5,37 @@ import {
   TokenId,
   TokenType,
   TokenSupplyType,
-  AccountId,
   TopicId,
   PublicKey,
 } from '@hiero-ledger/sdk';
 import { AgentMode, type Context } from '@/shared/configuration';
 import updateTokenTool from '@/plugins/core-token-plugin/tools/update-token';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { updateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import updateTopicTool from '@/plugins/core-consensus-plugin/tools/consensus/update-topic';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Update Token Integration Tests', () => {
-  let operatorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
-  let executorAccountId: AccountId;
   let context: Context;
   let tokenId: TokenId;
   let topicId: TopicId;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MAXIMUM),
-        accountMemo: 'executor account for Update Token Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MAXIMUM' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
@@ -62,23 +48,23 @@ describe('Update Token Integration Tests', () => {
       supplyType: TokenSupplyType.Infinite,
       initialSupply: 1000,
       decimals: 0,
-      treasuryAccountId: executorAccountId.toString(),
-      adminKey: executorClient.operatorPublicKey!,
-      supplyKey: executorClient.operatorPublicKey!,
-      freezeKey: executorClient.operatorPublicKey!,
+      treasuryAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey,
+      supplyKey: executor.privateKey.publicKey,
+      freezeKey: executor.privateKey.publicKey,
       kycKey: secondaryKey,
     });
     tokenId = createTokenResult.tokenId!;
     const createResult = await executorWrapper.createTopic({
-      adminKey: executorClient.operatorPublicKey!,
-      submitKey: executorClient.operatorPublicKey!,
+      adminKey: executor.privateKey.publicKey,
+      submitKey: executor.privateKey.publicKey,
       topicMemo: 'Initial topic memo',
-      autoRenewAccountId: executorClient.operatorAccountId!.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
       isSubmitKey: true,
     });
 
     topicId = createResult.topicId!;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.transactionId!);
   });
 
   afterEach(async () => {
@@ -99,15 +85,8 @@ describe('Update Token Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('updates token name, symbol, and memo', async () => {
@@ -140,7 +119,7 @@ describe('Update Token Integration Tests', () => {
 
     expect(result.humanMessage).toContain('Token successfully updated.');
     const info = await executorWrapper.getTokenInfo(tokenId.toString());
-    expect(info?.adminKey?.toString()).toBe(executorClient.operatorPublicKey!.toString());
+    expect(info?.adminKey?.toString()).toBe(executor.privateKey.publicKey.toString());
   });
 
   it('updates supplyKey to a new public key', async () => {
@@ -227,7 +206,7 @@ describe('Update Token Integration Tests', () => {
     expect(result.humanMessage).toContain('Topic successfully updated.');
 
     const info = await executorWrapper.getTopicInfo(topicId.toString());
-    expect(info?.submitKey?.toString()).toBe(executorClient.operatorPublicKey!.toString());
+    expect(info?.submitKey?.toString()).toBe(executor.privateKey.publicKey.toString());
   });
 
   it('updates submitKey to a new public key', async () => {
@@ -260,7 +239,7 @@ describe('Update Token Integration Tests', () => {
 
     const params = {
       topicId: topicId.toString(),
-      autoRenewAccountId: executorClient.operatorAccountId!.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
       autoRenewPeriod: newAutoRenewPeriod,
       expirationTime: newExpirationDate,
     };
@@ -272,7 +251,7 @@ describe('Update Token Integration Tests', () => {
 
     const updatedInfo = await executorWrapper.getTopicInfo(topicId.toString());
     expect(updatedInfo?.autoRenewAccountId?.toString()).toBe(
-      executorClient.operatorAccountId!.toString(),
+      executor.accountId.toString(),
     );
     expect(updatedInfo?.autoRenewPeriod?.seconds.toString()).toBe(newAutoRenewPeriod.toString());
 
@@ -286,13 +265,13 @@ describe('Update Token Integration Tests', () => {
     // Delete the existing topic and recreate without a submitKey
     await executorWrapper.deleteTopic({ topicId: topicId.toString() });
     const createResult = await executorWrapper.createTopic({
-      adminKey: executorClient.operatorPublicKey!,
+      adminKey: executor.privateKey.publicKey,
       topicMemo: 'No submitKey topic',
-      autoRenewAccountId: executorClient.operatorAccountId!.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
       isSubmitKey: true,
     });
     topicId = createResult.topicId!;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createResult.transactionId!);
 
     const tool = updateTopicTool(context);
     const params = { topicId: topicId.toString(), submitKey: true };

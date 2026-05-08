@@ -1,52 +1,35 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import createERC20Tool from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Create ERC20 Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
-  let executorAccountId: AccountId;
+  let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD), // For creating NFTs
-        key: executorAccountKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   describe('Valid Create ERC20 Scenarios', () => {
