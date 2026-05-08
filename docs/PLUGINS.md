@@ -206,6 +206,8 @@ export class MyTool extends BaseTool {
   `;
   parameters = myToolParameters;
 
+  // Stage 1 - Here preToolExecutionHook() will be called automatically - see the 7-stage lifecycle above.
+
   // Stage 2 — validate / transform raw params from the LLM
   async normalizeParams(
     params: z.infer<typeof myToolParameters>,
@@ -214,6 +216,8 @@ export class MyTool extends BaseTool {
   ) {
     return params; // pass-through; add validation/transformation here
   }
+
+  // Stage 3 - Here postParamsNormalizationHook() will be called automatically.
 
   // Stage 4 — core business logic (build a transaction or run a query)
   async coreAction(
@@ -225,6 +229,8 @@ export class MyTool extends BaseTool {
     return `Result for ${normalisedParams.requiredParam}`;
   }
 
+  // Stage 5 - Here postCoreActionHook() will be called automatically.
+
   // Skip secondary action for non-transaction tools
   async shouldSecondaryAction(_result: any, _context: Context) {
     return false; // return true (default) if you need to sign/submit a transaction
@@ -234,6 +240,8 @@ export class MyTool extends BaseTool {
   async secondaryAction(result: any, _client: Client, _context: Context) {
     return result; // no-op for non-transaction tools
   }
+
+  // Stage 7 - Here postToolExecutionHook() will be called automatically.
 }
 
 // Factory function: return a BaseTool instance (satisfies the Tool interface)
@@ -241,6 +249,10 @@ const tool = (_context: Context) => new MyTool();
 
 export default tool;
 ```
+
+> [!NOTE]  
+> Stages 1, 3, 5, and 7 must not be defined by the plugin. They are automatically handled by the \`BaseTool\` implementation and the hooks/policies system. Developers only need to implement the core logic stages (2, 4, and 6).
+
 
 <details>
 <summary>Legacy v3 pattern (still works, but no hook/policy support)</summary>
