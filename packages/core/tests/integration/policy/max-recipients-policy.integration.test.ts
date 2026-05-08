@@ -1,15 +1,20 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
 import { Context, AgentMode } from '@/shared';
-import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 import { Client } from '@hiero-ledger/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 
 describe('MaxRecipientsPolicy Integration Tests', () => {
+  const profile = getProfile();
   let operatorClient: Client;
 
   beforeAll(() => {
-    operatorClient = getOperatorClientForTests();
+    ({ client: operatorClient } = profile.client.connectAs(profile.operator));
+  });
+
+  afterAll(() => {
+    operatorClient?.close();
   });
 
   it('should block TRANSFER_HBAR_TOOL if recipients count exceeds limit', async () => {

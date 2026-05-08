@@ -16,6 +16,7 @@ import {
 } from '@/shared/constants/contracts';
 import { mintERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
 
 const mintERC721Prompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -75,6 +76,7 @@ export class MintErc721Tool extends BaseTool {
     context: Context,
     client: Client,
   ) {
+    assertEcdsaOperator(client);
     const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
     return await HederaParameterNormaliser.normaliseMintERC721Params(
       params,

@@ -1,29 +1,26 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AccountId, Client, PrivateKey, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
+import { Client, PublicKey, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 
+import { createLangchainTestSetup, type LangchainTestSetup } from '../utils';
 import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
-import { createLangchainTestSetup, type LangchainTestSetup, BALANCE_TIERS } from '../utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ReactAgent } from 'langchain';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
 
 describe('Airdrop Fungible Token E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdFT: TokenId;
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
+  const recipients: TestAccount[] = [];
 
   const FT_PARAMS = {
     tokenName: 'AirdropToken',
@@ -36,21 +33,11 @@ describe('Airdrop Fungible Token E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Executor account
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Airdrop Fungible Token E2E Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({
+      tier: 'STANDARD',
+      accountMemo: 'executor account for Airdrop Fungible Token E2E Tests',
+    });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // Setup agent
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
@@ -58,86 +45,78 @@ describe('Airdrop Fungible Token E2E Tests', () => {
     responseParsingService = testSetup.responseParser;
 
     // Deploy fungible token
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        autoRenewAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTokenResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createTokenResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTokenResp.transactionId!);
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      testSetup.cleanup();
-      operatorClient.close();
+    for (const recipient of recipients) {
+      await profile.accounts.release(recipient);
     }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
-  const createRecipientAccount = async (maxAutomaticTokenAssociations: number) => {
-    const recipientKey = PrivateKey.generateED25519();
-
-    return await executorWrapper
-      .createAccount({
-        key: recipientKey.publicKey,
-        initialBalance: 0,
-        maxAutomaticTokenAssociations,
-        accountMemo: 'recipient account for Airdrop Fungible Token E2E Tests',
-      })
-      .then(resp => resp.accountId!);
+  const createRecipientAccount = async () => {
+    const recipient = await profile.accounts.acquire({
+      preset: 'pending-airdrop-recipient',
+      accountMemo: 'recipient account for Airdrop Fungible Token E2E Tests',
+    });
+    recipients.push(recipient);
+    return recipient.accountId;
   };
 
   it(
     'should airdrop tokens to a single recipient successfully',
-    itWithRetry(async () => {
-      const recipientId = await createRecipientAccount(0); // no auto-association
+    async () => {
+      const recipientId = await createRecipientAccount();
 
       const queryResult = await agent.invoke({
         messages: [
           {
             role: 'user',
-            content: `Airdrop 50 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+            content: `Airdrop 50 of token ${tokenIdFT.toString()} from ${executor.accountId.toString()} to ${recipientId.toString()}`,
           },
         ],
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully airdropped');
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
       const pending = await executorWrapper.getPendingAirdrops(recipientId.toString());
       expect(pending.airdrops.length).toBeGreaterThan(0);
-    }),
+    },
   );
 
   it(
     'should airdrop tokens to multiple recipients in one transaction',
-    itWithRetry(async () => {
-      const recipient1 = await createRecipientAccount(0);
-      const recipient2 = await createRecipientAccount(0);
+    async () => {
+      const recipient1 = await createRecipientAccount();
+      const recipient2 = await createRecipientAccount();
 
       const queryResult = await agent.invoke({
         messages: [
           {
             role: 'user',
-            content: `Airdrop 10 of token ${tokenIdFT.toString()} from ${executorAccountId.toString()} to ${recipient1.toString()} and 20 to ${recipient2.toString()}`,
+            content: `Airdrop 10 of token ${tokenIdFT.toString()} from ${executor.accountId.toString()} to ${recipient1.toString()} and 20 to ${recipient2.toString()}`,
           },
         ],
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
 
@@ -146,20 +125,20 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       expect(pending1.airdrops.length).toBeGreaterThan(0);
       expect(pending2.airdrops.length).toBeGreaterThan(0);
-    }),
+    },
   );
 
   it(
     'should fail gracefully for non-existent token',
-    itWithRetry(async () => {
-      const recipientId = await createRecipientAccount(0);
+    async () => {
+      const recipientId = await createRecipientAccount();
       const fakeTokenId = '0.0.999999999';
 
       const queryResult = await agent.invoke({
         messages: [
           {
             role: 'user',
-            content: `Airdrop 5 of token ${fakeTokenId} from ${executorAccountId.toString()} to ${recipientId.toString()}`,
+            content: `Airdrop 5 of token ${fakeTokenId} from ${executor.accountId.toString()} to ${recipientId.toString()}`,
           },
         ],
       });
@@ -169,6 +148,6 @@ describe('Airdrop Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to get token info for a token',
       );
-    }),
+    },
   );
 });

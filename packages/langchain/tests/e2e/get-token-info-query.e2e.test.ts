@@ -1,33 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  Client,
-  PrivateKey,
-  TokenId,
-  AccountId,
-  TokenSupplyType,
-  PublicKey,
-  TokenType,
-} from '@hiero-ledger/sdk';
+import { Client, TokenId, TokenSupplyType, PublicKey, TokenType } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@hashgraph/hedera-agent-kit';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Get Token Info Query E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let tokenIdNFT: TokenId;
   let tokenIdFT: TokenId;
@@ -56,61 +43,43 @@ describe('Get Token Info Query E2E Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createFtResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createFtResp.tokenId!;
 
-    tokenIdNFT = await executorWrapper
-      .createNonFungibleToken({
-        ...NFT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createNftResp = await executorWrapper.createNonFungibleToken({
+      ...NFT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdNFT = createNftResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createNftResp.transactionId!);
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'should return token info for a newly created fungible token',
-    itWithRetry(async () => {
+    async () => {
       const input = `Get token information for ${tokenIdFT.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -137,7 +106,7 @@ describe('Get Token Info Query E2E Tests', () => {
         `Decimals**: ${FT_PARAMS.decimals}`,
       );
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        `Treasury Account ID**: ${executorAccountId.toString()}`,
+        `Treasury Account ID**: ${executor.accountId.toString()}`,
       );
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Status (Deleted/Active)**: Active',
@@ -150,14 +119,14 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.tokenInfo.memo).toBe(FT_PARAMS.tokenMemo);
       expect(parsedResponse[0].parsedData.raw.tokenInfo.deleted).toBe(false);
       expect(parsedResponse[0].parsedData.raw.tokenInfo.treasury_account_id).toBe(
-        executorAccountId.toString(),
+        executor.accountId.toString(),
       );
-    }),
+    },
   );
 
   it(
     'should return token info with formatted supply amounts',
-    itWithRetry(async () => {
+    async () => {
       const input = `Show me details for token ${tokenIdFT.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -188,12 +157,12 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.tokenInfo.supply_type?.toUpperCase()).toBe(
         FT_PARAMS.supplyType.toString().toUpperCase(),
       );
-    }),
+    },
   );
 
   it(
     'should fail gracefully for non-existent token',
-    itWithRetry(async () => {
+    async () => {
       const fakeTokenId = '0.0.999999999';
 
       const input = `Get token info for ${fakeTokenId}`;
@@ -210,12 +179,12 @@ describe('Get Token Info Query E2E Tests', () => {
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to get token info');
       expect(parsedResponse[0].parsedData.raw.error).toBeDefined();
-    }),
+    },
   );
 
   it(
     'should handle tokens with different key configurations',
-    itWithRetry(async () => {
+    async () => {
       const input = `Query information for token ${tokenIdNFT.toString()}`;
       const result = await agent.invoke({
         messages: [
@@ -251,6 +220,6 @@ describe('Get Token Info Query E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.tokenInfo.max_supply).toBe(
         String(NFT_PARAMS.maxSupply),
       );
-    }),
+    },
   );
 });

@@ -27,8 +27,6 @@ import {
   LLMProvider,
 } from '@hashgraph/hedera-agent-kit-tests/shared/setup/llm-factory';
 
-export { BALANCE_TIERS, type BalanceTier } from '@hashgraph/hedera-agent-kit-tests';
-
 /**
  * Common test toolkit options type used by langchain test setup.
  */

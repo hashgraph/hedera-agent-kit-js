@@ -1,57 +1,46 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
-import { AccountId, Client, PrivateKey, TransactionId } from '@hiero-ledger/sdk';
+import { Client, TransactionId } from '@hiero-ledger/sdk';
 import { GetTransactionRecordQueryTool } from '@/plugins/core-transactions-query-plugin/tools/queries/get-transaction-record-query';
-import { getCustomClient, getOperatorClientForTests, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import type { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Integration - Hedera getTransactionRecord', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   beforeAll(async () => {
-    // Use a separate executor account to avoid conflicts in parallel runs
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Integration - Hedera getTransactionRecord',
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
   });
 
   it('fetches record for a recent transfer using real Client', async () => {
     const mirrornodeService = getMirrornodeService(undefined, executorClient.ledgerId!);
     context = {
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
       mirrornodeService: mirrornodeService,
     };
 
     // Create a self-transfer to produce a transaction id
     const rawResponse = await executorWrapper.transferHbar({
       hbarTransfers: [
-        { accountId: executorAccountId, amount: 0.00000001 },
-        { accountId: executorAccountId, amount: -0.00000001 },
+        { accountId: executor.accountId, amount: 0.00000001 },
+        { accountId: executor.accountId, amount: -0.00000001 },
       ],
     });
     const txIdSdkStyle = TransactionId.fromString(rawResponse.transactionId!);
 
     const txIdMirrorNodeStyle = `${txIdSdkStyle.accountId!.toString()}-${txIdSdkStyle.validStart!.seconds!.toString()}-${txIdSdkStyle.validStart!.nanos!.toString()}`;
 
-    await wait(MIRROR_NODE_WAITING_TIME); // waiting for the transaction to be indexed by mirrornode
+    await waitForMirrorTx(executorWrapper, rawResponse.transactionId!); // waiting for the transaction to be indexed by mirrornode
 
     const tool = new GetTransactionRecordQueryTool(context);
     const result = await tool.execute(executorClient, context, {
@@ -65,7 +54,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
   it('fails when transactionId format is invalid', async () => {
     const mirrornodeService = getMirrornodeService(undefined, executorClient.ledgerId!);
     context = {
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
       mirrornodeService,
     };
 
@@ -81,11 +70,11 @@ describe('Integration - Hedera getTransactionRecord', () => {
   it('throws an error for non-existent transaction', async () => {
     const mirrornodeService = getMirrornodeService(undefined, executorClient.ledgerId!);
     context = {
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
       mirrornodeService,
     };
 
-    const nonExistentTxId = `${executorClient.operatorAccountId!.toString()}-123456789-000000000`;
+    const nonExistentTxId = `${executor.accountId.toString()}-123456789-000000000`;
     const tool = new GetTransactionRecordQueryTool(context);
     const response = await tool.execute(executorClient, context, {
       transactionId: nonExistentTxId,
@@ -94,14 +83,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
   });
 
   afterAll(async () => {
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      executorClient.operatorAccountId!,
-      operatorClient.operatorAccountId!,
-    );
-    if (executorClient && operatorClient) {
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 });

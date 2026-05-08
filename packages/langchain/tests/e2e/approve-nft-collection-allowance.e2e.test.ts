@@ -2,9 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   AccountId,
   Client,
-  Key,
   NftId,
-  PrivateKey,
   PublicKey,
   TokenId,
   TokenMintTransaction,
@@ -13,91 +11,57 @@ import {
   TransferTransaction,
 } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 /**
  * E2E: Approve allowance for the entire NFT collection (all serials)
  */
 describe('Approve NFT Collection Allowance (all serials) E2E', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
 
-  let operatorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
-
+  let owner: TestAccount;
   let ownerClient: Client; // owner/treasury/executor
   let ownerWrapper: HederaOperationsWrapper;
 
-  let spenderAccount: AccountId; // spender who will get collection-wide approval
-  let spenderKey: PrivateKey;
+  let spender: TestAccount;
   let spenderClient: Client;
   let spenderWrapper: HederaOperationsWrapper;
 
-  let recipientAccount: AccountId; // recipient to receive NFT in approved transfer
-  let recipientKey: PrivateKey;
+  let recipient: TestAccount;
   let recipientClient: Client;
   let recipientWrapper: HederaOperationsWrapper;
 
   let nftTokenId: string;
 
   beforeAll(async () => {
-    // 1) Operator funds accounts
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    // 1) Create owner (executor) account and client
+    owner = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: ownerClient, wrapper: ownerWrapper } = profile.client.connectAs(owner));
 
-    // 2) Create owner (executor) account and client
-    const ownerKey = PrivateKey.generateED25519();
-    const ownerAccountId = await operatorWrapper
-      .createAccount({
-        key: ownerKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
+    // 2) Create spender account + client
+    spender = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: spenderClient, wrapper: spenderWrapper } = profile.client.connectAs(spender));
 
-    ownerClient = getCustomClient(ownerAccountId, ownerKey);
-    ownerWrapper = new HederaOperationsWrapper(ownerClient);
+    // 3) Create a recipient account + client
+    recipient = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: recipientClient, wrapper: recipientWrapper } = profile.client.connectAs(recipient));
 
-    // 3) Create spender account + client
-    spenderKey = PrivateKey.generateED25519();
-    spenderAccount = await operatorWrapper
-      .createAccount({
-        key: spenderKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-    spenderClient = getCustomClient(spenderAccount, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
-
-    // 4) Create a recipient account + client
-    recipientKey = PrivateKey.generateED25519();
-    recipientAccount = await operatorWrapper
-      .createAccount({
-        key: recipientKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-    recipientClient = getCustomClient(recipientAccount, recipientKey);
-    recipientWrapper = new HederaOperationsWrapper(recipientClient);
-
-    // 5) Start LangChain test setup with the owner client (so the agent acts as owner)
+    // 4) Start LangChain test setup with the owner client (so the agent acts as owner)
     testSetup = await createLangchainTestSetup(undefined, undefined, ownerClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
 
-    // 6) Create an HTS NFT with owner as treasury/admin/supply
+    // 5) Create an HTS NFT with owner as treasury/admin/supply
     const createResp = await ownerWrapper.createNonFungibleToken({
       tokenName: 'AK-NFT-ALL-E2E',
       tokenSymbol: 'AKNA',
@@ -105,63 +69,41 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       tokenType: TokenType.NonFungibleUnique,
       supplyType: TokenSupplyType.Finite,
       maxSupply: 10,
-      adminKey: ownerClient.operatorPublicKey! as PublicKey,
-      supplyKey: ownerClient.operatorPublicKey! as PublicKey,
-      treasuryAccountId: ownerClient.operatorAccountId!.toString(),
-      autoRenewAccountId: ownerClient.operatorAccountId!.toString(),
+      adminKey: owner.privateKey.publicKey as PublicKey,
+      supplyKey: owner.privateKey.publicKey as PublicKey,
+      treasuryAccountId: owner.accountId.toString(),
+      autoRenewAccountId: owner.accountId.toString(),
     });
     nftTokenId = createResp.tokenId!.toString();
 
-    // 7) Associate spender and recipient with the NFT token
+    // 6) Associate spender and recipient with the NFT token
     await spenderWrapper.associateToken({
-      accountId: spenderAccount.toString(),
+      accountId: spender.accountId.toString(),
       tokenId: nftTokenId,
     });
-    await recipientWrapper.associateToken({
-      accountId: recipientAccount.toString(),
+    const recipAssocResp = await recipientWrapper.associateToken({
+      accountId: recipient.accountId.toString(),
       tokenId: nftTokenId,
     });
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, recipAssocResp.transactionId!);
   }, 180_000);
 
   afterAll(async () => {
-    try {
-      if (recipientWrapper) {
-        await returnHbarsAndDeleteAccount(
-          recipientWrapper,
-          recipientAccount,
-          operatorClient.operatorAccountId!,
-        );
-      }
-      if (spenderWrapper) {
-        await returnHbarsAndDeleteAccount(
-          spenderWrapper,
-          spenderAccount,
-          operatorClient.operatorAccountId!,
-        );
-      }
-      if (ownerWrapper) {
-        await returnHbarsAndDeleteAccount(
-          ownerWrapper,
-          ownerClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      }
-    } finally {
-      testSetup?.cleanup();
-      operatorClient?.close();
-      ownerClient?.close();
-      spenderClient?.close();
-      recipientClient?.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(spender);
+    await profile.accounts.release(owner);
+    testSetup?.cleanup();
+    ownerClient?.close();
+    spenderClient?.close();
+    recipientClient?.close();
   });
 
   it(
     'approves allowance for all serials and transfers a newly minted serial',
-    itWithRetry(async () => {
+    async () => {
       // Approve for all serials
-      const input = `Approve NFT allowance for all serials of token ${nftTokenId} from ${ownerClient.operatorAccountId!.toString()} to ${spenderAccount.toString()}`;
+      const input = `Approve NFT allowance for all serials of token ${nftTokenId} from ${owner.accountId.toString()} to ${spender.accountId.toString()}`;
 
       const result = await agent.invoke({
         messages: [
@@ -178,7 +120,7 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
 
       // Wait for mirror node/allowance propagation
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(ownerWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       // Mint a new serial AFTER approval to ensure future serials are covered
       const mintTx = new TokenMintTransaction()
@@ -196,8 +138,8 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       const nft = new NftId(TokenId.fromString(nftTokenId), serialToTransfer);
       const tx = new TransferTransaction().addApprovedNftTransfer(
         nft,
-        AccountId.fromString(ownerClient.operatorAccountId!.toString()),
-        AccountId.fromString(recipientAccount.toString()),
+        AccountId.fromString(owner.accountId.toString()),
+        AccountId.fromString(recipient.accountId.toString()),
       );
       const exec = await tx.execute(spenderClient);
       const transferRcpt = await exec.getReceipt(spenderClient);
@@ -207,8 +149,8 @@ describe('Approve NFT Collection Allowance (all serials) E2E', () => {
       const info = await spenderWrapper.getNftInfo(nftTokenId, serialToTransfer);
       expect(info).toBeDefined();
       // @ts-ignore validated existence above
-      expect(info.at(0).accountId?.toString()).toBe(recipientAccount.toString());
-    }),
+      expect(info.at(0).accountId?.toString()).toBe(recipient.accountId.toString());
+    },
     180_000,
   );
 });

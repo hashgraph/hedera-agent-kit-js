@@ -1,63 +1,37 @@
 import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
 import { ReactAgent } from 'langchain';
-import {
-  getOperatorClientForTests,
-  getCustomClient,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { Client, PrivateKey, TokenId } from '@hiero-ledger/sdk';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
+import { Client, TokenId } from '@hiero-ledger/sdk';
 
 describe('Create Non-Fungible Token E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    // 1. Create executor account (funded by operator)
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-      })
-      .then(resp => resp.accountId!);
-
-    // 2. Build executor client
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-
-    // 3. Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    await wait(MIRROR_NODE_WAITING_TIME);
   });
 
   afterAll(async () => {
-    if (operatorClient && executorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      operatorClient.close();
-      executorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   beforeEach(async () => {
@@ -66,7 +40,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
 
   it(
     'creates an NFT with minimal params via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Create a non-fungible token named MyNFT with symbol MNFT`;
 
       const result = await agent.invoke({
@@ -86,7 +60,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       // Verify on-chain
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
@@ -94,12 +68,12 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(tokenInfo.symbol).toBe('MNFT');
       expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
       expect(tokenInfo.maxSupply?.toInt()).toBe(100); // default maxSupply
-    }),
+    },
   );
 
   it(
     'creates an NFT with custom max supply',
-    itWithRetry(async () => {
+    async () => {
       const input = 'Create a non-fungible token ArtCollection with symbol ART and max supply 500';
 
       const result = await agent.invoke({
@@ -118,20 +92,20 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('ArtCollection');
       expect(tokenInfo.symbol).toBe('ART');
       expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
       expect(tokenInfo.maxSupply?.toInt()).toBe(500);
-    }),
+    },
   );
 
   it(
     'creates an NFT with treasury account specification',
-    itWithRetry(async () => {
-      const treasuryAccountId = executorClient.operatorAccountId!.toString();
+    async () => {
+      const treasuryAccountId = executor.accountId.toString();
       const input = `Create a non-fungible token GameItems with symbol GAME, treasury account ${treasuryAccountId}, and max supply 1000`;
 
       const result = await agent.invoke({
@@ -150,19 +124,19 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('GameItems');
       expect(tokenInfo.symbol).toBe('GAME');
       expect(tokenInfo.treasuryAccountId?.toString()).toBe(treasuryAccountId);
       expect(tokenInfo.maxSupply?.toInt()).toBe(1000);
-    }),
+    },
   );
 
   it(
     'should schedule creation of a NFT successfully',
-    itWithRetry(async () => {
+    async () => {
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -177,12 +151,12 @@ describe('Create Non-Fungible Token E2E Tests', () => {
         'Scheduled transaction created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'creates an NFT with infinite supply',
-    itWithRetry(async () => {
+    async () => {
       const input =
         'Create a non-fungible token InfiniteCollection with symbol INF and infinite supply';
 
@@ -202,7 +176,7 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token created successfully');
       expect(parsedResponse[0].parsedData.raw.tokenId).toBeDefined();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
       const tokenInfo = await executorWrapper.getTokenInfo(tokenId.toString());
       expect(tokenInfo.name).toBe('InfiniteCollection');
@@ -210,6 +184,6 @@ describe('Create Non-Fungible Token E2E Tests', () => {
       expect(tokenInfo.tokenType!.toString()).toBe('NON_FUNGIBLE_UNIQUE');
       expect(tokenInfo.supplyType!.toString()).toBe('INFINITE');
       expect(tokenInfo.maxSupply?.toInt()).toBe(0); // infinite supply has maxSupply of 0
-    }),
+    },
   );
 });

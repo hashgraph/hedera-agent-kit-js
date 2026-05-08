@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { Context, AgentMode } from '@/shared';
 import { HcsAuditTrailHook } from '@/hooks/hcs-audit-trail-hook';
-import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 import {
   Client,
   TopicCreateTransaction,
@@ -15,16 +15,21 @@ import getTransferHbarTool, {
 } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 
 describe('HcsAuditTrailHook Integration Tests', () => {
+  const profile = getProfile();
   let operatorClient: Client;
   let topicId: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
+    ({ client: operatorClient } = profile.client.connectAs(profile.operator));
 
     // Create a temporary topic for testing
     const tx = await new TopicCreateTransaction().execute(operatorClient);
     const receipt = await tx.getReceipt(operatorClient);
     topicId = receipt.topicId!.toString();
+  });
+
+  afterAll(() => {
+    operatorClient?.close();
   });
 
   it('should log tool execution to HCS successfully', async () => {
@@ -36,7 +41,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
 
     const tool = getTransferHbarTool(context);
     const params = {
-      transfers: [{ accountId: operatorClient.operatorAccountId!.toString(), amount: 0.0001 }],
+      transfers: [{ accountId: profile.operator.accountId.toString(), amount: 0.0001 }],
     };
 
     const result = await tool.execute(operatorClient, context, params);
@@ -50,12 +55,12 @@ describe('HcsAuditTrailHook Integration Tests', () => {
     const context: Context = {
       mode: AgentMode.RETURN_BYTES,
       hooks: [hook],
-      accountId: operatorClient.operatorAccountId!.toString(),
+      accountId: profile.operator.accountId.toString(),
     };
 
     const tool = getTransferHbarTool(context);
     const params = {
-      transfers: [{ accountId: operatorClient.operatorAccountId!.toString(), amount: 0.0001 }],
+      transfers: [{ accountId: profile.operator.accountId.toString(), amount: 0.0001 }],
     };
 
     const result = await tool.execute(operatorClient, context, params);

@@ -26,7 +26,7 @@ on:
         required: false
         default: ''
 
-# One release at a time per ref. Do not cancel in-progress runs — we never
+# One release at a time per ref. Do not cancel in-progress runs. We never
 # want a half-published set.
 concurrency:
   group: release-${{ github.ref }}
@@ -128,7 +128,7 @@ jobs:
             ARGS+=(--dry-run)
           fi
 
-          # 1. Human-readable table — echoed to the run log AND the run
+          # 1. Human-readable table, echoed to the run log AND the run
           #    Summary page (GITHUB_STEP_SUMMARY), so reviewers see the plan
           #    at the top of the run without opening the logs. In dry-run mode
           #    a banner is prepended so no one mistakes the plan for a live run.
@@ -292,7 +292,7 @@ jobs:
       - build-release-package
     if: needs.prepare-release.outputs.hasPublishWork == 'true'
     strategy:
-      # Don't abort sibling publishes if one fails — partial publishes are
+      # Don't abort sibling publishes if one fails. Partial publishes are
       # recoverable on the next run (the npm registry check skips what's done).
       fail-fast: false
       matrix: ${{ fromJson(needs.prepare-release.outputs.publishMatrix) }}

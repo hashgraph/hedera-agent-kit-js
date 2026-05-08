@@ -1,48 +1,31 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { Client, PrivateKey, AccountId, Hbar, HbarUnit, HbarAllowance } from '@hiero-ledger/sdk';
+import { Client, Hbar, HbarUnit, HbarAllowance } from '@hiero-ledger/sdk';
 import { z } from 'zod';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 import { approveHbarAllowanceParametersNormalised } from '@hashgraph/hedera-agent-kit';
 import { ReactAgent } from 'langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Delete HBAR Allowance Integration Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
 
-  let spenderAccountId: AccountId;
-  let spenderKey: PrivateKey;
+  let spender: TestAccount;
   let spenderClient: Client;
-  let spenderWrapper: HederaOperationsWrapper;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Create an executor (owner) account
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
@@ -51,39 +34,19 @@ describe('Delete HBAR Allowance Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   beforeEach(async () => {
-    // Create spender
-    spenderKey = PrivateKey.generateED25519();
-    spenderAccountId = await executorWrapper
-      .createAccount({
-        key: spenderKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    spenderClient = getCustomClient(spenderAccountId, spenderKey);
-    spenderWrapper = new HederaOperationsWrapper(spenderClient);
+    spender = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: spenderClient } = profile.client.connectAs(spender));
   });
 
   afterEach(async () => {
-    if (spenderAccountId) {
-      await returnHbarsAndDeleteAccount(
-        spenderWrapper,
-        spenderAccountId,
-        operatorClient.operatorAccountId!,
-      );
-    }
+    await profile.accounts.release(spender);
+    spenderClient?.close();
   });
 
   it('should delete an existing allowance and prevent further spending', async () => {
@@ -93,8 +56,8 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     const approveParams: z.infer<ReturnType<typeof approveHbarAllowanceParametersNormalised>> = {
       hbarApprovals: [
         new HbarAllowance({
-          ownerAccountId: executorAccountId,
-          spenderAccountId: spenderAccountId,
+          ownerAccountId: executor.accountId,
+          spenderAccountId: spender.accountId,
           amount: Hbar.from(allowanceAmount, HbarUnit.Hbar),
         }),
       ],
@@ -102,7 +65,7 @@ describe('Delete HBAR Allowance Integration Tests', () => {
     await executorWrapper.approveHbarAllowance(approveParams);
 
     // Step 3: Delete allowance via tool (no amount param!)
-    const input = `Delete HBAR allowance from ${executorAccountId.toString()} to ${spenderAccountId.toString()}`;
+    const input = `Delete HBAR allowance from ${executor.accountId.toString()} to ${spender.accountId.toString()}`;
     const queryResult = await agent.invoke({
       messages: [
         {
@@ -121,7 +84,7 @@ describe('Delete HBAR Allowance Integration Tests', () => {
 
   it('should handle deleting a non-existent allowance gracefully', async () => {
     // No approve step -> directly delete
-    const input = `Delete HBAR allowance from ${executorAccountId.toString()} to ${spenderAccountId.toString()}`;
+    const input = `Delete HBAR allowance from ${executor.accountId.toString()} to ${spender.accountId.toString()}`;
     const queryResult = await agent.invoke({
       messages: [
         {

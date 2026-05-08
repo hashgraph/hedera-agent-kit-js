@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { RejectToolPolicy } from '@/policies/reject-tool-policy';
 import { Context, AgentMode } from '@/shared';
-import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 import { Client } from '@hiero-ledger/sdk';
 import getHbarBalanceTool from '@/plugins/core-account-query-plugin/tools/queries/get-hbar-balance-query';
 import { coreAccountQueryPluginToolNames } from '@/plugins';
@@ -9,10 +9,15 @@ import { coreAccountQueryPluginToolNames } from '@/plugins';
 const { GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
 describe('reject tool policy integration tests', () => {
+  const profile = getProfile();
   let operatorClient: Client;
 
   beforeAll(() => {
-    operatorClient = getOperatorClientForTests();
+    ({ client: operatorClient } = profile.client.connectAs(profile.operator));
+  });
+
+  afterAll(() => {
+    operatorClient?.close();
   });
 
   it('should reject tool call if tool is defined in relevantTools', async () => {
@@ -23,7 +28,7 @@ describe('reject tool policy integration tests', () => {
     };
 
     const tool = getHbarBalanceTool(context);
-    const params = { accountId: operatorClient.operatorAccountId!.toString() };
+    const params = { accountId: profile.operator.accountId.toString() };
 
     await expect(tool.execute(operatorClient, context, params)).resolves.toEqual({
       raw: {
@@ -41,7 +46,7 @@ describe('reject tool policy integration tests', () => {
     };
 
     const tool = getHbarBalanceTool(context);
-    const params = { accountId: operatorClient.operatorAccountId!.toString() };
+    const params = { accountId: profile.operator.accountId.toString() };
 
     const result = await tool.execute(operatorClient, context, params);
     expect(result.raw.error).toBeUndefined();

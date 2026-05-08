@@ -1,97 +1,56 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { AgentMode, type Context } from '@/shared/configuration';
 import {
-  getCustomClient,
-  getOperatorClientForTests,
+  getProfile,
   HederaOperationsWrapper,
+  type TestAccount,
   verifyHbarBalanceChange,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Transfer HBAR Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let recipient1: TestAccount;
+  let recipient2: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let recipientAccountId: AccountId;
-  let recipientAccountId2: AccountId;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    const executorKeyPair = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: executorKeyPair.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKeyPair);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    // Operator creates recipient accounts to preserve executor balance
-    recipientAccountId = await operatorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
-      .then(resp => resp.accountId!);
-
-    recipientAccountId2 = await operatorWrapper
-      .createAccount({ key: executorClient.operatorPublicKey as Key })
-      .then(resp => resp.accountId!);
+    recipient1 = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    recipient2 = await profile.accounts.acquire({ tier: 'MINIMAL' });
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    if (executorClient) {
-      // Transfer remaining balance back to operator and delete an executor account
-      try {
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          recipientAccountId,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          recipientAccountId2,
-          operatorClient.operatorAccountId!,
-        );
-        await returnHbarsAndDeleteAccount(
-          executorWrapper,
-          executorClient.operatorAccountId!,
-          operatorClient.operatorAccountId!,
-        );
-      } catch (error) {
-        console.warn('Failed to clean up accounts:', error);
-      }
-      executorClient.close();
-    }
-    if (operatorClient) {
-      operatorClient.close();
-    }
+    await profile.accounts.release(recipient1);
+    await profile.accounts.release(recipient2);
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   describe('Valid Transfer Scenarios', () => {
     it('should successfully transfer HBAR to a single recipient', async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
       const amountToTransfer = 0.1; // 0.1 HBAR
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: amountToTransfer,
           },
         ],
@@ -109,7 +68,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change using the helper function
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
@@ -118,20 +77,20 @@ describe('Transfer HBAR Integration Tests', () => {
 
     it('should successfully transfer HBAR to multiple recipients', async () => {
       const balanceBefore1 = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
       const balanceBefore2 = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId2.toString(),
+        recipient2.accountId.toString(),
       );
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: 0.05,
           },
           {
-            accountId: recipientAccountId2.toString(),
+            accountId: recipient2.accountId.toString(),
             amount: 0.05,
           },
         ],
@@ -148,13 +107,13 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance changes for both recipients
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore1,
         0.05,
         executorWrapper,
       );
       await verifyHbarBalanceChange(
-        recipientAccountId2.toString(),
+        recipient2.accountId.toString(),
         balanceBefore2,
         0.05,
         executorWrapper,
@@ -163,17 +122,17 @@ describe('Transfer HBAR Integration Tests', () => {
 
     it('should successfully transfer with explicit source account', async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: 0.1,
           },
         ],
-        sourceAccountId: executorClient.operatorAccountId!.toString(),
+        sourceAccountId: executor.accountId.toString(),
         transactionMemo: 'Explicit source account test',
       };
 
@@ -187,7 +146,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore,
         0.1,
         executorWrapper,
@@ -196,13 +155,13 @@ describe('Transfer HBAR Integration Tests', () => {
 
     it('should successfully transfer without memo', async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: 0.05,
           },
         ],
@@ -218,7 +177,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore,
         0.05,
         executorWrapper,
@@ -229,7 +188,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: 0.05,
           },
         ],
@@ -257,7 +216,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: 0,
           },
         ],
@@ -275,7 +234,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: -0.1,
           },
         ],
@@ -311,7 +270,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: 1000000, // 1 million HBAR - likely more than test account has
           },
         ],
@@ -329,14 +288,14 @@ describe('Transfer HBAR Integration Tests', () => {
   describe('Edge Cases', () => {
     it('should handle very small amounts (1 tinybar equivalent)', async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
       const amountToTransfer = 0.00000001; // 1 tinybar
 
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: amountToTransfer,
           },
         ],
@@ -353,7 +312,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
@@ -362,7 +321,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
     it('should handle long memo strings', async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
       const longMemo = 'A'.repeat(90); // Close to 100 char limit for memos
       const amountToTransfer = 0.01;
@@ -370,7 +329,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
         transfers: [
           {
-            accountId: recipientAccountId.toString(),
+            accountId: recipient1.accountId.toString(),
             amount: amountToTransfer,
           },
         ],
@@ -387,7 +346,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify balance change
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
@@ -396,7 +355,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
     it('should handle maximum number of transfers in a single transaction', async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
       );
       const transferAmount = 0.001;
       const transferCount = 10;
@@ -406,7 +365,7 @@ describe('Transfer HBAR Integration Tests', () => {
       const transfers = Array(transferCount)
         .fill(null)
         .map((_, _index) => ({
-          accountId: recipientAccountId.toString(),
+          accountId: recipient1.accountId.toString(),
           amount: transferAmount,
         }));
 
@@ -425,7 +384,7 @@ describe('Transfer HBAR Integration Tests', () => {
 
       // Verify total balance change
       await verifyHbarBalanceChange(
-        recipientAccountId.toString(),
+        recipient1.accountId.toString(),
         balanceBefore,
         totalAmount,
         executorWrapper,

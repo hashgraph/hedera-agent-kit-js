@@ -1,0 +1,92 @@
+name: "800: [CALL] Run E2E Tests"
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node.js version
+        required: false
+        default: '22'
+        type: string
+    secrets:
+      OPENAI_API_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-tests:
+    runs-on: hedera-agent-linux-medium
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      HEDERA_NETWORK: local-node
+      HEDERA_ACCOUNT_ID: '0.0.1002'
+      HEDERA_PRIVATE_KEY: '0x105d050185ccb907fba04dd92d8de9e32c18305e097ab41dadda21489a211524'
+      E2E_LLM_PROVIDER: ${{ vars.E2E_LLM_PROVIDER }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Install Docker Compose Plugin
+        run: |
+          sudo mkdir -p /usr/local/lib/docker/cli-plugins
+          sudo curl -fLo /usr/local/lib/docker/cli-plugins/docker-compose https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64
+          sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+      - name: Setup Kind
+        uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3 # v1.12.0
+        with:
+          install_only: true
+          node_image: kindest/node:v1.32.5@sha256:e3b2327e3a5ab8c76f5ece68936e4cafaa82edf58486b769727ab0b3b97a5b0d
+          version: v0.29.0
+          kubectl_version: v1.32.5
+          verbosity: 3
+          wait: 120s
+
+      - name: Install Solo
+        run: pnpm test:solo:install
+
+      - name: Setup Solo local network
+        run: pnpm test:solo:deploy
+
+      - name: Wait for Solo endpoints
+        # The 5s sleep is a belt-and-braces buffer: even though `test:solo:check`
+        # probes consensus, mirror REST, mirror Web3, and the JSON-RPC relay until
+        # they all respond, we still occasionally hit "endpoint not ready" during
+        # the next step (contract deployment). Letting the relay settle for a few
+        # extra seconds before the probe starts has been enough to eliminate it.
+        run: |
+          sleep 5
+          pnpm test:solo:check
+
+      - name: Deploy Solo factory contracts
+        run: pnpm test:solo:deploy:contracts
+
+      - name: Run E2E tests
+        run: pnpm -r test:e2e
+
+      - name: Teardown Solo local network
+        if: always()
+        run: pnpm test:solo:destroy

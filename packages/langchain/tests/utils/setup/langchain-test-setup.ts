@@ -8,7 +8,7 @@ import {
   SYSTEM_PROMPT,
 } from '@tests/utils';
 
-import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 import type { LangchainTestOptions } from '@tests/utils';
 import { createAgent, ReactAgent } from 'langchain';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
@@ -31,7 +31,8 @@ export async function createLangchainTestSetup(
   llmOptions?: Partial<LlmOptions>,
   customClient?: Client,
 ): Promise<LangchainTestSetup> {
-  const client = customClient || getOperatorClientForTests();
+  const profile = getProfile();
+  const client = customClient || profile.client.connectAs(profile.operator).client;
   const operatorAccountId = client.operatorAccountId!;
 
   // Resolve final LLM options (provider, model, apiKey)

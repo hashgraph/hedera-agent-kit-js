@@ -1,65 +1,40 @@
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { ReactAgent } from 'langchain';
-import {
-  getOperatorClientForTests,
-  getCustomClient,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { AccountId, Client, PrivateKey } from '@hiero-ledger/sdk';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
+import { Client } from '@hiero-ledger/sdk';
 
 describe('Mint ERC721 Token E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
+  let recipient: TestAccount;
   let testTokenAddress: string;
   let recipientAccountId: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    // 1. Create an executor account (funded by operator)
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        maxAutomaticTokenAssociations: -1,
-      })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    recipientAccountId = recipient.accountId.toString();
 
-    // 2. Create a recipient account (with the same public key as the executor for simplicity)
-    recipientAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: 0,
-        maxAutomaticTokenAssociations: -1,
-      })
-      .then(resp => resp.accountId!.toString());
-
-    // 3. Build executor client
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-
-    // 4. Start LangChain test setup with an executor account
+    // Start LangChain test setup with an executor account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
 
-    await wait(MIRROR_NODE_WAITING_TIME);
-
-    // 5. Create a test ERC721 token
+    // Create a test ERC721 token
     const createInput = 'Create an ERC721 token named MintTest with symbol MNT';
     const createResult = await agent.invoke({
       messages: [
@@ -76,29 +51,19 @@ describe('Mint ERC721 Token E2E Tests', () => {
     }
 
     testTokenAddress = createParsedResponse[0].parsedData.raw.erc721Address;
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createParsedResponse[0].parsedData.raw.transactionId);
   });
 
   afterAll(async () => {
-    if (operatorClient && executorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        AccountId.fromString(recipientAccountId),
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      operatorClient.close();
-      executorClient.close();
-    }
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   it(
     'mints ERC721 token to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Mint ERC721 token form contract: ${testTokenAddress} to ${recipientAccountId}`;
 
       const result = await agent.invoke({
@@ -114,12 +79,12 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
-    }),
+    },
   );
 
   it(
     'mints token to default (context) account when toAddress missing',
-    itWithRetry(async () => {
+    async () => {
       const input = `Mint ERC721 token ${testTokenAddress}`;
 
       const result = await agent.invoke({
@@ -136,12 +101,12 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(parsedResponse).toBeDefined();
       expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
       expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
-    }),
+    },
   );
 
   it.skip(
     'handles various natural language variations for minting',
-    itWithRetry(async () => {
+    async () => {
       const variations = [
         `Mint NFT (ERC-721) from ${testTokenAddress} to ${recipientAccountId}`,
         `Create EVM compatible NFT from contract ${testTokenAddress} to ${recipientAccountId}`,
@@ -163,12 +128,12 @@ describe('Mint ERC721 Token E2E Tests', () => {
         expect(parsedResponse[0].parsedData.raw.status).toBe('SUCCESS');
         expect(parsedResponse[0].parsedData.raw.transactionId).toBeDefined();
       }
-    }),
+    },
   );
 
   it(
     'schedules minting ERC721 token to another account via natural language',
-    itWithRetry(async () => {
+    async () => {
       const input = `Mint ERC721 token from contract: ${testTokenAddress} to ${recipientAccountId}. Schedule this transaction.`;
 
       const result = await agent.invoke({
@@ -188,6 +153,6 @@ describe('Mint ERC721 Token E2E Tests', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Scheduled minting of ERC721 successfully.',
       );
-    }),
+    },
   );
 });

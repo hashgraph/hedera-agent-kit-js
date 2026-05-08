@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   Client,
-  PrivateKey,
-  AccountId,
   PublicKey,
   TokenId,
   TokenType,
@@ -10,19 +8,19 @@ import {
 } from '@hiero-ledger/sdk';
 import mintNonFungibleTokenTool from '@/plugins/core-token-plugin/tools/non-fungible-token/mint-non-fungible-token';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { mintNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Mint Non-Fungible Token Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let nftTokenId: TokenId;
   let context: Context;
@@ -37,49 +35,29 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Mint Non-Fungible Token Integration Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
     };
 
-    nftTokenId = await executorWrapper
-      .createNonFungibleToken({
-        ...NFT_PARAMS,
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-        autoRenewAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createNftResp = await executorWrapper.createNonFungibleToken({
+      ...NFT_PARAMS,
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    nftTokenId = createNftResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createNftResp.transactionId!);
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('should mint a single NFT for the token', async () => {
@@ -93,7 +71,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .getTokenInfo(nftTokenId.toString())
       .then(info => info.totalSupply.toInt());
     const result: any = await tool.execute(executorClient, context, params);
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
     const supplyAfter = await executorWrapper
       .getTokenInfo(nftTokenId.toString())
       .then(info => info.totalSupply.toInt());
@@ -115,7 +93,7 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
       .getTokenInfo(nftTokenId.toString())
       .then(info => info.totalSupply.toInt());
     const result: any = await tool.execute(executorClient, context, params);
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
     const supplyAfter = await executorWrapper
       .getTokenInfo(nftTokenId.toString())
       .then(info => info.totalSupply.toInt());

@@ -1,11 +1,11 @@
-import { UsdToHbarService } from '../usd-to-hbar-service';
+import { getProfile } from '../profile';
 
-export default async function globalSetup(): Promise<void> {
-  try {
-    await UsdToHbarService.initialize();
-    process.env.HBAR_EXCHANGE_RATE = String(UsdToHbarService.getExchangeRate());
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(`❌ Failed to initialize HBAR Service: ${message}`);
-  }
+export default async function globalSetup(): Promise<() => Promise<void>> {
+  const profile = getProfile();
+  await profile.balance.init();
+  // Returned function runs after all tests finish. Closes the profile's internal
+  // operator client so its gRPC sockets don't keep the Node event loop alive.
+  return async () => {
+    await profile.dispose();
+  };
 }

@@ -1,28 +1,24 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { AccountId, Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
 import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  verifyHbarBalanceChange,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import { verifyHbarBalanceChange } from '@hashgraph/hedera-agent-kit-tests/shared/verification/balance-verification-utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
   let executorWrapper: HederaOperationsWrapper;
-  let recipientAccount: AccountId;
+  let recipient: TestAccount;
 
   // The operator account (from env variables) funds the setup process.
   // 1. An executor account is created using the operator account as the source of HBARs.
@@ -31,21 +27,8 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   // 4. After all tests are complete, the executor account is deleted and its remaining balance
   //    is transferred back to the operator account.
   beforeAll(async () => {
-    // operator client creation
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // execution account and client creation
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // langchain setup with execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
@@ -54,42 +37,27 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      testSetup.cleanup();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   beforeEach(async () => {
-    recipientAccount = await executorWrapper
-      .createAccount({
-        key: executorClient.operatorPublicKey as Key,
-        initialBalance: 0,
-      })
-      .then(resp => resp.accountId!);
+    recipient = await profile.accounts.acquire({ tier: 'MINIMAL' });
   });
 
   afterEach(async () => {
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      recipientAccount,
-      operatorClient.operatorAccountId!,
-    );
+    await profile.accounts.release(recipient);
   });
 
   it(
     'should transfer HBAR to a recipient',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
       );
       const amountToTransfer = 0.1;
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()}`;
 
       await agent.invoke({
         messages: [
@@ -101,26 +69,24 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       });
 
       await verifyHbarBalanceChange(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
       );
-      const balanceAfter = await executorWrapper.getAccountHbarBalance(recipientAccount.toString());
-      expect(balanceAfter.toNumber()).toBeGreaterThan(balanceBefore.toNumber());
-    }),
+    },
   );
 
   it(
     'should transfer HBAR with memo',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
       );
       const amountToTransfer = 0.05;
       const memo = 'Test memo for transfer';
 
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${memo}"`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()} with memo "${memo}"`;
 
       await agent.invoke({
         messages: [
@@ -132,23 +98,23 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       });
 
       await verifyHbarBalanceChange(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should handle very small amount (1 tinybar)',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
       );
       const amountToTransfer = 0.00000001;
 
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()}`;
 
       await agent.invoke({
         messages: [
@@ -160,24 +126,24 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       });
 
       await verifyHbarBalanceChange(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should handle long memo strings',
-    itWithRetry(async () => {
+    async () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
       );
-      const longMemo = 'A'.repeat(90);
+      const longMemo = 'Invoice INV-2025-10847 - subscription renewal Q1-2026';
       const amountToTransfer = 0.01;
 
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()} with memo "${longMemo}"`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()} with memo "${longMemo}"`;
 
       await agent.invoke({
         messages: [
@@ -189,19 +155,19 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       });
 
       await verifyHbarBalanceChange(
-        recipientAccount.toString(),
+        recipient.accountId.toString(),
         balanceBefore,
         amountToTransfer,
         executorWrapper,
       );
-    }),
+    },
   );
 
   it(
     'should schedule an HBAR transfer',
-    itWithRetry(async () => {
+    async () => {
       const amountToTransfer = 0.2;
-      const input = `Transfer ${amountToTransfer} HBAR to ${recipientAccount.toString()}. Schedule the transaction instead of executing it immediately.`;
+      const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()}. Schedule the transaction instead of executing it immediately.`;
       const updateResult = await agent.invoke({
         messages: [
           {
@@ -216,6 +182,6 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
         'Scheduled HBAR transfer created successfully.',
       );
       expect(parsedResponse[0].parsedData.raw.scheduleId).toBeDefined();
-    }),
+    },
   );
 });

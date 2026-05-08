@@ -21,5 +21,6 @@ export default defineConfig({
     testTimeout: 120000,
     hookTimeout: 120000,
     retry: 3,
+    maxWorkers: 8,
   },
 });

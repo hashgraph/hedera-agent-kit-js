@@ -1,6 +1,6 @@
-import { beforeAll, describe, it, expect } from 'vitest';
+import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import { Client } from '@hiero-ledger/sdk';
-import { getOperatorClientForTests } from '@hashgraph/hedera-agent-kit-tests';
+import { getProfile, type TestAccount } from '@hashgraph/hedera-agent-kit-tests';
 import { createLangchainTestSetup } from '@tests/utils';
 import { TOOLKIT_OPTIONS } from '@tests/utils';
 import { RejectToolPolicy } from '@hashgraph/hedera-agent-kit/policies';
@@ -9,10 +9,18 @@ import { coreAccountQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plu
 const { GET_HBAR_BALANCE_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
 describe('RejectToolPolicy E2E Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let executorClient: Client;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient } = profile.client.connectAs(executor));
+  });
+
+  afterAll(async () => {
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('should block the agent from using a rejected tool', async () => {
@@ -24,11 +32,11 @@ describe('RejectToolPolicy E2E Tests', () => {
         hooks: [policy],
       },
       undefined,
-      operatorClient,
+      executorClient,
     );
     const agent = testSetup.agent;
 
-    const input = `What is the HBAR balance of ${operatorClient.operatorAccountId!.toString()}?`;
+    const input = `What is the HBAR balance of ${executor.accountId.toString()}?`;
 
     const result = await agent.invoke({
       messages: [

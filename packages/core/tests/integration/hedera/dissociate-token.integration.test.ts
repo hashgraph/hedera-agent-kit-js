@@ -1,24 +1,22 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
+import { Client, TokenId, TokenSupplyType } from '@hiero-ledger/sdk';
 import dissociateTokenTool from '@/plugins/core-token-plugin/tools/dissociate-token';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Dissociate Token Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
+  let tokenCreator: TestAccount;
   let executorClient: Client;
   let tokenCreatorClient: Client;
-
-  let tokenCreatorAccountId: AccountId;
-  let executorAccountId: AccountId;
-
   let executorWrapper: HederaOperationsWrapper;
   let tokenCreatorWrapper: HederaOperationsWrapper;
 
@@ -28,34 +26,16 @@ describe('Dissociate Token Integration Tests', () => {
   let context: Context;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
-    // Executor account
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
-
-    // Token creator account
-    const tokenCreatorKey = PrivateKey.generateED25519();
-    tokenCreatorAccountId = await operatorWrapper
-      .createAccount({
-        key: tokenCreatorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-    tokenCreatorClient = getCustomClient(tokenCreatorAccountId, tokenCreatorKey);
-    tokenCreatorWrapper = new HederaOperationsWrapper(tokenCreatorClient);
+    tokenCreator = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: tokenCreatorClient, wrapper: tokenCreatorWrapper } =
+      profile.client.connectAs(tokenCreator));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
 
     // Deploy two fungible tokens using a token creator account
@@ -81,9 +61,9 @@ describe('Dissociate Token Integration Tests', () => {
     tokenIdFT = await tokenCreatorWrapper
       .createFungibleToken({
         ...FT_PARAMS,
-        treasuryAccountId: tokenCreatorAccountId.toString(),
-        adminKey: tokenCreatorClient.operatorPublicKey!,
-        supplyKey: tokenCreatorClient.operatorPublicKey!,
+        treasuryAccountId: tokenCreator.accountId.toString(),
+        adminKey: tokenCreator.privateKey.publicKey,
+        supplyKey: tokenCreator.privateKey.publicKey,
       })
       .then(resp => resp.tokenId!);
 
@@ -91,37 +71,24 @@ describe('Dissociate Token Integration Tests', () => {
       .createFungibleToken({
         ...NFT_PARAMS,
         initialSupply: 0,
-        treasuryAccountId: tokenCreatorAccountId.toString(),
-        adminKey: tokenCreatorClient.operatorPublicKey!,
-        supplyKey: tokenCreatorClient.operatorPublicKey!,
+        treasuryAccountId: tokenCreator.accountId.toString(),
+        adminKey: tokenCreator.privateKey.publicKey,
+        supplyKey: tokenCreator.privateKey.publicKey,
       })
       .then(resp => resp.tokenId!);
   });
 
   afterAll(async () => {
-    // Delete executor and token creator accounts
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        tokenCreatorWrapper,
-        tokenCreatorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-
-      executorClient.close();
-      tokenCreatorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(tokenCreator);
+    await profile.accounts.release(executor);
+    executorClient?.close();
+    tokenCreatorClient?.close();
   });
 
   const associateTokens = async (tokenIds: TokenId[]) => {
     for (const tokenId of tokenIds) {
       await executorWrapper.associateToken({
-        accountId: executorAccountId.toString(),
+        accountId: executor.accountId.toString(),
         tokenId: tokenId.toString(),
       });
     }
@@ -140,9 +107,9 @@ describe('Dissociate Token Integration Tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.humanMessage).toContain('successfully dissociated');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
-    const balances = await executorWrapper.getAccountTokenBalances(executorAccountId.toString());
+    const balances = await executorWrapper.getAccountTokenBalances(executor.accountId.toString());
     expect(balances.find(b => b.tokenId === tokenIdFT.toString())).toBeFalsy();
   });
 
@@ -159,9 +126,9 @@ describe('Dissociate Token Integration Tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.humanMessage).toContain('successfully dissociated');
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
-    const balances = await executorWrapper.getAccountTokenBalances(executorAccountId.toString());
+    const balances = await executorWrapper.getAccountTokenBalances(executor.accountId.toString());
     expect(balances.find(b => b.tokenId === tokenIdFT.toString())).toBeFalsy();
     expect(balances.find(b => b.tokenId === tokenIdNFT.toString())).toBeFalsy();
   });

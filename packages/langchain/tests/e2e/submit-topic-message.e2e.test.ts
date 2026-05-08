@@ -1,45 +1,28 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorWrapper: HederaOperationsWrapper;
-  let executionWrapper: HederaOperationsWrapper;
+  let executorWrapper: HederaOperationsWrapper;
   let targetTopicId: string;
 
   beforeAll(async () => {
-    // operator client creation
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // execution account and client creation
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey as Key,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executionWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     // setting up langchain to run with the execution account
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
@@ -48,23 +31,16 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executionWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-
-      testSetup.cleanup();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   beforeEach(async () => {
     // create a fresh topic for each test
-    const created = await executionWrapper.createTopic({
+    const created = await executorWrapper.createTopic({
       topicMemo: 'e2e-test-topic',
-      autoRenewAccountId: executorClient.operatorAccountId!.toString(),
+      autoRenewAccountId: executor.accountId.toString(),
       isSubmitKey: false,
     });
     targetTopicId = created.topicId!.toString();
@@ -72,7 +48,7 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
 
   it(
     'should submit a message to a pre-created topic via agent',
-    itWithRetry(async () => {
+    async () => {
       const message = '"submitted via agent"';
       const res = await agent.invoke({
         messages: [
@@ -93,17 +69,17 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
           ),
       ).toBeTruthy();
 
-      await wait(MIRROR_NODE_WAITING_TIME);
+      await waitForMirrorTx(executorWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
-      const mirrornodeMessages = await operatorWrapper.getTopicMessages(targetTopicId);
+      const mirrornodeMessages = await executorWrapper.getTopicMessages(targetTopicId);
 
       expect(mirrornodeMessages.messages.length).toBeGreaterThan(0);
-    }),
+    },
   );
 
   it(
     'should fail to submit to a non-existent topic via agent',
-    itWithRetry(async () => {
+    async () => {
       const fakeTopicId = '0.0.999999999';
       const res = await agent.invoke({
         messages: [
@@ -118,6 +94,6 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_TOPIC_ID|NOT_FOUND|ACCOUNT_DELETED|INVALID_ARGUMENT/i,
       );
-    }),
+    },
   );
 });

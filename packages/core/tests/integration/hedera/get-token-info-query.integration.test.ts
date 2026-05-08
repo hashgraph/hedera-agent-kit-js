@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   Client,
-  PrivateKey,
-  AccountId,
   TokenId,
   PublicKey,
   TokenSupplyType,
@@ -10,22 +8,22 @@ import {
 } from '@hiero-ledger/sdk';
 import getTokenInfoQueryTool from '@/plugins/core-token-query-plugin/tools/queries/get-token-info-query';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
+import { waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Token Info Query Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let context: Context;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
+  let context: Context;
   let tokenIdNFT: TokenId;
   let tokenIdFT: TokenId;
 
@@ -50,58 +48,38 @@ describe('Get Token Info Query Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorClient.operatorAccountId!.toString(),
+      accountId: executor.accountId.toString(),
     };
 
-    tokenIdFT = await executorWrapper
-      .createFungibleToken({
-        ...FT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createFtResp = await executorWrapper.createFungibleToken({
+      ...FT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdFT = createFtResp.tokenId!;
 
-    tokenIdNFT = await executorWrapper
-      .createNonFungibleToken({
-        ...NFT_PARAMS,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createNftResp = await executorWrapper.createNonFungibleToken({
+      ...NFT_PARAMS,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    tokenIdNFT = createNftResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createNftResp.transactionId!);
   });
 
   afterAll(async () => {
-    if (executorClient && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      executorClient.close();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   it('should return token info for a newly created fungible token', async () => {
@@ -117,7 +95,7 @@ describe('Get Token Info Query Integration Tests', () => {
     expect(result.humanMessage).toContain(`Token Name**: ${FT_PARAMS.tokenName}`);
     expect(result.humanMessage).toContain(`Token Symbol**: ${FT_PARAMS.tokenSymbol}`);
     expect(result.humanMessage).toContain(`Decimals**: ${FT_PARAMS.decimals}`);
-    expect(result.humanMessage).toContain(`Treasury Account ID**: ${executorAccountId.toString()}`);
+    expect(result.humanMessage).toContain(`Treasury Account ID**: ${executor.accountId.toString()}`);
     expect(result.humanMessage).toContain('Status (Deleted/Active)**: Active');
     expect(result.humanMessage).toContain(
       `**Current Supply**: ${toDisplayUnit(FT_PARAMS.initialSupply, FT_PARAMS.decimals)}`,
@@ -132,7 +110,7 @@ describe('Get Token Info Query Integration Tests', () => {
     expect(result.raw.tokenInfo.decimals).toBe(String(FT_PARAMS.decimals));
     expect(result.raw.tokenInfo.memo).toBe(FT_PARAMS.tokenMemo);
     expect(result.raw.tokenInfo.deleted).toBe(false);
-    expect(result.raw.tokenInfo.treasury_account_id).toBe(executorAccountId.toString());
+    expect(result.raw.tokenInfo.treasury_account_id).toBe(executor.accountId.toString());
     expect(result.raw.tokenInfo.total_supply).toBe(String(FT_PARAMS.initialSupply));
     expect(result.raw.tokenInfo.max_supply).toBe(String(FT_PARAMS.maxSupply));
     expect(result.raw.tokenInfo.supply_type?.toUpperCase()).toBe(
@@ -153,7 +131,7 @@ describe('Get Token Info Query Integration Tests', () => {
     expect(result.humanMessage).toContain(`Token Name**: ${NFT_PARAMS.tokenName}`);
     expect(result.humanMessage).toContain(`Token Symbol**: ${NFT_PARAMS.tokenSymbol}`);
     expect(result.humanMessage).toContain('Token Type**: NON_FUNGIBLE_UNIQUE');
-    expect(result.humanMessage).toContain(`Treasury Account ID**: ${executorAccountId.toString()}`);
+    expect(result.humanMessage).toContain(`Treasury Account ID**: ${executor.accountId.toString()}`);
     expect(result.humanMessage).toContain('Status (Deleted/Active)**: Active');
     expect(result.humanMessage).toContain(`**Max Supply**: ${NFT_PARAMS.maxSupply}`);
     expect(result.humanMessage).toContain('Memo**: NFT');
@@ -190,26 +168,25 @@ describe('Get Token Info Query Integration Tests', () => {
 
   it('should handle deleted token correctly', async () => {
     // Create a temporary token to delete
-    const tempTokenId = await executorWrapper
-      .createFungibleToken({
-        tokenName: 'TempToken',
-        tokenSymbol: 'TEMP',
-        tokenMemo: 'Temporary token',
-        initialSupply: 50,
-        decimals: 0,
-        supplyType: TokenSupplyType.Finite,
-        maxSupply: 100,
-        supplyKey: executorClient.operatorPublicKey! as PublicKey,
-        autoRenewAccountId: executorAccountId.toString(),
-        adminKey: executorClient.operatorPublicKey! as PublicKey,
-        treasuryAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.tokenId!);
+    const createTempResp = await executorWrapper.createFungibleToken({
+      tokenName: 'TempToken',
+      tokenSymbol: 'TEMP',
+      tokenMemo: 'Temporary token',
+      initialSupply: 50,
+      decimals: 0,
+      supplyType: TokenSupplyType.Finite,
+      maxSupply: 100,
+      supplyKey: executor.privateKey.publicKey as PublicKey,
+      autoRenewAccountId: executor.accountId.toString(),
+      adminKey: executor.privateKey.publicKey as PublicKey,
+      treasuryAccountId: executor.accountId.toString(),
+    });
+    const tempTokenId = createTempResp.tokenId!;
 
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, createTempResp.transactionId!);
 
-    await executorWrapper.deleteToken({ tokenId: tempTokenId.toString() });
-    await wait(MIRROR_NODE_WAITING_TIME);
+    const deleteResp = await executorWrapper.deleteToken({ tokenId: tempTokenId.toString() });
+    await waitForMirrorTx(executorWrapper, deleteResp.transactionId!);
 
     const tool = getTokenInfoQueryTool(context);
     const params: z.infer<ReturnType<typeof tokenInfoQueryParameters>> = {

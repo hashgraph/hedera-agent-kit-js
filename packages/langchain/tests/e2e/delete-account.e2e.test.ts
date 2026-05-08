@@ -1,68 +1,44 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key, PrivateKey } from '@hiero-ledger/sdk';
+import { Client, Key } from '@hiero-ledger/sdk';
 import { ReactAgent } from 'langchain';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { itWithRetry } from '@hashgraph/hedera-agent-kit-tests/shared/retry-util';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
 
 describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
+  let executor: TestAccount;
   let executorClient: Client;
-  let operatorClient: Client;
   let executorWrapper: HederaOperationsWrapper;
 
-  // The operator account (from env variables) funds the setup process.
-  // 1. An executor account is created using the operator account as the source of HBARs.
-  // 2. The executor account is used to perform all Hedera operations required for the tests.
-  // 3. LangChain is configured to run with the executor account as its client.
-  // 4. After all tests are complete, the executor account is deleted and its remaining balance
-  //    is transferred back to the operator account.
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    const executorAccountKey = PrivateKey.generateED25519();
-    const executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorAccountKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        accountMemo: 'executor account for Delete Account E2E Tests',
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorAccountKey);
+    executor = await profile.accounts.acquire({
+      tier: 'STANDARD',
+      accountMemo: 'executor account for Delete Account E2E Tests',
+    });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-    executorWrapper = new HederaOperationsWrapper(executorClient);
   });
 
   afterAll(async () => {
-    if (testSetup && operatorClient) {
-      await returnHbarsAndDeleteAccount(
-        executorWrapper,
-        executorClient.operatorAccountId!,
-        operatorClient.operatorAccountId!,
-      );
-      testSetup.cleanup();
-      operatorClient.close();
-    }
+    await profile.accounts.release(executor);
+    testSetup?.cleanup();
+    executorClient?.close();
   });
 
   async function createTestAccount(initialBalance = 0) {
     return executorWrapper.createAccount({
-      key: executorClient.operatorPublicKey as Key,
+      key: executor.privateKey.publicKey as Key,
       ...(initialBalance > 0 && { initialBalance }),
       accountMemo: 'test account for Delete Account E2E Tests',
     });
@@ -70,7 +46,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
 
   it(
     'deletes a pre-created account via agent (default transfer to operator)',
-    itWithRetry(async () => {
+    async () => {
       const resp = await createTestAccount();
       const targetAccountId = resp.accountId!.toString();
 
@@ -87,12 +63,12 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
 
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-    }),
+    },
   );
 
   it(
     'should delete second pre-created account via agent (explicit transfer account)',
-    itWithRetry(async () => {
+    async () => {
       const resp = await createTestAccount();
       const targetAccountId = resp.accountId!.toString();
 
@@ -100,7 +76,7 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
         messages: [
           {
             role: 'user',
-            content: `Delete the account ${targetAccountId} and transfer remaining balance to ${executorClient.operatorAccountId}`,
+            content: `Delete the account ${targetAccountId} and transfer remaining balance to ${executor.accountId.toString()}`,
           },
         ],
       });
@@ -109,12 +85,12 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
 
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
-    }),
+    },
   );
 
   it(
     'should fail to delete a non-existent account',
-    itWithRetry(async () => {
+    async () => {
       const fakeAccountId = '0.0.999999999';
 
       const deleteResult = await agent.invoke({
@@ -130,36 +106,36 @@ describe('Delete Account E2E Tests with Pre-Created Accounts', () => {
       expect(parsedResponse[0].parsedData.humanMessage).toMatch(
         /INVALID_ACCOUNT_ID|ACCOUNT_DELETED|NOT_FOUND|INVALID_SIGNATURE/i,
       );
-    }),
+    },
   );
 
   it(
     'should handle natural language variations',
-    itWithRetry(async () => {
+    async () => {
       const resp = await createTestAccount(5);
       const targetAccountId = resp.accountId!.toString();
 
       const operatorBalanceBefore = await executorWrapper.getAccountHbarBalance(
-        executorClient.operatorAccountId?.toString()!,
+        executor.accountId.toString(),
       );
 
       const deleteResult = await agent.invoke({
         messages: [
           {
             role: 'user',
-            content: `Remove account id ${targetAccountId} and send balance to ${executorClient.operatorAccountId}`,
+            content: `Remove account id ${targetAccountId} and send balance to ${executor.accountId.toString()}`,
           },
         ],
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(deleteResult);
       const operatorBalanceAfter = await executorWrapper.getAccountHbarBalance(
-        executorClient.operatorAccountId?.toString()!,
+        executor.accountId.toString(),
       );
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('deleted');
       await expect(executorWrapper.getAccountInfo(targetAccountId)).rejects.toBeDefined();
       expect(operatorBalanceAfter.gt(operatorBalanceBefore)).toBeTruthy();
-    }),
+    },
   );
 });

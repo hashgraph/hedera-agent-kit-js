@@ -40,8 +40,6 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
         messages: [{ role: 'user', content: input }],
       });
 
-      console.log(JSON.stringify(resp, null, 2));
-
       expect(spy).toHaveBeenCalledOnce();
       expect(spy).toHaveBeenCalledWith(
         TRANSFER_ERC20_TOOL,

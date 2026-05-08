@@ -1,58 +1,39 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AccountId, Client, PrivateKey, TokenType, TokenSupplyType } from '@hiero-ledger/sdk';
-import {
-  getCustomClient,
-  getOperatorClientForTests,
-} from '@hashgraph/hedera-agent-kit-tests/shared/setup/client-setup';
+import { Client, TokenType, TokenSupplyType } from '@hiero-ledger/sdk';
 import { createLangchainTestSetup, LangchainTestSetup } from '@tests/utils';
-import HederaOperationsWrapper from '@hashgraph/hedera-agent-kit-tests/shared/hedera-operations/HederaOperationsWrapper';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+  waitForMirrorTx,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests/shared/teardown/account-teardown';
-import { wait } from '@hashgraph/hedera-agent-kit-tests/shared/general-util';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests/shared/test-constants';
 import { ReactAgent } from 'langchain';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests/shared/usd-to-hbar-service';
-import { BALANCE_TIERS } from '@tests/utils';
 
 describe('Transfer NFT E2E Tests', () => {
+  const profile = getProfile();
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let responseParsingService: ResponseParserService;
-  let operatorClient: Client;
+
+  let owner: TestAccount;
   let ownerClient: Client;
-  let recipientClient: Client;
   let ownerWrapper: HederaOperationsWrapper;
-  let operatorWrapper: HederaOperationsWrapper;
+
+  let recipient: TestAccount;
+  let recipientClient: Client;
   let recipientWrapper: HederaOperationsWrapper;
-  let ownerAccountId: AccountId;
-  let recipientAccountId: AccountId;
+
   let nftTokenId: string;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
     // Create an owner (treasury) account
-    const ownerKey = PrivateKey.generateED25519();
-    ownerAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.ELEVATED),
-        key: ownerKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    ownerClient = getCustomClient(ownerAccountId, ownerKey);
-    ownerWrapper = new HederaOperationsWrapper(ownerClient);
+    owner = await profile.accounts.acquire({ tier: 'ELEVATED' });
+    ({ client: ownerClient, wrapper: ownerWrapper } = profile.client.connectAs(owner));
 
     // Create a recipient account
-    const recipientKey = PrivateKey.generateED25519();
-    recipientAccountId = await operatorWrapper
-      .createAccount({
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.STANDARD),
-        key: recipientKey.publicKey,
-      })
-      .then(resp => resp.accountId!);
-    recipientClient = getCustomClient(recipientAccountId, recipientKey);
-    recipientWrapper = new HederaOperationsWrapper(recipientClient);
+    recipient = await profile.accounts.acquire({ tier: 'STANDARD' });
+    ({ client: recipientClient, wrapper: recipientWrapper } = profile.client.connectAs(recipient));
 
     // Set up LangChain executor with an owner as an operator
     testSetup = await createLangchainTestSetup(undefined, undefined, ownerClient);
@@ -67,10 +48,10 @@ describe('Transfer NFT E2E Tests', () => {
       tokenType: TokenType.NonFungibleUnique,
       supplyType: TokenSupplyType.Finite,
       maxSupply: 10,
-      treasuryAccountId: ownerAccountId.toString(),
-      adminKey: ownerClient.operatorPublicKey!,
-      supplyKey: ownerClient.operatorPublicKey!,
-      autoRenewAccountId: ownerAccountId.toString(),
+      treasuryAccountId: owner.accountId.toString(),
+      adminKey: owner.privateKey.publicKey,
+      supplyKey: owner.privateKey.publicKey,
+      autoRenewAccountId: owner.accountId.toString(),
     });
     nftTokenId = tokenCreate.tokenId!.toString();
 
@@ -85,36 +66,23 @@ describe('Transfer NFT E2E Tests', () => {
       ],
     });
 
-    // Associate recipient with the token
+    // Associate recipient with the token (signed by recipient's wrapper)
     await recipientWrapper.associateToken({
-      accountId: recipientAccountId.toString(),
+      accountId: recipient.accountId.toString(),
       tokenId: nftTokenId,
     });
   });
 
   afterAll(async () => {
-    try {
-      await returnHbarsAndDeleteAccount(
-        ownerWrapper,
-        recipientAccountId,
-        operatorClient.operatorAccountId!,
-      );
-      await returnHbarsAndDeleteAccount(
-        ownerWrapper,
-        ownerAccountId,
-        operatorClient.operatorAccountId!,
-      );
-    } catch (err) {
-      console.warn('Cleanup failed:', err);
-    }
-
+    await profile.accounts.release(recipient);
+    await profile.accounts.release(owner);
+    testSetup?.cleanup();
     ownerClient?.close();
     recipientClient?.close();
-    operatorClient?.close();
   });
 
   it('should transfer NFT to recipient via natural language', async () => {
-    const input = `Transfer NFT ${nftTokenId} serial 1 to ${recipientAccountId.toString()}`;
+    const input = `Transfer NFT ${nftTokenId} serial 1 to ${recipient.accountId.toString()}`;
 
     const transferResult = await agent.invoke({
       messages: [
@@ -133,16 +101,16 @@ describe('Transfer NFT E2E Tests', () => {
     );
 
     // Wait for mirror node update
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
-    const recipientNfts = await ownerWrapper.getAccountNfts(recipientAccountId.toString());
+    const recipientNfts = await ownerWrapper.getAccountNfts(recipient.accountId.toString());
     expect(
       recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 1),
     ).toBeTruthy();
   });
 
   it('should transfer multiple NFTs to recipient via natural language', async () => {
-    const input = `Transfer NFT ${nftTokenId} serial 2 and serial 3 to ${recipientAccountId.toString()}`;
+    const input = `Transfer NFT ${nftTokenId} serial 2 and serial 3 to ${recipient.accountId.toString()}`;
 
     const transferResult = await agent.invoke({
       messages: [
@@ -161,9 +129,9 @@ describe('Transfer NFT E2E Tests', () => {
     );
 
     // Wait for mirror node update
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(ownerWrapper, parsedResponse[0].parsedData.raw.transactionId);
 
-    const recipientNfts = await ownerWrapper.getAccountNfts(recipientAccountId.toString());
+    const recipientNfts = await ownerWrapper.getAccountNfts(recipient.accountId.toString());
     expect(
       recipientNfts.nfts.find(nft => nft.token_id === nftTokenId && nft.serial_number === 2),
     ).toBeTruthy();
@@ -173,7 +141,7 @@ describe('Transfer NFT E2E Tests', () => {
   });
 
   it('should schedule an NFT transfer via natural language', async () => {
-    const input = `Schedule a transfer of HTS NFT with token ID: ${nftTokenId}, serial: 4 to account ${recipientAccountId.toString()}`;
+    const input = `Schedule a transfer of HTS NFT with token ID: ${nftTokenId}, serial: 4 to account ${recipient.accountId.toString()}`;
 
     const transferResult = await agent.invoke({
       messages: [

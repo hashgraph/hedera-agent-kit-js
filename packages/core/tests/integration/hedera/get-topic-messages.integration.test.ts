@@ -1,65 +1,49 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
-import { Client, PrivateKey, AccountId, TopicId, PublicKey } from '@hiero-ledger/sdk';
+import { Client, TopicId, PublicKey } from '@hiero-ledger/sdk';
 import getTopicMessagesQueryTool from '@/plugins/core-consensus-query-plugin/tools/queries/get-topic-messages-query';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { getOperatorClientForTests, getCustomClient, HederaOperationsWrapper } from '@hashgraph/hedera-agent-kit-tests';
+import {
+  getProfile,
+  HederaOperationsWrapper,
+  type TestAccount,
+} from '@hashgraph/hedera-agent-kit-tests';
 import { z } from 'zod';
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
-import { wait } from '@hashgraph/hedera-agent-kit-tests';
-import { MIRROR_NODE_WAITING_TIME } from '@hashgraph/hedera-agent-kit-tests';
-import { UsdToHbarService } from '@hashgraph/hedera-agent-kit-tests';
-import { BALANCE_TIERS } from '@hashgraph/hedera-agent-kit-tests';
-import { returnHbarsAndDeleteAccount } from '@hashgraph/hedera-agent-kit-tests';
+import { wait, waitForMirrorTx } from '@hashgraph/hedera-agent-kit-tests';
 
 describe('Get Topic Messages Query Integration Tests', () => {
-  let operatorClient: Client;
+  const profile = getProfile();
+  let executor: TestAccount;
   let executorClient: Client;
-  let executorAccountId: AccountId;
   let executorWrapper: HederaOperationsWrapper;
   let context: Context;
   let createdTopicId: TopicId;
   let topicAdminKey: PublicKey;
 
   beforeAll(async () => {
-    operatorClient = getOperatorClientForTests();
-    const operatorWrapper = new HederaOperationsWrapper(operatorClient);
-
-    // Operator creates executor account
-    const executorKey = PrivateKey.generateED25519();
-    executorAccountId = await operatorWrapper
-      .createAccount({
-        key: executorKey.publicKey,
-        initialBalance: UsdToHbarService.usdToHbar(BALANCE_TIERS.MINIMAL),
-      })
-      .then(resp => resp.accountId!);
-
-    executorClient = getCustomClient(executorAccountId, executorKey);
-    executorWrapper = new HederaOperationsWrapper(executorClient);
+    executor = await profile.accounts.acquire({ tier: 'MINIMAL' });
+    ({ client: executorClient, wrapper: executorWrapper } = profile.client.connectAs(executor));
 
     context = {
       mode: AgentMode.AUTONOMOUS,
-      accountId: executorAccountId.toString(),
+      accountId: executor.accountId.toString(),
     };
   });
 
   afterAll(async () => {
-    await returnHbarsAndDeleteAccount(
-      executorWrapper,
-      executorClient.operatorAccountId!,
-      operatorClient.operatorAccountId!,
-    );
+    await profile.accounts.release(executor);
+    executorClient?.close();
   });
 
   beforeEach(async () => {
     // Executor creates topic
-    topicAdminKey = executorClient.operatorPublicKey!;
-    createdTopicId = await executorWrapper
-      .createTopic({
-        isSubmitKey: false,
-        adminKey: topicAdminKey,
-        autoRenewAccountId: executorAccountId.toString(),
-      })
-      .then(resp => resp.topicId!);
+    topicAdminKey = executor.privateKey.publicKey;
+    const createTopicResp = await executorWrapper.createTopic({
+      isSubmitKey: false,
+      adminKey: topicAdminKey,
+      autoRenewAccountId: executor.accountId.toString(),
+    });
+    createdTopicId = createTopicResp.topicId!;
 
     // Submit some messages to the topic
     await executorWrapper.submitMessage({
@@ -72,13 +56,13 @@ describe('Get Topic Messages Query Integration Tests', () => {
       message: 'Message 2',
     });
     await wait(1000);
-    await executorWrapper.submitMessage({
+    const submit3Resp = await executorWrapper.submitMessage({
       topicId: createdTopicId.toString(),
       message: 'Message 3',
     });
 
     // Wait for mirror node indexing
-    await wait(MIRROR_NODE_WAITING_TIME);
+    await waitForMirrorTx(executorWrapper, submit3Resp.transactionId!);
   });
 
   it('should fetch all topic messages', async () => {
