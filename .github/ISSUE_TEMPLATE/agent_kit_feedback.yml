@@ -39,7 +39,7 @@ body:
     validations:
       required: true
   
-   - type: checkboxes
+  - type: checkboxes
     id: feedback-applies-to
     attributes:
       label: What does this feedback apply to?
@@ -50,6 +50,96 @@ body:
         - label: Other
     validations:
       required: true
+
+  - type: dropdown
+    id: score-docs-confidence
+    attributes:
+      label: "Score (1-10): How confident did you feel after reading the docs that you could build successfully?"
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: score-getting-help
+    attributes:
+      label: "Score (1-10): How easy was it to get help when you were blocked?"
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: score-api-intuitiveness
+    attributes:
+      label: "Score (1-10): How intuitive were the APIs / SDKs to use?"
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: score-debugging
+    attributes:
+      label: "Score (1-10): How easy was it to debug issues?"
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: score-build-again
+    attributes:
+      label: "Score (1-10): How likely are you to build again on Hedera after the hackathon?"
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    validations:
+      required: false
 
   - type: textarea
     id: expected-vs-actual
