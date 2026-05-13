@@ -8,7 +8,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to share feedback on the Hedera Agent Kit.
-        
+
   - type: input
     id: contact-username
     attributes:
@@ -36,9 +36,7 @@ body:
         - label: Bug or Suggestion
         - label: Feature Request
         - label: Other
-    validations:
-      required: true
-  
+
   - type: checkboxes
     id: feedback-applies-to
     attributes:
@@ -48,9 +46,8 @@ body:
         - label: Hedera Agent Kit Python
         - label: Feature Request
         - label: Other
-    validations:
-      required: true
-   - type: textarea
+
+  - type: textarea
     id: expected-vs-actual
     attributes:
       label: What you expected vs what you experienced
