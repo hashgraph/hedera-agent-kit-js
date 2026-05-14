@@ -97,6 +97,16 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Status: Not validated by HAK team, v3-compatible release
 
+- [MPP Hedera Plugin](https://www.npmjs.com/package/hak-mppx-hedera-plugin) enables AI agents to pay for 402-protected APIs using USDC on Hedera via the [Machine Payments Protocol](https://mpp.dev), exposing tools for one-shot charge payments (`mppx_hedera_charge_fetch_tool`) and streaming session payments (`mppx_hedera_session_open_tool`, `mppx_hedera_session_fetch_tool`, `mppx_hedera_session_close_tool`):
+
+  NPM: https://www.npmjs.com/package/hak-mppx-hedera-plugin
+
+  Github repository: https://github.com/tomrowbo/hak-mppx-hedera-plugin
+
+  Version: hak-mppx-hedera-plugin@1.2.0
+
+  Status: Not validated by HAK team, v4-compatible release
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
