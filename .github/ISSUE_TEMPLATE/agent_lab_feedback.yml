@@ -1,6 +1,6 @@
 name: Agent Lab Feedback Form
-description: Share feedback, report bugs, or request features for the AI Lab
-title: "[Agent Lab Feedback:] - "
+description: Share feedback, report bugs, or request features for the AI Lab at portal.hedera.com/agent-lab
+title: "Agent Lab Feedback: "
 labels: ["AI Lab"]
 assignees: []
 body:
@@ -13,7 +13,7 @@ body:
     id: contact-username
     attributes:
       label: Contact Info
-      description: Your GitHub or Discord username for follow-up
+      description: A GitHub or Discord username for follow-up
       placeholder: "@username"
     validations:
       required: false
