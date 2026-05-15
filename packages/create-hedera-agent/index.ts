@@ -3,297 +3,448 @@ import path from "node:path";
 import fs from "node:fs";
 import fse from "fs-extra";
 import prompts, { PromptObject } from "prompts";
-import { bold, cyan, green, red, yellow } from "kolorist";
-// Lazy import to avoid early ESM/CJS warnings disrupting prompts
+import { bold, cyan, dim, green, red, yellow } from "kolorist";
+
 async function loadExeca() {
   const mod = await import("execa");
   return mod.execa;
 }
 
-type Mode = "autonomous" | "human";
-type Network = "testnet" | "mainnet";
+type Framework = "ai-sdk" | "langchain";
+type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
-type CliFlags = {
-  mode?: Mode;
-  network?: Network;
-  name?: string;
+type ScaffoldConfig = {
+  name: string;
+  framework: Framework;
+  operatorId: string;
+  operatorKey: string;
+  openaiKey: string;
+  packageManager: PackageManager;
 };
+
+type CliFlags = Partial<{
+  name: string;
+  framework: Framework;
+  operatorId: string;
+  operatorKey: string;
+  openaiKey: string;
+  packageManager: PackageManager;
+  yes: boolean;
+}>;
+
+const FRAMEWORKS: readonly Framework[] = ["ai-sdk", "langchain"];
+const PACKAGE_MANAGERS: readonly PackageManager[] = ["npm", "pnpm", "yarn", "bun"];
+
+function isLikelyEcdsaPrivateKey(key: string): boolean {
+  const trimmed = key.trim();
+  if (/^303002/i.test(trimmed)) return true;
+  if (/^0x[0-9a-fA-F]{64}$/.test(trimmed)) return true;
+  if (/^[0-9a-fA-F]{64,}$/.test(trimmed)) return true;
+  return false;
+}
 
 function parseFlags(argv: string[]): CliFlags {
   const flags: CliFlags = {};
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = argv[i + 1];
-    if (arg === "--mode" && next) flags.mode = next as Mode;
-    if (arg === "--network" && next) flags.network = next as Network;
-    if ((arg === "--name" || arg === "--project-name") && next)
-      flags.name = next;
+    switch (arg) {
+      case "--yes":
+      case "-y":
+        flags.yes = true;
+        break;
+      case "--name":
+      case "--project-name":
+        if (next) flags.name = next;
+        break;
+      case "--framework":
+        if (next && (FRAMEWORKS as readonly string[]).includes(next)) {
+          flags.framework = next as Framework;
+        }
+        break;
+      case "--operator-id":
+        if (next) flags.operatorId = next;
+        break;
+      case "--operator-key":
+        if (next) flags.operatorKey = next;
+        break;
+      case "--openai-key":
+        if (next) flags.openaiKey = next;
+        break;
+      case "--pm":
+      case "--package-manager":
+        if (next && (PACKAGE_MANAGERS as readonly string[]).includes(next)) {
+          flags.packageManager = next as PackageManager;
+        }
+        break;
+    }
   }
   return flags;
 }
 
-async function main() {
-  console.log(bold(cyan("Create Hedera Agent")));
-  const isLikelyEcdsaPrivateKey = (key: string | undefined): boolean => {
-    if (!key || typeof key !== "string") return false;
-    const trimmed = key.trim();
-    // Accept Hedera ECDSA DER encodings: typically start with 303002... (EC Private Key structure)
-    // Common form: 30300201010420<32-byte-hex>...
-    if (/^303002/i.test(trimmed)) return true;
-    if (/^0x[0-9a-fA-F]{64}$/.test(trimmed)) return true;
-    // Fallback: long hex string >= 64 chars
-    if (/^[0-9a-fA-F]{64,}$/.test(trimmed)) return true;
-    return false;
-  };
-
-  const flags = parseFlags(process.argv.slice(2));
-
-  const responses = await prompts(
-    [
-      {
-        type: flags.name ? null : "text",
-        name: "name",
-        message: "Project name",
-        initial: "hedera-agent-app",
-      } as PromptObject,
-      {
-        type: flags.mode ? null : "select",
-        name: "mode",
-        message: "Mode",
-        choices: [
-          { title: "Autonomous (server signs)", value: "autonomous" },
-          { title: "Human-in-the-Loop (WalletConnect)", value: "human" },
-        ],
-        initial: 1,
-      } as PromptObject,
-      {
-        type: flags.network ? null : "select",
-        name: "network",
-        message: "Network",
-        choices: [
-          { title: "testnet", value: "testnet" },
-          { title: "mainnet", value: "mainnet" },
-        ],
-        initial: 0,
-      } as PromptObject,
-      {
-        type: (prev, values) =>
-          values.mode === "autonomous" && !process.env.HEDERA_OPERATOR_ID
-            ? "text"
-            : null,
-        name: "HEDERA_OPERATOR_ID",
-        message:
-          "HEDERA_OPERATOR_ID (e.g. 0.0.x, use ECDSA for this demo; get from https://portal.hedera.com)",
-      } as PromptObject,
-      {
-        type: (prev, values) =>
-          values.mode === "autonomous" && !process.env.HEDERA_OPERATOR_KEY
-            ? "password"
-            : null,
-        name: "HEDERA_OPERATOR_KEY",
-        message:
-          "HEDERA_OPERATOR_KEY (autonomous, ECDSA – DER hex starting with 303002… or 0x-prefixed 64-hex",
-        validate: (value: string) =>
-          isLikelyEcdsaPrivateKey(value) ||
-          "Must be an ECDSA private key (DER hex starting with 303002… or 0x-prefixed 64-hex).",
-      } as PromptObject,
-      {
-        type: (prev, values) => (values.mode === "human" ? "text" : null),
-        name: "NEXT_PUBLIC_WC_PROJECT_ID",
-        message:
-          "NEXT_PUBLIC_WC_PROJECT_ID (WalletConnect – get from https://dashboard.reown.com)",
-        validate: (v: string) =>
-          !!v?.trim() || "WalletConnect Project ID is required",
-      } as PromptObject,
-      {
-        type: "select",
-        name: "aiProvider",
-        message: "AI provider",
-        choices: [
-          { title: "OpenAI", value: "openai" },
-          { title: "Anthropic", value: "anthropic" },
-          { title: "Groq", value: "groq" },
-          { title: "Ollama", value: "ollama" },
-        ],
-        initial: 0,
-      } as PromptObject,
-      {
-        type: (prev, values) =>
-          values.aiProvider === "openai" ? "password" : null,
-        name: "OPENAI_API_KEY",
-        message: "OPENAI_API_KEY",
-        validate: (v: string) =>
-          !!v?.trim() || "OPENAI_API_KEY is required for OpenAI",
-      } as PromptObject,
-      {
-        type: (prev, values) =>
-          values.aiProvider === "anthropic" ? "password" : null,
-        name: "ANTHROPIC_API_KEY",
-        message: "ANTHROPIC_API_KEY",
-        validate: (v: string) =>
-          !!v?.trim() || "ANTHROPIC_API_KEY is required for Anthropic",
-      } as PromptObject,
-      {
-        type: (prev, values) =>
-          values.aiProvider === "groq" ? "password" : null,
-        name: "GROQ_API_KEY",
-        message: "GROQ_API_KEY",
-        validate: (v: string) =>
-          !!v?.trim() || "GROQ_API_KEY is required for Groq",
-      } as PromptObject,
-      {
-        type: (prev, values) =>
-          values.aiProvider === "ollama" ? "text" : null,
-        name: "OLLAMA_BASE_URL",
-        message: "OLLAMA_BASE_URL (e.g. http://localhost:11434)",
-        initial: "http://localhost:11434",
-        validate: (v: string) =>
-          !!v?.trim() || "OLLAMA_BASE_URL is required for Ollama",
-      } as PromptObject,
-    ],
+async function collectConfig(flags: CliFlags): Promise<ScaffoldConfig> {
+  // Each prompt is suppressed (`type: null`) when the matching flag is set or
+  // when `--yes` is passed (defaults fill in).
+  const questions: PromptObject[] = [
     {
-      onCancel: () => {
-        console.log(yellow("Aborted."));
-        process.exit(1);
-      },
-    }
-  );
+      type: flags.name || flags.yes ? null : "text",
+      name: "name",
+      message: "Project name",
+      initial: "hedera-agent-app",
+    },
+    {
+      type: flags.framework || flags.yes ? null : "select",
+      name: "framework",
+      message: "Framework",
+      choices: [
+        { title: "Vercel AI SDK", value: "ai-sdk" },
+        { title: "LangChain", value: "langchain" },
+      ],
+      initial: 0,
+    },
+    {
+      type: flags.operatorId || flags.yes ? null : "text",
+      name: "operatorId",
+      message: "HEDERA_OPERATOR_ID (e.g. 0.0.x, get one at https://portal.hedera.com)",
+    },
+    {
+      type: flags.operatorKey || flags.yes ? null : "password",
+      name: "operatorKey",
+      message: "HEDERA_OPERATOR_KEY (ECDSA DER hex starting with 303002… or 0x-prefixed 64-hex)",
+      validate: (value: string) =>
+        !value
+          ? "Operator key is required"
+          : isLikelyEcdsaPrivateKey(value) ||
+            "Must be an ECDSA private key (DER hex starting with 303002… or 0x-prefixed 64-hex).",
+    },
+    {
+      type: flags.openaiKey || flags.yes ? null : "password",
+      name: "openaiKey",
+      message: "OPENAI_API_KEY",
+      validate: (value: string) => !!value?.trim() || "Required",
+    },
+    {
+      type: flags.packageManager || flags.yes ? null : "select",
+      name: "packageManager",
+      message: "Package manager",
+      choices: [
+        { title: "npm", value: "npm" },
+        { title: "pnpm", value: "pnpm" },
+        { title: "yarn", value: "yarn" },
+        { title: "bun", value: "bun" },
+      ],
+      initial: 0,
+    },
+  ];
 
-  const projectName = (
-    flags.name ||
-    responses.name ||
-    "hedera-agent-app"
-  ).trim();
-  const mode = (flags.mode || responses.mode || "human") as Mode;
-  const network = (flags.network || responses.network || "testnet") as Network;
-
-  const targetDir = path.resolve(process.cwd(), projectName);
-  if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
-    console.log(
-      red(`Target directory already exists and is not empty: ${targetDir}`)
-    );
-    process.exit(1);
-  }
-
-  // Prefer packaged template when installed via npm, fallback to repo path during local dev
-  const packagedTemplatePrimary = path.resolve(__dirname, "..", "template"); // package root
-  const packagedTemplateAlt = path.resolve(__dirname, "template"); // in case bundler layout differs
-  let templateDir = packagedTemplatePrimary;
-  if (!fs.existsSync(templateDir)) templateDir = packagedTemplateAlt;
-  if (!fs.existsSync(templateDir)) {
-    const repoRoot = path.resolve(__dirname, "..", "..", "..");
-    const devTemplate = path.resolve(
-      repoRoot,
-      "typescript",
-      "examples",
-      "nextjs"
-    );
-    if (fs.existsSync(devTemplate)) {
-      templateDir = devTemplate;
-    } else {
-      console.error(
-        red(
-          "Template not found. The package should include a 'template' directory. If developing locally, ensure typescript/examples/nextjs exists."
-        )
-      );
+  const responses = await prompts(questions, {
+    onCancel: () => {
+      console.log(yellow("Aborted."));
       process.exit(1);
-    }
-  }
-
-  // Copy template
-  await fse.copy(templateDir, targetDir, {
-    filter: (src) => {
-      const rel = path.relative(templateDir, src);
-      // Exclude lockfiles and .next
-      if (rel.includes("node_modules") || rel.startsWith(".next")) return false;
-      return true;
     },
   });
 
-  // Write .env.local
-  const envLines: string[] = [];
-  envLines.push(`NEXT_PUBLIC_NETWORK=${network}`);
-  envLines.push(`NEXT_PUBLIC_AGENT_MODE=${mode}`);
-  if (mode === "autonomous") {
-    const id =
-      responses.HEDERA_OPERATOR_ID || process.env.HEDERA_OPERATOR_ID || "";
-    const key =
-      responses.HEDERA_OPERATOR_KEY || process.env.HEDERA_OPERATOR_KEY || "";
-    envLines.push(`HEDERA_OPERATOR_ID=${id}`);
-    envLines.push(`HEDERA_OPERATOR_KEY=${key}`);
-  } else {
-    const wcId =
-      responses.NEXT_PUBLIC_WC_PROJECT_ID ||
-      process.env.NEXT_PUBLIC_WC_PROJECT_ID ||
-      "";
-    envLines.push(`NEXT_PUBLIC_WC_PROJECT_ID=${wcId}`);
-  }
+  return {
+    name: (flags.name || responses.name || "hedera-agent-app").trim(),
+    framework: (flags.framework || responses.framework || "ai-sdk") as Framework,
+    operatorId: (flags.operatorId || responses.operatorId || "").trim(),
+    operatorKey: (flags.operatorKey || responses.operatorKey || "").trim(),
+    openaiKey: (flags.openaiKey || responses.openaiKey || "").trim(),
+    packageManager: (flags.packageManager || responses.packageManager || "npm") as PackageManager,
+  };
+}
 
-  // Optional AI provider keys
-  const aiProvider = responses.aiProvider as
-    | "openai"
-    | "anthropic"
-    | "groq"
-    | "ollama"
-    | undefined;
-  if (aiProvider) {
-    envLines.push(`AI_PROVIDER=${aiProvider}`);
-    if (aiProvider === "openai" && responses.OPENAI_API_KEY) {
-      envLines.push(`OPENAI_API_KEY=${responses.OPENAI_API_KEY}`);
-    } else if (aiProvider === "anthropic" && responses.ANTHROPIC_API_KEY) {
-      envLines.push(`ANTHROPIC_API_KEY=${responses.ANTHROPIC_API_KEY}`);
-    } else if (aiProvider === "groq" && responses.GROQ_API_KEY) {
-      envLines.push(`GROQ_API_KEY=${responses.GROQ_API_KEY}`);
-    } else if (aiProvider === "ollama" && responses.OLLAMA_BASE_URL) {
-      envLines.push(`OLLAMA_BASE_URL=${responses.OLLAMA_BASE_URL}`);
+type ResolvedPaths = {
+  templateDir: string;
+  runtimeVariantsDir: string;
+};
+
+function resolvePaths(): ResolvedPaths {
+  // Packaged: __dirname is dist/, template/ and runtime-variants/ sit next to
+  // dist/ in the published tarball (see package.json "files"). Dev fallback:
+  // both live one level up from index.ts in the source tree.
+  const candidates = [
+    path.resolve(__dirname, ".."),
+    path.resolve(__dirname),
+  ];
+
+  for (const root of candidates) {
+    const templateDir = path.resolve(root, "template");
+    const runtimeVariantsDir = path.resolve(root, "runtime-variants");
+    if (fs.existsSync(templateDir) && fs.existsSync(runtimeVariantsDir)) {
+      return { templateDir, runtimeVariantsDir };
     }
   }
 
-  await fse.writeFile(
-    path.join(targetDir, ".env.local"),
-    envLines.join("\n") + "\n",
-    "utf8"
+  console.error(
+    red(
+      "Template assets not found. The published package should include template/ and runtime-variants/ directories alongside dist/.",
+    ),
   );
+  process.exit(1);
+}
 
-  // Update package.json name field in generated app if present
-  const appPkgPath = path.join(targetDir, "package.json");
-  if (fs.existsSync(appPkgPath)) {
-    const appPkg = JSON.parse(await fse.readFile(appPkgPath, "utf8"));
-    appPkg.name = projectName;
-    await fse.writeFile(
-      appPkgPath,
-      JSON.stringify(appPkg, null, 2) + "\n",
-      "utf8"
-    );
+async function copyTemplate(templateDir: string, targetDir: string): Promise<void> {
+  await fse.copy(templateDir, targetDir, {
+    filter: (src) => {
+      const rel = path.relative(templateDir, src);
+      if (rel.includes("node_modules")) return false;
+      if (rel.startsWith(".next")) return false;
+      if (rel === "tsconfig.tsbuildinfo") return false;
+      if (rel === ".env.local") return false;
+      return true;
+    },
+  });
+}
+
+async function applyFrameworkOverlay(
+  runtimeVariantsDir: string,
+  targetDir: string,
+  framework: Framework,
+): Promise<void> {
+  // The default template ships the AI SDK runtime. For LangChain we replace
+  // src/features/chat-runtime/ wholesale (the runtime adapter feature),
+  // overlay the runtime-coupled chat-hedera files (today: just toolkit.ts —
+  // its body wires HederaAIToolkit on the AI SDK side and HederaLangchainToolkit
+  // on the LangChain side), and apply the dep diff in package.deps.json.
+  if (framework === "ai-sdk") return;
+
+  const variantDir = path.resolve(runtimeVariantsDir, framework);
+  const variantRuntimeDir = path.resolve(
+    variantDir,
+    "src",
+    "features",
+    "chat-runtime",
+  );
+  const targetRuntimeDir = path.resolve(
+    targetDir,
+    "src",
+    "features",
+    "chat-runtime",
+  );
+  const depsFile = path.resolve(variantDir, "package.deps.json");
+
+  if (!fs.existsSync(variantRuntimeDir) || !fs.existsSync(depsFile)) {
+    console.error(red(`Framework variant assets missing for "${framework}".`));
+    process.exit(1);
   }
 
-  // Skipping automatic dependency installation to let the user install manually
+  await fse.remove(targetRuntimeDir);
+  await fse.copy(variantRuntimeDir, targetRuntimeDir);
 
-  // Initialize git (optional)
+  // Tests (`*.test.ts(x)`) live alongside source for parity with the rest of
+  // the template, but the scaffolded project doesn't ship the langchain test
+  // dev-dependencies. Strip them out post-copy so `next build` and the user's
+  // own test setup stay untouched.
+  await removeTestFiles(targetRuntimeDir);
+
+  // Overlay specific chat-hedera/server files that are runtime-coupled.
+  // Anything not present in the variant's chat-hedera directory stays
+  // unchanged from the template.
+  const variantChatHederaServerDir = path.resolve(
+    variantDir,
+    "src",
+    "features",
+    "chat-hedera",
+    "server",
+  );
+  const targetChatHederaServerDir = path.resolve(
+    targetDir,
+    "src",
+    "features",
+    "chat-hedera",
+    "server",
+  );
+  if (fs.existsSync(variantChatHederaServerDir)) {
+    await fse.copy(variantChatHederaServerDir, targetChatHederaServerDir, {
+      overwrite: true,
+    });
+    await removeTestFiles(targetChatHederaServerDir);
+  }
+
+  await applyPackageDepsDiff(targetDir, depsFile);
+}
+
+async function removeTestFiles(dir: string): Promise<void> {
+  if (!fs.existsSync(dir)) return;
+  const entries = await fse.readdir(dir, { withFileTypes: true });
+  await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.resolve(dir, entry.name);
+      if (entry.isDirectory()) {
+        await removeTestFiles(entryPath);
+        return;
+      }
+      if (/\.test\.tsx?$/.test(entry.name)) {
+        await fse.remove(entryPath);
+      }
+    }),
+  );
+}
+
+type PackageDepsDiff = {
+  add?: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+  remove?: { dependencies?: string[]; devDependencies?: string[] };
+};
+
+async function applyPackageDepsDiff(targetDir: string, depsFile: string): Promise<void> {
+  const pkgPath = path.resolve(targetDir, "package.json");
+  const pkg = JSON.parse(await fse.readFile(pkgPath, "utf8")) as Record<string, unknown> & {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  const diff = JSON.parse(await fse.readFile(depsFile, "utf8")) as PackageDepsDiff;
+
+  if (diff.remove?.dependencies && pkg.dependencies) {
+    for (const name of diff.remove.dependencies) delete pkg.dependencies[name];
+  }
+  if (diff.remove?.devDependencies && pkg.devDependencies) {
+    for (const name of diff.remove.devDependencies) delete pkg.devDependencies[name];
+  }
+  if (diff.add?.dependencies) {
+    pkg.dependencies = { ...(pkg.dependencies ?? {}), ...diff.add.dependencies };
+  }
+  if (diff.add?.devDependencies) {
+    pkg.devDependencies = { ...(pkg.devDependencies ?? {}), ...diff.add.devDependencies };
+  }
+
+  if (pkg.dependencies) pkg.dependencies = sortKeys(pkg.dependencies);
+  if (pkg.devDependencies) pkg.devDependencies = sortKeys(pkg.devDependencies);
+
+  await fse.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+}
+
+function sortKeys(record: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(record).sort()) out[key] = record[key];
+  return out;
+}
+
+async function renamePackage(targetDir: string, projectName: string): Promise<void> {
+  const pkgPath = path.resolve(targetDir, "package.json");
+  if (!fs.existsSync(pkgPath)) return;
+  const pkg = JSON.parse(await fse.readFile(pkgPath, "utf8")) as Record<string, unknown>;
+  pkg.name = projectName;
+  await fse.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+}
+
+function buildEnvFile(config: ScaffoldConfig): string {
+  const lines: string[] = [
+    "# Hedera operator credentials (testnet, server-side only, no NEXT_PUBLIC_ prefix)",
+    `HEDERA_OPERATOR_ID=${config.operatorId}`,
+    `HEDERA_OPERATOR_KEY=${config.operatorKey}`,
+    "",
+    "# OpenAI",
+    `OPENAI_API_KEY=${config.openaiKey}`,
+    "",
+  ];
+  return lines.join("\n");
+}
+
+async function writeEnvFile(targetDir: string, config: ScaffoldConfig): Promise<void> {
+  await fse.writeFile(path.resolve(targetDir, ".env.local"), buildEnvFile(config), "utf8");
+}
+
+async function ensureGitignoresEnvLocal(targetDir: string): Promise<void> {
+  // The shipped template's .gitignore already matches `.env*`, but a missing
+  // file (or one that's been hand-edited) shouldn't silently leak secrets.
+  const gitignorePath = path.resolve(targetDir, ".gitignore");
+  let contents = "";
+  if (fs.existsSync(gitignorePath)) {
+    contents = await fse.readFile(gitignorePath, "utf8");
+  }
+  if (!/^\.env\*$/m.test(contents) && !/^\.env\.local$/m.test(contents)) {
+    const sep = contents.endsWith("\n") || contents === "" ? "" : "\n";
+    contents = `${contents}${sep}\n# Local secrets\n.env*\n!.env.local.example\n`;
+    await fse.writeFile(gitignorePath, contents, "utf8");
+  }
+}
+
+function installCommandFor(pm: PackageManager): { command: string; args: string[] } {
+  switch (pm) {
+    case "npm":
+      return { command: "npm", args: ["install"] };
+    case "pnpm":
+      return { command: "pnpm", args: ["install"] };
+    case "yarn":
+      return { command: "yarn", args: [] };
+    case "bun":
+      return { command: "bun", args: ["install"] };
+  }
+}
+
+async function runInstall(targetDir: string, pm: PackageManager): Promise<boolean> {
+  const { command, args } = installCommandFor(pm);
+  console.log(dim(`Installing dependencies with ${command}…`));
+  try {
+    const execa = await loadExeca();
+    await execa(command, args, { cwd: targetDir, stdio: "inherit" });
+    return true;
+  } catch (err) {
+    console.log(
+      yellow(
+        `Install failed (${command}). You can finish setup manually by running it inside the project directory.`,
+      ),
+    );
+    if (err instanceof Error && err.message) console.log(dim(err.message));
+    return false;
+  }
+}
+
+async function gitInit(targetDir: string): Promise<void> {
   try {
     const execa = await loadExeca();
     await execa("git", ["init"], { cwd: targetDir, stdio: "pipe" });
     await execa("git", ["add", "."], { cwd: targetDir, stdio: "pipe" });
-    await execa(
-      "git",
-      ["commit", "-m", "chore: scaffold with create-hedera-agent"],
-      {
-        cwd: targetDir,
-        stdio: "pipe",
-      }
-    );
-  } catch { }
+    await execa("git", ["commit", "-m", "chore: scaffold with create-hedera-agent"], {
+      cwd: targetDir,
+      stdio: "pipe",
+    });
+  } catch {
+    // git is optional; ignore failures so users without git installed still
+    // get a working scaffold.
+  }
+}
 
-  // Next steps
+function printNextSteps(config: ScaffoldConfig): void {
+  const devCmd =
+    config.packageManager === "npm"
+      ? "npm run dev"
+      : config.packageManager === "yarn"
+        ? "yarn dev"
+        : `${config.packageManager} run dev`;
   console.log("");
   console.log(green("Done."));
   console.log(
     `${bold("Next steps:")}\n` +
-    `  cd ${projectName}\n` +
-    `  npm i\n` +
-    `  npm run dev\n`
+      `  cd ${config.name}\n` +
+      `  ${devCmd}\n`,
   );
-  // Ensure the CLI exits cleanly even if some child process leaves open handles
+}
+
+async function main(): Promise<void> {
+  console.log(bold(cyan("Create Hedera Agent")));
+  const flags = parseFlags(process.argv.slice(2));
+  const config = await collectConfig(flags);
+
+  const targetDir = path.resolve(process.cwd(), config.name);
+  if (fs.existsSync(targetDir) && fs.readdirSync(targetDir).length > 0) {
+    console.log(red(`Target directory already exists and is not empty: ${targetDir}`));
+    process.exit(1);
+  }
+
+  const { templateDir, runtimeVariantsDir } = resolvePaths();
+
+  await copyTemplate(templateDir, targetDir);
+  await applyFrameworkOverlay(runtimeVariantsDir, targetDir, config.framework);
+  await renamePackage(targetDir, config.name);
+  await writeEnvFile(targetDir, config);
+  await ensureGitignoresEnvLocal(targetDir);
+
+  await runInstall(targetDir, config.packageManager);
+  await gitInit(targetDir);
+
+  printNextSteps(config);
   process.exit(0);
 }
 
