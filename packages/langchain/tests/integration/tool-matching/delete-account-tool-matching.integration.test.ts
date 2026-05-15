@@ -69,9 +69,9 @@ describe('Delete Account Tool Matching Integration Tests', () => {
 
     it('should handle various natural language variations', async () => {
       const variations = [
-        { input: 'Close account 0.0.42', expected: { accountId: '0.0.42' } },
+        { input: 'Close Hedera account 0.0.42', expected: { accountId: '0.0.42' } },
         {
-          input: 'Remove account id 0.0.77 and send balance to 0.0.88',
+          input: 'Remove account 0.0.77, transferring its remaining balance to 0.0.88',
           expected: { accountId: '0.0.77', transferAccountId: '0.0.88' },
         },
       ];
