@@ -6,7 +6,7 @@ import { coreTokenQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plugi
 
 const { GET_TOKEN_INFO_QUERY_TOOL } = coreTokenQueryPluginToolNames;
 
-describe.skip('Get Token Info Query Tool Matching Integration Tests', () => {
+describe('Get Token Info Query Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

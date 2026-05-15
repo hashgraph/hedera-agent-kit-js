@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { GET_ACCOUNT_QUERY_TOOL } from '@hashgraph/hedera-agent-kit/plugins';
 
-describe.skip('Get Account Query Tool Matching Integration Tests', () => {
+describe('Get Account Query Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
@@ -25,8 +25,8 @@ describe.skip('Get Account Query Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
-    it.skip('should match get account query tool for simple request', async () => {
+  describe('Tool Matching and Parameter Extraction', () => {
+    it('should match get account query tool for simple request', async () => {
       const input = 'Get account info for 0.0.1234';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -48,7 +48,7 @@ describe.skip('Get Account Query Tool Matching Integration Tests', () => {
       );
     });
 
-    it.skip('should match when user says "query" instead of "get"', async () => {
+    it('should match when user says "query" instead of "get"', async () => {
       const input = 'Query details of account 0.0.5555';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -70,7 +70,7 @@ describe.skip('Get Account Query Tool Matching Integration Tests', () => {
       );
     });
 
-    it.skip('should handle various natural language variations', async () => {
+    it('should handle various natural language variations', async () => {
       const variations = [
         { input: 'Please show me details for account 0.0.2222', accountId: '0.0.2222' },
         { input: 'Look up account 0.0.3333', accountId: '0.0.3333' },
@@ -100,8 +100,8 @@ describe.skip('Get Account Query Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
-    it.skip('should have get account query tool available', () => {
+  describe('Tool Available', () => {
+    it('should have get account query tool available', () => {
       const tools = toolkit.getTools();
       const accountQueryTool = tools.find(tool => tool.name === 'get_account_query_tool');
 

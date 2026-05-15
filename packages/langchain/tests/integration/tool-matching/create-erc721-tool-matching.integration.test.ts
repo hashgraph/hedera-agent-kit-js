@@ -25,7 +25,7 @@ describe('Create ERC721 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match simple create ERC721 command', async () => {
       const input =
         'Create an ERC721 token named ArtCollection with symbol ART and base URI https://example.com/metadata/';
@@ -207,7 +207,7 @@ describe('Create ERC721 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have create ERC721 tool available', () => {
       const tools = toolkit.getTools();
       const createERC721 = tools.find(tool => tool.name === 'create_erc721_tool');

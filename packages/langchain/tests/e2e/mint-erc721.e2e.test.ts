@@ -104,7 +104,7 @@ describe('Mint ERC721 Token E2E Tests', () => {
     },
   );
 
-  it.skip(
+  it(
     'handles various natural language variations for minting',
     async () => {
       const variations = [

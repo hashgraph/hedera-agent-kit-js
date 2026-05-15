@@ -158,14 +158,14 @@ describe('Mint ERC721 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have mint ERC721 tool available', () => {
       const tools = toolkit.getTools();
       const mintERC721 = tools.find(tool => tool.name === 'mint_erc721_tool');
 
       expect(mintERC721).toBeDefined();
       expect(mintERC721!.name).toBe('mint_erc721_tool');
-      expect(mintERC721!.description).toContain('mint a new ERC721 token');
+      expect(mintERC721!.description).toContain('a new ERC721 token on Hedera');
     });
   });
 });

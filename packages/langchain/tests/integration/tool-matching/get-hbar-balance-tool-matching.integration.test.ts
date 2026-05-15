@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { coreAccountQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
 
-describe.skip('Get HBAR Balance Tool Matching Integration Tests', () => {
+describe('Get HBAR Balance Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

@@ -6,7 +6,7 @@ import { coreAccountQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plu
 
 const { GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL } = coreAccountQueryPluginToolNames;
 
-describe.skip('Get Account Token Balances - Tool Matching Integration Tests', () => {
+describe('Get Account Token Balances - Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

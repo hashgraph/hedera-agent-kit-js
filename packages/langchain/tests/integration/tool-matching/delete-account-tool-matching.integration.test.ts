@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { coreAccountPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
 
-describe.skip('Delete Account Tool Matching Integration Tests', () => {
+describe('Delete Account Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
@@ -26,8 +26,8 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
-    it.skip('should match delete account tool with accountId only', async () => {
+  describe('Tool Matching and Parameter Extraction', () => {
+    it('should match delete account tool with accountId only', async () => {
       const input = 'Delete account 0.0.12345';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -47,7 +47,7 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
       );
     });
 
-    it.skip('should match delete account tool with transferAccountId', async () => {
+    it('should match delete account tool with transferAccountId', async () => {
       const input = 'Delete the account 0.0.1111 and transfer funds to 0.0.2222';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
@@ -67,11 +67,11 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
       );
     });
 
-    it.skip('should handle various natural language variations', async () => {
+    it('should handle various natural language variations', async () => {
       const variations = [
-        { input: 'Close account 0.0.42', expected: { accountId: '0.0.42' } },
+        { input: 'Close Hedera account 0.0.42', expected: { accountId: '0.0.42' } },
         {
-          input: 'Remove account id 0.0.77 and send balance to 0.0.88',
+          input: 'Remove account 0.0.77, transferring its remaining balance to 0.0.88',
           expected: { accountId: '0.0.77', transferAccountId: '0.0.88' },
         },
       ];
@@ -96,8 +96,8 @@ describe.skip('Delete Account Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
-    it.skip('should have delete account tool available', () => {
+  describe('Tool Available', () => {
+    it('should have delete account tool available', () => {
       const tools = toolkit.getTools();
       const deleteAccount = tools.find(tool => tool.name === 'delete_account_tool');
 

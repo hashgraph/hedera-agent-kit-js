@@ -6,7 +6,7 @@ import { coreEVMQueryPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins
 
 const { GET_CONTRACT_INFO_QUERY_TOOL } = coreEVMQueryPluginToolNames;
 
-describe.skip('Get Contract Info - Tool Matching Integration Tests', () => {
+describe('Get Contract Info - Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

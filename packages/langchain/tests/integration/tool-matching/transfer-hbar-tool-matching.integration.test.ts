@@ -299,7 +299,7 @@ describe('Transfer HBAR Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have transfer HBAR tool available', () => {
       const tools = toolkit.getTools();
       const transferHbarTool = tools.find(tool => tool.name === 'transfer_hbar_tool');

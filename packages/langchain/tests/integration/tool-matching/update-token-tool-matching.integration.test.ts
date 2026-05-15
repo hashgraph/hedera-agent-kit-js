@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { coreTokenPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
 
-describe.skip('Update Token Tool Matching Integration Tests', () => {
+describe('Update Token Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

@@ -118,7 +118,7 @@ describe('Mint Fungible Token Tool Matching Integration Tests', () => {
     }, 120_000); // increase timeout to 2 minutes
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have mint fungible token tool available', () => {
       const tools = toolkit.getTools();
       const mintFT = tools.find(tool => tool.name === 'mint_fungible_token_tool');
