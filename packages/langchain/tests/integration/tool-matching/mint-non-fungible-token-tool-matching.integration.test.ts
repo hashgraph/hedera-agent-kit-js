@@ -145,14 +145,14 @@ describe('Mint Non-Fungible Token Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
-    it.skip('should have mint non-fungible token tool available', () => {
+  describe('Tool Available', () => {
+    it('should have mint non-fungible token tool available', () => {
       const tools = toolkit.getTools();
       const mintNFT = tools.find(tool => tool.name === 'mint_non_fungible_token_tool');
 
       expect(mintNFT).toBeDefined();
       expect(mintNFT!.name).toBe('mint_non_fungible_token_tool');
-      expect(mintNFT!.description).toContain('mint NFTs with its unique metadata');
+      expect(mintNFT!.description).toContain('mint HTS NFTs with its unique metadata');
     });
   });
 });

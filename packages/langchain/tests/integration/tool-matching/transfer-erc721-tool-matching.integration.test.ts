@@ -25,7 +25,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match simple transfer ERC721 command', async () => {
       const input =
         'Transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x1234567890123456789012345678901234567890';
@@ -123,7 +123,8 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
           },
         },
         {
-          input: 'Transfer ERC721 collectible 10 at 0.0.5555 from 0.0.6666 to recipient 0.0.7777',
+          input:
+            'Transfer ERC721 collectible with id 10 from contract 0.0.5555, owner 0.0.6666, to recipient 0.0.7777',
           expected: {
             contractId: '0.0.5555',
             fromAddress: '0.0.6666',
@@ -277,7 +278,7 @@ describe('Transfer ERC721 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have transfer ERC721 tool available', () => {
       const tools = toolkit.getTools();
       const transferERC721 = tools.find(tool => tool.name === 'transfer_erc721_tool');

@@ -137,13 +137,13 @@ describe('Airdrop Fungible Token Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Availability', () => {
+  describe('Tool Availability', () => {
     it('should have airdrop fungible token tool available', () => {
       const tools = toolkit.getTools();
       const airdropTool = tools.find(tool => tool.name === 'airdrop_fungible_token_tool');
 
       expect(airdropTool).toBeDefined();
-      expect(airdropTool!.description).toContain('airdrop a fungible token on Hedera');
+      expect(airdropTool!.description).toContain('airdrop a HTS fungible token on Hedera');
     });
   });
 });

@@ -236,7 +236,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have transfer ERC20 tool available', () => {
       const tools = toolkit.getTools();
       const transferERC20 = tools.find(tool => tool.name === 'transfer_erc20_tool');

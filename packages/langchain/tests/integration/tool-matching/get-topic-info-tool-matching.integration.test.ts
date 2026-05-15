@@ -78,7 +78,7 @@ describe('Get Topic Info Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have get topic info tool available', () => {
       const tools = toolkit.getTools();
       const tool = tools.find(tool => tool.name === 'get_topic_info_query_tool');

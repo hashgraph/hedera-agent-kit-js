@@ -6,7 +6,7 @@ import { coreTransactionQueryPluginToolNames } from '@hashgraph/hedera-agent-kit
 
 const { GET_TRANSACTION_RECORD_QUERY_TOOL } = coreTransactionQueryPluginToolNames;
 
-describe.skip('Get Transaction Record - Tool Matching Integration Tests', () => {
+describe('Get Transaction Record - Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

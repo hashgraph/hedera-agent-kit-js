@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { DELETE_TOPIC_TOOL } from '@hashgraph/hedera-agent-kit/plugins';
 
-describe.skip('Delete Topic Tool Matching Integration Tests', () => {
+describe('Delete Topic Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;

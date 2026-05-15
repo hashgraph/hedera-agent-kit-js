@@ -100,7 +100,7 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     receiverClient?.close();
   });
 
-  it.skip('should allow spender to transfer tokens to themselves using allowance', async () => {
+  it('should allow spender to transfer tokens to themselves using allowance', async () => {
     const context = {}; // optional tool context
     const tool = transferFungibleTokenWithAllowanceTool(context);
 
@@ -122,17 +122,17 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     );
     expect(result.raw.status).toBe('SUCCESS');
 
-    //FIXME: this breaks somehow
+    await waitForMirrorTx(executorWrapper, result.raw.transactionId);
 
-    const spenderBalance = await spenderWrapper.getAccountTokenBalance(
-      tokenId.toString(),
+    const spenderBalance = await spenderWrapper.getAccountTokenBalanceFromMirrornode(
       spender.accountId.toString(),
+      tokenId.toString(),
     );
 
     expect(spenderBalance.balance).toBe(50);
   });
 
-  it.skip('should allow spender to transfer tokens to themselves and receiver using allowance', async () => {
+  it('should allow spender to transfer tokens to themselves and receiver using allowance', async () => {
     const context = {};
     const tool = transferFungibleTokenWithAllowanceTool(context);
 

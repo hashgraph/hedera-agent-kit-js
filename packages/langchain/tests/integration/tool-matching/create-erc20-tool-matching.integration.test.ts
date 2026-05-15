@@ -25,7 +25,7 @@ describe('Create ERC20 Tool Matching Integration Tests', () => {
     }
   });
 
-  describe.skip('Tool Matching and Parameter Extraction', () => {
+  describe('Tool Matching and Parameter Extraction', () => {
     it('should match simple create ERC20 command', async () => {
       const input = 'Create an ERC20 token named TestToken with symbol TST and 1000 initial supply';
 
@@ -167,7 +167,7 @@ describe('Create ERC20 Tool Matching Integration Tests', () => {
     });
   });
 
-  describe.skip('Tool Available', () => {
+  describe('Tool Available', () => {
     it('should have create ERC20 tool available', () => {
       const tools = toolkit.getTools();
       const createERC20 = tools.find(tool => tool.name === 'create_erc20_tool');

@@ -4,7 +4,7 @@ import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
 import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
 import { coreMiscQueriesPluginsToolNames } from '@hashgraph/hedera-agent-kit/plugins';
 
-describe.skip('Get Exchange Rate Tool Matching Integration Tests', () => {
+describe('Get Exchange Rate Tool Matching Integration Tests', () => {
   let testSetup: LangchainTestSetup;
   let agent: ReactAgent;
   let toolkit: HederaLangchainToolkit;
