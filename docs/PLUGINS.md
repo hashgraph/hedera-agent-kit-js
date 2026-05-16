@@ -65,6 +65,17 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
   Status: Validated by HAK team, v4-compatible release
 
 
+- [HAK Stader Plugin](https://www.npmjs.com/package/hak-stader-plugin) integrates [**Stader**](https://www.staderlabs.com/hedera/) liquid staking on Hedera, exposing the core actions (`stader_stake_hbar`, `stader_approve_hbarx`, `stader_unstake_hbar`, `stader_claim_withdrawal`, `stader_get_pending_withdrawals`, `stader_get_hbarx_balance`, `stader_get_exchange_rate`, `stader_get_staking_info`) for staking HBAR to receive HBARX (a yield-bearing liquid staking token usable in DeFi):
+
+  NPM: https://www.npmjs.com/package/hak-stader-plugin
+
+  Github repository: https://github.com/jmgomezl/hak-stader-plugin
+
+  Version: hak-stader-plugin@1.0.0
+
+  Status: Not validated by HAK team, v4-compatible release
+
+
 - [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
 
   NPM: https://www.npmjs.com/package/coincap-hedera-plugin
