@@ -13,9 +13,8 @@
     "runtime-variants"
   ],
   "scripts": {
-    "prepack": "npm run sync-template && npm run build",
+    "prepack": "npm run build",
     "build": "tsup index.ts --format cjs --dts --sourcemap --clean",
-    "sync-template": "node ./scripts/sync-template.cjs",
     "dev": "tsx watch index.ts",
     "start": "node dist/index.js"
   },

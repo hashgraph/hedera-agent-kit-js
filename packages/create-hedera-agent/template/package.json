@@ -11,6 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "3.0.78",
     "@ai-sdk/openai": "3.0.63",
     "@ai-sdk/react": "3.0.184",
     "@hashgraph/hedera-agent-kit": "4.0.0",

@@ -60,9 +60,10 @@ Everything below ships in this overlay:
   ai-sdk UIMessage stream protocol — only the server-side adapter differs.
 - `utils/mappers.ts` — canonical ↔ ai-sdk `UIMessage` mappers shared between
   the client hook and the server's request decoder.
-- `server/llm.ts` — `createLLM()` switching on `AI_PROVIDER` and instantiating
-  the matching LangChain chat model (`ChatOpenAI` / `ChatAnthropic` /
-  `ChatGroq` / `ChatOllama`). Same env contract as the AI SDK variant.
+- `server/llm.ts` — `createLLM()` switching on `LLM_PROVIDER` (default
+  `openai` / `gpt-4o-mini`, opt-in `anthropic` / `claude-haiku-4-5`) and
+  instantiating the matching LangChain chat model (`ChatOpenAI` /
+  `ChatAnthropic`). Same env contract as the AI SDK variant.
 - `server/messages.ts` — converts canonical `ChatMessage[]` to LangChain
   `BaseMessage[]` (HumanMessage / AIMessage with `tool_calls` / ToolMessage),
   letting the agent resume cleanly after the offline-sign round-trip.

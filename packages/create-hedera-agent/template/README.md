@@ -7,16 +7,27 @@ A Next.js 15 chatbot wired with the [Hedera Agent Kit](https://github.com/hashgr
 ### 1. Fill in `.env.local`
 
 ```env
+# Hedera operator credentials
 HEDERA_OPERATOR_ID=0.0.xxxx
 HEDERA_OPERATOR_KEY=
+
+# LLM API keys (set the one that matches LLM_PROVIDER below; leave the other blank)
 OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+
+# LLM provider & model
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
 ```
 
-| Variable              | Where to get it                                                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `HEDERA_OPERATOR_ID`  | Create a testnet account at <https://portal.hedera.com>. Use the account ID shown after sign-in (`0.0.x` format).          |
-| `HEDERA_OPERATOR_KEY` | Same portal. Reveal the **ECDSA** private key for that account and paste it here (DER hex starting `303002…` or `0x`-hex). |
-| `OPENAI_API_KEY`      | Generate one at <https://platform.openai.com/api-keys>. The scaffold uses `gpt-4o-mini`.                                   |
+| Variable              | Where to get it / what to set                                                                                                                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `HEDERA_OPERATOR_ID`  | Create a testnet account at <https://portal.hedera.com>. Use the account ID shown after sign-in (`0.0.x` format).                                                                                                        |
+| `HEDERA_OPERATOR_KEY` | Same portal. Reveal the **ECDSA** private key for that account and paste it here (DER hex starting `303002…` or `0x`-hex).                                                                                               |
+| `OPENAI_API_KEY`      | Generate one at <https://platform.openai.com/api-keys>. Required when `LLM_PROVIDER=openai`.                                                                                                                             |
+| `ANTHROPIC_API_KEY`   | Generate one at <https://console.anthropic.com/settings/keys>. Required when `LLM_PROVIDER=anthropic`.                                                                                                                   |
+| `LLM_PROVIDER`        | Which provider to use: `openai` (default) or `anthropic`.                                                                                                                                                                |
+| `LLM_MODEL`           | Which model to use. Examples by provider — **openai:** `gpt-4o-mini` (default), `gpt-4o`, `gpt-4.1-mini`. **anthropic:** `claude-haiku-4-5` (default), `claude-sonnet-4-6`, `claude-opus-4-7`. Leave blank for default. |
 
 ### 2. Install dependencies
 

@@ -334,8 +334,17 @@ function buildEnvFile(config: ScaffoldConfig): string {
     `HEDERA_OPERATOR_ID=${config.operatorId}`,
     `HEDERA_OPERATOR_KEY=${config.operatorKey}`,
     "",
-    "# OpenAI",
+    "# LLM API keys (set the one that matches LLM_PROVIDER below; leave the other blank)",
     `OPENAI_API_KEY=${config.openaiKey}`,
+    "# ANTHROPIC_API_KEY=",
+    "",
+    "# LLM provider & model",
+    "# LLM_PROVIDER  — which provider to use. Must be: openai | anthropic",
+    "# LLM_MODEL     — which model to use. Examples by provider:",
+    "#                   openai     -> gpt-4o-mini (default), gpt-4o, gpt-4.1-mini",
+    "#                   anthropic  -> claude-haiku-4-5 (default), claude-sonnet-4-6, claude-opus-4-7",
+    "LLM_PROVIDER=openai",
+    "LLM_MODEL=gpt-4o-mini",
     "",
   ];
   return lines.join("\n");

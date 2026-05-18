@@ -14,7 +14,7 @@ Answer the prompts and the CLI will:
 
 - Copy the template into a new directory
 - Apply the framework overlay you picked (AI SDK or LangChain)
-- Write a populated `.env.local` with your operator credentials and OpenAI API key
+- Write a populated `.env.local` with your operator credentials and OpenAI API key (Anthropic is supported too — see [Switching LLM provider](#switching-llm-provider))
 - Run `npm install` (or your selected package manager)
 - Initialise a git repo with a first commit
 
@@ -83,9 +83,25 @@ The scaffolded project's own `README.md` covers env contract, mode behavior, the
 
 ## Framework choice
 
-Picking `ai-sdk` ships `@ai-sdk/openai` and `@hashgraph/hedera-agent-kit-ai-sdk`. Picking `langchain` ships `@langchain/openai` (plus `@langchain/core`, `@langchain/langgraph`, `langchain`) and `@hashgraph/hedera-agent-kit-langchain`. Only the chosen framework's dependencies land in `package.json`. There is no co-installed deadweight.
+Picking `ai-sdk` ships `@ai-sdk/openai` + `@ai-sdk/anthropic` and `@hashgraph/hedera-agent-kit-ai-sdk`. Picking `langchain` ships `@langchain/openai` + `@langchain/anthropic` (plus `@langchain/core`, `@langchain/langgraph`, `langchain`) and `@hashgraph/hedera-agent-kit-langchain`. Only the chosen framework's dependencies land in `package.json`. There is no co-installed deadweight.
 
 All framework-specific code lives in `src/lib/runtime/`. The rest of the app imports only AI SDK UIMessage types, so changing your mind later means swapping that single directory and the matching `package.json` entries.
+
+## Switching LLM provider
+
+The scaffolded `.env.local` ships with three LLM-related groups: API keys, then `LLM_PROVIDER` + `LLM_MODEL`. To switch from OpenAI (the default) to Anthropic without re-scaffolding, edit `.env.local`:
+
+```env
+# LLM API keys
+# OPENAI_API_KEY=...
+ANTHROPIC_API_KEY=sk-ant-...
+
+# LLM provider & model
+LLM_PROVIDER=anthropic
+LLM_MODEL=claude-haiku-4-5
+```
+
+Both provider SDKs (`@ai-sdk/openai` + `@ai-sdk/anthropic`, or the LangChain equivalents) are installed up front, so no `npm install` is needed to switch. `LLM_MODEL` accepts any model the chosen provider supports — leave it blank to fall back to the per-provider default (`gpt-4o-mini` / `claude-haiku-4-5`).
 
 ## Replacing a previous scaffold
 
