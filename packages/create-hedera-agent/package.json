@@ -1,25 +1,32 @@
 {
   "name": "create-hedera-agent",
-  "version": "0.2.0",
-  "description": "Scaffold a Next.js chatbot wired with Hedera Agent Kit (Vercel AI SDK or LangChain).",
+  "version": "1.1.0",
+  "description": "Scaffold a Hedera Agent Kit project with a Next.js web chat and a terminal CLI (Vercel AI SDK or LangChain).",
   "bin": {
-    "create-hedera-agent": "dist/index.js"
+    "create-hedera-agent": "index.js"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./scaffold-rule": "./scaffold-rule.js",
+    "./read-template": "./read-template.js",
+    "./generate-agent": "./generate-agent.js",
+    "./package.json": "./package.json"
+  },
   "files": [
-    "dist",
-    "template",
-    "runtime-variants"
+    "index.js",
+    "scaffold-rule.js",
+    "read-template.js",
+    "generate-agent.js",
+    "template"
   ],
   "scripts": {
-    "prepack": "npm run build",
-    "build": "tsup index.ts --format cjs --dts --sourcemap --clean",
-    "dev": "tsx watch index.ts",
-    "start": "node dist/index.js"
+    "start": "node index.js",
+    "test": "vitest run"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "execa": "^8.0.1",
@@ -28,11 +35,6 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.19.17",
-    "@types/prompts": "^2.4.9",
-    "tsup": "^8.5.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "vitest": "^4.1.6"
   }
 }

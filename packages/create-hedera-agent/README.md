@@ -1,8 +1,11 @@
 # create-hedera-agent
 
-Scaffold a Next.js 15 chatbot wired with the [Hedera Agent Kit](https://github.com/hashgraph/hedera-agent-kit). One command, one `npm run dev`, working chat with streaming, tool-call cards, and human-in-the-loop signing.
+Scaffold a Hedera Agent Kit starter project. One command, two run modes out of the box:
 
-Two framework backends are supported: **Vercel AI SDK** (default) and **LangChain**. The chat UI is identical for both; only `src/lib/runtime/` differs.
+- `npm run web` — a Next.js 16 chat UI (browser, streaming, optional human-in-the-loop transaction signing)
+- `npm run cli` — an interactive terminal chat against the same agent
+
+The web app is locked to the **Vercel AI SDK** (its `useChat` hook drives the streaming UI). The CLI is **single-runtime per scaffolded project**: pick `ai-sdk` or `langchain` at scaffold time and only that runtime's dependencies land in your project.
 
 ## Quickstart
 
@@ -12,44 +15,40 @@ npx create-hedera-agent@latest
 
 Answer the prompts and the CLI will:
 
-- Copy the template into a new directory
-- Apply the framework overlay you picked (AI SDK or LangChain)
-- Write a populated `.env.local` with your operator credentials and OpenAI API key (Anthropic is supported too — see [Switching LLM provider](#switching-llm-provider))
-- Run `npm install` (or your selected package manager)
-- Initialise a git repo with a first commit
+- Apply the **scaffold rule** with your framework choice (keeps only the chosen `cli/index.<framework>.js`, renames it to `cli/index.js`, prunes the unused runtime's deps)
+- Write `.env` with your operator credentials and LLM key
+- Run `npm install`
 
 Then:
 
 ```bash
 cd hedera-agent-app
-npm run dev
+npm run web   # browser chat at http://localhost:3000
+# or
+npm run cli   # terminal chat
 ```
 
-Open <http://localhost:3000> and start chatting.
-
-Node.js **>= 20** is required.
+Node.js **>= 22** is required.
 
 ## Prompts
 
-| Prompt              | Choices                                  | Default            |
-| ------------------- | ---------------------------------------- | ------------------ |
-| Project name        | string                                   | `hedera-agent-app` |
-| Framework           | `ai-sdk` \| `langchain`                  | `ai-sdk`           |
-| Operator ID         | string (`0.0.x`)                         | -                  |
-| Operator key        | ECDSA DER hex or `0x`-prefixed 64-hex    | -                  |
-| OpenAI API key      | `sk-…`                                   | -                  |
-| Package manager     | `npm` \| `pnpm` \| `yarn` \| `bun`       | `npm`              |
+| Prompt          | Choices                                | Default            |
+| --------------- | -------------------------------------- | ------------------ |
+| Project name    | string                                 | `hedera-agent-app` |
+| Framework       | `ai-sdk` \| `langchain` (CLI runtime)  | `ai-sdk`           |
+| Operator ID     | `0.0.x`                                | —                  |
+| Operator key    | ECDSA DER hex or `0x`-prefixed 64-hex  | —                  |
+| OpenAI API key  | `sk-…`                                 | —                  |
+| Package manager | `npm` \| `pnpm` \| `yarn` \| `bun`     | `npm`              |
 
-Get a testnet operator account at <https://portal.hedera.com>. The CLI accepts **ECDSA** keys only. ED25519 needs a manual edit to `src/features/chat-hedera/server/hedera-client.ts`. The scaffold runs on `testnet` by default; switch to mainnet by editing `src/features/chat-hedera/utils/network.ts`.
+Get a testnet operator account at <https://portal.hedera.com>. The CLI accepts ECDSA keys.
 
-## Non-interactive mode
-
-Every prompt has a matching flag. Pass `--yes` to skip prompts and apply defaults:
+## Non-interactive
 
 ```bash
 npx create-hedera-agent@latest \
   --name my-agent \
-  --framework ai-sdk \
+  --framework langchain \
   --operator-id 0.0.1234 \
   --operator-key 0x... \
   --openai-key sk-... \
@@ -59,53 +58,62 @@ npx create-hedera-agent@latest \
 
 ### Flag reference
 
-| Flag                       | Value                                       |
-| -------------------------- | ------------------------------------------- |
-| `--name`                   | Project directory name                      |
-| `--framework`              | `ai-sdk` \| `langchain`                     |
-| `--operator-id`            | Hedera account ID                           |
-| `--operator-key`           | ECDSA private key                           |
-| `--openai-key`             | OpenAI API key                              |
-| `--pm`, `--package-manager`| `npm` \| `pnpm` \| `yarn` \| `bun`          |
-| `--yes`, `-y`              | Accept defaults; suppress prompts           |
+| Flag                       | Value                                |
+| -------------------------- | ------------------------------------ |
+| `--name`                   | Project directory name               |
+| `--framework`              | `ai-sdk` \| `langchain`              |
+| `--operator-id`            | Hedera account ID                    |
+| `--operator-key`           | ECDSA private key                    |
+| `--openai-key`             | OpenAI API key                       |
+| `--pm`, `--package-manager`| `npm` \| `pnpm` \| `yarn` \| `bun`   |
+| `--yes`, `-y`              | Accept defaults; suppress prompts    |
 
-## What the scaffold includes
+## Project layout (post-scaffold)
 
-- Streaming chat surface built on the AI SDK UIMessage protocol and Vercel AI Elements
-- Left sidebar with multi-chat persistence (localStorage), per-chat URLs, rename, delete
-- Inline `<TransactionCard>` for every mutating tool call with state-machine rendering (`executing → confirmed | failed` in auto mode, or `awaiting-approval` → user signs offline and pastes signed bytes → `signing → confirmed | rejected | failed` in human mode)
-- `POST /api/chat` for streaming and `POST /api/transactions/submit-signed` for broadcasting user-signed transactions in `human` mode
-- All ten Hedera Agent Kit core plugins enabled (token, account, consensus, EVM, plus query plugins and misc/transaction history)
-- A `prompts/system.md` system prompt with `{{operatorId}}`, `{{network}}`, `{{mode}}` substitutions
-- A populated `.env.local` (gitignored)
+```
+my-agent/
+├── shared/agent.js        # single edit surface — plugins, system prompt, client, tools, llm
+├── cli/index.js           # terminal chat (AI SDK or LangChain, per --framework)
+├── web/                   # Next.js project root (always AI SDK)
+│   ├── next.config.js
+│   ├── jsconfig.json      # @/ → web/src
+│   ├── public/
+│   └── src/
+│       ├── app/           # layout, page, /api/chat, /api/transactions/submit-signed
+│       └── features/      # chat, chat-runtime, chat-hedera, chat-wallet
+├── package.json           # single root; "type": "module"; only the chosen runtime's deps
+├── .env                   # operator credentials and LLM keys
+└── vitest.config.js
+```
 
-The scaffolded project's own `README.md` covers env contract, mode behavior, the HITL threat model, framework swapping, and AgentLab integration.
+`shared/agent.js` is the **only** file you need to edit to change agent behavior. Edit `plugins`, `systemPrompt`, `mode`, or `llm` and both the web app and the CLI pick it up.
 
 ## Framework choice
 
-Picking `ai-sdk` ships `@ai-sdk/openai` + `@ai-sdk/anthropic` and `@hashgraph/hedera-agent-kit-ai-sdk`. Picking `langchain` ships `@langchain/openai` + `@langchain/anthropic` (plus `@langchain/core`, `@langchain/langgraph`, `langchain`) and `@hashgraph/hedera-agent-kit-langchain`. Only the chosen framework's dependencies land in `package.json`. There is no co-installed deadweight.
+- **`ai-sdk`** (default): web app and CLI both use `@ai-sdk/openai` + `@ai-sdk/anthropic` + `@hashgraph/hedera-agent-kit-ai-sdk`. Single mental model end-to-end.
+- **`langchain`**: web app still uses the AI SDK (its UI is tied to `useChat`), but `cli/index.js` builds a LangGraph React agent on top of `@hashgraph/hedera-agent-kit-langchain` + `@langchain/openai`/`@langchain/anthropic`.
 
-All framework-specific code lives in `src/lib/runtime/`. The rest of the app imports only AI SDK UIMessage types, so changing your mind later means swapping that single directory and the matching `package.json` entries.
+The scaffold rule lives in `packages/create-hedera-agent` and is exported as a pure function — same input produces the same output, whether called by this CLI or by the Hedera Portal's download wizard.
 
-## Switching LLM provider
+### Switching frameworks after scaffolding
 
-The scaffolded `.env.local` ships with three LLM-related groups: API keys, then `LLM_PROVIDER` + `LLM_MODEL`. To switch from OpenAI (the default) to Anthropic without re-scaffolding, edit `.env.local`:
+There is no in-source dispatch. To switch, re-scaffold with the desired `--framework` and copy your `plugins`/`systemPrompt` edits over.
+
+## LLM provider
+
+Both OpenAI and Anthropic SDKs are installed by default. Switch with environment variables — no `npm install`:
 
 ```env
-# LLM API keys
-# OPENAI_API_KEY=...
-ANTHROPIC_API_KEY=sk-ant-...
-
-# LLM provider & model
 LLM_PROVIDER=anthropic
 LLM_MODEL=claude-haiku-4-5
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Both provider SDKs (`@ai-sdk/openai` + `@ai-sdk/anthropic`, or the LangChain equivalents) are installed up front, so no `npm install` is needed to switch. `LLM_MODEL` accepts any model the chosen provider supports — leave it blank to fall back to the per-provider default (`gpt-4o-mini` / `claude-haiku-4-5`).
+`LLM_MODEL` defaults: `gpt-4o-mini` (openai), `claude-haiku-4-5` (anthropic).
 
-## Replacing a previous scaffold
+## Tests
 
-The 0.1.x template shipped a WalletConnect-based chat UI with a modal HITL flow. The 0.2 rewrite removes that path entirely. If you scaffolded against the old template, you'll want to start fresh. The scaffolded project's `README.md` has a migration note covering what's removed and why old chats can't be imported.
+The scaffold ships Vitest tests for chat state, runtime mappers, Hedera client wiring, mutating-tool detection, the chat-extension registry, and more. `npm test` runs them all from the project root.
 
 ## Learn more
 
