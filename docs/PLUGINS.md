@@ -105,7 +105,7 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Version: hak-mppx-hedera-plugin@1.2.0
 
-  Status: Not validated by HAK team, v4-compatible release
+  Status: Validated by HAK team, v4-compatible release
 
 ## Plugin Architecture
 
