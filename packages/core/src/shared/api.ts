@@ -3,6 +3,8 @@ import { Client } from '@hiero-ledger/sdk';
 import type { Context } from './configuration';
 import { Tool } from './tools';
 
+export type ToolSummary = Pick<Tool, 'method' | 'name' | 'description'>;
+
 class HederaAgentAPI {
   client: Client;
 
@@ -17,6 +19,10 @@ class HederaAgentAPI {
     }
     this.context = context || {};
     this.tools = tools || [];
+  }
+
+  listTools(): ToolSummary[] {
+    return this.tools.map(({ method, name, description }) => ({ method, name, description }));
   }
 
   async run(method: string, arg: unknown) {
