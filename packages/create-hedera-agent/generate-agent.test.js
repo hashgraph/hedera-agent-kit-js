@@ -13,32 +13,34 @@ describe("generateAgentJs", () => {
       expect(Buffer.isBuffer(out)).toBe(true);
     });
 
-    it("should expose the eight required exports", () => {
+    it("should expose the six data exports", () => {
       const code = toString(generateAgentJs());
       expect(code).toMatch(/export const plugins = \[/);
       expect(code).toMatch(/export const mode = "auto";/);
-      expect(code).toMatch(/export const systemPrompt = /);
-      expect(code).toMatch(/export const client = createClient\(\);/);
-      expect(code).toMatch(/export const tools = aiToolkit\.getTools\(\);/);
-      expect(code).toMatch(/export const llm = createLLM\(\);/);
       expect(code).toMatch(/export const hooks = /);
       expect(code).toMatch(/export const config = /);
+      expect(code).toMatch(/export const systemPrompt = /);
+      expect(code).toMatch(/export const client = createClient\(\);/);
+    });
+
+    it("should not emit toolkit, llm, factory, or LLM-provider imports", () => {
+      const code = toString(generateAgentJs());
+      expect(code).not.toMatch(/HederaAIToolkit/);
+      expect(code).not.toMatch(/aiToolkit/);
+      expect(code).not.toMatch(/createAIToolkit/);
+      expect(code).not.toMatch(/createLLM/);
+      expect(code).not.toMatch(/from "@hashgraph\/hedera-agent-kit-ai-sdk"/);
+      expect(code).not.toMatch(/from "@ai-sdk\/openai"/);
+      expect(code).not.toMatch(/from "@ai-sdk\/anthropic"/);
+      expect(code).not.toMatch(/AgentMode as HederaAgentMode/);
+      expect(code).not.toMatch(/export const tools/);
+      expect(code).not.toMatch(/export const llm/);
     });
 
     it("should default hooks to an empty array and config to an empty object", () => {
       const code = toString(generateAgentJs());
       expect(code).toMatch(/export const hooks = \[\];/);
       expect(code).toMatch(/export const config = \{\};/);
-    });
-
-    it("should default the mode to auto and use HederaAgentMode.AUTONOMOUS in the toolkit", () => {
-      const code = toString(generateAgentJs());
-      expect(code).toMatch(/mode: HederaAgentMode\.AUTONOMOUS,/);
-    });
-
-    it("should thread hooks and config into HederaAIToolkit's configuration.context", () => {
-      const code = toString(generateAgentJs());
-      expect(code).toMatch(/context: \{ mode: HederaAgentMode\.[A-Z_]+, hooks, config \}/);
     });
 
     it("should import the ten core plugins from @hashgraph/hedera-agent-kit/plugins", () => {
@@ -181,7 +183,11 @@ describe("generateAgentJs", () => {
             },
           ],
           pluginConfig: [
-            { key: "x", builder: { package: "shared/pkg", symbol: "buildX" } },
+            {
+              key: "x",
+              expression: "buildX()",
+              imports: [{ package: "shared/pkg", symbols: ["buildX"] }],
+            },
           ],
         }),
       );
@@ -199,35 +205,62 @@ describe("generateAgentJs", () => {
   });
 
   describe("pluginConfig handling", () => {
-    it("should emit one import per builder", () => {
+    it("should emit a config export whose values are the entry expressions verbatim", () => {
       const code = toString(
         generateAgentJs({
           pluginConfig: [
-            { key: "saucerswap", builder: { package: "saucerswap-plugin", symbol: "getSaucerswapPluginConfig" } },
-            { key: "memejob", builder: { package: "memejob-plugin", symbol: "getMemejobPluginConfig" } },
+            {
+              key: "saucerswap",
+              expression: "{ apiKey: process.env.SAUCERSWAP_API_KEY }",
+            },
+            {
+              key: "memejob",
+              expression: 'getMemejobConfig({ mode: "live" })',
+              imports: [
+                { package: "memejob-plugin", symbols: ["getMemejobConfig"] },
+              ],
+            },
           ],
         }),
       );
       expect(code).toMatch(
-        /import \{ getSaucerswapPluginConfig \} from "saucerswap-plugin";/,
-      );
-      expect(code).toMatch(
-        /import \{ getMemejobPluginConfig \} from "memejob-plugin";/,
+        /export const config = \{\n  "saucerswap": \{ apiKey: process\.env\.SAUCERSWAP_API_KEY \},\n  "memejob": getMemejobConfig\(\{ mode: "live" \}\),\n\};/,
       );
     });
 
-    it("should emit a config export whose values are bare call expressions to the builders", () => {
+    it("should emit no extra imports when an entry has no imports field", () => {
       const code = toString(
         generateAgentJs({
+          plugins: [],
           pluginConfig: [
-            { key: "saucerswap", builder: { package: "saucerswap-plugin", symbol: "getSaucerswapPluginConfig" } },
-            { key: "memejob", builder: { package: "memejob-plugin", symbol: "getMemejobPluginConfig" } },
+            {
+              key: "saucerswap",
+              expression: "{ apiKey: process.env.SAUCERSWAP_API_KEY }",
+            },
           ],
         }),
       );
-      expect(code).toMatch(
-        /export const config = \{\n  "saucerswap": getSaucerswapPluginConfig\(\),\n  "memejob": getMemejobPluginConfig\(\),\n\};/,
+      // Only the single fixed SDK import should be present — no plugin
+      // package, no pluginConfig package, no toolkit/LLM imports.
+      const importLines = code
+        .split("\n")
+        .filter((line) => line.startsWith("import "));
+      expect(importLines).toHaveLength(1);
+    });
+
+    it("should merge an entry's imports into the import block, deduplicated", () => {
+      const code = toString(
+        generateAgentJs({
+          pluginConfig: [
+            {
+              key: "memejob",
+              expression: "getMemejobConfig()",
+              imports: [{ package: "memejob-plugin", symbols: ["getMemejobConfig"] }],
+            },
+          ],
+        }),
       );
+      expect(code).toMatch(/import \{ getMemejobConfig \} from "memejob-plugin";/);
     });
 
     it("should default the config export to {} when no entries are supplied", () => {
@@ -237,16 +270,14 @@ describe("generateAgentJs", () => {
   });
 
   describe("mode handling", () => {
-    it("should reflect mode 'human' as HederaAgentMode.RETURN_BYTES in the toolkit construction", () => {
+    it("should set the mode export to 'human' when the wizard picks human", () => {
       const code = toString(generateAgentJs({ mode: "human" }));
       expect(code).toMatch(/export const mode = "human";/);
-      expect(code).toMatch(/mode: HederaAgentMode\.RETURN_BYTES, hooks, config/);
     });
 
-    it("should reflect mode 'auto' as HederaAgentMode.AUTONOMOUS in the toolkit construction", () => {
+    it("should set the mode export to 'auto' when the wizard picks auto", () => {
       const code = toString(generateAgentJs({ mode: "auto" }));
       expect(code).toMatch(/export const mode = "auto";/);
-      expect(code).toMatch(/mode: HederaAgentMode\.AUTONOMOUS, hooks, config/);
     });
   });
 
@@ -256,7 +287,13 @@ describe("generateAgentJs", () => {
         mode: "auto",
         plugins: [{ package: "p", symbol: "x" }],
         hooks: [{ expression: "new H()", imports: [{ package: "h", symbols: ["H"] }] }],
-        pluginConfig: [{ key: "k", builder: { package: "b", symbol: "buildK" } }],
+        pluginConfig: [
+          {
+            key: "k",
+            expression: "buildK()",
+            imports: [{ package: "b", symbols: ["buildK"] }],
+          },
+        ],
       };
       expect(toString(generateAgentJs(input))).toBe(toString(generateAgentJs(input)));
     });
@@ -293,12 +330,26 @@ describe("generateAgentJs", () => {
       ).toThrow(/hooks\[0\]\.imports\[0\]\.symbols/);
     });
 
-    it("should throw when pluginConfig builder lacks a symbol", () => {
+    it("should throw when pluginConfig entry lacks an expression", () => {
       expect(() =>
         generateAgentJs({
-          pluginConfig: [{ key: "x", builder: { package: "p" } }],
+          pluginConfig: [{ key: "x" }],
         }),
-      ).toThrow(/pluginConfig\[0\]\.builder\.symbol is required/);
+      ).toThrow(/pluginConfig\[0\]\.expression is required/);
+    });
+
+    it("should throw when pluginConfig entry imports lacks symbols", () => {
+      expect(() =>
+        generateAgentJs({
+          pluginConfig: [
+            {
+              key: "x",
+              expression: "buildX()",
+              imports: [{ package: "p", symbols: [] }],
+            },
+          ],
+        }),
+      ).toThrow(/pluginConfig\[0\]\.imports\[0\]\.symbols/);
     });
 
     it("should throw when input is not an object", () => {

@@ -40,7 +40,7 @@ function templateFileMap() {
 
   return {
     "package.json": b(JSON.stringify(pkg, null, 2)),
-    "shared/agent.js": b("export const plugins = [];\n"),
+    "shared/config.js": b("export const plugins = [];\n"),
     "cli/index.ai-sdk.js": b("// AI SDK CLI\n"),
     "cli/index.langchain.js": b("// LangChain CLI\n"),
     "web/src/app/page.jsx": b("export default function Page() {}\n"),
@@ -95,7 +95,7 @@ describe("applyScaffoldRule", () => {
 
     it("should leave non-suffix files untouched", () => {
       const result = applyScaffoldRule(templateFileMap(), "ai-sdk");
-      expect(result["shared/agent.js"].toString("utf8")).toBe("export const plugins = [];\n");
+      expect(result["shared/config.js"].toString("utf8")).toBe("export const plugins = [];\n");
       expect(result["web/src/app/page.jsx"].toString("utf8")).toBe(
         "export default function Page() {}\n",
       );
@@ -158,11 +158,11 @@ describe("applyScaffoldRule", () => {
   describe("idempotency", () => {
     it("should be a no-op on a file map with no runtime-suffixed files", () => {
       const minimal = {
-        "shared/agent.js": b("// agent\n"),
+        "shared/config.js": b("// agent\n"),
         "README.md": b("# readme\n"),
       };
       const result = applyScaffoldRule(minimal, "ai-sdk");
-      expect(result["shared/agent.js"].toString("utf8")).toBe("// agent\n");
+      expect(result["shared/config.js"].toString("utf8")).toBe("// agent\n");
       expect(result["README.md"].toString("utf8")).toBe("# readme\n");
     });
   });

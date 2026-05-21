@@ -11,7 +11,7 @@ dotenv.config({ path: resolve(__dirname, "..", ".env") });
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  // `shared/agent.js` lives one level above `web/`; trace from the template
+  // `shared/config.js` lives one level above `web/`; trace from the template
   // root so the bundler picks it up.
   outputFileTracingRoot: resolve(__dirname, ".."),
   turbopack: {

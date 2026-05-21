@@ -5,7 +5,6 @@ export {
   readEnv,
 } from "./hedera-client";
 export { getMutatingToolMethods, isMutatingTool } from "./mutating-tools";
-export { plugins } from "./plugins";
 export {
   loadSystemPrompt,
   readSystemPromptTemplate,

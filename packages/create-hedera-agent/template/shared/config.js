@@ -1,5 +1,4 @@
 import { AccountId, Client, PrivateKey } from "@hiero-ledger/sdk";
-import { AgentMode as HederaAgentMode } from "@hashgraph/hedera-agent-kit";
 import {
   coreAccountPlugin,
   coreAccountQueryPlugin,
@@ -12,9 +11,6 @@ import {
   coreTokenQueryPlugin,
   coreTransactionQueryPlugin,
 } from "@hashgraph/hedera-agent-kit/plugins";
-import { HederaAIToolkit } from "@hashgraph/hedera-agent-kit-ai-sdk";
-import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
 
 // --- Environment ------------------------------------------------------------
 
@@ -89,24 +85,11 @@ export const systemPrompt = `You are a Hedera Agent assistant. You help users in
 
 // --- Derived runtime objects ------------------------------------------------
 
-// Hedera SDK client bound to the operator key. Consumed by the web app for both
-// auto-mode submission and toolkit construction; the LangChain CLI uses the
-// same client when building its own toolkit.
+// Hedera SDK client bound to the operator key. Consumed by both CLI runtimes
+// when constructing their toolkits. The web app builds its own per-request
+// clients (auto-mode signing vs return-bytes for human-in-the-loop signing)
+// and does not import this export.
 export const client = createClient();
-
-// AI-SDK-bound exports. The web `/api/chat` route and the AI SDK CLI consume
-// these directly. The LangChain CLI ignores them and constructs its own
-// toolkit + LLM from `client`, `plugins`, `mode`, `systemPrompt`.
-const aiToolkit = new HederaAIToolkit({
-  client,
-  configuration: {
-    plugins,
-    context: { mode: HederaAgentMode.AUTONOMOUS, hooks, config },
-  },
-});
-export const tools = aiToolkit.getTools();
-
-export const llm = createLLM();
 
 // --- Helpers ----------------------------------------------------------------
 
@@ -132,18 +115,4 @@ function createClient() {
   const base = network === "mainnet" ? Client.forMainnet() : Client.forTestnet();
   base.setOperator(AccountId.fromString(operatorId), parseOperatorKey(operatorKey));
   return base;
-}
-
-function createLLM() {
-  const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
-  const model = process.env.LLM_MODEL?.trim();
-  if (provider === "anthropic") {
-    requireEnv("ANTHROPIC_API_KEY");
-    return anthropic(model || "claude-haiku-4-5");
-  }
-  if (provider !== "openai") {
-    throw new Error(`Unsupported LLM_PROVIDER="${provider}". Use "openai" or "anthropic".`);
-  }
-  requireEnv("OPENAI_API_KEY");
-  return openai(model || "gpt-4o-mini");
 }

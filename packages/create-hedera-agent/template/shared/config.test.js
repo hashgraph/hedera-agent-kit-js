@@ -1,0 +1,66 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const VALID_ENV = {
+  HEDERA_OPERATOR_ID: "0.0.1234",
+  HEDERA_OPERATOR_KEY: "0x" + "a".repeat(64),
+  HEDERA_NETWORK: "testnet",
+};
+
+let originalEnv;
+
+beforeEach(() => {
+  originalEnv = { ...process.env };
+  vi.resetModules();
+});
+
+afterEach(() => {
+  process.env = originalEnv;
+  vi.resetModules();
+});
+
+function setEnv(env) {
+  for (const key of Object.keys(VALID_ENV)) delete process.env[key];
+  Object.assign(process.env, env);
+}
+
+describe("shared/config", () => {
+  it("should export plugins, mode, hooks, config, systemPrompt, client when env is set", async () => {
+    setEnv(VALID_ENV);
+    const mod = await import("./config.js");
+    expect(Array.isArray(mod.plugins)).toBe(true);
+    expect(mod.plugins.length).toBeGreaterThan(0);
+    expect(mod.mode).toMatch(/^(auto|human)$/);
+    expect(Array.isArray(mod.hooks)).toBe(true);
+    expect(mod.hooks).toEqual([]);
+    expect(typeof mod.config).toBe("object");
+    expect(mod.config).not.toBeNull();
+    expect(Object.keys(mod.config)).toEqual([]);
+    expect(typeof mod.systemPrompt).toBe("string");
+    expect(mod.systemPrompt.length).toBeGreaterThan(0);
+    expect(mod.client).toBeDefined();
+  });
+
+  it("should not export tools, llm, createAIToolkit, or createLLM (data-only module)", async () => {
+    setEnv(VALID_ENV);
+    const mod = await import("./config.js");
+    expect(mod.tools).toBeUndefined();
+    expect(mod.llm).toBeUndefined();
+    expect(mod.createAIToolkit).toBeUndefined();
+    expect(mod.createLLM).toBeUndefined();
+  });
+
+  it("should throw a clear error when HEDERA_OPERATOR_ID is missing", async () => {
+    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_ID: "" });
+    await expect(import("./config.js")).rejects.toThrow(/HEDERA_OPERATOR_ID/);
+  });
+
+  it("should throw a clear error when HEDERA_OPERATOR_KEY is missing", async () => {
+    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_KEY: "" });
+    await expect(import("./config.js")).rejects.toThrow(/HEDERA_OPERATOR_KEY/);
+  });
+
+  it("should reject an invalid HEDERA_NETWORK", async () => {
+    setEnv({ ...VALID_ENV, HEDERA_NETWORK: "previewnet" });
+    await expect(import("./config.js")).rejects.toThrow(/HEDERA_NETWORK/);
+  });
+});

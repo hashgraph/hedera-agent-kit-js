@@ -11,7 +11,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver } from "@langchain/langgraph";
 import { HumanMessage } from "@langchain/core/messages";
 
-import { client, config, hooks, plugins, systemPrompt } from "../shared/agent.js";
+import { client, config, hooks, plugins, systemPrompt } from "../shared/config.js";
 
 const toolkit = new HederaLangchainToolkit({
   client,

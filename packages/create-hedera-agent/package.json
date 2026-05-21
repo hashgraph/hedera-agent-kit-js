@@ -1,6 +1,6 @@
 {
   "name": "create-hedera-agent",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Scaffold a Hedera Agent Kit project with a Next.js web chat and a terminal CLI (Vercel AI SDK or LangChain).",
   "bin": {
     "create-hedera-agent": "index.js"
@@ -12,6 +12,7 @@
     "./scaffold-rule": "./scaffold-rule.js",
     "./read-template": "./read-template.js",
     "./generate-agent": "./generate-agent.js",
+    "./merge-package-json-deps": "./merge-package-json-deps.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -19,6 +20,7 @@
     "scaffold-rule.js",
     "read-template.js",
     "generate-agent.js",
+    "merge-package-json-deps.js",
     "template"
   ],
   "scripts": {
@@ -26,7 +28,7 @@
     "test": "vitest run"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "dependencies": {
     "execa": "^8.0.1",

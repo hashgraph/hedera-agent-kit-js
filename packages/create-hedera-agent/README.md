@@ -72,7 +72,7 @@ npx create-hedera-agent@latest \
 
 ```
 my-agent/
-├── shared/agent.js        # single edit surface — plugins, system prompt, client, tools, llm
+├── shared/config.js       # single edit surface — plugins, system prompt, hooks, config, client (data only)
 ├── cli/index.js           # terminal chat (AI SDK or LangChain, per --framework)
 ├── web/                   # Next.js project root (always AI SDK)
 │   ├── next.config.js
@@ -86,7 +86,13 @@ my-agent/
 └── vitest.config.js
 ```
 
-`shared/agent.js` is the **only** file you need to edit to change agent behavior. Edit `plugins`, `systemPrompt`, `mode`, or `llm` and both the web app and the CLI pick it up.
+`shared/config.js` is the **only** file you need to edit to change agent behavior. Edit `plugins`, `systemPrompt`, `mode`, `hooks`, or `config` and both the web app and the CLI pick it up. (LLM provider/model is `.env`-driven via `LLM_PROVIDER` / `LLM_MODEL`.)
+
+## Third-party plugins
+
+The CLI scaffold ships only the 10 **core** Hedera Agent Kit plugins (account, token, consensus, EVM, and their query variants). Third-party plugins — Saucerswap, Memejob, Pyth, Chainlink, CoinCap — are **not bundled** with the CLI scaffold nor with downloads from the Hedera Portal's Agent Lab. The Agent Lab playground lets you experiment with them in the browser, but the downloaded zip is core-plugins-only.
+
+To add a third-party plugin to a scaffolded project, see the "Third-party plugins" section in the project's own `README.md` (or the equivalent section in `template/README.md` in this repo) — `npm install` the package, import the plugin symbol in `shared/config.js`, and wire any per-plugin runtime config via the `config` export.
 
 ## Framework choice
 

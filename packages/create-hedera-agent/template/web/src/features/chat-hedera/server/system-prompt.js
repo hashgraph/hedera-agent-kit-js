@@ -1,4 +1,4 @@
-import { systemPrompt } from "../../../../../shared/agent.js";
+import { systemPrompt } from "../../../../../shared/config.js";
 
 export function readSystemPromptTemplate() {
   return systemPrompt;

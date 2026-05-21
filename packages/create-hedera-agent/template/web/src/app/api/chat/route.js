@@ -4,14 +4,13 @@ import {
   getHederaTools,
   HederaRequestError,
 } from "@/features/chat-hedera/server";
-
-import { llm } from "../../../../../shared/agent.js";
+import { createLLM } from "@/features/chat-hedera/server/llm";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const handler = createChatHandler({
-  llm,
+  llm: createLLM(),
   getTools: getHederaTools,
   getSystemPrompt: getHederaSystemPrompt,
 });

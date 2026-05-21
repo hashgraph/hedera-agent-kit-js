@@ -1,6 +1,6 @@
-// Provide fake env vars so importing `shared/agent.js` succeeds in test
+// Provide fake env vars so importing `shared/config.js` succeeds in test
 // environments. Tests that exercise env-var failure modes override these
-// locally (see `shared/agent.test.js`).
+// locally (see `shared/config.test.js`).
 process.env.HEDERA_OPERATOR_ID ||= "0.0.1234";
 process.env.HEDERA_OPERATOR_KEY ||= "0x" + "a".repeat(64);
 process.env.HEDERA_NETWORK ||= "testnet";

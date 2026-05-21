@@ -1,4 +1,4 @@
-// Pure-function emitter for `shared/agent.js`.
+// Pure-function emitter for `shared/config.js`.
 //
 // Takes a structured input describing wizard selections (mode, plugins, hooks,
 // per-plugin config builders) and returns the contents of the file as a
@@ -63,7 +63,6 @@ export function generateAgentJs(input = {}) {
   const pluginsArray = renderPlugins(plugins);
   const hooksArray = renderHooks(hooks);
   const configObject = renderConfig(pluginConfig);
-  const agentModeConstant = MODE_TO_AGENT_MODE_CONSTANT[mode];
 
   const body = `${importBlock}
 // --- Environment ------------------------------------------------------------
@@ -89,18 +88,10 @@ export const systemPrompt = \`${DEFAULT_SYSTEM_PROMPT}\`;
 
 // --- Derived runtime objects ------------------------------------------------
 
+// Hedera SDK client bound to the operator key. Consumed by both CLI runtimes
+// when constructing their toolkits. The web app builds its own per-request
+// clients and does not import this export.
 export const client = createClient();
-
-const aiToolkit = new HederaAIToolkit({
-  client,
-  configuration: {
-    plugins,
-    context: { mode: ${agentModeConstant}, hooks, config },
-  },
-});
-export const tools = aiToolkit.getTools();
-
-export const llm = createLLM();
 
 // --- Helpers ----------------------------------------------------------------
 
@@ -126,20 +117,6 @@ function createClient() {
   const base = network === "mainnet" ? Client.forMainnet() : Client.forTestnet();
   base.setOperator(AccountId.fromString(operatorId), parseOperatorKey(operatorKey));
   return base;
-}
-
-function createLLM() {
-  const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
-  const model = process.env.LLM_MODEL?.trim();
-  if (provider === "anthropic") {
-    requireEnv("ANTHROPIC_API_KEY");
-    return anthropic(model || "claude-haiku-4-5");
-  }
-  if (provider !== "openai") {
-    throw new Error(\`Unsupported LLM_PROVIDER="\${provider}". Use "openai" or "anthropic".\`);
-  }
-  requireEnv("OPENAI_API_KEY");
-  return openai(model || "gpt-4o-mini");
 }
 `;
 
@@ -229,21 +206,50 @@ function validateHookEntry(value, path) {
 
 function validatePluginConfigEntry(value, path) {
   if (value === null || typeof value !== "object") {
-    throw new Error(`generateAgentJs: ${path} must be an object with "key" and "builder".`);
+    throw new Error(`generateAgentJs: ${path} must be an object with "key" and "expression".`);
   }
   if (typeof value.key !== "string" || !value.key.trim()) {
     throw new Error(`generateAgentJs: ${path}.key is required and must be a non-empty string.`);
   }
-  validatePackagedSymbol(value.builder, `${path}.builder`);
+  if (typeof value.expression !== "string" || !value.expression.trim()) {
+    throw new Error(
+      `generateAgentJs: ${path}.expression is required and must be a non-empty string.`,
+    );
+  }
+  const imports = value.imports ?? [];
+  if (!Array.isArray(imports)) {
+    throw new Error(`generateAgentJs: ${path}.imports must be an array.`);
+  }
+  imports.forEach((imp, i) => {
+    if (imp === null || typeof imp !== "object") {
+      throw new Error(`generateAgentJs: ${path}.imports[${i}] must be an object.`);
+    }
+    if (typeof imp.package !== "string" || !imp.package.trim()) {
+      throw new Error(
+        `generateAgentJs: ${path}.imports[${i}].package is required and must be a non-empty string.`,
+      );
+    }
+    if (!Array.isArray(imp.symbols) || imp.symbols.length === 0) {
+      throw new Error(
+        `generateAgentJs: ${path}.imports[${i}].symbols must be a non-empty array of strings.`,
+      );
+    }
+    imp.symbols.forEach((sym, j) => {
+      if (typeof sym !== "string" || !sym.trim()) {
+        throw new Error(
+          `generateAgentJs: ${path}.imports[${i}].symbols[${j}] must be a non-empty string.`,
+        );
+      }
+    });
+  });
 }
 
 function renderImports(plugins, hooks, pluginConfig) {
+  // The emitted `shared/config.js` is data-only. The only fixed import it
+  // needs is the SDK types used by the operator-bound `client` export — the
+  // toolkit, AI SDK, and HederaAgentMode imports moved into each runtime.
   const fixed = [
     `import { AccountId, Client, PrivateKey } from "@hiero-ledger/sdk";`,
-    `import { AgentMode as HederaAgentMode } from "@hashgraph/hedera-agent-kit";`,
-    `import { HederaAIToolkit } from "@hashgraph/hedera-agent-kit-ai-sdk";`,
-    `import { openai } from "@ai-sdk/openai";`,
-    `import { anthropic } from "@ai-sdk/anthropic";`,
   ];
 
   const wizardImports = new Map();
@@ -258,7 +264,11 @@ function renderImports(plugins, hooks, pluginConfig) {
       for (const sym of imp.symbols) addImport(imp.package, sym);
     }
   }
-  for (const entry of pluginConfig) addImport(entry.builder.package, entry.builder.symbol);
+  for (const entry of pluginConfig) {
+    for (const imp of entry.imports ?? []) {
+      for (const sym of imp.symbols) addImport(imp.package, sym);
+    }
+  }
 
   const wizard = [];
   for (const [pkg, symbols] of wizardImports.entries()) {
@@ -288,7 +298,7 @@ function renderHooks(hooks) {
 function renderConfig(pluginConfig) {
   if (pluginConfig.length === 0) return "{}";
   const entries = pluginConfig
-    .map((entry) => `  ${JSON.stringify(entry.key)}: ${entry.builder.symbol}(),`)
+    .map((entry) => `  ${JSON.stringify(entry.key)}: ${entry.expression},`)
     .join("\n");
   return `{\n${entries}\n}`;
 }

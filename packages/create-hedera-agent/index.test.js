@@ -79,13 +79,13 @@ describe("scaffold integration", () => {
     expect(envBody).toMatch(/LLM_PROVIDER=openai/);
   });
 
-  it("should preserve shared/agent.js exactly between framework variants", async () => {
+  it("should preserve shared/config.js exactly between framework variants", async () => {
     const aiTarget = path.join(tmpDir, "ai");
     const lcTarget = path.join(tmpDir, "lc");
     await scaffold({ ...baseConfig, framework: "ai-sdk" }, aiTarget);
     await scaffold({ ...baseConfig, framework: "langchain" }, lcTarget);
-    const aiAgent = fs.readFileSync(path.join(aiTarget, "shared/agent.js"), "utf8");
-    const lcAgent = fs.readFileSync(path.join(lcTarget, "shared/agent.js"), "utf8");
-    expect(aiAgent).toBe(lcAgent);
+    const aiConfig = fs.readFileSync(path.join(aiTarget, "shared/config.js"), "utf8");
+    const lcConfig = fs.readFileSync(path.join(lcTarget, "shared/config.js"), "utf8");
+    expect(aiConfig).toBe(lcConfig);
   });
 });
