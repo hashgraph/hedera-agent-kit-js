@@ -21,7 +21,7 @@ Framework integrations are no longer bundled in the core package. Each toolkit i
 
 | Package | Exports |
 |---|---|
-| `@hashgraph/hedera-agent-kit` | `HederaAgentAPI`, `AgentMode`, `Configuration`, `Context`, `Plugin`, `Tool`, `ToolDiscovery`, `HederaBuilder`, `handleTransaction`, `ExecuteStrategy`, parameter schemas, mirrornode types |
+| `@hashgraph/hedera-agent-kit` | `HederaAgentAPI`, `AgentMode`, `Configuration`, `Context`, `Plugin`, `Tool`, `ToolSummary`, `ToolDiscovery`, `HederaBuilder`, `handleTransaction`, `ExecuteStrategy`, parameter schemas, mirrornode types |
 | `@hashgraph/hedera-agent-kit-langchain` | `HederaLangchainToolkit`, `ResponseParserService`, `HederaMCPServer` |
 | `@hashgraph/hedera-agent-kit-ai-sdk` | `HederaAIToolkit`, `HederaMCPServer` |
 | `@hashgraph/hedera-agent-kit-elizaos` | `HederaElizaOSToolkit` |

@@ -1,7 +1,10 @@
 import { Client } from '@hiero-ledger/sdk';
 
 import type { Context } from './configuration';
-import { Tool } from './tools';
+import type { Tool } from './tools';
+
+/** Lightweight projection of a {@link Tool} for safe introspection — omits the Zod schema and execute handler. */
+export type ToolSummary = Pick<Tool, 'method' | 'name' | 'description'>;
 
 class HederaAgentAPI {
   client: Client;
@@ -17,6 +20,14 @@ class HederaAgentAPI {
     }
     this.context = context || {};
     this.tools = tools || [];
+  }
+
+  /**
+   * Returns a summary of all registered tools without exposing executable handlers or parameter schemas.
+   * @returns Array of {@link ToolSummary} objects, each containing `method`, `name`, and `description`.
+   */
+  listTools(): ToolSummary[] {
+    return this.tools.map(({ method, name, description }) => ({ method, name, description }));
   }
 
   async run(method: string, arg: unknown) {
