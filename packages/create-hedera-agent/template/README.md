@@ -1,6 +1,6 @@
 # Hedera Agent App
 
-A starter project scaffolded by `create-hedera-agent`. Ships two run modes out of the box:
+A Hedera Agent Kit starter project. Ships two run modes out of the box:
 
 - `npm run web` — Next.js chat UI with optional human-in-the-loop transaction signing
 - `npm run cli` — interactive terminal chat against the same agent
@@ -43,7 +43,7 @@ To add a third-party plugin manually:
 
 ## Switching frameworks
 
-Re-scaffold with `npx create-hedera-agent --framework <ai-sdk|langchain>` and copy your plugin selection + custom prompt into the new `shared/config.js`.
+Re-download the project from the Hedera Portal with the other framework selected, then copy your plugin selection + custom prompt into the new `shared/config.js`.
 
 ## Project layout
 

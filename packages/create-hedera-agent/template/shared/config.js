@@ -1,4 +1,4 @@
-import { AccountId, Client, PrivateKey } from "@hiero-ledger/sdk";
+import { AccountId, Client } from "@hiero-ledger/sdk";
 import {
   coreAccountPlugin,
   coreAccountQueryPlugin,
@@ -11,6 +11,7 @@ import {
   coreTokenQueryPlugin,
   coreTransactionQueryPlugin,
 } from "@hashgraph/hedera-agent-kit/plugins";
+import { parseOperatorKey } from "./operator-key.js";
 
 // --- Environment ------------------------------------------------------------
 
@@ -101,14 +102,6 @@ function requireEnv(name) {
     );
   }
   return value.trim();
-}
-
-function parseOperatorKey(key) {
-  const trimmed = key.trim();
-  if (/^303002/i.test(trimmed) || /^(0x)?[0-9a-fA-F]{64}$/.test(trimmed)) {
-    return PrivateKey.fromStringECDSA(trimmed);
-  }
-  return PrivateKey.fromStringED25519(trimmed);
 }
 
 function createClient() {

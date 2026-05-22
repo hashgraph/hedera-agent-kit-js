@@ -63,4 +63,22 @@ describe("shared/config", () => {
     setEnv({ ...VALID_ENV, HEDERA_NETWORK: "previewnet" });
     await expect(import("./config.js")).rejects.toThrow(/HEDERA_NETWORK/);
   });
+
+  it("should accept an ED25519 operator key in DER format", async () => {
+    const ed25519DerKey =
+      "302e020100300506032b657004220420" +
+      "db484b828e64b2d8f12ce3c0a0e93a0b8cce7af1bb8f39c97732394482538e10";
+    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_KEY: ed25519DerKey });
+    const mod = await import("./config.js");
+    expect(mod.client).toBeDefined();
+  });
+
+  it("should accept an ECDSA operator key in DER format", async () => {
+    const ecdsaDerKey =
+      "3030020100300706052b8104000a04220420" +
+      "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_KEY: ecdsaDerKey });
+    const mod = await import("./config.js");
+    expect(mod.client).toBeDefined();
+  });
 });

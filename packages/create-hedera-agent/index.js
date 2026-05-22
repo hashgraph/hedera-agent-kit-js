@@ -9,18 +9,20 @@ import { bold, cyan, dim, green, red, yellow } from "kolorist";
 
 import { applyScaffoldRule, FRAMEWORKS } from "./scaffold-rule.js";
 import { bundledTemplateDir, readTemplateFileMap } from "./read-template.js";
+import { resolveKeyType } from "./template/shared/key-type.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn", "bun"];
 
-function isLikelyEcdsaPrivateKey(key) {
-  const trimmed = key.trim();
-  if (/^303002/i.test(trimmed)) return true;
-  if (/^0x[0-9a-fA-F]{64}$/.test(trimmed)) return true;
-  if (/^[0-9a-fA-F]{64,}$/.test(trimmed)) return true;
-  return false;
+function validateOperatorKey(key) {
+  try {
+    resolveKeyType(key);
+    return true;
+  } catch (error) {
+    return error.message;
+  }
 }
 
 function parseFlags(argv) {
@@ -88,12 +90,9 @@ async function collectConfig(flags) {
     {
       type: flags.operatorKey || flags.yes ? null : "password",
       name: "operatorKey",
-      message: "HEDERA_OPERATOR_KEY (ECDSA DER hex starting 303002… or 0x-prefixed 64-hex)",
+      message: "HEDERA_OPERATOR_KEY (ECDSA/ED25519 DER hex or 0x-prefixed 64-hex)",
       validate: (value) =>
-        !value
-          ? "Operator key is required"
-          : isLikelyEcdsaPrivateKey(value) ||
-            "Must be an ECDSA private key (DER hex starting 303002… or 0x-prefixed 64-hex).",
+        !value ? "Operator key is required" : validateOperatorKey(value),
     },
     {
       type: flags.openaiKey || flags.yes ? null : "password",

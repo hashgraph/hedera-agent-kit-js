@@ -19,7 +19,7 @@ const MODE_LABEL = {
 const MODE_DESCRIPTION = {
   human: {
     title: "Human approval",
-    body: "Mutating transactions pause and open the wallet drawer. You sign each one in-browser before it's broadcast. Nothing executes without your explicit OK.",
+    body: "You stay in control. Whenever the agent wants to make a change, the wallet drawer opens so you can review and sign it yourself. Read-only requests like balance and account checks still run instantly. Nothing actually happens until you tap approve.",
   },
   auto: {
     title: "Auto",
