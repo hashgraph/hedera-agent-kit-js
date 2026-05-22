@@ -145,6 +145,10 @@ Install the core package, LangChain toolkit, your LLM provider, and the Hedera S
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
 ```
 
+> v4 uses `@hiero-ledger/sdk` as its Hedera SDK peer dependency. The examples do not use `@hashgraph/sdk`; import `Client` and other SDK types from `@hiero-ledger/sdk`.
+>
+> The main runtime class is available as `HederaAgentAPI` and `HederaAgentKit`. New examples still use `HederaAgentAPI`; `HederaAgentKit` is an alias for developers who look for a class that matches the package name.
+>
 > Using a different LLM? Replace `@langchain/openai` with `@langchain/anthropic`, `@langchain/groq`, or `@langchain/ollama`.
 
 ### 2 – Configure: Add Environment Variables
