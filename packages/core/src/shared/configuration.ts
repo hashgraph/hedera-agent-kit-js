@@ -31,4 +31,6 @@ export type Configuration = {
   //plugins to load - must be explicitly provided
   plugins?: Plugin[];
   context?: Context;
+  // When true, only non-mutating query tools may be registered.
+  readOnly?: boolean;
 };
