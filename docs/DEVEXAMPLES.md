@@ -40,6 +40,27 @@ PRIVATE_KEY= 302e...
 OPENAI_API_KEY= sk-proj-...
 ```
 
+#### Reviewer-friendly demo mode
+
+If you are submitting a bounty, hackathon, or review app, keep a deterministic
+mock path alongside the live Hedera Agent Kit path so reviewers can run the
+project before they have testnet credentials or an LLM key.
+
+Recommended pattern:
+
+- Gate live network execution behind an explicit flag such as
+  `DEMO_MODE=live`; default local demos to `DEMO_MODE=mock`.
+- In mock mode, return static fixture data and do not construct a Hedera
+  `Client`, read `ACCOUNT_ID` / `PRIVATE_KEY`, or call an LLM provider.
+- Document live-mode setup separately: the Agent Kit package, framework adapter,
+  Hedera SDK, `.env` variables, and any LLM provider package are required only
+  for live network execution.
+- Never commit `.env` files, private keys, account IDs tied to funded accounts,
+  or LLM API keys. Keep example files limited to placeholders.
+
+The examples in this repo exercise live testnet flows; the mock-mode guidance is
+for downstream apps that need a safe, judge-friendly first run.
+
 ##### About Private Keys
 
 Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
