@@ -9,7 +9,7 @@ A Hedera Agent Kit starter project. Ships two run modes out of the box:
 
 ```bash
 cp .env.example .env
-# fill HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY, and OPENAI_API_KEY (or ANTHROPIC_API_KEY)
+# fill HEDERA_ACCOUNT_ID, HEDERA_PRIVATE_KEY, and OPENAI_API_KEY (or ANTHROPIC_API_KEY)
 
 npm install
 npm run web   # open http://localhost:3000
@@ -61,8 +61,8 @@ web/                         # Next.js project root
 
 | Variable | Purpose |
 |---|---|
-| `HEDERA_OPERATOR_ID` | Account ID like `0.0.x` |
-| `HEDERA_OPERATOR_KEY` | ECDSA private key (DER hex or `0x`-prefixed 64-hex) |
+| `HEDERA_ACCOUNT_ID` | Account ID like `0.0.x` |
+| `HEDERA_PRIVATE_KEY` | ECDSA private key (DER hex or `0x`-prefixed 64-hex) |
 | `HEDERA_NETWORK` | `testnet` (default) or `mainnet` |
 | `LLM_PROVIDER` | `openai` or `anthropic` |
 | `LLM_MODEL` | Model id; provider-specific defaults apply if unset |
@@ -93,8 +93,8 @@ web/                         # Next.js project root
 
    | Variable | Value |
    |---|---|
-   | `HEDERA_OPERATOR_ID` | Your account ID (e.g. `0.0.1234`) |
-   | `HEDERA_OPERATOR_KEY` | Your ECDSA private key |
+   | `HEDERA_ACCOUNT_ID` | Your account ID (e.g. `0.0.1234`) |
+   | `HEDERA_PRIVATE_KEY` | Your ECDSA private key |
    | `HEDERA_NETWORK` | `testnet` or `mainnet` |
    | `LLM_PROVIDER` | `openai` or `anthropic` |
    | `LLM_MODEL` | (optional) e.g. `gpt-4o-mini` |
@@ -108,8 +108,8 @@ web/                         # Next.js project root
 npm install -g vercel
 vercel login
 vercel link             # accept defaults; when asked for project root, enter: web
-vercel env add HEDERA_OPERATOR_ID production
-vercel env add HEDERA_OPERATOR_KEY production
+vercel env add HEDERA_ACCOUNT_ID production
+vercel env add HEDERA_PRIVATE_KEY production
 vercel env add HEDERA_NETWORK production
 vercel env add LLM_PROVIDER production
 vercel env add LLM_MODEL production

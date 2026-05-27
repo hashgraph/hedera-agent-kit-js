@@ -85,12 +85,12 @@ async function collectConfig(flags) {
     {
       type: flags.operatorId || flags.yes ? null : "text",
       name: "operatorId",
-      message: "HEDERA_OPERATOR_ID (e.g. 0.0.x, get one at https://portal.hedera.com)",
+      message: "HEDERA_ACCOUNT_ID (e.g. 0.0.x, get one at https://portal.hedera.com)",
     },
     {
       type: flags.operatorKey || flags.yes ? null : "password",
       name: "operatorKey",
-      message: "HEDERA_OPERATOR_KEY (ECDSA/ED25519 DER hex or 0x-prefixed 64-hex)",
+      message: "HEDERA_PRIVATE_KEY (ECDSA/ED25519 DER hex or 0x-prefixed 64-hex)",
       validate: (value) =>
         !value ? "Operator key is required" : validateOperatorKey(value),
     },
@@ -160,8 +160,8 @@ function renamePackage(files, projectName) {
 function buildEnvFile(config) {
   const lines = [
     "# Hedera operator credentials (server-side only)",
-    `HEDERA_OPERATOR_ID=${config.operatorId}`,
-    `HEDERA_OPERATOR_KEY=${config.operatorKey}`,
+    `HEDERA_ACCOUNT_ID=${config.operatorId}`,
+    `HEDERA_PRIVATE_KEY=${config.operatorKey}`,
     "HEDERA_NETWORK=testnet",
     "",
     "# LLM provider & model",

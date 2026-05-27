@@ -15,8 +15,8 @@ import { parseOperatorKey } from "./operator-key.js";
 
 // --- Environment ------------------------------------------------------------
 
-const operatorId = requireEnv("HEDERA_OPERATOR_ID");
-const operatorKey = requireEnv("HEDERA_OPERATOR_KEY");
+const operatorId = requireEnv("HEDERA_ACCOUNT_ID");
+const operatorKey = requireEnv("HEDERA_PRIVATE_KEY");
 const network = (process.env.HEDERA_NETWORK || "testnet").toLowerCase();
 if (network !== "testnet" && network !== "mainnet") {
   throw new Error(`HEDERA_NETWORK must be "testnet" or "mainnet" (got "${network}").`);

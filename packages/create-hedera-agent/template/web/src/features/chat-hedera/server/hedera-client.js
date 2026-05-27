@@ -4,8 +4,8 @@ import { HEDERA_NETWORK } from "@/features/chat-hedera/utils/network";
 import { parseOperatorKey } from "@/features/chat-hedera/utils/operator-key";
 
 export function readEnv() {
-  const operatorId = requireEnv("HEDERA_OPERATOR_ID", process.env.HEDERA_OPERATOR_ID);
-  const operatorKey = requireEnv("HEDERA_OPERATOR_KEY", process.env.HEDERA_OPERATOR_KEY);
+  const operatorId = requireEnv("HEDERA_ACCOUNT_ID", process.env.HEDERA_ACCOUNT_ID);
+  const operatorKey = requireEnv("HEDERA_PRIVATE_KEY", process.env.HEDERA_PRIVATE_KEY);
   const operatorPublicKey = parseOperatorKey(operatorKey).publicKey.toStringDer();
   return { operatorId, operatorKey, operatorPublicKey };
 }

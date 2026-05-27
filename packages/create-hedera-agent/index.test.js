@@ -73,8 +73,8 @@ describe("scaffold integration", () => {
     const target = path.join(tmpDir, "env");
     await scaffold({ ...baseConfig, framework: "ai-sdk" }, target);
     const envBody = fs.readFileSync(path.join(target, ".env"), "utf8");
-    expect(envBody).toMatch(/HEDERA_OPERATOR_ID=0\.0\.1234/);
-    expect(envBody).toMatch(new RegExp(`HEDERA_OPERATOR_KEY=0x${"a".repeat(64)}`));
+    expect(envBody).toMatch(/HEDERA_ACCOUNT_ID=0\.0\.1234/);
+    expect(envBody).toMatch(new RegExp(`HEDERA_PRIVATE_KEY=0x${"a".repeat(64)}`));
     expect(envBody).toMatch(/OPENAI_API_KEY=sk-test/);
     expect(envBody).toMatch(/LLM_PROVIDER=openai/);
   });

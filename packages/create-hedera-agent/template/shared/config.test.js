@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const VALID_ENV = {
-  HEDERA_OPERATOR_ID: "0.0.1234",
-  HEDERA_OPERATOR_KEY: "0x" + "a".repeat(64),
+  HEDERA_ACCOUNT_ID: "0.0.1234",
+  HEDERA_PRIVATE_KEY: "0x" + "a".repeat(64),
   HEDERA_NETWORK: "testnet",
 };
 
@@ -49,14 +49,14 @@ describe("shared/config", () => {
     expect(mod.createLLM).toBeUndefined();
   });
 
-  it("should throw a clear error when HEDERA_OPERATOR_ID is missing", async () => {
-    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_ID: "" });
-    await expect(import("./config.js")).rejects.toThrow(/HEDERA_OPERATOR_ID/);
+  it("should throw a clear error when HEDERA_ACCOUNT_ID is missing", async () => {
+    setEnv({ ...VALID_ENV, HEDERA_ACCOUNT_ID: "" });
+    await expect(import("./config.js")).rejects.toThrow(/HEDERA_ACCOUNT_ID/);
   });
 
-  it("should throw a clear error when HEDERA_OPERATOR_KEY is missing", async () => {
-    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_KEY: "" });
-    await expect(import("./config.js")).rejects.toThrow(/HEDERA_OPERATOR_KEY/);
+  it("should throw a clear error when HEDERA_PRIVATE_KEY is missing", async () => {
+    setEnv({ ...VALID_ENV, HEDERA_PRIVATE_KEY: "" });
+    await expect(import("./config.js")).rejects.toThrow(/HEDERA_PRIVATE_KEY/);
   });
 
   it("should reject an invalid HEDERA_NETWORK", async () => {
@@ -68,7 +68,7 @@ describe("shared/config", () => {
     const ed25519DerKey =
       "302e020100300506032b657004220420" +
       "db484b828e64b2d8f12ce3c0a0e93a0b8cce7af1bb8f39c97732394482538e10";
-    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_KEY: ed25519DerKey });
+    setEnv({ ...VALID_ENV, HEDERA_PRIVATE_KEY: ed25519DerKey });
     const mod = await import("./config.js");
     expect(mod.client).toBeDefined();
   });
@@ -77,7 +77,7 @@ describe("shared/config", () => {
     const ecdsaDerKey =
       "3030020100300706052b8104000a04220420" +
       "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-    setEnv({ ...VALID_ENV, HEDERA_OPERATOR_KEY: ecdsaDerKey });
+    setEnv({ ...VALID_ENV, HEDERA_PRIVATE_KEY: ecdsaDerKey });
     const mod = await import("./config.js");
     expect(mod.client).toBeDefined();
   });
