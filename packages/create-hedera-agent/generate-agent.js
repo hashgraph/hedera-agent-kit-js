@@ -58,11 +58,12 @@ const DEFAULT_SYSTEM_PROMPT = `You are a Hedera Agent assistant. You help users 
 `;
 
 export function generateAgentJs(input = {}) {
-  const { mode, plugins, hooks, pluginConfig } = normalize(input);
-  const importBlock = renderImports(plugins, hooks, pluginConfig);
+  const { mode, plugins, hooks, pluginConfig, extraContext } = normalize(input);
+  const importBlock = renderImports(plugins, hooks, pluginConfig, extraContext);
   const pluginsArray = renderPlugins(plugins);
   const hooksArray = renderHooks(hooks);
   const configObject = renderConfig(pluginConfig);
+  const extraContextObject = renderExtraContext(extraContext);
 
   const body = `${importBlock}
 // --- Environment ------------------------------------------------------------
@@ -83,6 +84,13 @@ export const mode = ${JSON.stringify(mode)};
 export const hooks = ${hooksArray};
 
 export const config = ${configObject};
+
+// Additional top-level fields injected into each toolkit's \`context\` object
+// by the CLI and web runtimes. Plugins can use this to provide context values
+// that belong at the top level instead of under \`config\` (for example, MPPX
+// requires \`privateKey\` and \`network\`). Defaults to \`{}\`, so spreading
+// \`...extraContext\` is always safe, even when no plugin provides extra fields.
+export const extraContext = ${extraContextObject};
 
 export const systemPrompt = \`${DEFAULT_SYSTEM_PROMPT}\`;
 
@@ -152,7 +160,13 @@ function normalize(input) {
   }
   pluginConfig.forEach((entry, i) => validatePluginConfigEntry(entry, `pluginConfig[${i}]`));
 
-  return { mode, plugins, hooks, pluginConfig };
+  const extraContext = input.extraContext ?? [];
+  if (!Array.isArray(extraContext)) {
+    throw new Error("generateAgentJs: extraContext must be an array.");
+  }
+  extraContext.forEach((entry, i) => validateExtraContextEntry(entry, `extraContext[${i}]`));
+
+  return { mode, plugins, hooks, pluginConfig, extraContext };
 }
 
 function validatePackagedSymbol(value, path) {
@@ -168,6 +182,43 @@ function validatePackagedSymbol(value, path) {
 }
 
 function validateHookEntry(value, path) {
+  if (value === null || typeof value !== "object") {
+    throw new Error(`generateAgentJs: ${path} must be an object with "expression" and "imports".`);
+  }
+  if (typeof value.expression !== "string" || !value.expression.trim()) {
+    throw new Error(
+      `generateAgentJs: ${path}.expression is required and must be a non-empty string.`,
+    );
+  }
+  const imports = value.imports ?? [];
+  if (!Array.isArray(imports)) {
+    throw new Error(`generateAgentJs: ${path}.imports must be an array.`);
+  }
+  imports.forEach((imp, i) => {
+    if (imp === null || typeof imp !== "object") {
+      throw new Error(`generateAgentJs: ${path}.imports[${i}] must be an object.`);
+    }
+    if (typeof imp.package !== "string" || !imp.package.trim()) {
+      throw new Error(
+        `generateAgentJs: ${path}.imports[${i}].package is required and must be a non-empty string.`,
+      );
+    }
+    if (!Array.isArray(imp.symbols) || imp.symbols.length === 0) {
+      throw new Error(
+        `generateAgentJs: ${path}.imports[${i}].symbols must be a non-empty array of strings.`,
+      );
+    }
+    imp.symbols.forEach((sym, j) => {
+      if (typeof sym !== "string" || !sym.trim()) {
+        throw new Error(
+          `generateAgentJs: ${path}.imports[${i}].symbols[${j}] must be a non-empty string.`,
+        );
+      }
+    });
+  });
+}
+
+function validateExtraContextEntry(value, path) {
   if (value === null || typeof value !== "object") {
     throw new Error(`generateAgentJs: ${path} must be an object with "expression" and "imports".`);
   }
@@ -244,16 +295,22 @@ function validatePluginConfigEntry(value, path) {
   });
 }
 
-function renderImports(plugins, hooks, pluginConfig) {
+function renderImports(plugins, hooks, pluginConfig, extraContext = []) {
   // The emitted `shared/config.js` is data-only. The only fixed import it
   // needs is the SDK types used by the operator-bound `client` export — the
   // toolkit, AI SDK, and HederaAgentMode imports moved into each runtime.
+  const SDK_PACKAGE = "@hiero-ledger/sdk";
+  const SDK_FIXED_SYMBOLS = new Set(["AccountId", "Client", "PrivateKey"]);
   const fixed = [
-    `import { AccountId, Client, PrivateKey } from "@hiero-ledger/sdk";`,
+    `import { ${[...SDK_FIXED_SYMBOLS].join(", ")} } from "${SDK_PACKAGE}";`,
   ];
 
   const wizardImports = new Map();
   const addImport = (pkg, symbol) => {
+    // Symbols already covered by the fixed SDK import must not be re-emitted —
+    // a plugin/hook/extraContext entry requesting e.g. `PrivateKey` from the
+    // SDK (MPPX does) would otherwise produce a duplicate import statement.
+    if (pkg === SDK_PACKAGE && SDK_FIXED_SYMBOLS.has(symbol)) return;
     if (!wizardImports.has(pkg)) wizardImports.set(pkg, new Set());
     wizardImports.get(pkg).add(symbol);
   };
@@ -265,6 +322,11 @@ function renderImports(plugins, hooks, pluginConfig) {
     }
   }
   for (const entry of pluginConfig) {
+    for (const imp of entry.imports ?? []) {
+      for (const sym of imp.symbols) addImport(imp.package, sym);
+    }
+  }
+  for (const entry of extraContext) {
     for (const imp of entry.imports ?? []) {
       for (const sym of imp.symbols) addImport(imp.package, sym);
     }
@@ -299,6 +361,18 @@ function renderConfig(pluginConfig) {
   if (pluginConfig.length === 0) return "{}";
   const entries = pluginConfig
     .map((entry) => `  ${JSON.stringify(entry.key)}: ${entry.expression},`)
+    .join("\n");
+  return `{\n${entries}\n}`;
+}
+
+// Each `expression` should be a valid JavaScript object property and is
+// inserted into the generated object verbatim (e.g. `privateKey: \`0x${operatorKey}\``
+// or shorthand `network`). Expressions can reference constants declared in
+// `shared/config.js`, such as `operatorKey` or `network`.
+function renderExtraContext(extraContext) {
+  if (extraContext.length === 0) return "{}";
+  const entries = extraContext
+    .map((entry) => `  ${entry.expression},`)
     .join("\n");
   return `{\n${entries}\n}`;
 }

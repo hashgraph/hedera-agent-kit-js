@@ -12,7 +12,7 @@ import { getMutatingToolMethods } from "./mutating-tools";
 // Pure data from `shared/config.js`: the plugins/hooks/per-plugin config the
 // wizard (or a manual editor) owns. The web stays in lockstep with the CLI
 // because both read these from the same file.
-import { config, hooks, plugins } from "../../../../../shared/config.js";
+import { config, extraContext, hooks, plugins } from "../../../../../shared/config.js";
 
 // Status emitted by mutating tools in `human` mode. Carried inside the standard
 // `{ raw, humanMessage }` envelope so the client uses the same parser path as
@@ -34,6 +34,7 @@ export function createHederaToolkit({ mode }) {
           accountPublicKey: env.operatorPublicKey,
           hooks,
           config,
+          ...extraContext,
         },
       },
     });
@@ -48,7 +49,7 @@ export function createHederaToolkit({ mode }) {
     client: createHederaClient(),
     configuration: {
       plugins,
-      context: { mode: HederaAgentMode.AUTONOMOUS, hooks, config },
+      context: { mode: HederaAgentMode.AUTONOMOUS, hooks, config, ...extraContext },
     },
   });
   return {
