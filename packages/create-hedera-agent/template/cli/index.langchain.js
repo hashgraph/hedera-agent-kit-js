@@ -1,7 +1,6 @@
 import "dotenv/config";
 
-import { createInterface } from "node:readline";
-import { stdin, stdout } from "node:process";
+import { stdout } from "node:process";
 
 import { AgentMode as HederaAgentMode } from "@hashgraph/hedera-agent-kit";
 import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit-langchain";
@@ -10,6 +9,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver } from "@langchain/langgraph";
 import { HumanMessage } from "@langchain/core/messages";
+import prompts from "prompts";
 
 import { client, config, hooks, plugins, systemPrompt } from "../shared/config.js";
 
@@ -58,10 +58,6 @@ async function chat(userInput) {
   stdout.write(`${lastAssistant}\n`);
 }
 
-function prompt(rl) {
-  return new Promise((resolve) => rl.question("you > ", resolve));
-}
-
 function createLangChainLLM() {
   const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
   const model = process.env.LLM_MODEL?.trim();
@@ -83,20 +79,22 @@ function requireEnv(name) {
 }
 
 async function main() {
-  const rl = createInterface({ input: stdin, output: stdout });
   console.log("Hedera Agent CLI (LangChain). Type 'exit' to quit.\n");
   console.log(`System prompt loaded (${systemPrompt.length} chars).\n`);
   for (;;) {
-    const input = (await prompt(rl)).trim();
-    if (!input) continue;
-    if (input === "exit" || input === "quit") break;
+    const { input } = await prompts(
+      { type: "text", name: "input", message: "you >" },
+      { onCancel: () => process.exit(0) },
+    );
+    const trimmed = (input ?? "").trim();
+    if (!trimmed) continue;
+    if (trimmed === "exit" || trimmed === "quit") break;
     try {
-      await chat(input);
+      await chat(trimmed);
     } catch (err) {
       console.error("\n[error]", err?.message || err);
     }
   }
-  rl.close();
 }
 
 main().catch((err) => {

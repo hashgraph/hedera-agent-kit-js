@@ -1,13 +1,13 @@
 import "dotenv/config";
 
-import { createInterface } from "node:readline";
-import { stdin, stdout } from "node:process";
+import { stdout } from "node:process";
 
 import { AgentMode as HederaAgentMode } from "@hashgraph/hedera-agent-kit";
 import { HederaAIToolkit } from "@hashgraph/hedera-agent-kit-ai-sdk";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, stepCountIs, streamText } from "ai";
+import prompts from "prompts";
 
 import { client, config, hooks, mode, plugins, systemPrompt } from "../shared/config.js";
 
@@ -56,24 +56,22 @@ async function chat(userInput) {
   history.push({ role: "assistant", parts: [{ type: "text", text: assistantText }] });
 }
 
-function prompt(rl) {
-  return new Promise((resolve) => rl.question("you > ", resolve));
-}
-
 async function main() {
-  const rl = createInterface({ input: stdin, output: stdout });
   console.log("Hedera Agent CLI (AI SDK). Type 'exit' to quit.\n");
   for (;;) {
-    const input = (await prompt(rl)).trim();
-    if (!input) continue;
-    if (input === "exit" || input === "quit") break;
+    const { input } = await prompts(
+      { type: "text", name: "input", message: "you >" },
+      { onCancel: () => process.exit(0) },
+    );
+    const trimmed = (input ?? "").trim();
+    if (!trimmed) continue;
+    if (trimmed === "exit" || trimmed === "quit") break;
     try {
-      await chat(input);
+      await chat(trimmed);
     } catch (err) {
       console.error("\n[error]", err?.message || err);
     }
   }
-  rl.close();
 }
 
 function createLLM() {
