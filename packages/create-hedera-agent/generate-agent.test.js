@@ -269,6 +269,53 @@ describe("generateAgentJs", () => {
     });
   });
 
+  describe("extraContext handling", () => {
+    it("should default the extraContext export to {} when no entries are supplied", () => {
+      const code = toString(generateAgentJs({}));
+      expect(code).toMatch(/export const extraContext = \{\};/);
+    });
+
+    it("should emit each entry's expression verbatim as an object member", () => {
+      const code = toString(
+        generateAgentJs({
+          extraContext: [
+            { expression: "privateKey: `0x${operatorKey}`" },
+            { expression: "network" },
+          ],
+        }),
+      );
+      expect(code).toMatch(
+        /export const extraContext = \{\n  privateKey: `0x\$\{operatorKey\}`,\n  network,\n\};/,
+      );
+    });
+
+    it("should merge an entry's imports into the import block, deduplicated", () => {
+      const code = toString(
+        generateAgentJs({
+          extraContext: [
+            {
+              expression: "privateKey: `0x${PrivateKey.fromString(operatorKey).toStringRaw()}`",
+              imports: [{ package: "@hiero-ledger/sdk", symbols: ["PrivateKey"] }],
+            },
+          ],
+        }),
+      );
+      // `PrivateKey` is already in the fixed SDK import, so it must not be
+      // duplicated into a second import statement.
+      const sdkImportLines = code
+        .split("\n")
+        .filter((line) => line.includes('from "@hiero-ledger/sdk"'));
+      expect(sdkImportLines).toHaveLength(1);
+      expect(sdkImportLines[0]).toContain("PrivateKey");
+    });
+
+    it("should throw when an extraContext entry lacks an expression", () => {
+      expect(() => generateAgentJs({ extraContext: [{}] })).toThrow(
+        /extraContext\[0\]\.expression is required/,
+      );
+    });
+  });
+
   describe("mode handling", () => {
     it("should set the mode export to 'human' when the wizard picks human", () => {
       const code = toString(generateAgentJs({ mode: "human" }));

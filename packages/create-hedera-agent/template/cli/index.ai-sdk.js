@@ -9,7 +9,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { convertToModelMessages, stepCountIs, streamText } from "ai";
 import prompts from "prompts";
 
-import { client, config, hooks, mode, plugins, systemPrompt } from "../shared/config.js";
+import { client, config, extraContext, hooks, mode, plugins, systemPrompt } from "../shared/config.js";
 
 const toolkit = new HederaAIToolkit({
   client,
@@ -22,6 +22,7 @@ const toolkit = new HederaAIToolkit({
           : HederaAgentMode.AUTONOMOUS,
       hooks,
       config,
+      ...extraContext,
     },
   },
 });

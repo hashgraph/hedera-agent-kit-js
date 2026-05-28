@@ -6,25 +6,25 @@ import { AgentMode as HederaAgentMode } from "@hashgraph/hedera-agent-kit";
 import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit-langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { createAgent } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
 import { HumanMessage } from "@langchain/core/messages";
 import prompts from "prompts";
 
-import { client, config, hooks, plugins, systemPrompt } from "../shared/config.js";
+import { client, config, extraContext, hooks, plugins, systemPrompt } from "../shared/config.js";
 
 const toolkit = new HederaLangchainToolkit({
   client,
   configuration: {
     plugins,
-    context: { mode: HederaAgentMode.AUTONOMOUS, hooks, config },
+    context: { mode: HederaAgentMode.AUTONOMOUS, hooks, config, ...extraContext },
   },
 });
 
 const llm = createLangChainLLM();
 
-const agent = createReactAgent({
-  llm,
+const agent = createAgent({
+  model: llm,
   tools: toolkit.getTools(),
   checkpointer: new MemorySaver(),
 });

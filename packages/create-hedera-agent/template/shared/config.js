@@ -51,6 +51,13 @@ export const hooks = [];
 // shapes the individual plugins expect under `context.config`.
 export const config = {};
 
+// Top-level fields spread into every toolkit's `context: { ... }` block by
+// the CLI and web runtimes (e.g. a plugin like MPPX populates this with
+// `privateKey` + `network`). Empty by default; the portal's Scaffold flow
+// overwrites this whole file via `generateAgentJs` and emits any contributed
+// fields here.
+export const extraContext = {};
+
 export const systemPrompt = `You are a Hedera Agent assistant. You help users interact with the Hedera network through the Hedera Agent Kit.
 
 ## Runtime context
