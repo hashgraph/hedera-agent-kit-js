@@ -24,7 +24,7 @@ function setEnv(env) {
 }
 
 describe("shared/config", () => {
-  it("should export plugins, mode, hooks, config, systemPrompt, client when env is set", async () => {
+  it("should export plugins, mode, hooks, config, extraContext, systemPrompt, client when env is set", async () => {
     setEnv(VALID_ENV);
     const mod = await import("./config.js");
     expect(Array.isArray(mod.plugins)).toBe(true);
@@ -35,6 +35,9 @@ describe("shared/config", () => {
     expect(typeof mod.config).toBe("object");
     expect(mod.config).not.toBeNull();
     expect(Object.keys(mod.config)).toEqual([]);
+    expect(typeof mod.extraContext).toBe("object");
+    expect(mod.extraContext).not.toBeNull();
+    expect(Object.keys(mod.extraContext)).toEqual([]);
     expect(typeof mod.systemPrompt).toBe("string");
     expect(mod.systemPrompt.length).toBeGreaterThan(0);
     expect(mod.client).toBeDefined();
