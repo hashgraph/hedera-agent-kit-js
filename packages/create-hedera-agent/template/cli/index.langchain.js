@@ -6,7 +6,7 @@ import { AgentMode as HederaAgentMode } from "@hashgraph/hedera-agent-kit";
 import { HederaLangchainToolkit } from "@hashgraph/hedera-agent-kit-langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { createAgent } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
 import { HumanMessage } from "@langchain/core/messages";
 import prompts from "prompts";
@@ -23,8 +23,8 @@ const toolkit = new HederaLangchainToolkit({
 
 const llm = createLangChainLLM();
 
-const agent = createReactAgent({
-  llm,
+const agent = createAgent({
+  model: llm,
   tools: toolkit.getTools(),
   checkpointer: new MemorySaver(),
 });
