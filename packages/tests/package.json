@@ -16,7 +16,7 @@
     "@hiero-ledger/sdk": "2.81.0",
     "bignumber.js": "9.3.1",
     "typescript": "5.8.3",
-    "vitest": "4.0.16",
+    "vitest": "4.1.0",
     "zod": "3.25.76"
   }
 }
