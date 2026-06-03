@@ -17,6 +17,6 @@
     "bignumber.js": "9.3.1",
     "typescript": "5.8.3",
     "vitest": "4.0.16",
-    "zod": "3.25.76"
+    "zod": "4.3.6"
   }
 }
