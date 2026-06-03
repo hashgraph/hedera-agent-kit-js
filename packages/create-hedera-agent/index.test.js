@@ -79,6 +79,17 @@ describe("scaffold integration", () => {
     expect(envBody).toMatch(/LLM_PROVIDER=openai/);
   });
 
+  it("should ship audit-trail topic-id keys in .env.example", async () => {
+    const target = path.join(tmpDir, "env-example");
+    await scaffold({ ...baseConfig, framework: "ai-sdk" }, target);
+    const envExample = fs.readFileSync(
+      path.join(target, ".env.example"),
+      "utf8",
+    );
+    expect(envExample).toMatch(/^HCS_TOPIC_ID=\s*$/m);
+    expect(envExample).toMatch(/^HOL_TOPIC_ID=\s*$/m);
+  });
+
   it("should preserve shared/config.js exactly between framework variants", async () => {
     const aiTarget = path.join(tmpDir, "ai");
     const lcTarget = path.join(tmpDir, "lc");
