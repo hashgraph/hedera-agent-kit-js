@@ -92,6 +92,7 @@ import {
   transferERC20Parameters,
   transferERC721Parameters,
 } from '@/shared/parameter-schemas/evm.zod';
+import { swapExactTokensForTokensParameters } from '@/shared/parameter-schemas/dex.zod';
 import {
   normalisedTransactionRecordQueryParameters,
   transactionRecordQueryParameters,
@@ -100,6 +101,9 @@ import {
   optionalScheduledTransactionParams,
   optionalScheduledTransactionParamsNormalised,
 } from '@/shared/parameter-schemas/common.zod';
+
+// Default validity window for a DEX swap when no deadline is supplied (20 minutes).
+const DEFAULT_SWAP_DEADLINE_SECONDS = 20 * 60;
 
 export default class HederaParameterNormaliser {
   static parseParamsWithSchema(
@@ -1115,6 +1119,66 @@ export default class HederaParameterNormaliser {
       contractId,
       functionParameters,
       gas: 100_000,
+      schedulingParams,
+    };
+  }
+
+  static async normaliseSwapExactTokensForTokensParams(
+    params: z.infer<ReturnType<typeof swapExactTokensForTokensParameters>>,
+    swapFunctionAbi: string[],
+    swapFunctionName: string,
+    context: Context,
+    mirrorNode: IHederaMirrornodeService,
+    client: Client,
+  ): Promise<z.infer<ReturnType<typeof evmContractCallParamsNormalised>>> {
+    const parsedParams: z.infer<ReturnType<typeof swapExactTokensForTokensParameters>> =
+      this.parseParamsWithSchema(params, swapExactTokensForTokensParameters, context);
+
+    const contractId = await HederaParameterNormaliser.getHederaAccountId(
+      parsedParams.routerContractId,
+      mirrorNode,
+    );
+
+    // Resolve every hop in the route to an EVM address (preserving order).
+    const path = await Promise.all(
+      parsedParams.path.map((token) => AccountResolver.getHederaEVMAddress(token, mirrorNode)),
+    );
+
+    // Recipient defaults to the operator/connected account when omitted.
+    const resolvedRecipient = AccountResolver.resolveAccount(
+      parsedParams.recipientAddress,
+      context,
+      client,
+    );
+    const recipientAddress = await AccountResolver.getHederaEVMAddress(
+      resolvedRecipient,
+      mirrorNode,
+    );
+
+    const deadline =
+      parsedParams.deadlineSeconds ?? Math.floor(Date.now() / 1000) + DEFAULT_SWAP_DEADLINE_SECONDS;
+
+    const iface = new ethers.Interface(swapFunctionAbi);
+    const encodedData = iface.encodeFunctionData(swapFunctionName, [
+      BigInt(parsedParams.amountIn),
+      BigInt(parsedParams.amountOutMin),
+      path,
+      recipientAddress,
+      deadline,
+    ]);
+
+    const functionParameters = ethers.getBytes(encodedData);
+
+    // Normalize scheduling parameters (if present and isScheduled = true)
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      contractId,
+      functionParameters,
+      gas: parsedParams.gas,
       schedulingParams,
     };
   }
