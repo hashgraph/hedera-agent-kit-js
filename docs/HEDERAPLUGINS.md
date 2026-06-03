@@ -18,6 +18,7 @@ The tools are organized into plugins, each containing related functionality:
 * **Core Token Plugin**: Tools for Hedera Token Service (HTS) operations
 * **Core Token Query Plugin**: Tools for querying Hedera Token Service related data
 * **Core EVM Plugin**: Tools for interacting with EVM smart contracts on Hedera (ERC-20 and ERC-721)
+* **Core DEX Plugin**: Tools for swapping tokens on Hedera DEXs (Uniswap V2 style routers)
 * **Core EVM Query Plugin**: Tools for querying smart contract-related data on Hedera
 * **Core Misc Query Plugin**: Tools for fetching miscellaneous information from Hedera Mirror Node
 * **Core Transaction Query Plugin**: Tools for handling Hedera transaction–related queries
@@ -132,6 +133,16 @@ This plugin provides tools for interacting with EVM smart contracts on Hedera, i
 | [`CREATE_ERC721_TOOL`](./HEDERATOOLS.md#create_erc721_tool)           | Deploys a new ERC-721 token via the BaseERC721Factory | [View Parameters & Examples](./HEDERATOOLS.md#create_erc721_tool)        |
 | [`MINT_ERC721_TOOL`](./HEDERATOOLS.md#mint_erc721_tool)               | Mints a new ERC-721 token                             | [View Parameters & Examples](./HEDERATOOLS.md#mint_erc721_tool)          |
 | [`TRANSFER_ERC721_TOOL`](./HEDERATOOLS.md#transfer_erc721_tool)       | Transfers an ERC-721 token                            | [View Parameters & Examples](./HEDERATOOLS.md#transfer_erc721_tool)      |
+
+---
+
+### Core DEX Plugin Tools (`core-dex-plugin`)
+
+This plugin provides tools for swapping tokens on Hedera DEXs via Uniswap V2 style routers (e.g. SaucerSwap).
+
+| Tool Name                                                | Description                                    | Details                                                         |
+|----------------------------------------------------------|------------------------------------------------|-----------------------------------------------------------------|
+| [`SWAP_TOKENS_TOOL`](./HEDERATOOLS.md#swap_tokens_tool)  | Swaps an exact amount of one token for another | [View Parameters & Examples](./HEDERATOOLS.md#swap_tokens_tool) |
 
 ---
 
@@ -252,6 +263,7 @@ import {
   coreTokenPlugin,
   coreTokenQueryPlugin,
   coreEVMPlugin,
+  coreDexPlugin,
   coreEVMQueryPlugin,
   coreMiscQueriesPlugin,
   coreTransactionQueryPlugin,
@@ -283,6 +295,7 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
       coreTokenPlugin,
       coreTokenQueryPlugin,
       coreEVMPlugin,
+      coreDexPlugin,
       coreEVMQueryPlugin,
       coreMiscQueriesPlugin,
       coreTransactionQueryPlugin,
