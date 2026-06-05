@@ -290,3 +290,71 @@ const hederaAgentToolkit = new HederaLangchainToolkit({
   },
 });
 ```
+
+---
+
+## Creating a Custom Plugin
+
+A plugin is just an object that exposes a `tools(context)` function returning an array of tools, so you can ship your own alongside the core plugins. The snippet below is a minimal, copy-paste starting point for a custom enterprise-style validation tool using the plain `Tool` object pattern.
+
+```typescript
+import { z } from 'zod';
+import type { Plugin, Tool, Context } from '@hashgraph/hedera-agent-kit';
+import type { Client } from '@hiero-ledger/sdk';
+
+// 1. Describe the parameters the LLM must provide with a Zod schema.
+const approvePaymentParameters = z.object({
+  amount: z.number().positive().describe('Payment amount in USD'),
+  vendor: z.string().describe('Vendor name'),
+});
+
+export const APPROVE_PAYMENT_TOOL = 'approve_payment_tool';
+
+// 2. Define the tool. A plain object satisfies the `Tool` interface —
+//    the only required runtime method is `execute(client, context, params)`.
+const approvePaymentTool: Tool = {
+  method: APPROVE_PAYMENT_TOOL,
+  name: 'Approve Payment',
+  description:
+    'Validates a payment against the company spending policy. ' +
+    'Parameters: amount (number, required), vendor (string, required).',
+  parameters: approvePaymentParameters,
+  execute: async (_client: Client, _context: Context, params) => {
+    const { amount, vendor } = approvePaymentParameters.parse(params);
+    const LIMIT = 10_000;
+    if (amount > LIMIT) {
+      return { approved: false, reason: `Amount $${amount} exceeds the $${LIMIT} limit.` };
+    }
+    return { approved: true, vendor, amount };
+  },
+};
+
+// 3. Wrap one or more tools in a plugin.
+export const enterprisePlugin: Plugin = {
+  name: 'enterprise-plugin',
+  version: '1.0.0',
+  description: 'Custom enterprise validation tools.',
+  tools: (_context: Context) => [approvePaymentTool],
+};
+```
+
+Register it next to the core plugins, exactly like a built-in:
+
+```typescript
+import { enterprisePlugin } from './enterprise-plugin';
+
+const toolkit = new HederaLangchainToolkit({
+  client,
+  configuration: {
+    context: { mode: AgentMode.AUTONOMOUS },
+    // Mix your plugin in with the core plugins you need.
+    plugins: [coreAccountQueryPlugin, coreConsensusPlugin, enterprisePlugin],
+  },
+});
+```
+
+### When to use `BaseTool` instead
+
+The plain object above is the quickest way to add a tool. If you want your tool to participate in the v4 **hooks and policies** system (for example `HcsAuditTrailHook`, `MaxRecipientsPolicy`, or `RejectToolPolicy`), extend `BaseTool` instead. `BaseTool` splits execution into `normalizeParams` → `coreAction` → `secondaryAction`, which lets hooks and policies inspect a transaction **before** it is signed and submitted — something the plain object pattern cannot do.
+
+See [`examples/plugin/example-plugin.ts`](../examples/plugin/example-plugin.ts) for a complete `BaseTool` example, including an on-chain HBAR transfer.
