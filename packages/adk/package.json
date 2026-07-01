@@ -45,13 +45,14 @@
         "dist/**/*"
     ],
     "dependencies": {
-        "@hashgraph/hedera-agent-kit": "workspace:*",
-        "@google/adk": "0.6.1"
+        "@hashgraph/hedera-agent-kit": "workspace:*"
     },
     "peerDependencies": {
-        "@hiero-ledger/sdk": "^2.81.0"
+        "@hiero-ledger/sdk": "^2.81.0",
+        "@google/adk": "^0.6.1"
     },
     "devDependencies": {
+        "@google/adk": "0.6.1",
         "@hiero-ledger/sdk": "2.81.0",
         "tsup": "8.5.0",
         "typescript": "5.8.3",

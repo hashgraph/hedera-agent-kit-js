@@ -142,7 +142,7 @@ Open `package.json` and add `"type": "module"` to enable ES modules.
 Install the core package, LangChain toolkit, your LLM provider, and the Hedera SDK:
 
 ```bash
-npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
+npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain langchain @langchain/openai dotenv
 ```
 
 > Using a different LLM? Replace `@langchain/openai` with `@langchain/anthropic`, `@langchain/groq`, or `@langchain/ollama`.
