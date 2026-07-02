@@ -7,7 +7,7 @@ LangChain integration for Hedera Agent Kit. Wraps Hedera tools as LangChain `Str
 ### 1. Install dependencies
 
 ```bash
-npm install @hashgraph/hedera-agent-kit-langchain @hashgraph/hedera-agent-kit @hiero-ledger/sdk @langchain/openai dotenv
+npm install @hashgraph/hedera-agent-kit-langchain @hashgraph/hedera-agent-kit @hiero-ledger/sdk langchain @langchain/openai dotenv
 ```
 
 ### 2. Configure environment variables

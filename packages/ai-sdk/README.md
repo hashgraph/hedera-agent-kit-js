@@ -7,7 +7,7 @@ Vercel AI SDK integration for Hedera Agent Kit. Wraps Hedera tools as Vercel AI 
 ### 1. Install dependencies
 
 ```bash
-npm install @hashgraph/hedera-agent-kit-ai-sdk @hashgraph/hedera-agent-kit @hiero-ledger/sdk @ai-sdk/openai dotenv
+npm install @hashgraph/hedera-agent-kit-ai-sdk @hashgraph/hedera-agent-kit @hiero-ledger/sdk ai @ai-sdk/openai dotenv
 ```
 
 ### 2. Configure environment variables

@@ -48,14 +48,16 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "@elizaos/core": "1.7.2",
     "@hashgraph/hedera-agent-kit": "workspace:*",
+    "zod": "3.25.76",
     "zod-to-json-schema": "3.24.6"
   },
   "peerDependencies": {
+    "@elizaos/core": "^1.7.2",
     "@hiero-ledger/sdk": "^2.81.0"
   },
   "devDependencies": {
+    "@elizaos/core": "1.7.2",
     "@hiero-ledger/sdk": "2.81.0",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
