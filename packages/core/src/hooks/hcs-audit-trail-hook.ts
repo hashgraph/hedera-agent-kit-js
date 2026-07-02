@@ -10,8 +10,18 @@ import { Client, TopicMessageSubmitTransaction } from '@hiero-ledger/sdk';
 /**
  * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.
  *
+ * @remarks
+ * **Autonomous mode only.** This hook works only when the agent runs in `AgentMode.AUTONOMOUS`.
+ * In `RETURN_BYTES` mode it throws before the tool executes, because there is no submitted
+ * transaction to audit.
+ *
+ * **Requires a pre-existing topic.** The hook does not create an HCS topic. Create the topic
+ * first — via the `create_topic_tool`.
+ *
  * @warning If a paid topic (HIP-991: https://hips.hedera.com/hip/hip-991) is provided,
  * it could potentially drain the provided logging client's funds due to message submission fees.
+ *
+ * @see docs/HOOKS_AND_POLICIES.md — "HcsAuditTrailHook" for full setup and examples.
  */
 export class HcsAuditTrailHook extends AbstractHook {
   relevantTools: string[];
@@ -20,6 +30,12 @@ export class HcsAuditTrailHook extends AbstractHook {
   hcsTopicId: string;
   loggingClient?: Client;
 
+  /**
+   * @param relevantTools Tool names to audit (e.g. `['transfer_hbar', 'create_token']`).
+   * @param hcsTopicId Id of a **pre-existing** HCS topic to log to — the hook does not create it.
+   * @param loggingClient Optional client used to submit audit messages; defaults to the agent's
+   *   operator client. Must be allowed to submit to `hcsTopicId`.
+   */
   constructor(relevantTools: string[], hcsTopicId: string, loggingClient?: Client) {
     super();
     this.relevantTools = relevantTools;
