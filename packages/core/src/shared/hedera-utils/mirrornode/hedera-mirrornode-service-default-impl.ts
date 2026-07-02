@@ -31,17 +31,39 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     this.baseUrl = LedgerIdToBaseUrl.get(ledgerId.toString())!;
   }
 
+  /**
+   * Fetches JSON from the mirror node, retrying only on 404 with exponential
+   * backoff. A just-created entity (transaction, token, topic, ...) is not
+   * indexed for a few seconds and returns 404, so a read fired right after the
+   * write would otherwise fail. Non-404 statuses throw immediately; an
+   * exhausted 404 throws via `buildError`.
+   */
+  private async fetchJson<T>(url: string, buildError: (response: Response) => string): Promise<T> {
+    const maxAttempts = 3;
+    let delayMs = 1000;
+    for (let attempt = 1; ; attempt++) {
+      const response = await fetch(url);
+
+      if (response.ok) {
+        return (await response.json()) as T;
+      }
+
+      if (response.status === 404 && attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        delayMs *= 2;
+        continue;
+      }
+
+      throw new Error(buildError(response));
+    }
+  }
+
   async getAccount(accountId: string): Promise<AccountResponse> {
     const url = `${this.baseUrl}/accounts/${accountId}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch account ${accountId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    const data: AccountAPIResponse = await response.json();
+    const data = await this.fetchJson<AccountAPIResponse>(
+      url,
+      r => `Failed to fetch account ${accountId}: ${r.status} ${r.statusText}`,
+    );
 
     // Check if the response is empty (no account found)
     if (!data.account) {
@@ -77,15 +99,10 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   ): Promise<TokenBalancesResponse> {
     const tokenIdParam = tokenId ? `&token.id=${tokenId}` : '';
     const url = `${this.baseUrl}/accounts/${accountId}/tokens?${tokenIdParam}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch balance for account ${accountId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    const res = await response.json();
+    const res = await this.fetchJson<any>(
+      url,
+      r => `Failed to fetch balance for account ${accountId}: ${r.status} ${r.statusText}`,
+    );
 
     // Fetch and attach symbols in parallel
     await Promise.all(
@@ -120,15 +137,10 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
         // Results are paginated
 
         fetchedMessages += 1;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to get topic messages for ${queryParams.topicId}: ${response.status} ${response.statusText}`,
-          );
-        }
-
-        const data: TopicMessagesAPIResponse = await response.json();
+        const data: TopicMessagesAPIResponse = await this.fetchJson<TopicMessagesAPIResponse>(
+          url,
+          r => `Failed to get topic messages for ${queryParams.topicId}: ${r.status} ${r.statusText}`,
+        );
 
         arrayOfMessages.push(...data.messages);
         if (fetchedMessages >= 100) {
@@ -151,28 +163,18 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
 
   async getTokenInfo(tokenId: string): Promise<TokenInfo> {
     const url = `${this.baseUrl}/tokens/${tokenId}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to get token info for a token ${tokenId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
+    return this.fetchJson<TokenInfo>(
+      url,
+      r => `Failed to get token info for a token ${tokenId}: ${r.status} ${r.statusText}`,
+    );
   }
 
   async getTopicInfo(topicId: string): Promise<TopicInfo> {
     const url = `${this.baseUrl}/topics/${topicId}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to get topic info for ${topicId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
+    return this.fetchJson<TopicInfo>(
+      url,
+      r => `Failed to get topic info for ${topicId}: ${r.status} ${r.statusText}`,
+    );
   }
 
   async getTransactionRecord(
@@ -183,75 +185,44 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     if (nonce !== undefined) {
       url += `?nonce=${nonce}`;
     }
-
-    const maxAttempts = 3;
-    let delayMs = 1000;
-    for (let attempt = 1; ; attempt++) {
-      const response = await fetch(url);
-
-      if (response.ok) {
-        return await response.json();
-      }
-
-      if (response.status === 404 && attempt < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs *= 2;
-        continue;
-      }
-
-      throw new Error(
-        `Failed to get transaction record for ${transactionId}: ${response.status} ${response.statusText}`,
-      );
-    }
+    return this.fetchJson<TransactionDetailsResponse>(
+      url,
+      r => `Failed to get transaction record for ${transactionId}: ${r.status} ${r.statusText}`,
+    );
   }
 
   async getContractInfo(contractId: string): Promise<ContractInfo> {
     const url = `${this.baseUrl}/contracts/${contractId}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to get contract info for ${contractId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
+    return this.fetchJson<ContractInfo>(
+      url,
+      r => `Failed to get contract info for ${contractId}: ${r.status} ${r.statusText}`,
+    );
   }
 
   async getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
     const url = `${this.baseUrl}/accounts/${accountId}/airdrops/pending`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch pending airdrops for an account ${accountId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
+    return this.fetchJson<TokenAirdropsResponse>(
+      url,
+      r => `Failed to fetch pending airdrops for an account ${accountId}: ${r.status} ${r.statusText}`,
+    );
   }
 
   async getOutstandingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
     const url = `${this.baseUrl}/accounts/${accountId}/airdrops/outstanding`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch outstanding airdrops for an account ${accountId}: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
+    return this.fetchJson<TokenAirdropsResponse>(
+      url,
+      r =>
+        `Failed to fetch outstanding airdrops for an account ${accountId}: ${r.status} ${r.statusText}`,
+    );
   }
 
   async getExchangeRate(timestamp?: string): Promise<ExchangeRateResponse> {
     const timestampParam = timestamp ? `?timestamp=${encodeURIComponent(timestamp)}` : '';
     const url = `${this.baseUrl}/network/exchangerate${timestampParam}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
-    }
-    return await response.json();
+    return this.fetchJson<ExchangeRateResponse>(
+      url,
+      r => `HTTP error! status: ${r.status}. Message: ${r.statusText}`,
+    );
   }
 
   async getTokenAllowances(
@@ -259,31 +230,28 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     spenderAccountId: string,
   ): Promise<TokenAllowanceResponse> {
     const url = `${this.baseUrl}/accounts/${ownerAccountId}/allowances/tokens?spender.id=${spenderAccountId}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
-    }
-    return await response.json();
+    return this.fetchJson<TokenAllowanceResponse>(
+      url,
+      r => `HTTP error! status: ${r.status}. Message: ${r.statusText}`,
+    );
   }
 
   async getAccountNfts(ownerAccountId: string): Promise<NftBalanceResponse> {
     const url = `${this.baseUrl}/accounts/${ownerAccountId}/nfts`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
-    }
-    return await response.json();
+    return this.fetchJson<NftBalanceResponse>(
+      url,
+      r => `HTTP error! status: ${r.status}. Message: ${r.statusText}`,
+    );
   }
 
   async getScheduledTransactionDetails(
     scheduleId: string,
   ): Promise<ScheduledTransactionDetailsResponse> {
     const url = `${this.baseUrl}/schedules/${scheduleId}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}. Message: ${response.statusText}`);
-    }
-    return await response.json();
+    return this.fetchJson<ScheduledTransactionDetailsResponse>(
+      url,
+      r => `HTTP error! status: ${r.status}. Message: ${r.statusText}`,
+    );
   }
 
   getBaseUrl(): string {

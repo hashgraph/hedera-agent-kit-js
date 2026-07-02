@@ -52,4 +52,19 @@ describe('mirror node getTransactionRecord - 404 retry with backoff', () => {
     await expect(service.getTransactionRecord('0.0.2-2-2')).rejects.toThrow('500');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('applies the same 404 retry to other methods (getTokenInfo)', async () => {
+    const info = { token_id: '0.0.5', symbol: 'FOO' };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(notFound()) // token not indexed yet after creation
+      .mockResolvedValueOnce(ok(info));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = service.getTokenInfo('0.0.5');
+    await vi.runAllTimersAsync();
+
+    await expect(promise).resolves.toEqual(info);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });
