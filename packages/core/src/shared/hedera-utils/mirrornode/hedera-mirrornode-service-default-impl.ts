@@ -184,15 +184,25 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
       url += `?nonce=${nonce}`;
     }
 
-    const response = await fetch(url);
+    const maxAttempts = 3;
+    let delayMs = 1000;
+    for (let attempt = 1; ; attempt++) {
+      const response = await fetch(url);
 
-    if (!response.ok) {
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (response.status === 404 && attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        delayMs *= 2;
+        continue;
+      }
+
       throw new Error(
         `Failed to get transaction record for ${transactionId}: ${response.status} ${response.statusText}`,
       );
     }
-
-    return await response.json();
   }
 
   async getContractInfo(contractId: string): Promise<ContractInfo> {
