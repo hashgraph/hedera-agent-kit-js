@@ -32,6 +32,10 @@ class HederaAgentKitTool extends StructuredTool {
     this.description = description;
     this.schema = schema;
     this.responseParsingFunction = responseParsingFunction;
+
+    // Surface the real tool name to stream events as `event.metadata.hakToolName`
+    // (on `on_tool_start`, event.name is the shared wrapper class). See README.
+    this.metadata = { ...this.metadata, hakToolName: method };
   }
 
   _call(

@@ -78,6 +78,18 @@ console.log(parsed[0].toolName);   // e.g. "create_account_tool"
 console.log(parsed[0].parsedData); // tool execution result
 ```
 
+## Streaming
+
+When streaming with `agent.streamEvents({ version: 'v2' })`, the `on_tool_start` event's `name` is the shared wrapper class (`HederaAgentKitTool`). To label steps with the real tool name, read it from `event.metadata.hakToolName`:
+
+```typescript
+for await (const event of agent.streamEvents({ messages }, { version: 'v2' })) {
+  if (event.event === 'on_tool_start') {
+    console.log(event.metadata?.hakToolName); // e.g. "transfer_hbar_tool"
+  }
+}
+```
+
 ## MCP server support
 
 The toolkit can also load tools from external MCP servers:
