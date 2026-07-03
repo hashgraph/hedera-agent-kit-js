@@ -340,7 +340,7 @@ describe('Integration - Hedera getTransactionRecord', () => {
       tokenId: 'invalid-token-id',
     });
 
-    expect(resp.humanMessage).toContain('Not Found');
+    expect(resp.humanMessage).toContain('400 Bad Request');
     expect(resp.humanMessage).toContain('Failed to get account token balances');
     expect(resp.raw.error).toContain('Failed to get account token balances');
   });
