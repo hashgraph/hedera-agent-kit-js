@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client} from '@hiero-ledger/sdk';
 import toolFactory, { ASSOCIATE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/associate-token';
 import z from 'zod';
 import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';
@@ -112,7 +112,7 @@ describe('associate-token tool (unit)', () => {
     expect(res.humanMessage).toContain('boom');
     expect(res.raw.error).toContain('Failed to associate token');
     expect(res.raw.error).toContain('boom');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns aligned generic failure response when a non-Error is thrown', async () => {

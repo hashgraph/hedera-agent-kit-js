@@ -90,7 +90,7 @@ export class GetTopicInfoQueryTool extends BaseTool {
     };
 
     return {
-      raw: { topicId: normalisedParams.topicId, topicInfo },
+      raw: { topicId: normalisedParams.topicId, topicInfo, status: 'SUCCESS' },
       humanMessage: postProcess(topicInfo),
     };
   }
@@ -107,7 +107,7 @@ export class GetTopicInfoQueryTool extends BaseTool {
     const desc = 'Failed to get topic info';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_topic_info_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

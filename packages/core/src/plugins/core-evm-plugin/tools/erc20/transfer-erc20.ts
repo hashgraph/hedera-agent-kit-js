@@ -95,7 +95,7 @@ export class TransferErc20Tool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_erc20_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

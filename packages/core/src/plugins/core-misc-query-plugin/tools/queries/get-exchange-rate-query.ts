@@ -80,7 +80,7 @@ export class GetExchangeRateQueryTool extends BaseTool {
       normalisedParams.timestamp,
     );
     return {
-      raw: rates,
+      raw: { ...rates, status: 'SUCCESS' },
       humanMessage: postProcess(rates),
     };
   }
@@ -98,7 +98,7 @@ export class GetExchangeRateQueryTool extends BaseTool {
     const message = error instanceof Error ? error.message : 'Failed to get exchange rate';
 
     return {
-      raw: { error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

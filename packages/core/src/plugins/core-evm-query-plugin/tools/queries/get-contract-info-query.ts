@@ -98,7 +98,7 @@ export class GetContractInfoQueryTool extends BaseTool {
     );
 
     return {
-      raw: { contractId: contractInfo.contract_id, contractInfo },
+      raw: { contractId: contractInfo.contract_id, contractInfo, status: 'SUCCESS' },
       humanMessage: postProcess(contractInfo),
     };
   }
@@ -115,7 +115,7 @@ export class GetContractInfoQueryTool extends BaseTool {
     const desc = 'Failed to get contract info';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_contract_info_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

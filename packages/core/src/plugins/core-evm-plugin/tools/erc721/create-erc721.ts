@@ -100,7 +100,7 @@ export class CreateErc721Tool extends BaseTool {
       'Failed to create ERC721 token' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_erc721_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

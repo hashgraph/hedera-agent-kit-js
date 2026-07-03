@@ -79,6 +79,7 @@ export class GetAccountTokenBalancesQueryTool extends BaseTool {
       raw: {
         accountId: normalisedParams.accountId,
         tokenBalances: tokenBalances,
+        status: 'SUCCESS',
       },
       humanMessage: postProcess(tokenBalances, normalisedParams.accountId),
     };
@@ -96,7 +97,7 @@ export class GetAccountTokenBalancesQueryTool extends BaseTool {
     const desc = 'Failed to get account token balances';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_account_token_balances_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

@@ -65,7 +65,7 @@ describe('get-contract-info tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { contractId: '0.0.5005' });
 
-    expect(res.raw).toEqual({ contractId: '0.0.5005', contractInfo });
+    expect(res.raw).toEqual({ contractId: '0.0.5005', contractInfo, status: 'SUCCESS' });
     expect(res.humanMessage).toContain('Here are the details for contract **0.0.5005**:');
     expect(res.humanMessage).toContain('Memo');
     expect(mockGetContractInfo).toHaveBeenCalledWith('0.0.5005');

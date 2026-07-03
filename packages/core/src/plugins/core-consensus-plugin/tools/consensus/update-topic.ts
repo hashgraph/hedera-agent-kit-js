@@ -138,7 +138,7 @@ export class UpdateTopicTool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[update_topic_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

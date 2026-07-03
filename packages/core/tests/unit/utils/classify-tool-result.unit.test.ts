@@ -7,11 +7,10 @@ import {
 
 describe('classifyToolResult', () => {
   describe('success', () => {
-    it('classifies a SUCCESS-status envelope as success and lifts transactionId', () => {
+    it('classifies SUCCESS status and lifts transactionId', () => {
       const result = classifyToolResult({
         raw: { status: 'SUCCESS', transactionId: '0.0.1234@1700000000.000000001' },
-        humanMessage:
-          'Message submitted successfully with transaction id 0.0.1234@1700000000.000000001',
+        humanMessage: 'Message submitted successfully with transaction id 0.0.1234@1700000000.000000001',
       });
 
       expect(result.kind).toBe('success');
@@ -22,7 +21,7 @@ describe('classifyToolResult', () => {
       }
     });
 
-    it('returns success with undefined transactionId when none is present', () => {
+    it('returns undefined transactionId when absent', () => {
       const result = classifyToolResult({
         raw: { status: 'SUCCESS', topicId: '0.0.5678' },
         humanMessage: 'Topic created',
@@ -34,7 +33,7 @@ describe('classifyToolResult', () => {
       }
     });
 
-    it('preserves the full raw payload via the typed `data` field', () => {
+    it('exposes typed data via generic parameter', () => {
       type CreateTopicData = { status: string; topicId: string; transactionId: string };
       const result = classifyToolResult<CreateTopicData>({
         raw: { status: 'SUCCESS', topicId: '0.0.5678', transactionId: '0.0.1@2.3' },
@@ -43,15 +42,14 @@ describe('classifyToolResult', () => {
 
       expect(result.kind).toBe('success');
       if (result.kind === 'success') {
-        // Type narrowing: data is typed as CreateTopicData here
         expect(result.data.topicId).toBe('0.0.5678');
         expect(result.data.transactionId).toBe('0.0.1@2.3');
       }
     });
 
-    it('treats RETURN_BYTES mode (no status field, has bytes) as success', () => {
+    it('classifies RETURN_BYTES mode (bytes + status SUCCESS) as success', () => {
       const result = classifyToolResult({
-        raw: { bytes: new Uint8Array([1, 2, 3]) },
+        raw: { bytes: new Uint8Array([1, 2, 3]), status: 'SUCCESS' },
         humanMessage: 'Transaction bytes are ready for signing.',
       });
 
@@ -61,40 +59,45 @@ describe('classifyToolResult', () => {
         expect((result.data as { bytes: Uint8Array }).bytes).toBeInstanceOf(Uint8Array);
       }
     });
+
+    it('status SUCCESS takes precedence over a present error field', () => {
+      const result = classifyToolResult({
+        raw: { status: 'SUCCESS', error: 'non-fatal warning' },
+        humanMessage: 'Done',
+      });
+
+      expect(result.kind).toBe('success');
+    });
   });
 
   describe('failure', () => {
-    it('classifies an SDK Status object (e.g. InvalidTransaction) as failure with numeric code', () => {
+    it('classifies ERROR status with error string', () => {
       const result = classifyToolResult({
-        raw: {
-          status: { _code: 1 },
-          error: 'Failed to submit message to topic: INVALID_TRANSACTION',
-        },
-        humanMessage: 'Failed to submit message to topic: INVALID_TRANSACTION',
+        raw: { status: 'ERROR', error: 'Failed to get account: not found' },
+        humanMessage: 'Failed to get account: not found',
       });
 
       expect(result.kind).toBe('failure');
       if (result.kind === 'failure') {
-        expect(result.errorCode).toBe(1);
-        expect(result.error).toContain('INVALID_TRANSACTION');
-        expect(result.humanMessage).toContain('Failed to submit');
+        expect(result.errorCode).toBe('ERROR');
+        expect(result.error).toBe('Failed to get account: not found');
       }
     });
 
-    it('falls back to humanMessage as `error` when raw.error is missing', () => {
+    it('falls back to humanMessage as error when error field is absent', () => {
       const result = classifyToolResult({
-        raw: { status: { _code: 9 } },
+        raw: { status: 'ERROR' },
         humanMessage: 'something went wrong',
       });
 
       expect(result.kind).toBe('failure');
       if (result.kind === 'failure') {
-        expect(result.errorCode).toBe(9);
+        expect(result.errorCode).toBe('ERROR');
         expect(result.error).toBe('something went wrong');
       }
     });
 
-    it('classifies envelope with raw.error string (no status object) as failure', () => {
+    it('classifies error string with no status as failure with UNKNOWN code', () => {
       const result = classifyToolResult({
         raw: { error: 'Network unreachable' },
         humanMessage: 'Network unreachable',
@@ -106,10 +109,26 @@ describe('classifyToolResult', () => {
         expect(result.error).toBe('Network unreachable');
       }
     });
+
+    it('classifies object status with error string as failure with UNKNOWN code', () => {
+      // Covers external plugins that still pass a serialized SDK Status object.
+      // The object status is not a recognized string so errorCode falls back to UNKNOWN;
+      // the error string is still surfaced correctly.
+      const result = classifyToolResult({
+        raw: { status: { _code: 1 }, error: 'INVALID_TRANSACTION' },
+        humanMessage: 'INVALID_TRANSACTION',
+      });
+
+      expect(result.kind).toBe('failure');
+      if (result.kind === 'failure') {
+        expect(result.errorCode).toBe('UNKNOWN');
+        expect(result.error).toBe('INVALID_TRANSACTION');
+      }
+    });
   });
 
   describe('parse_error', () => {
-    it('classifies PARSE_ERROR-status envelopes as parse_error', () => {
+    it('classifies PARSE_ERROR status as parse_error and surfaces originalOutput', () => {
       const result = classifyToolResult({
         raw: {
           status: 'PARSE_ERROR',
@@ -126,12 +145,12 @@ describe('classifyToolResult', () => {
       }
     });
 
-    it('classifies missing/null raw as parse_error', () => {
+    it('classifies null raw as parse_error', () => {
       const result = classifyToolResult({ raw: null as unknown as object, humanMessage: '' });
       expect(result.kind).toBe('parse_error');
     });
 
-    it('classifies non-object raw (string) as parse_error', () => {
+    it('classifies non-object raw as parse_error and surfaces the value', () => {
       const result = classifyToolResult({ raw: 'oops' as unknown as object, humanMessage: '' });
       expect(result.kind).toBe('parse_error');
       if (result.kind === 'parse_error') {
@@ -141,9 +160,40 @@ describe('classifyToolResult', () => {
     });
   });
 
+  describe('unknown', () => {
+    it('classifies unrecognized string status with no error as unknown', () => {
+      const result = classifyToolResult({
+        raw: { status: 'FAILED' },
+        humanMessage: 'something happened',
+      });
+
+      expect(result.kind).toBe('unknown');
+      if (result.kind === 'unknown') {
+        expect(result.humanMessage).toBe('something happened');
+      }
+    });
+
+    it('classifies object status with no error as unknown', () => {
+      const result = classifyToolResult({
+        raw: { status: { _code: 9 } },
+        humanMessage: 'something went wrong',
+      });
+
+      expect(result.kind).toBe('unknown');
+    });
+
+    it('classifies raw with no status and no error as unknown', () => {
+      const result = classifyToolResult({
+        raw: { someOtherField: 'value' },
+        humanMessage: 'unexpected shape',
+      });
+
+      expect(result.kind).toBe('unknown');
+    });
+  });
+
   describe('end-to-end with transactionToolOutputParser', () => {
-    it('classifies the parser output of a successful submit_topic_message_tool', () => {
-      // Shape produced by the kit when a transaction succeeds in EXECUTE_TRANSACTION mode.
+    it('classifies a successful EXECUTE_TRANSACTION output', () => {
       const rawOutput = JSON.stringify({
         raw: { status: 'SUCCESS', transactionId: '0.0.1234@1700.0' },
         humanMessage: 'Message submitted successfully with transaction id 0.0.1234@1700.0',
@@ -157,7 +207,7 @@ describe('classifyToolResult', () => {
       }
     });
 
-    it('classifies a malformed parser input as parse_error end-to-end', () => {
+    it('classifies malformed parser input as parse_error', () => {
       const envelope = transactionToolOutputParser('not-json{');
       const result = classifyToolResult(envelope);
       expect(result.kind).toBe('parse_error');

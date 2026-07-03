@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { BaseTool } from '@/shared/tools';
@@ -98,6 +98,7 @@ export class GetTransactionRecordQueryTool extends BaseTool {
       raw: {
         transactionId: normalisedParams.transactionId,
         transactionRecord: transactionRecord,
+        status: 'SUCCESS',
       },
       humanMessage: postProcess(transactionRecord, normalisedParams.transactionId),
     };
@@ -115,7 +116,7 @@ export class GetTransactionRecordQueryTool extends BaseTool {
     const desc = 'Failed to get transaction record';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_transaction_record_query_tool]', message);
-    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

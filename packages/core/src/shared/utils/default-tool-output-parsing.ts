@@ -141,7 +141,8 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
 export type ToolResultStatus<T = unknown> =
   | { kind: 'success'; transactionId?: string; data: T; humanMessage: string }
   | { kind: 'failure'; errorCode: number | string; error: string; humanMessage: string }
-  | { kind: 'parse_error'; originalOutput: unknown; humanMessage: string };
+  | { kind: 'parse_error'; originalOutput: unknown; humanMessage: string }
+  | { kind: 'unknown'; humanMessage: string };
 
 /**
  * Classify the `{ raw, humanMessage }` envelope returned by
@@ -174,8 +175,7 @@ export const classifyToolResult = <T = unknown>(parsed: {
   raw: any;
   humanMessage: string;
 }): ToolResultStatus<T> => {
-  const humanMessage = parsed?.humanMessage ?? '';
-  const raw = parsed?.raw;
+  const { raw, humanMessage } = parsed;
 
   if (raw == null || typeof raw !== 'object') {
     return {
@@ -193,26 +193,23 @@ export const classifyToolResult = <T = unknown>(parsed: {
     };
   }
 
-  const statusIsObject = raw.status !== null && typeof raw.status === 'object';
-  if (statusIsObject || typeof raw.error === 'string') {
-    const errorCode =
-      statusIsObject && '_code' in (raw.status as object)
-        ? (raw.status as { _code: number })._code
-        : typeof raw.status === 'string'
-          ? raw.status
-          : 'UNKNOWN';
+  if (raw.status === 'SUCCESS') {
+    return {
+      kind: 'success',
+      transactionId: typeof raw.transactionId === 'string' ? raw.transactionId : undefined,
+      data: raw as T,
+      humanMessage,
+    };
+  }
+
+  if (raw.status === 'ERROR' || typeof raw.error === 'string') {
     return {
       kind: 'failure',
-      errorCode,
+      errorCode: typeof raw.status === 'string' ? raw.status : 'UNKNOWN',
       error: typeof raw.error === 'string' ? raw.error : humanMessage,
       humanMessage,
     };
   }
 
-  return {
-    kind: 'success',
-    transactionId: typeof raw.transactionId === 'string' ? raw.transactionId : undefined,
-    data: raw as T,
-    humanMessage,
-  };
+  return { kind: 'unknown', humanMessage };
 };

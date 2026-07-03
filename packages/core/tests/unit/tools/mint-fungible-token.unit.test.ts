@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client} from '@hiero-ledger/sdk';
 import toolFactory, { MINT_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/mint-fungible-token';
 import z from 'zod';
 import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
@@ -116,7 +116,7 @@ describe('mint-fungible-token tool (unit)', () => {
     expect(res.humanMessage).toContain('boom');
     expect(res.raw.error).toContain('Failed to mint fungible token');
     expect(res.raw.error).toContain('boom');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns aligned generic failure response when a non-Error is thrown', async () => {

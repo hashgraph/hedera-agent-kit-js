@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client} from '@hiero-ledger/sdk';
 import toolFactory, {
   DELETE_HBAR_ALLOWANCE_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/delete-hbar-allowance';
@@ -108,7 +108,7 @@ describe('delete-hbar-allowance tool (unit)', () => {
     const res: any = await tool.execute(client, context, params as any);
 
     expect(res).toBeDefined();
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
     expect(res.humanMessage).toContain('Failed to delete hbar allowance');
     expect(res.humanMessage).toContain('Test normaliser failure');
   });

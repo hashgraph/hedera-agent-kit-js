@@ -83,7 +83,7 @@ export class TransferNonFungibleTokenWithAllowanceTool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_non_fungible_token_with_allowance_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

@@ -74,7 +74,7 @@ export class ApproveHbarAllowanceTool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[approve_hbar_allowance_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

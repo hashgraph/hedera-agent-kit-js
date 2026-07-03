@@ -69,7 +69,7 @@ class ReturnBytesStrategy implements TxModeStrategy {
       throw new Error('Account ID is required in context for RETURN_BYTES mode');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
-    return { bytes: tx.toBytes() };
+    return { bytes: tx.toBytes(), status: 'SUCCESS' };
   }
 }
 

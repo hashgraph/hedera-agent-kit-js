@@ -97,7 +97,7 @@ export class CreateErc20Tool extends BaseTool {
       'Failed to create ERC20 token' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[create_erc20_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

@@ -74,6 +74,7 @@ describe('get-token-info-query tool (unit)', () => {
     expect(res.raw).toEqual({
       tokenId: params.tokenId,
       tokenInfo: { ...fakeToken, token_id: params.tokenId },
+      status: 'SUCCESS',
     });
     expect(res.humanMessage).toContain(`${params.tokenId}`);
     expect(res.humanMessage).toContain(`Token Name**: ${fakeToken.name}`);

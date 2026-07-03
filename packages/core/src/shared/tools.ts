@@ -137,7 +137,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     const desc = `Failed to execute ${this.name}`;
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error(`[${this.method}]`, message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 
   // Abstract steps

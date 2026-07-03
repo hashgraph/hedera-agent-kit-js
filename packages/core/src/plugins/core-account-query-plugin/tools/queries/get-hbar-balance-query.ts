@@ -59,7 +59,7 @@ export class GetHbarBalanceQueryTool extends BaseTool {
       normalisedParams.accountId,
     );
     return {
-      raw: { accountId: normalisedParams.accountId, hbarBalance: toHbar(balance).toString() },
+      raw: { accountId: normalisedParams.accountId, hbarBalance: toHbar(balance).toString(), status: 'SUCCESS' },
       humanMessage: postProcess(toHbar(balance).toString() as string, normalisedParams.accountId),
     };
   }
@@ -76,7 +76,7 @@ export class GetHbarBalanceQueryTool extends BaseTool {
     const desc = 'Failed to get HBAR balance';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_hbar_balance_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

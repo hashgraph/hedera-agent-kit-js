@@ -96,7 +96,7 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
 
     expect(result.humanMessage).toContain('Failed to transfer fungible token with allowance');
     expect(result.humanMessage).toContain('boom');
-    expect(result.raw.status).toBe(Status.InvalidTransaction);
+    expect(result.raw.status).toBe('ERROR');
   });
 
   it('should handle non-Error exceptions gracefully', async () => {
@@ -116,6 +116,6 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
     const result = await tool.execute(client, context, params);
 
     expect(result.humanMessage).toBe('Failed to transfer fungible token with allowance');
-    expect(result.raw.status).toBe(Status.InvalidTransaction);
+    expect(result.raw.status).toBe('ERROR');
   });
 });

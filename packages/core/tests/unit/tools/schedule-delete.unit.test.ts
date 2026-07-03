@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client} from '@hiero-ledger/sdk';
 import toolFactory, {
   SCHEDULE_DELETE_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/schedule-delete';
@@ -153,7 +153,7 @@ describe('schedule-delete tool (unit)', () => {
       scheduleId: '0.0.999999',
     } as any);
 
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
     expect(res.humanMessage).toContain('Failed to delete scheduled transaction');
   });
 });

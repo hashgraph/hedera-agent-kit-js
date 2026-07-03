@@ -88,7 +88,7 @@ export class ApproveTokenAllowanceTool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[approve_token_allowance_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction.toString(), error: message },
+      raw: { status: 'ERROR'.toString(), error: message },
       humanMessage: message,
     };
   }

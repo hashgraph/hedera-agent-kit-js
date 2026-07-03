@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
-import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey} from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -140,7 +140,7 @@ describe('createERC20 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('Failed to create ERC20 token: boom');
     expect(res.raw.error).toContain('Failed to create ERC20 token: boom');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -155,6 +155,6 @@ describe('createERC20 tool (unit)', () => {
 
     expect(res.humanMessage).toBe('Failed to create ERC20 token');
     expect(res.raw.error).toBe('Failed to create ERC20 token');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 });

@@ -108,6 +108,7 @@ export class GetTopicMessagesQueryTool extends BaseTool {
       raw: {
         topicId: messages.topicId,
         messages: convertMessagesFromBase64ToString(messages.messages),
+        status: 'SUCCESS',
       },
       humanMessage: postProcess(messages.messages, normalisedParams.topicId),
     };
@@ -125,7 +126,7 @@ export class GetTopicMessagesQueryTool extends BaseTool {
     const desc = 'Failed to get topic messages';
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[get_topic_messages_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
+    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

@@ -33,6 +33,7 @@ describe('reject tool policy integration tests', () => {
     await expect(tool.execute(operatorClient, context, params)).resolves.toEqual({
       raw: {
         error: `Failed to get HBAR balance: Action ${GET_HBAR_BALANCE_QUERY_TOOL} blocked by policy: Reject Tool Call (Stops agent from calling predefined tools)`,
+        status: 'ERROR',
       },
       humanMessage: `Failed to get HBAR balance: Action ${GET_HBAR_BALANCE_QUERY_TOOL} blocked by policy: Reject Tool Call (Stops agent from calling predefined tools)`,
     });

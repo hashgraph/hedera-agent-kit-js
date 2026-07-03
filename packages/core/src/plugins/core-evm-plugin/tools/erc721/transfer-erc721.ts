@@ -101,7 +101,7 @@ export class TransferErc721Tool extends BaseTool {
       'Failed to transfer ERC721' + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_erc721_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }
