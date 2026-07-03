@@ -154,7 +154,7 @@ describe('Update Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
 
     expect(result.humanMessage).toContain(
-      'Failed to update token: Cannot update metadataKey: token was created without a metadataKey',
+      'Failed to execute Update Token: Cannot update metadataKey: token was created without a metadataKey',
     );
   });
 
@@ -164,7 +164,7 @@ describe('Update Token Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
 
-    expect(result.humanMessage).toContain('Failed to update token:');
+    expect(result.humanMessage).toContain('Failed to execute Update Token:');
     expect(result.humanMessage).toContain('Not Found');
   });
 
@@ -277,7 +277,7 @@ describe('Update Token Integration Tests', () => {
     const params = { topicId: topicId.toString(), submitKey: true };
 
     const result: any = await tool.execute(executorClient, context, params);
-    expect(result.humanMessage).toContain('Failed to update topic: Cannot update submitKey');
+    expect(result.humanMessage).toContain('Failed to execute Update Topic: Cannot update submitKey');
   });
 
   it('fails with invalid topic ID', async () => {
@@ -285,6 +285,6 @@ describe('Update Token Integration Tests', () => {
     const params = { topicId: '0.0.999999999', topicMemo: 'Invalid topic' };
 
     const result: any = await tool.execute(executorClient, context, params);
-    expect(result.humanMessage).toContain('Failed to update topic:');
+    expect(result.humanMessage).toContain('Failed to execute Update Topic:');
   });
 });

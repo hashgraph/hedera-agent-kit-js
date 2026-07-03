@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -32,7 +32,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const SIGN_SCHEDULE_TRANSACTION_TOOL = 'sign_schedule_transaction_tool';
 
-export class SignScheduleTransactionTool extends BaseTool {
+export class SignScheduleTransactionTool extends BaseTransactionTool {
   method = SIGN_SCHEDULE_TRANSACTION_TOOL;
   name = 'Sign Scheduled Transaction';
   description: string;
@@ -60,18 +60,8 @@ export class SignScheduleTransactionTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to sign scheduled transaction';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[sign_schedule_transaction_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new SignScheduleTransactionTool(context);
+const tool = (context: Context): BaseTransactionTool => new SignScheduleTransactionTool(context);
 
 export default tool;

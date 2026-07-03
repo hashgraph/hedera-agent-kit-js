@@ -91,9 +91,9 @@ describe('DeleteTopicTool', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to delete the topic');
+    expect(res.humanMessage).toContain('Failed to execute Delete Topic');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to delete the topic');
+    expect(res.raw.error).toContain('Failed to execute Delete Topic');
     expect(res.raw.status).toBe('ERROR');
   });
 
@@ -107,8 +107,8 @@ describe('DeleteTopicTool', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to delete the topic');
-    expect(res.raw.error).toContain('Failed to delete the topic');
+    expect(res.humanMessage).toContain('Failed to execute Delete Topic');
+    expect(res.raw.error).toContain('Failed to execute Delete Topic');
     expect(res.raw.status).toBe('ERROR');
   });
 });

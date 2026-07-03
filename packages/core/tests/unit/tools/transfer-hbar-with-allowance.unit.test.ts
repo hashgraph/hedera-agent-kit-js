@@ -99,7 +99,7 @@ describe('transfer-hbar-with-allowance tool (unit)', () => {
       sourceAccountId: '0.0.1001',
     } as any);
 
-    expect(res.humanMessage).toContain('Failed to transfer HBAR');
+    expect(res.humanMessage).toContain('Failed to execute Transfer HBAR');
     expect(res.humanMessage).toContain('boom');
   });
 
@@ -117,6 +117,6 @@ describe('transfer-hbar-with-allowance tool (unit)', () => {
       sourceAccountId: '0.0.1001',
     } as any);
 
-    expect(res.humanMessage).toBe('Failed to transfer HBAR with allowance');
+    expect(res.humanMessage).toBe('Failed to execute Transfer HBAR with allowance');
   });
 });

@@ -76,7 +76,7 @@ describe('Dissociate Token Tool', () => {
     const toolInstance = tool(context);
     const result = await toolInstance.execute(client, context, params);
 
-    expect(result.humanMessage).toContain('Failed to dissociate token');
+    expect(result.humanMessage).toContain('Failed to execute Dissociate Token');
     expect(result.raw.status).toBe('ERROR');
     expect(result.raw.error).toContain('Test error');
   });
@@ -87,7 +87,7 @@ describe('Dissociate Token Tool', () => {
 
     await expect(toolInstance.execute(client, context, params)).resolves.toMatchObject({
       raw: { status: 'ERROR' },
-      humanMessage: expect.stringContaining('Failed to dissociate token'),
+      humanMessage: expect.stringContaining('Failed to execute Dissociate Token'),
     });
   });
 

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -55,7 +55,7 @@ Serial(s): ${serialsStr}`;
 
 export const MINT_NON_FUNGIBLE_TOKEN_TOOL = 'mint_non_fungible_token_tool';
 
-export class MintNonFungibleTokenTool extends BaseTool {
+export class MintNonFungibleTokenTool extends BaseTransactionTool {
   method = MINT_NON_FUNGIBLE_TOKEN_TOOL;
   name = 'Mint Non-Fungible Token';
   description: string;
@@ -88,18 +88,8 @@ export class MintNonFungibleTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to mint non-fungible token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[mint_non_fungible_token_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new MintNonFungibleTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new MintNonFungibleTokenTool(context);
 
 export default tool;

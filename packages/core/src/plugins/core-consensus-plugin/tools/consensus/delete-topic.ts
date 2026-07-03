@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -32,7 +32,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DELETE_TOPIC_TOOL = 'delete_topic_tool';
 
-export class DeleteTopicTool extends BaseTool {
+export class DeleteTopicTool extends BaseTransactionTool {
   method = DELETE_TOPIC_TOOL;
   name = 'Delete Topic';
   description: string;
@@ -69,18 +69,8 @@ export class DeleteTopicTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete the topic';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[delete_topic_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new DeleteTopicTool(context);
+const tool = (context: Context): BaseTransactionTool => new DeleteTopicTool(context);
 
 export default tool;

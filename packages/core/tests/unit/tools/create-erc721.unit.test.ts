@@ -166,8 +166,8 @@ describe('createERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toContain('Failed to create ERC721 token');
-    expect(res.raw.error).toContain('Failed to create ERC721 token');
+    expect(res.humanMessage).toContain('Failed to execute Create ERC721 Token');
+    expect(res.raw.error).toContain('Failed to execute Create ERC721 Token');
     expect(res.raw.status).toBe('ERROR');
   });
 });

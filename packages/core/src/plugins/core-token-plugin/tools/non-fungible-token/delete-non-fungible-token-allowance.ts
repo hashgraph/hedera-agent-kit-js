@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -42,7 +42,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DELETE_NFT_ALLOWANCE_TOOL = 'delete_non_fungible_token_allowance_tool';
 
-export class DeleteNftAllowanceTool extends BaseTool {
+export class DeleteNftAllowanceTool extends BaseTransactionTool {
   method = DELETE_NFT_ALLOWANCE_TOOL;
   name = 'Delete Non Fungible Token Allowance';
   description: string;
@@ -75,18 +75,8 @@ export class DeleteNftAllowanceTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete NFT allowance';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[delete_non_fungible_token_allowance_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new DeleteNftAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new DeleteNftAllowanceTool(context);
 
 export default tool;

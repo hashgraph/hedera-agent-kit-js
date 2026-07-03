@@ -112,9 +112,9 @@ describe('mint-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to mint fungible token');
+    expect(res.humanMessage).toContain('Failed to execute Mint Fungible Token');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to mint fungible token');
+    expect(res.raw.error).toContain('Failed to execute Mint Fungible Token');
     expect(res.raw.error).toContain('boom');
     expect(res.raw.status).toBe('ERROR');
   });
@@ -128,7 +128,7 @@ describe('mint-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Failed to mint fungible token');
-    expect(res.raw.error).toBe('Failed to mint fungible token');
+    expect(res.humanMessage).toBe('Failed to execute Mint Fungible Token');
+    expect(res.raw.error).toBe('Failed to execute Mint Fungible Token');
   });
 });

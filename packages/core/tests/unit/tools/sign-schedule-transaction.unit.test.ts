@@ -82,7 +82,7 @@ describe('sign-schedule-transaction tool (unit)', () => {
     const res = await tool.execute(client, context, {
       scheduleId: '0.0.999999',
     } as any);
-    expect(res.humanMessage).toBe('Failed to sign scheduled transaction: Invalid schedule ID');
+    expect(res.humanMessage).toBe('Failed to execute Sign Scheduled Transaction: Invalid schedule ID');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -97,7 +97,7 @@ describe('sign-schedule-transaction tool (unit)', () => {
     const res = await tool.execute(client, context, {
       scheduleId: '0.0.123456',
     } as any);
-    expect(res.humanMessage).toBe('Failed to sign scheduled transaction');
+    expect(res.humanMessage).toBe('Failed to execute Sign Scheduled Transaction');
   });
 
   it('handles different schedule ID formats', async () => {
@@ -137,7 +137,7 @@ describe('sign-schedule-transaction tool (unit)', () => {
     } as any);
     expect(consoleSpy).toHaveBeenCalledWith(
       '[sign_schedule_transaction_tool]',
-      'Failed to sign scheduled transaction: Test error',
+      'Failed to execute Sign Scheduled Transaction: Test error',
     );
     consoleSpy.mockRestore();
   });
@@ -156,6 +156,6 @@ describe('sign-schedule-transaction tool (unit)', () => {
     } as any);
 
     expect(res.raw.status).toBe('ERROR');
-    expect(res.humanMessage).toContain('Failed to sign scheduled transaction');
+    expect(res.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
   });
 });

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -49,7 +49,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const CREATE_ACCOUNT_TOOL = 'create_account_tool';
 
-export class CreateAccountTool extends BaseTool {
+export class CreateAccountTool extends BaseTransactionTool {
   method = CREATE_ACCOUNT_TOOL;
   name = 'Create Account';
   description: string;
@@ -83,18 +83,8 @@ export class CreateAccountTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to create account';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_account_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new CreateAccountTool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateAccountTool(context);
 
 export default tool;

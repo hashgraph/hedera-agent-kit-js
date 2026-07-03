@@ -125,7 +125,7 @@ describe('delete-token-allowance tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw.status).toBe('ERROR');
-    expect(res.humanMessage).toContain('Failed to delete token allowance');
+    expect(res.humanMessage).toContain('Failed to execute Delete Token Allowance');
     expect(res.humanMessage).toContain('Test normaliser failure');
   });
 });

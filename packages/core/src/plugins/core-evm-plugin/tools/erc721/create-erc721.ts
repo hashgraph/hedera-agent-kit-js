@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status, TransactionRecordQuery } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import {
   ExecuteStrategyResult,
   handleTransaction,
@@ -49,7 +49,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const CREATE_ERC721_TOOL = 'create_erc721_tool';
 
-export class CreateErc721Tool extends BaseTool {
+export class CreateErc721Tool extends BaseTransactionTool {
   method = CREATE_ERC721_TOOL;
   name = 'Create ERC721 Token';
   description: string;
@@ -94,18 +94,8 @@ export class CreateErc721Tool extends BaseTool {
 
     return { ...result, erc721Address, humanMessage };
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const message =
-      'Failed to create ERC721 token' + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_erc721_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new CreateErc721Tool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateErc721Tool(context);
 
 export default tool;

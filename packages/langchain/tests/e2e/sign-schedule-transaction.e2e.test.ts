@@ -111,7 +111,7 @@ describe('Sign Schedule Transaction E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
       // Should handle the error gracefully
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        'Failed to sign scheduled transaction',
+        'Failed to execute Sign Scheduled Transaction',
       );
     },
   );

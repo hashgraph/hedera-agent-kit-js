@@ -140,8 +140,10 @@ describe('Dissociate Token Integration Tests', () => {
     };
 
     const result: any = await tool.execute(executorClient, context, params);
-    expect(result.humanMessage).toContain('Failed to dissociate');
-    expect(result.raw.status).not.toBe('SUCCESS');
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.humanMessage).toContain('Failed to execute Dissociate Token');
   });
 
   it('should fail dissociating a non-existent token', async () => {
@@ -151,7 +153,9 @@ describe('Dissociate Token Integration Tests', () => {
     };
 
     const result: any = await tool.execute(executorClient, context, params);
-    expect(result.humanMessage).toContain('Failed to dissociate');
-    expect(result.raw.status).not.toBe('SUCCESS');
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.humanMessage).toContain('Failed to execute Dissociate Token');
   });
 });

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -42,7 +42,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DELETE_TOKEN_ALLOWANCE_TOOL = 'delete_token_allowance_tool';
 
-export class DeleteTokenAllowanceTool extends BaseTool {
+export class DeleteTokenAllowanceTool extends BaseTransactionTool {
   method = DELETE_TOKEN_ALLOWANCE_TOOL;
   name = 'Delete Token Allowance';
   description: string;
@@ -81,18 +81,8 @@ export class DeleteTokenAllowanceTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete token allowance(s).';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[delete_token_allowance_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new DeleteTokenAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new DeleteTokenAllowanceTool(context);
 
 export default tool;

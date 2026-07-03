@@ -3,7 +3,7 @@ import {
   transactionToolOutputParser,
   untypedQueryOutputParser,
   classifyToolResult,
-} from '@hashgraph/hedera-agent-kit';
+} from '@/shared/utils/default-tool-output-parsing';
 
 describe('transactionToolOutputParser', () => {
   it('returns PARSE_ERROR on malformed JSON', () => {
@@ -125,22 +125,42 @@ describe('classifyToolResult', () => {
     ).toMatchObject({ kind: 'failure' });
   });
 
-  it('classifies BaseTool.handleError output (ERROR status + error field)', () => {
+  it('classifies BaseTool.handleError generic output (ERROR status + error field)', () => {
     expect(
       classifyToolResult({
         raw: { status: 'ERROR', error: 'Failed to execute tool' },
         humanMessage: 'Failed to execute tool',
       }),
-    ).toMatchObject({ kind: 'failure' });
+    ).toMatchObject({ kind: 'failure', errorCode: 'ERROR' });
   });
 
-  it('classifies custom transaction tool handleError output (serialized SDK Status + error)', () => {
+  it('classifies BaseTool.handleError ReceiptStatusError output — errorCode is SDK status name', () => {
+    // BaseTool.handleError() detects ReceiptStatusError and sets errorCode to the
+    // SDK status name so callers get the specific network-level failure reason.
+    expect(
+      classifyToolResult({
+        raw: {
+          status: 'ERROR',
+          errorCode: 'INSUFFICIENT_PAYER_BALANCE',
+          transactionId: '0.0.1@1700000000.000000001',
+          error:
+            'receipt for transaction 0.0.1@1700000000.000000001 contained error status INSUFFICIENT_PAYER_BALANCE',
+        },
+        humanMessage:
+          'receipt for transaction 0.0.1@1700000000.000000001 contained error status INSUFFICIENT_PAYER_BALANCE',
+      }),
+    ).toMatchObject({ kind: 'failure', errorCode: 'INSUFFICIENT_PAYER_BALANCE' });
+  });
+
+  it('classifies third-party plugin output with serialized SDK Status object as failure with UNKNOWN code', () => {
+    // Third-party plugins may still return a serialized SDK Status object in raw.status.
+    // The object is not a recognised string so errorCode falls back to UNKNOWN.
     expect(
       classifyToolResult({
         raw: { status: { _code: 10 }, error: 'Failed to submit' },
         humanMessage: 'Failed to submit',
       }),
-    ).toMatchObject({ kind: 'failure' });
+    ).toMatchObject({ kind: 'failure', errorCode: 'UNKNOWN' });
   });
 
   it('classifies unrecognized string status with no error as unknown — not success', () => {

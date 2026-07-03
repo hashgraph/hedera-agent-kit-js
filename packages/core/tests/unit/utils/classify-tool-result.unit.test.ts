@@ -71,7 +71,7 @@ describe('classifyToolResult', () => {
   });
 
   describe('failure', () => {
-    it('classifies ERROR status with error string', () => {
+    it('classifies ERROR status with error string — errorCode is ERROR', () => {
       const result = classifyToolResult({
         raw: { status: 'ERROR', error: 'Failed to get account: not found' },
         humanMessage: 'Failed to get account: not found',
@@ -81,6 +81,29 @@ describe('classifyToolResult', () => {
       if (result.kind === 'failure') {
         expect(result.errorCode).toBe('ERROR');
         expect(result.error).toBe('Failed to get account: not found');
+      }
+    });
+
+    it('uses raw.errorCode over raw.status when present — Hedera receipt failure shape', () => {
+      // This is the envelope produced by BaseTool.handleError() when a ReceiptStatusError
+      // is thrown: status stays 'ERROR' (discriminator) but errorCode carries the specific
+      // SDK status name so callers don't have to parse the prose message.
+      const result = classifyToolResult({
+        raw: {
+          status: 'ERROR',
+          errorCode: 'INSUFFICIENT_PAYER_BALANCE',
+          transactionId: '0.0.1@1700000000.000000001',
+          error:
+            'receipt for transaction 0.0.1@1700000000.000000001 contained error status INSUFFICIENT_PAYER_BALANCE',
+        },
+        humanMessage:
+          'receipt for transaction 0.0.1@1700000000.000000001 contained error status INSUFFICIENT_PAYER_BALANCE',
+      });
+
+      expect(result.kind).toBe('failure');
+      if (result.kind === 'failure') {
+        expect(result.errorCode).toBe('INSUFFICIENT_PAYER_BALANCE');
+        expect(result.error).toContain('INSUFFICIENT_PAYER_BALANCE');
       }
     });
 
@@ -111,9 +134,9 @@ describe('classifyToolResult', () => {
     });
 
     it('classifies object status with error string as failure with UNKNOWN code', () => {
-      // Covers external plugins that still pass a serialized SDK Status object.
-      // The object status is not a recognized string so errorCode falls back to UNKNOWN;
-      // the error string is still surfaced correctly.
+      // Covers third-party plugins that pass a serialized SDK Status object rather than
+      // the normalised 'ERROR' string. The object is not a recognised string so
+      // errorCode falls back to UNKNOWN; the error string is still surfaced correctly.
       const result = classifyToolResult({
         raw: { status: { _code: 1 }, error: 'INVALID_TRANSACTION' },
         humanMessage: 'INVALID_TRANSACTION',

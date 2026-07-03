@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -55,7 +55,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const TRANSFER_ERC721_TOOL = 'transfer_erc721_tool';
 
-export class TransferErc721Tool extends BaseTool {
+export class TransferErc721Tool extends BaseTransactionTool {
   method = TRANSFER_ERC721_TOOL;
   name = 'Transfer ERC721';
   description: string;
@@ -95,18 +95,8 @@ export class TransferErc721Tool extends BaseTool {
     }
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const message =
-      'Failed to transfer ERC721' + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_erc721_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new TransferErc721Tool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferErc721Tool(context);
 
 export default tool;

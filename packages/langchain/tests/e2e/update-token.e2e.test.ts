@@ -118,10 +118,10 @@ describe('Get Token Info Query E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        'Failed to update token: Cannot update kycKey: token was created without a kycKey',
+        'Failed to execute Update Token: Cannot update kycKey: token was created without a kycKey',
       );
       expect(parsedResponse[0].parsedData.raw.error).toContain(
-        'Failed to update token: Cannot update kycKey: token was created without a kycKey',
+        'Failed to execute Update Token: Cannot update kycKey: token was created without a kycKey',
       );
     },
   );

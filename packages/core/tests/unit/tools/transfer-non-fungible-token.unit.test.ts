@@ -128,7 +128,7 @@ describe('transfer-non-fungible-token tool', () => {
       tokenId: '0.0.2001',
       recipients: [{ recipientId: '0.0.3001', serialNumber: 1 }],
     });
-    expect(res.humanMessage).toContain('Failed to transfer non-fungible token:');
+    expect(res.humanMessage).toContain('Failed to execute Transfer Non Fungible Token:');
     expect(res.humanMessage).toContain('boom');
   });
 });

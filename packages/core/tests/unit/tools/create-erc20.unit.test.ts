@@ -138,8 +138,8 @@ describe('createERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toContain('Failed to create ERC20 token: boom');
-    expect(res.raw.error).toContain('Failed to create ERC20 token: boom');
+    expect(res.humanMessage).toContain('Failed to execute Create ERC20 Token: boom');
+    expect(res.raw.error).toContain('Failed to execute Create ERC20 Token: boom');
     expect(res.raw.status).toBe('ERROR');
   });
 
@@ -153,8 +153,8 @@ describe('createERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to create ERC20 token');
-    expect(res.raw.error).toBe('Failed to create ERC20 token');
+    expect(res.humanMessage).toBe('Failed to execute Create ERC20 Token');
+    expect(res.raw.error).toBe('Failed to execute Create ERC20 Token');
     expect(res.raw.status).toBe('ERROR');
   });
 });

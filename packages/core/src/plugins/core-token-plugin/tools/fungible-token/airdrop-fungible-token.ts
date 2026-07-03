@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -46,7 +46,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const AIRDROP_FUNGIBLE_TOKEN_TOOL = 'airdrop_fungible_token_tool';
 
-export class AirdropFungibleTokenTool extends BaseTool {
+export class AirdropFungibleTokenTool extends BaseTransactionTool {
   method = AIRDROP_FUNGIBLE_TOKEN_TOOL;
   name = 'Airdrop Fungible Token';
   description: string;
@@ -86,18 +86,8 @@ export class AirdropFungibleTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to airdrop fungible token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[airdrop_fungible_token_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new AirdropFungibleTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new AirdropFungibleTokenTool(context);
 
 export default tool;

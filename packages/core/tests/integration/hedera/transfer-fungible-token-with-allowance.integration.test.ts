@@ -205,7 +205,10 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
 
     const result: any = await tool.execute(spenderClient, context, params);
 
-    expect(result.humanMessage).toContain('Failed to transfer fungible token with allowance');
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('AMOUNT_EXCEEDS_ALLOWANCE');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.humanMessage).toContain('Failed to execute Transfer Fungible Token with Allowance');
     expect(result.humanMessage).toContain('AMOUNT_EXCEEDS_ALLOWANCE');
   });
 });

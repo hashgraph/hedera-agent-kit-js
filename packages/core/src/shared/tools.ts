@@ -20,6 +20,23 @@ export interface Tool {
   outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
 }
 
+/**
+ * Base class for all Hedera Agent Kit tools. Subclasses implement the
+ * `coreAction` / `secondaryAction` pipeline and inherit a standard
+ * `{ raw, humanMessage }` output envelope.
+ *
+ * ## `raw.status` contract
+ *
+ * Every tool returns a `raw` object whose `status` field signals outcome:
+ *
+ * | `raw.status`  | Source                                          | Meaning                                                                 |
+ * |---------------|-------------------------------------------------|-------------------------------------------------------------------------|
+ * | `'SUCCESS'`   | `coreAction` (query tools) or `ExecuteStrategy` | Operation completed successfully                                         |
+ * | `'ERROR'`     | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt failures. |
+ *
+ * Use {@link classifyToolResult} to map these into the stable
+ * `ToolResultStatus` discriminated union (`success | failure | parse_error | unknown`).
+ */
 export abstract class BaseTool<TParams = any, TNormalisedParams = any> implements Tool {
   abstract method: string;
   abstract name: string;
@@ -133,6 +150,12 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     }
   }
 
+  /**
+   * Default error handler called when any step of `execute()` throws.
+   * Returns `{ raw: { status: 'ERROR', error: string }, humanMessage: string }`.
+   * Transaction tools extend `BaseTransactionTool` which overrides this to
+   * additionally extract structured fields from `ReceiptStatusError`.
+   */
   async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = `Failed to execute ${this.name}`;
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');

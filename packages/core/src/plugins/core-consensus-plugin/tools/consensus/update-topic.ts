@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, PublicKey, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -99,7 +99,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const UPDATE_TOPIC_TOOL = 'update_topic_tool';
 
-export class UpdateTopicTool extends BaseTool {
+export class UpdateTopicTool extends BaseTransactionTool {
   method = UPDATE_TOPIC_TOOL;
   name = 'Update Topic';
   description: string;
@@ -132,18 +132,8 @@ export class UpdateTopicTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to update topic';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[update_topic_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new UpdateTopicTool(context);
+const tool = (context: Context): BaseTransactionTool => new UpdateTopicTool(context);
 
 export default tool;

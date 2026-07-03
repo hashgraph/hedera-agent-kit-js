@@ -81,7 +81,7 @@ describe('schedule-delete tool (unit)', () => {
     const res = await tool.execute(client, context, {
       scheduleId: '0.0.999999',
     } as any);
-    expect(res.humanMessage).toBe('Failed to delete scheduled transaction: Invalid schedule ID');
+    expect(res.humanMessage).toBe('Failed to execute Delete Scheduled Transaction: Invalid schedule ID');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -96,7 +96,7 @@ describe('schedule-delete tool (unit)', () => {
     const res = await tool.execute(client, context, {
       scheduleId: '0.0.123456',
     } as any);
-    expect(res.humanMessage).toBe('Failed to delete scheduled transaction');
+    expect(res.humanMessage).toBe('Failed to execute Delete Scheduled Transaction');
   });
 
   it('handles different schedule ID formats', async () => {
@@ -135,7 +135,7 @@ describe('schedule-delete tool (unit)', () => {
     } as any);
     expect(consoleSpy).toHaveBeenCalledWith(
       '[schedule_delete_tool]',
-      'Failed to delete scheduled transaction: Test error',
+      'Failed to execute Delete Scheduled Transaction: Test error',
     );
     consoleSpy.mockRestore();
   });
@@ -154,6 +154,6 @@ describe('schedule-delete tool (unit)', () => {
     } as any);
 
     expect(res.raw.status).toBe('ERROR');
-    expect(res.humanMessage).toContain('Failed to delete scheduled transaction');
+    expect(res.humanMessage).toContain('Failed to execute Delete Scheduled Transaction');
   });
 });

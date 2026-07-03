@@ -146,8 +146,8 @@ describe('mintERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to mint ERC721');
-    expect(res.raw.error).toBe('Failed to mint ERC721');
+    expect(res.humanMessage).toBe('Failed to execute Mint ERC721');
+    expect(res.raw.error).toBe('Failed to execute Mint ERC721');
     expect(res.raw.status).toBe('ERROR');
   });
 

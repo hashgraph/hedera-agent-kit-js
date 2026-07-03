@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -40,7 +40,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const APPROVE_HBAR_ALLOWANCE_TOOL = 'approve_hbar_allowance_tool';
 
-export class ApproveHbarAllowanceTool extends BaseTool {
+export class ApproveHbarAllowanceTool extends BaseTransactionTool {
   method = APPROVE_HBAR_ALLOWANCE_TOOL;
   name = 'Approve HBAR Allowance';
   description: string;
@@ -68,18 +68,8 @@ export class ApproveHbarAllowanceTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to approve hbar allowance.';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[approve_hbar_allowance_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new ApproveHbarAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new ApproveHbarAllowanceTool(context);
 
 export default tool;

@@ -1,4 +1,5 @@
 export * from './api';
+export * from './base-transaction-tool';
 export * from './configuration';
 export * from './tools';
 export * from './plugin';

@@ -143,8 +143,8 @@ describe('transferERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to transfer ERC20');
-    expect(res.raw.error).toBe('Failed to transfer ERC20');
+    expect(res.humanMessage).toBe('Failed to execute Transfer ERC20');
+    expect(res.raw.error).toBe('Failed to execute Transfer ERC20');
     expect(res.raw.status).toBe('ERROR');
   });
 

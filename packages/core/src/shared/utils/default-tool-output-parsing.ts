@@ -125,18 +125,33 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
 };
 
 /**
- * Discriminated union describing a tool result that has been classified into
- * a stable success / failure / parse_error shape.
+ * Well-known string values that appear in `raw.status` across all tool outputs.
  *
- * - `success`: the underlying tool reported a non-error status. `data` exposes
- *   the original `raw` payload typed as `T`. `transactionId` is lifted out
- *   when present so consumers don't need to know which sub-field carries it.
- * - `failure`: the tool surfaced an error — either an SDK `Status` object
- *   (`raw.status` is an object with a numeric `_code`, e.g. `Status.InvalidTransaction`)
- *   or an explicit `raw.error` string. `errorCode` is normalised to the
- *   numeric SDK code when available, falling back to the string status.
- * - `parse_error`: the upstream parser could not interpret the tool output
- *   (`raw.status === 'PARSE_ERROR'`) or the envelope was malformed.
+ * | Value          | Set by                                                                                       |
+ * |----------------|----------------------------------------------------------------------------------------------|
+ * | `'SUCCESS'`    | `ReturnBytesStrategy`, query tool `coreAction` implementations, and `ExecuteStrategy` (receipt is always `SUCCESS` here — non-SUCCESS receipts throw before the return) |
+ * | `'ERROR'`      | `BaseTransactionTool.handleError()` (receipt failures) or `BaseTool.handleError()` (generic). Receipt failures additionally set `raw.errorCode` (e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId`. |
+ * | `'PARSE_ERROR'`| `transactionToolOutputParser` / `untypedQueryOutputParser` when the output is malformed      |
+ */
+export type ToolRawStatus = 'SUCCESS' | 'ERROR' | 'PARSE_ERROR';
+
+/**
+ * Discriminated union describing a tool result that has been classified into
+ * a stable success / failure / parse_error / unknown shape.
+ *
+ * - `success`: `raw.status === 'SUCCESS'`. `data` exposes the original `raw`
+ *   payload typed as `T`. `transactionId` is lifted out when present.
+ * - `failure`: `raw.status === 'ERROR'` or `raw.error` is a string. `errorCode`
+ *   is the specific SDK status name (e.g. `'INSUFFICIENT_PAYER_BALANCE'`) when
+ *   the failure was a Hedera network receipt error, or `'ERROR'` for generic
+ *   caught exceptions.
+ * - `parse_error`: `raw.status === 'PARSE_ERROR'` or the envelope was
+ *   structurally malformed (missing `raw`, non-object, etc.).
+ * - `unknown`: `raw.status` is a non-empty string that does not match any of
+ *   the above (e.g. an unexpected Hedera SDK status from `ExecuteStrategy`).
+ *
+ * See {@link ToolRawStatus} for the known `raw.status` string values and
+ * {@link BaseTool} for the full `raw.status` contract.
  */
 export type ToolResultStatus<T = unknown> =
   | { kind: 'success'; transactionId?: string; data: T; humanMessage: string }
@@ -205,7 +220,14 @@ export const classifyToolResult = <T = unknown>(parsed: {
   if (raw.status === 'ERROR' || typeof raw.error === 'string') {
     return {
       kind: 'failure',
-      errorCode: typeof raw.status === 'string' ? raw.status : 'UNKNOWN',
+      // Prefer raw.errorCode (SDK status name, e.g. 'INSUFFICIENT_PAYER_BALANCE')
+      // when present; fall back to raw.status ('ERROR') for generic errors.
+      errorCode:
+        typeof raw.errorCode === 'string'
+          ? raw.errorCode
+          : typeof raw.status === 'string'
+            ? raw.status
+            : 'UNKNOWN',
       error: typeof raw.error === 'string' ? raw.error : humanMessage,
       humanMessage,
     };

@@ -92,9 +92,9 @@ describe('delete-account tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params as any);
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to delete account');
+    expect(res.humanMessage).toContain('Failed to execute Delete Account');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to delete account');
+    expect(res.raw.error).toContain('Failed to execute Delete Account');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -108,7 +108,7 @@ describe('delete-account tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params as any);
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to delete account');
-    expect(res.raw.error).toContain('Failed to delete account');
+    expect(res.humanMessage).toContain('Failed to execute Delete Account');
+    expect(res.raw.error).toContain('Failed to execute Delete Account');
   });
 });

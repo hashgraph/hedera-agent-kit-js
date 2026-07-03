@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -42,7 +42,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DELETE_HBAR_ALLOWANCE_TOOL = 'delete_hbar_allowance_tool';
 
-export class DeleteHbarAllowanceTool extends BaseTool {
+export class DeleteHbarAllowanceTool extends BaseTransactionTool {
   method = DELETE_HBAR_ALLOWANCE_TOOL;
   name = 'Delete HBAR Allowance';
   description: string;
@@ -71,18 +71,8 @@ export class DeleteHbarAllowanceTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete hbar allowance.';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[delete_hbar_allowance_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new DeleteHbarAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new DeleteHbarAllowanceTool(context);
 
 export default tool;

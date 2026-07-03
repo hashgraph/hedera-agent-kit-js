@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -44,7 +44,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const APPROVE_NFT_ALLOWANCE_TOOL = 'approve_nft_allowance_tool';
 
-export class ApproveNftAllowanceTool extends BaseTool {
+export class ApproveNftAllowanceTool extends BaseTransactionTool {
   method = APPROVE_NFT_ALLOWANCE_TOOL;
   name = 'Approve NFT Allowance';
   description: string;
@@ -78,18 +78,8 @@ export class ApproveNftAllowanceTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to Approve NFT allowance';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[approve_nft_allowance_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new ApproveNftAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new ApproveNftAllowanceTool(context);
 
 export default tool;

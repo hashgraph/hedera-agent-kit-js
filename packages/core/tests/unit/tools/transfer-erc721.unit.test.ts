@@ -145,8 +145,8 @@ describe('transferERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to transfer ERC721');
-    expect(res.raw.error).toBe('Failed to transfer ERC721');
+    expect(res.humanMessage).toBe('Failed to execute Transfer ERC721');
+    expect(res.raw.error).toBe('Failed to execute Transfer ERC721');
     expect(res.raw.status).toBe('ERROR');
   });
 

@@ -64,6 +64,12 @@ export class ExecuteStrategy implements TxModeStrategy {
 }
 
 class ReturnBytesStrategy implements TxModeStrategy {
+  /**
+   * Serialises the transaction to bytes instead of submitting it.
+   *
+   * `raw.status` is always `'SUCCESS'` and `raw.bytes` contains the serialised
+   * transaction.`
+   */
   async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId)
       throw new Error('Account ID is required in context for RETURN_BYTES mode');

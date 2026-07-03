@@ -109,7 +109,7 @@ describe('delete-hbar-allowance tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw.status).toBe('ERROR');
-    expect(res.humanMessage).toContain('Failed to delete hbar allowance');
+    expect(res.humanMessage).toContain('Failed to execute Delete HBAR Allowance');
     expect(res.humanMessage).toContain('Test normaliser failure');
   });
 });

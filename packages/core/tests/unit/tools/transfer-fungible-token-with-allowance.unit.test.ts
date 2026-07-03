@@ -94,7 +94,7 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
     const tool = toolFactory(context);
     const result = await tool.execute(client, context, params);
 
-    expect(result.humanMessage).toContain('Failed to transfer fungible token with allowance');
+    expect(result.humanMessage).toContain('Failed to execute Transfer Fungible Token with Allowance');
     expect(result.humanMessage).toContain('boom');
     expect(result.raw.status).toBe('ERROR');
   });
@@ -115,7 +115,7 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
     const tool = toolFactory(context);
     const result = await tool.execute(client, context, params);
 
-    expect(result.humanMessage).toBe('Failed to transfer fungible token with allowance');
+    expect(result.humanMessage).toBe('Failed to execute Transfer Fungible Token with Allowance');
     expect(result.raw.status).toBe('ERROR');
   });
 });

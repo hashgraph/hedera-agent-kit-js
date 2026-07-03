@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import {
   handleTransaction,
   RawTransactionResponse,
@@ -41,7 +41,7 @@ const postProcess = (response: RawTransactionResponse) => {
 export const TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
   'transfer_non_fungible_token_with_allowance_tool';
 
-export class TransferNonFungibleTokenWithAllowanceTool extends BaseTool {
+export class TransferNonFungibleTokenWithAllowanceTool extends BaseTransactionTool {
   method = TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
   name = 'Transfer Non Fungible Token with Allowance';
   description: string;
@@ -77,18 +77,8 @@ export class TransferNonFungibleTokenWithAllowanceTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to transfer non-fungible token with allowance';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_non_fungible_token_with_allowance_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new TransferNonFungibleTokenWithAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferNonFungibleTokenWithAllowanceTool(context);
 
 export default tool;
