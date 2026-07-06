@@ -9,13 +9,13 @@ import {
 } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 
-interface TxModeStrategy {
+export interface TxModeStrategy {
   handle<T extends Transaction>(
     tx: T,
     client: Client,
     context: Context,
     postProcess?: (response: RawTransactionResponse) => unknown,
-  ): Promise<unknown>;
+  ): Promise<any>;
 }
 
 export interface RawTransactionResponse {
@@ -70,9 +70,15 @@ class ReturnBytesStrategy implements TxModeStrategy {
   }
 }
 
-const getStrategyFromContext = (context: Context) => {
+const getStrategyFromContext = (context: Context): TxModeStrategy => {
   if (context.mode === AgentMode.RETURN_BYTES) {
     return new ReturnBytesStrategy();
+  }
+  if (context.mode === AgentMode.CUSTOM) {
+    if (!context.transactionStrategy) {
+      throw new Error('transactionStrategy must be provided in Context when AgentMode is CUSTOM');
+    }
+    return context.transactionStrategy;
   }
   return new ExecuteStrategy();
 };

@@ -25,8 +25,11 @@ export { handleTransaction } from './shared/strategies/tx-mode-strategy';
 export type {
   RawTransactionResponse,
   ExecuteStrategyResult,
+  TxModeStrategy,
 } from './shared/strategies/tx-mode-strategy';
 export { ExecuteStrategy } from './shared/strategies/tx-mode-strategy';
+export { HttpSigningStrategy } from './shared/strategies/http-signing-strategy';
+export type { HttpSigningStrategyOptions } from './shared/strategies/http-signing-strategy';
 export { AccountResolver } from './shared/utils/account-resolver';
 export { PromptGenerator } from './shared/utils/prompt-generator';
 export {

@@ -6,12 +6,13 @@
     "langchain:structured-chat-agent": "tsx structured-chat-agent.ts",
     "langchain:tool-calling-agent": "tsx tool-calling-agent.ts",
     "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
-    "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
+    "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
+    "langchain:custom-signing-tool-calling-agent": "tsx custom-signing-tool-calling-agent.ts"
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.81.0",
     "@langchain/classic": "1.0.17",
-    "@langchain/core": "1.1.24",
+    "@langchain/core": "1.1.48",
     "@langchain/openai": "1.2.7",
     "cheerio": "1.1.2",
     "dotenv": "17.2.3",
