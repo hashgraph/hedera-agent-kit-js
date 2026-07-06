@@ -33,6 +33,16 @@ An agent that returns transaction bytes for **manual signing and execution**, ra
 
 ---
 
+### Custom Signing Agent
+
+```bash
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+An agent using `AgentMode.CUSTOM` with an interactive human-in-the-loop console strategy built into a LangGraph multi-turn agent. Demonstrates how to plug in a custom `TxModeStrategy` — a pattern that extends to remote TEE enclaves, MPC threshold signers, and KMS APIs. See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for the full reference.
+
+---
+
 ### Policy Enforcement Agent
 
 ```bash

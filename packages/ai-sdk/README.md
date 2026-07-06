@@ -60,6 +60,16 @@ const response = await generateText({
 console.log(response.text);
 ```
 
+## Execution modes
+
+HAK supports three transaction execution modes — set `mode` in the `context` configuration:
+
+- `AgentMode.AUTONOMOUS` — signs and broadcasts using the operator key on the client.
+- `AgentMode.RETURN_BYTES` — returns unsigned transaction bytes for external signing.
+- `AgentMode.CUSTOM` — delegates signing to a pluggable `TxModeStrategy` (TEE, MPC, KMS API, or HITL console).
+
+See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for full details.
+
 ## License
 
 Apache-2.0

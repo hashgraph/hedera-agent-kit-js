@@ -1,6 +1,6 @@
 # Hedera Agent Kit Next.js Example
 
-This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera Agent Kit, supporting both **AUTONOMOUS** and **RETURN_BYTES (HITL)** execution modes.
+This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera Agent Kit, supporting **AUTONOMOUS** and **RETURN_BYTES (HITL)** execution modes. For a full description of all modes (including custom external signers and TEE/MPC integrations), see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
 
 > [!IMPORTANT]
 > **Migrating from v3 to v4?** Check out our [Migration Guide](../../docs/MIGRATION-v4.md).

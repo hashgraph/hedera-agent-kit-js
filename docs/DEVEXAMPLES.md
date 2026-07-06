@@ -465,7 +465,37 @@ npm run langchain:audit-trail-agent
 
 ---
 
-### Option J: Try out the Google ADK Agent
+### Option J: Run the Custom Signing Agent
+
+This example demonstrates `AgentMode.CUSTOM` with an interactive human-in-the-loop console strategy — a pattern that also covers remote TEE enclaves, MPC threshold signers, Fireblocks/AWS KMS integrations, and any other delegated signing flow. The agent halts before each transaction and prompts for approval in the terminal before delegating to the custom strategy.
+
+**Found at:**
+- `examples/langchain/custom-signing-tool-calling-agent.ts` (LangChain v0.3)
+- `examples/langchain-v1/custom-signing-tool-calling-agent.ts` (LangChain v1 / LangGraph)
+
+For the full API reference, `TxModeStrategy` interface, and a production-ready `HttpSigningStrategy`, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
+
+#### Running the Example
+
+##### LangChain v0.3
+
+```bash
+cd examples/langchain
+npm install
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+---
+
+### Option K: Try out the Google ADK Agent
 
 This example demonstrates how to use the Hedera Agent Kit with [Google's Agent Development Kit (ADK)](https://google.github.io/adk-docs/get-started/). It includes a plugin tool calling agent and supports the ADK Web GUI for interactive testing.
 
