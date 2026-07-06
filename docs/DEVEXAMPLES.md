@@ -64,7 +64,8 @@ Try out one or more of the example agents:
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
 * **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
 * **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
-* **Option J -** [Example Google ADK Agent](#option-j-try-out-the-google-adk-agent)
+* **Option J -** [Example Custom Signing Agent](#option-j-run-the-custom-signing-agent)
+* **Option K -** [Example Google ADK Agent](#option-k-try-out-the-google-adk-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
