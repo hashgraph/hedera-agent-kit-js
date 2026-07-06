@@ -68,7 +68,7 @@ class ReturnBytesStrategy implements TxModeStrategy {
    * Serialises the transaction to bytes instead of submitting it.
    *
    * `raw.status` is always `'SUCCESS'` and `raw.bytes` contains the serialised
-   * transaction.`
+   * transaction.
    */
   async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId)

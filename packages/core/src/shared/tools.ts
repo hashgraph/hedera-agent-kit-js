@@ -29,10 +29,11 @@ export interface Tool {
  *
  * Every tool returns a `raw` object whose `status` field signals outcome:
  *
- * | `raw.status`  | Source                                          | Meaning                                                                 |
- * |---------------|-------------------------------------------------|-------------------------------------------------------------------------|
- * | `'SUCCESS'`   | `coreAction` (query tools) or `ExecuteStrategy` | Operation completed successfully                                         |
- * | `'ERROR'`     | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt failures. |
+ * | `raw.status`    | Source                                          | Meaning                                                                 |
+ * |-----------------|-------------------------------------------------|-------------------------------------------------------------------------|
+ * | `'SUCCESS'`     | `coreAction` (query tools) or `ExecuteStrategy` | Operation completed successfully                                         |
+ * | `'ERROR'`       | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt failures. |
+ * | `'PARSE_ERROR'` | `transactionToolOutputParser` / `untypedQueryOutputParser` | Output is not valid JSON or has an unexpected shape.                     |
  *
  * Use {@link classifyToolResult} to map these into the stable
  * `ToolResultStatus` discriminated union (`success | failure | parse_error | unknown`).

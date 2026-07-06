@@ -10,12 +10,14 @@ import { Context } from './configuration';
  * receipt from the network), the SDK status name and transaction ID are lifted
  * into structured fields on `raw` so callers don't need to parse prose.
  *
- * `raw.status` is always `'ERROR'`; the additional fields are:
+ * On successful execution `raw.status` is `'SUCCESS'` (set by `ExecuteStrategy`).
+ * When a `ReceiptStatusError` is caught by `handleError()`, `raw.status` is
+ * `'ERROR'` and the following additional fields are set:
  * - `raw.errorCode` — SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`
  * - `raw.transactionId` — the transaction ID string
  * - `raw.error` — the original error message
  *
- * This behaviour only applies in `AUTONOMUS` mode. In
+ * This behaviour only applies in `AUTONOMOUS` mode. In
  * `RETURN_BYTES` mode `getReceipt()` is never called, so `ReceiptStatusError`
  * cannot be thrown and `BaseTool.handleError()` handles all errors generically.
  */
