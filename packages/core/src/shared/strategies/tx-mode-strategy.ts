@@ -9,7 +9,7 @@ import {
 } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 
-export interface TxModeStrategy {
+export interface TransactionStrategy {
   handle<T extends Transaction>(
     tx: T,
     client: Client,
@@ -32,7 +32,7 @@ export interface ExecuteStrategyResult {
   humanMessage: string;
 }
 
-export class ExecuteStrategy implements TxModeStrategy {
+export class ExecuteStrategy implements TransactionStrategy {
   defaultPostProcess(response: RawTransactionResponse): string {
     return JSON.stringify(response, null, 2);
   }
@@ -60,7 +60,7 @@ export class ExecuteStrategy implements TxModeStrategy {
   }
 }
 
-class ReturnBytesStrategy implements TxModeStrategy {
+class ReturnBytesStrategy implements TransactionStrategy {
   async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId)
       throw new Error('Account ID is required in context for RETURN_BYTES mode');
@@ -70,7 +70,7 @@ class ReturnBytesStrategy implements TxModeStrategy {
   }
 }
 
-const getStrategyFromContext = (context: Context): TxModeStrategy => {
+const getStrategyFromContext = (context: Context): TransactionStrategy => {
   if (context.mode === AgentMode.RETURN_BYTES) {
     return new ReturnBytesStrategy();
   }

@@ -17,10 +17,6 @@ class HederaAgentAPI {
       throw new Error('Client must be connected to a network');
     }
     this.context = context || {};
-    
-    if (this.context.mode === AgentMode.RETURN_BYTES && !this.context.accountId) {
-      throw new Error('accountId must be provided in Context when AgentMode is RETURN_BYTES');
-    }
 
     if (this.context.mode === AgentMode.CUSTOM && !this.context.transactionStrategy) {
       throw new Error('transactionStrategy must be provided in Context when AgentMode is CUSTOM');

@@ -1,12 +1,11 @@
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
-import { Client, Transaction } from '@hiero-ledger/sdk';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Client } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
 import {
   handleTransaction,
   ExecuteStrategy,
-  TxModeStrategy,
+  TransactionStrategy,
 } from '@/shared/strategies/tx-mode-strategy';
-import { HttpSigningStrategy } from '@/shared/strategies/http-signing-strategy';
 import HederaAgentAPI from '@/shared/api';
 
 describe('Transaction Mode Strategies & custom signing (unit)', () => {
@@ -87,7 +86,7 @@ describe('Transaction Mode Strategies & custom signing (unit)', () => {
     });
 
     it('uses custom strategy when mode is AgentMode.CUSTOM', async () => {
-      const customMockStrategy: TxModeStrategy = {
+      const customMockStrategy: TransactionStrategy = {
         handle: vi.fn().mockResolvedValue({ success: true, custom: 'value' }),
       };
       const context: Context = { mode: AgentMode.CUSTOM, transactionStrategy: customMockStrategy };
@@ -106,164 +105,10 @@ describe('Transaction Mode Strategies & custom signing (unit)', () => {
     });
   });
 
-  describe('HttpSigningStrategy', () => {
-    let mockFetch: Mock;
-
-    beforeEach(() => {
-      mockFetch = vi.fn();
-      global.fetch = mockFetch;
-    });
-
-    it('freezes transaction and calls external endpoint with default options', async () => {
-      const signedTxMock = {
-        transactionId: '0.0.1001@55555.555',
-        execute: vi.fn().mockResolvedValue({
-          getReceipt: vi.fn().mockResolvedValue({
-            status: { toString: () => 'SUCCESS' },
-            accountId: '0.0.1001',
-            tokenId: null,
-            topicId: null,
-            scheduleId: null,
-          }),
-        }),
-      };
-      
-      // Mock Transaction.fromBytes to return our mock signed transaction
-      const spyFromBytes = vi.spyOn(Transaction, 'fromBytes').mockReturnValue(signedTxMock as any);
-
-      // Fetch response
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          signedTransactionBytes: Buffer.from([9, 8, 7]).toString('base64'),
-        }),
-      });
-
-      const strategy = new HttpSigningStrategy({
-        endpoint: 'https://api.test.com/sign',
-      });
-
-      const context: Context = { mode: AgentMode.CUSTOM, accountId: '0.0.1001' };
-
-      const result = await strategy.handle(mockTx, mockClient, context);
-
-      expect(mockTx.setTransactionId).toHaveBeenCalled();
-      expect(mockTx.freezeWith).toHaveBeenCalledWith(mockClient);
-      expect(mockFetch).toHaveBeenCalledWith('https://api.test.com/sign', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          transactionBytes: Buffer.from([1, 2, 3]).toString('base64'),
-        }),
-      });
-
-      expect(spyFromBytes).toHaveBeenCalledWith(new Uint8Array([9, 8, 7]));
-      expect(signedTxMock.execute).toHaveBeenCalledWith(mockClient);
-      expect(result.raw.status).toBe('SUCCESS');
-      
-      spyFromBytes.mockRestore();
-    });
-
-    it('respects hex encoding and custom headers', async () => {
-      const signedTxMock = {
-        transactionId: '0.0.1001@55555.555',
-        execute: vi.fn().mockResolvedValue({
-          getReceipt: vi.fn().mockResolvedValue({
-            status: { toString: () => 'SUCCESS' },
-            accountId: '0.0.1001',
-            tokenId: null,
-            topicId: null,
-            scheduleId: null,
-          }),
-        }),
-      };
-
-      const spyFromBytes = vi.spyOn(Transaction, 'fromBytes').mockReturnValue(signedTxMock as any);
-
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          signedTransactionBytes: Buffer.from([9, 8, 7]).toString('hex'),
-        }),
-      });
-
-      const strategy = new HttpSigningStrategy({
-        endpoint: 'https://api.test.com/sign',
-        encoding: 'hex',
-        headers: { 'X-Api-Key': 'secret123' },
-      });
-
-      const context: Context = { mode: AgentMode.CUSTOM, accountId: '0.0.1001' };
-      await strategy.handle(mockTx, mockClient, context);
-
-      expect(mockFetch).toHaveBeenCalledWith('https://api.test.com/sign', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Api-Key': 'secret123',
-        },
-        body: JSON.stringify({
-          transactionBytes: Buffer.from([1, 2, 3]).toString('hex'),
-        }),
-      });
-
-      spyFromBytes.mockRestore();
-    });
-
-    it('uses buildRequestBody and parseResponseBody hooks when provided', async () => {
-      const signedTxMock = {
-        transactionId: '0.0.1001@55555.555',
-        execute: vi.fn().mockResolvedValue({
-          getReceipt: vi.fn().mockResolvedValue({
-            status: { toString: () => 'SUCCESS' },
-            accountId: '0.0.1001',
-            tokenId: null,
-            topicId: null,
-            scheduleId: null,
-          }),
-        }),
-      };
-
-      const spyFromBytes = vi.spyOn(Transaction, 'fromBytes').mockReturnValue(signedTxMock as any);
-
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          customSignedBytes: 'customSignature123',
-        }),
-      });
-
-      const buildRequestBody = vi.fn().mockReturnValue({ customBody: 'test' });
-      const parseResponseBody = vi.fn().mockReturnValue(new Uint8Array([5, 5, 5]));
-
-      const strategy = new HttpSigningStrategy({
-        endpoint: 'https://api.test.com/sign',
-        buildRequestBody,
-        parseResponseBody,
-      });
-
-      const context: Context = { mode: AgentMode.CUSTOM, accountId: '0.0.1001' };
-      await strategy.handle(mockTx, mockClient, context);
-
-      expect(buildRequestBody).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]), context);
-      expect(mockFetch).toHaveBeenCalledWith('https://api.test.com/sign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customBody: 'test' }),
-      });
-      expect(parseResponseBody).toHaveBeenCalledWith({ customSignedBytes: 'customSignature123' });
-      expect(spyFromBytes).toHaveBeenCalledWith(new Uint8Array([5, 5, 5]));
-
-      spyFromBytes.mockRestore();
-    });
-  });
-
   describe('HederaAgentAPI Initialization Validation', () => {
     it('succeeds initialization if AgentMode.CUSTOM and transactionStrategy is provided', () => {
       const mockApiClient = { ledgerId: 'mainnet' } as unknown as Client;
-      const customStrategy: TxModeStrategy = {
+      const customStrategy: TransactionStrategy = {
         handle: vi.fn(),
       };
       const context: Context = {
@@ -285,25 +130,11 @@ describe('Transaction Mode Strategies & custom signing (unit)', () => {
       );
     });
 
-    it('succeeds initialization if AgentMode.RETURN_BYTES and accountId is provided', () => {
+    it('succeeds initialization if AgentMode.RETURN_BYTES with or without accountId', () => {
       const mockApiClient = { ledgerId: 'mainnet' } as unknown as Client;
-      const context: Context = {
-        mode: AgentMode.RETURN_BYTES,
-        accountId: '0.0.1001',
-      };
 
-      expect(() => new HederaAgentAPI(mockApiClient, context)).not.toThrow();
-    });
-
-    it('throws during initialization if AgentMode.RETURN_BYTES and accountId is missing', () => {
-      const mockApiClient = { ledgerId: 'mainnet' } as unknown as Client;
-      const context: Context = {
-        mode: AgentMode.RETURN_BYTES,
-      };
-
-      expect(() => new HederaAgentAPI(mockApiClient, context)).toThrow(
-        'accountId must be provided in Context when AgentMode is RETURN_BYTES'
-      );
+      expect(() => new HederaAgentAPI(mockApiClient, { mode: AgentMode.RETURN_BYTES, accountId: '0.0.1001' })).not.toThrow();
+      expect(() => new HederaAgentAPI(mockApiClient, { mode: AgentMode.RETURN_BYTES })).not.toThrow();
     });
   });
 });

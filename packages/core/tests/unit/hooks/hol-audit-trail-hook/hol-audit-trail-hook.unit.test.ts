@@ -137,7 +137,16 @@ describe('HolAuditTrailHook', () => {
       const params = { context } as PreToolExecutionParams;
 
       await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-        'Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
+        'Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
+      );
+    });
+
+    it('should throw when mode is CUSTOM for a relevant tool', async () => {
+      const context = { mode: AgentMode.CUSTOM };
+      const params = { context } as PreToolExecutionParams;
+
+      await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
+        'Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
       );
     });
   });
@@ -245,6 +254,28 @@ describe('HolAuditTrailHook', () => {
       );
 
       consoleSpy.mockRestore();
+    });
+
+    it('should use loggingClient when provided instead of params.client', async () => {
+      const loggingClient = {
+        operatorAccountId: { toString: () => '0.0.99999' },
+        operatorPublicKey: 'logging-public-key',
+      } as unknown as Client;
+
+      const hookWithLoggingClient = new HolAuditTrailHook({
+        ...defaultConfig,
+        loggingClient,
+      });
+
+      const context = { mode: AgentMode.AUTONOMOUS };
+      const postParams = makePostParams({ context });
+
+      await hookWithLoggingClient.postToolExecutionHook(postParams, 'test_tool');
+
+      expect(mockCreateFile).toHaveBeenCalledTimes(1);
+      const fileArgs = mockCreateFile.mock.calls[0][0];
+      expect(fileArgs.autoRenewAccountId).toBe('0.0.99999');
+      expect(fileArgs.submitKey).toBe('logging-public-key');
     });
   });
 });

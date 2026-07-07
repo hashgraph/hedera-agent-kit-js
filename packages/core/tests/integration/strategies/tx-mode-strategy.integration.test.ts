@@ -8,7 +8,7 @@ import {
   type TestAccount,
   verifyHbarBalanceChange,
 } from '@hashgraph/hedera-agent-kit-tests';
-import { TxModeStrategy, RawTransactionResponse, ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
+import { TransactionStrategy, RawTransactionResponse, ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 
@@ -31,11 +31,11 @@ describe('Custom Transaction Strategy Integration Tests', () => {
     executorClient?.close();
   });
 
-  it('should successfully execute a transaction using a custom TxModeStrategy', async () => {
+  it('should successfully execute a transaction using a custom TransactionStrategy', async () => {
     let strategyCalled = false;
 
     // A custom strategy that wraps ExecuteStrategy and adds custom tracking
-    class CustomTrackingStrategy implements TxModeStrategy {
+    class CustomTrackingStrategy implements TransactionStrategy {
       private defaultExecute = new ExecuteStrategy();
 
       async handle(

@@ -65,7 +65,27 @@ describe('HcsAuditTrailHook Integration Tests', () => {
 
     const result = await tool.execute(operatorClient, context, params);
     expect(result.raw.error).toContain(
-      'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS',
+      'Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS',
+    );
+  });
+
+  it('should stop execution in CUSTOM mode', async () => {
+    const hook = new HcsAuditTrailHook([TRANSFER_HBAR_TOOL], topicId, operatorClient);
+    const context: Context = {
+      mode: AgentMode.CUSTOM,
+      hooks: [hook],
+      accountId: profile.operator.accountId.toString(),
+      transactionStrategy: { handle: async () => ({ raw: {}, humanMessage: '' }) },
+    };
+
+    const tool = getTransferHbarTool(context);
+    const params = {
+      transfers: [{ accountId: profile.operator.accountId.toString(), amount: 0.0001 }],
+    };
+
+    const result = await tool.execute(operatorClient, context, params);
+    expect(result.raw.error).toContain(
+      'Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS',
     );
   });
 

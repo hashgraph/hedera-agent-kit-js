@@ -11,9 +11,14 @@ import { Client, TopicMessageSubmitTransaction } from '@hiero-ledger/sdk';
  * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.
  *
  * @remarks
- * **Autonomous mode only.** This hook works only when the agent runs in `AgentMode.AUTONOMOUS`.
- * In `RETURN_BYTES` mode it throws before the tool executes, because there is no submitted
- * transaction to audit.
+ * **Autonomous mode only.** This hook only supports `AgentMode.AUTONOMOUS`.
+ *
+ * - In `RETURN_BYTES` mode it throws before the tool executes, because no transaction was
+ *   submitted — there is nothing to audit.
+ * - In `CUSTOM` mode it throws because the tool result shape is not guaranteed. A custom
+ *   `TransactionStrategy` can return any structure, making reliable audit entries impossible.
+ *   If you need audit trails in `CUSTOM` mode, implement a custom `AbstractHook` that reads
+ *   the specific shape your strategy returns.
  *
  * **Requires a pre-existing topic.** The hook does not create an HCS topic. Create the topic
  * first — via the `create_topic_tool`.
@@ -41,7 +46,7 @@ export class HcsAuditTrailHook extends AbstractHook {
     this.relevantTools = relevantTools;
     this.name = 'HCS Audit Trail Hook';
     this.description =
-      'Hook to add audit trail to HCS messages. Available only in Agent Mode AUTONOMOUS.';
+      'Hook to add audit trail to HCS messages. Supported only in AgentMode.AUTONOMOUS. Blocked in RETURN_BYTES and CUSTOM modes.';
     this.hcsTopicId = hcsTopicId;
     this.loggingClient = loggingClient;
   }
@@ -49,13 +54,12 @@ export class HcsAuditTrailHook extends AbstractHook {
   async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    // HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS.
-    if (params.context.mode === AgentMode.RETURN_BYTES) {
-      console.log(
-        `Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
-      );
+    if (
+      params.context.mode === AgentMode.RETURN_BYTES ||
+      params.context.mode === AgentMode.CUSTOM
+    ) {
       throw new Error(
-        `Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
+        `Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
       );
     }
   }

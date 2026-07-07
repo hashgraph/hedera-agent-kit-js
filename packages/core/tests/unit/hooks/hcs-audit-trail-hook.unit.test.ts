@@ -69,7 +69,17 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const params = { context, client: operatorClient } as PreToolExecutionParams;
 
     await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-      'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
+      'Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
+    );
+  });
+
+  it('should throw if mode is CUSTOM in preToolExecutionHook', async () => {
+    const operatorClient = {} as Client;
+    const context = { mode: AgentMode.CUSTOM };
+    const params = { context, client: operatorClient } as PreToolExecutionParams;
+
+    await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
+      'Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
     );
   });
 

@@ -1,7 +1,7 @@
 import { IHederaMirrornodeService } from './hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { Plugin } from './plugin';
 import { AbstractHook } from './hook';
-import type { TxModeStrategy } from './strategies/tx-mode-strategy';
+import type { TransactionStrategy } from './strategies/tx-mode-strategy';
 
 /**
  * Defines the execution and signing mode for transactions created by the agent.
@@ -36,11 +36,11 @@ export type Context = {
   /**
    * The connected Account ID. Used by tools to identify which account
    * transactions are being built for.
-   * Required when mode is `AgentMode.RETURN_BYTES`, and highly recommended
-   * (and expected by most strategies) when mode is `AgentMode.CUSTOM`.
+   * Required when mode is `AgentMode.RETURN_BYTES` for running non-query tools
+   * Recommended for `AgentMode.CUSTOM` and  `AgentMode.AUTONOMUS`.
    */
   accountId?: string;
-  
+
   /**
    * The public key of the connected account. Passed in configuration or
    * dynamically resolved using the Mirrornode based on the `accountId`.
@@ -53,12 +53,11 @@ export type Context = {
   mode?: AgentMode;
 
   /**
-   * A custom transaction strategy class or function that handles signing and broadcasting.
-   * Required when `mode` is set to `AgentMode.CUSTOM`. Note that most custom strategies
-   * (like the built-in `HttpSigningStrategy`) also require `accountId` to be set in the Context
-   * to determine the transaction payer.
+   * A custom transaction strategy instance that handles signing and broadcasting.
+   * Required when `mode` is set to `AgentMode.CUSTOM`. Most custom strategies also require
+   * `accountId` to be set in the Context to determine the transaction payer.
    */
-  transactionStrategy?: TxModeStrategy;
+  transactionStrategy?: TransactionStrategy;
 
   /**
    * Optional custom Mirrornode service implementation.

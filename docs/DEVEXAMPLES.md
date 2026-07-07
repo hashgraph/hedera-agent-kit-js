@@ -474,7 +474,7 @@ This example demonstrates `AgentMode.CUSTOM` with an interactive human-in-the-lo
 - `examples/langchain/custom-signing-tool-calling-agent.ts` (LangChain v0.3)
 - `examples/langchain-v1/custom-signing-tool-calling-agent.ts` (LangChain v1 / LangGraph)
 
-For the full API reference, `TxModeStrategy` interface, and a production-ready `HttpSigningStrategy`, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
+For the full API reference and `TransactionStrategy` interface, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
 
 #### Running the Example
 

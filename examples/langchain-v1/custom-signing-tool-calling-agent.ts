@@ -1,4 +1,4 @@
-import { AgentMode, TxModeStrategy, ExecuteStrategy, RawTransactionResponse, Context } from '@hashgraph/hedera-agent-kit';
+import { AgentMode, TransactionStrategy, ExecuteStrategy, RawTransactionResponse, Context } from '@hashgraph/hedera-agent-kit';
 import {
   coreTokenPlugin,
   coreAccountPlugin,
@@ -35,7 +35,7 @@ function validateEnv() {
  * A custom transaction signing strategy that prompts the operator
  * via the CLI to approve any transaction before it gets executed.
  */
-class CLITransactionApprovalStrategy implements TxModeStrategy {
+class CLITransactionApprovalStrategy implements TransactionStrategy {
   private defaultExecute = new ExecuteStrategy();
 
   private askConfirmation(promptMsg: string): Promise<boolean> {

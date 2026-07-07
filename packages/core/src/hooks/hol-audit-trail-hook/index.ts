@@ -1,4 +1,5 @@
 import z from 'zod';
+import { Client } from '@hiero-ledger/sdk';
 
 import {
   AbstractHook,
@@ -17,13 +18,29 @@ const configSchema = z.object({
     .regex(/^0\.0\.\d+$/, 'sessionId must be a valid Hedera topic ID in format 0.0.xxx'),
 });
 
-export type HolAuditTrailHookConfig = z.infer<typeof configSchema>;
+export type HolAuditTrailHookConfig = z.infer<typeof configSchema> & {
+  /**
+   * Optional client used to submit audit messages to HCS; defaults to the agent's operator
+   * client. Must have a local operator key capable of signing and submitting transactions.
+   */
+  loggingClient?: Client;
+};
 
 /**
  * Hook that writes HOL-standards-compliant audit trails to an HCS session topic.
  *
  * Uses an HCS-2 INDEXED registry as the session topic to list audit entries.
  * Delegates to AuditSession + HolAuditWriter for all write operations.
+ *
+ * @remarks
+ * **Autonomous mode only.** This hook only supports `AgentMode.AUTONOMOUS`.
+ *
+ * - In `RETURN_BYTES` mode it throws before the tool executes, because no transaction was
+ *   submitted — there is nothing to audit.
+ * - In `CUSTOM` mode it throws because the tool result shape is not guaranteed. A custom
+ *   `TransactionStrategy` can return any structure, making reliable audit entries impossible.
+ *   If you need audit trails in `CUSTOM` mode, implement a custom `AbstractHook` that reads
+ *   the specific shape your strategy returns.
  */
 export class HolAuditTrailHook extends AbstractHook {
   relevantTools: string[];
@@ -32,21 +49,27 @@ export class HolAuditTrailHook extends AbstractHook {
 
   private session: AuditSession | null = null;
   private sessionId: string;
+  private loggingClient?: Client;
 
   /**
    * @param config.sessionId - Hedera topic ID (format `0.0.xxx`) used as the audit session registry.
    *   The topic should be created with memo `hcs-2:0:0` to be fully compliant with the HCS-2 standard.
    *   See {@link https://hol.org/docs/standards/hcs-2/}
    * @param config.relevantTools - List of tool names that trigger audit trail logging.
+   * @param config.loggingClient - Optional client used to submit audit messages to HCS; defaults to
+   *   the agent's operator client. Must have a local operator key capable of signing and submitting
+   *   transactions.
    */
   constructor(config: HolAuditTrailHookConfig) {
     super();
-    const validated = configSchema.parse(config);
+    const { loggingClient, ...rest } = config;
+    const validated = configSchema.parse(rest);
     this.relevantTools = validated.relevantTools;
     this.name = 'HOL Audit Trail Hook';
     this.description =
-      'Hook to add HOL-standards-compliant audit trail to HCS topics. Available only in Agent Mode AUTONOMOUS.';
+      'Hook to add HOL-standards-compliant audit trail to HCS topics. Supported only in AgentMode.AUTONOMOUS. Blocked in RETURN_BYTES and CUSTOM modes.';
     this.sessionId = validated.sessionId;
+    this.loggingClient = loggingClient;
   }
 
   getSessionId(): string {
@@ -56,9 +79,12 @@ export class HolAuditTrailHook extends AbstractHook {
   async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    if (params.context.mode === AgentMode.RETURN_BYTES) {
+    if (
+      params.context.mode === AgentMode.RETURN_BYTES ||
+      params.context.mode === AgentMode.CUSTOM
+    ) {
       throw new Error(
-        `Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
+        `Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
       );
     }
   }
@@ -68,7 +94,7 @@ export class HolAuditTrailHook extends AbstractHook {
 
     try {
       if (!this.session) {
-        const writer = new HolAuditWriter(params.client);
+        const writer = new HolAuditWriter(this.loggingClient ?? params.client);
         this.session = new AuditSession(writer, this.sessionId);
       }
 

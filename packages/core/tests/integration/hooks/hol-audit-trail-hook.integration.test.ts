@@ -232,7 +232,27 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const result = await tool.execute(executorClient, context, params);
     expect(result.raw.error).toContain(
-      'Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS',
+      'Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS',
+    );
+  });
+
+  it('should block tool execution when hook is used in CUSTOM mode', async () => {
+    const hook = new HolAuditTrailHook({ relevantTools: [TRANSFER_HBAR_TOOL], sessionId: '0.0.123' });
+    const context: Context = {
+      mode: AgentMode.CUSTOM,
+      hooks: [hook],
+      accountId: executor.accountId.toString(),
+      transactionStrategy: { handle: async () => ({ raw: {}, humanMessage: '' }) },
+    };
+
+    const tool = getTransferHbarTool(context);
+    const params = {
+      transfers: [{ accountId: recipient.accountId.toString(), amount: 0.0001 }],
+    };
+
+    const result = await tool.execute(executorClient, context, params);
+    expect(result.raw.error).toContain(
+      'Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS',
     );
   });
 
