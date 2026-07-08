@@ -86,15 +86,26 @@ describe('Transaction Mode Strategies & custom signing (unit)', () => {
     });
 
     it('uses custom strategy when mode is AgentMode.CUSTOM', async () => {
+      const customResult = {
+        raw: {
+          status: 'SUCCESS',
+          accountId: null,
+          tokenId: null,
+          transactionId: '0.0.1001@123456.789',
+          topicId: null,
+          scheduleId: null,
+        },
+        humanMessage: 'Custom strategy executed successfully.',
+      };
       const customMockStrategy: TransactionStrategy = {
-        handle: vi.fn().mockResolvedValue({ success: true, custom: 'value' }),
+        handle: vi.fn().mockResolvedValue(customResult),
       };
       const context: Context = { mode: AgentMode.CUSTOM, transactionStrategy: customMockStrategy };
 
       const result = await handleTransaction(mockTx, mockClient, context);
 
       expect(customMockStrategy.handle).toHaveBeenCalledWith(mockTx, mockClient, context, undefined);
-      expect(result).toEqual({ success: true, custom: 'value' });
+      expect(result).toEqual(customResult);
     });
 
     it('throws error in CUSTOM mode if transactionStrategy is missing', async () => {

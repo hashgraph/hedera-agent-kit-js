@@ -1,22 +1,5 @@
-import {
-  AccountId,
-  Client,
-  ScheduleId,
-  TokenId,
-  TopicId,
-  Transaction,
-  TransactionId,
-} from '@hiero-ledger/sdk';
+import { AccountId, Client, ScheduleId, TokenId, TopicId, Transaction, TransactionId, } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
-
-export interface TransactionStrategy {
-  handle<T extends Transaction>(
-    tx: T,
-    client: Client,
-    context: Context,
-    postProcess?: (response: RawTransactionResponse) => unknown,
-  ): Promise<any>;
-}
 
 export interface RawTransactionResponse {
   status: string;
@@ -32,7 +15,20 @@ export interface ExecuteStrategyResult {
   humanMessage: string;
 }
 
-export class ExecuteStrategy implements TransactionStrategy {
+export interface ReturnBytesStrategyResult {
+  bytes: Uint8Array;
+}
+
+export interface TransactionStrategy<TResult = ExecuteStrategyResult> {
+  handle(
+    tx: Transaction,
+    client: Client,
+    context: Context,
+    postProcess?: (response: RawTransactionResponse) => string,
+  ): Promise<TResult>;
+}
+
+export class ExecuteStrategy implements TransactionStrategy<ExecuteStrategyResult> {
   defaultPostProcess(response: RawTransactionResponse): string {
     return JSON.stringify(response, null, 2);
   }
@@ -56,31 +52,33 @@ export class ExecuteStrategy implements TransactionStrategy {
     return {
       raw: rawTransactionResponse,
       humanMessage: postProcess(rawTransactionResponse),
-    };
+    } as ExecuteStrategyResult;
   }
 }
 
-class ReturnBytesStrategy implements TransactionStrategy {
+export class ReturnBytesStrategy implements TransactionStrategy<ReturnBytesStrategyResult> {
   async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId)
       throw new Error('Account ID is required in context for RETURN_BYTES mode');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
-    return { bytes: tx.toBytes() };
+    return { bytes: tx.toBytes() } as ReturnBytesStrategyResult;
   }
 }
 
-const getStrategyFromContext = (context: Context): TransactionStrategy => {
-  if (context.mode === AgentMode.RETURN_BYTES) {
-    return new ReturnBytesStrategy();
+const getStrategyFromContext = (context: Context): TransactionStrategy<unknown> => {
+  switch (context.mode) {
+    case AgentMode.RETURN_BYTES:
+      return new ReturnBytesStrategy();
+    case AgentMode.CUSTOM:
+      if (!context.transactionStrategy) {
+        throw new Error('transactionStrategy must be provided in Context when AgentMode is CUSTOM');
+      }
+      return context.transactionStrategy;
+    case AgentMode.AUTONOMOUS:
+    default:
+      return new ExecuteStrategy();
   }
-  if (context.mode === AgentMode.CUSTOM) {
-    if (!context.transactionStrategy) {
-      throw new Error('transactionStrategy must be provided in Context when AgentMode is CUSTOM');
-    }
-    return context.transactionStrategy;
-  }
-  return new ExecuteStrategy();
 };
 
 export const handleTransaction = async (

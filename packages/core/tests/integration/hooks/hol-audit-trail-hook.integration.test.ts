@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, TopicCreateTransaction } from '@hiero-ledger/sdk';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { Client, TopicCreateTransaction, Transaction } from '@hiero-ledger/sdk';
 import { brotliDecompressSync } from 'zlib';
 import { randomBytes } from 'crypto';
 
@@ -9,6 +9,11 @@ import getTransferHbarTool, {
   TRANSFER_HBAR_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { auditEntrySchema, buildAuditEntry } from '@/hooks/hol-audit-trail-hook/audit/audit-entry';
+import {
+  ExecuteStrategy,
+  RawTransactionResponse,
+  TransactionStrategy,
+} from '@/shared/strategies/tx-mode-strategy';
 import { HCS2_PROTOCOL, HCS2_OPERATION, HCS1_CHUNK_SIZE } from '@/hooks/hol-audit-trail-hook/hol/constants';
 import { AuditSession } from '@/hooks/hol-audit-trail-hook/audit/audit-session';
 import { HolAuditWriter } from '@/hooks/hol-audit-trail-hook/audit/writers/hol-audit-writer';
@@ -232,17 +237,35 @@ describe('HolAuditTrailHook Integration Tests', () => {
 
     const result = await tool.execute(executorClient, context, params);
     expect(result.raw.error).toContain(
-      'Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS',
+      'Unsupported hook: HolAuditTrailHook does not support AgentMode.RETURN_BYTES',
     );
   });
 
-  it('should block tool execution when hook is used in CUSTOM mode', async () => {
+  it('should invoke postToolExecutionHook with ExecuteStrategyResult shape in CUSTOM mode', async () => {
     const hook = new HolAuditTrailHook({ relevantTools: [TRANSFER_HBAR_TOOL], sessionId: '0.0.123' });
+
+    class PassthroughStrategy implements TransactionStrategy {
+      private inner = new ExecuteStrategy();
+      async handle(tx: Transaction, client: Client, context: Context, postProcess?: (r: RawTransactionResponse) => string) {
+        return this.inner.handle(tx, client, context, postProcess);
+      }
+    }
+
+    // Intercept the actual HCS write so we don't need a live session topic,
+    // but still verify the hook received a valid ExecuteStrategyResult.
+    const postToolSpy = vi
+      .spyOn(hook, 'postToolExecutionHook')
+      .mockImplementation(async (params) => {
+        expect(params.toolResult.raw.status).toBe('SUCCESS');
+        expect(params.toolResult.raw.transactionId).toBeDefined();
+        expect(params.toolResult.humanMessage).toBeDefined();
+      });
+
     const context: Context = {
       mode: AgentMode.CUSTOM,
       hooks: [hook],
       accountId: executor.accountId.toString(),
-      transactionStrategy: { handle: async () => ({ raw: {}, humanMessage: '' }) },
+      transactionStrategy: new PassthroughStrategy(),
     };
 
     const tool = getTransferHbarTool(context);
@@ -251,9 +274,11 @@ describe('HolAuditTrailHook Integration Tests', () => {
     };
 
     const result = await tool.execute(executorClient, context, params);
-    expect(result.raw.error).toContain(
-      'Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS',
-    );
+
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(postToolSpy).toHaveBeenCalledTimes(1);
+
+    postToolSpy.mockRestore();
   });
 
   it('should not trigger hook when executed tool is not in relevantTools list', async () => {

@@ -69,17 +69,48 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     const params = { context, client: operatorClient } as PreToolExecutionParams;
 
     await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-      'Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
+      'Unsupported hook: HcsAuditTrailHook does not support AgentMode.RETURN_BYTES. Stopping the agent execution before tool test_tool is executed.',
     );
   });
 
-  it('should throw if mode is CUSTOM in preToolExecutionHook', async () => {
+  it('should not throw if mode is CUSTOM in preToolExecutionHook', async () => {
     const operatorClient = {} as Client;
     const context = { mode: AgentMode.CUSTOM };
     const params = { context, client: operatorClient } as PreToolExecutionParams;
 
-    await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-      'Unsupported hook: HcsAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
+    await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
+  });
+
+  it('should log message in postToolExecutionHook when mode is CUSTOM', async () => {
+    const operatorClient = { isOperatorClient: true } as unknown as Client;
+    const context = { mode: AgentMode.CUSTOM };
+    const params = {
+      context,
+      normalisedParams: { amount: 50 },
+      client: operatorClient,
+      toolResult: {
+        raw: {
+          transactionId: '0.0.1@456',
+          status: 'SUCCESS',
+          accountId: null,
+          tokenId: null,
+          topicId: null,
+          scheduleId: null,
+        } as RawTransactionResponse,
+        humanMessage: 'Custom strategy executed successfully.',
+      },
+    } as PostSecondaryActionParams;
+
+    await hook.postToolExecutionHook(params, 'test_tool');
+
+    const TopicMessageSubmitTransactionMock = sdk.TopicMessageSubmitTransaction as any;
+    expect(TopicMessageSubmitTransactionMock).toHaveBeenCalled();
+    const mockInstance = TopicMessageSubmitTransactionMock.mock.results[0].value;
+    expect(mockInstance.setMessage).toHaveBeenCalledWith(
+      expect.stringContaining('Agent executed tool test_tool'),
+    );
+    expect(mockInstance.setMessage).toHaveBeenCalledWith(
+      expect.stringContaining('0.0.1@456'),
     );
   });
 

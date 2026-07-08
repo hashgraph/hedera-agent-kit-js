@@ -145,6 +145,24 @@ export class RemoteTeeSigningStrategy implements TransactionStrategy {
 }
 ```
 
+### Audit Trail Hooks in Custom Mode
+
+Because the `TransactionStrategy` interface enforces that `handle()` returns `ExecuteStrategyResult`
+(`{ raw: RawTransactionResponse, humanMessage: string }`), both `HcsAuditTrailHook` and `HolAuditTrailHook` work
+identically in `CUSTOM` mode as they do in `AUTONOMOUS` mode. You can attach them directly to your context without any
+additional configuration:
+
+```typescript
+import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
+
+const context: Context = {
+  mode: AgentMode.CUSTOM,
+  accountId: '0.0.12345',
+  transactionStrategy: new RemoteTeeSigningStrategy('https://enclave.mycompany.com/sign', process.env.TEE_API_KEY!),
+  hooks: [new HcsAuditTrailHook(['transfer_hbar'], '0.0.99999')],
+};
+```
+
 ### Initializing HAK with Custom Mode
 To enable the custom strategy, register it in the `Context`:
 

@@ -1,7 +1,7 @@
 import { IHederaMirrornodeService } from './hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { Plugin } from './plugin';
 import { AbstractHook } from './hook';
-import type { TransactionStrategy } from './strategies/tx-mode-strategy';
+import { ExecuteStrategyResult, TransactionStrategy } from './strategies/tx-mode-strategy';
 
 /**
  * Defines the execution and signing mode for transactions created by the agent.
@@ -25,6 +25,11 @@ export enum AgentMode {
    * strategy handler supplied via `context.transactionStrategy`. This mode is designed for
    * Human-in-the-Loop approval setups or integrations with remote signing services (such as
    * enclaves, MPC services, or secure API signing endpoints).
+   *
+   * The strategy **must** return `ExecuteStrategyResult` (`{ raw: RawTransactionResponse, humanMessage: string }`),
+   * which is enforced by the `TransactionStrategy` interface. This guarantees full compatibility
+   * with audit-trail hooks (`HcsAuditTrailHook`, `HolAuditTrailHook`) and the standard tool
+   * output pipeline.
    */
   CUSTOM = 'custom',
 }
@@ -56,8 +61,12 @@ export type Context = {
    * A custom transaction strategy instance that handles signing and broadcasting.
    * Required when `mode` is set to `AgentMode.CUSTOM`. Most custom strategies also require
    * `accountId` to be set in the Context to determine the transaction payer.
+   *
+   * The strategy must return `ExecuteStrategyResult` (`{ raw: RawTransactionResponse, humanMessage: string }`).
+   * This is enforced by the `TransactionStrategy` interface and enables audit-trail hooks to work
+   * identically to `AgentMode.AUTONOMOUS`.
    */
-  transactionStrategy?: TransactionStrategy;
+  transactionStrategy?: TransactionStrategy<ExecuteStrategyResult>;
 
   /**
    * Optional custom Mirrornode service implementation.

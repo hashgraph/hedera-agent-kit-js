@@ -33,14 +33,13 @@ export type HolAuditTrailHookConfig = z.infer<typeof configSchema> & {
  * Delegates to AuditSession + HolAuditWriter for all write operations.
  *
  * @remarks
- * **Autonomous mode only.** This hook only supports `AgentMode.AUTONOMOUS`.
+ * Supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM`.
  *
  * - In `RETURN_BYTES` mode it throws before the tool executes, because no transaction was
  *   submitted — there is nothing to audit.
- * - In `CUSTOM` mode it throws because the tool result shape is not guaranteed. A custom
- *   `TransactionStrategy` can return any structure, making reliable audit entries impossible.
- *   If you need audit trails in `CUSTOM` mode, implement a custom `AbstractHook` that reads
- *   the specific shape your strategy returns.
+ * - In `CUSTOM` mode the strategy must return `ExecuteStrategyResult` (i.e. `{ raw, humanMessage }`),
+ *   which is enforced by the `TransactionStrategy` interface. This guarantees the same audit
+ *   entry shape as AUTONOMOUS mode, so remote signing and HITL flows are fully supported.
  */
 export class HolAuditTrailHook extends AbstractHook {
   relevantTools: string[];
@@ -67,7 +66,7 @@ export class HolAuditTrailHook extends AbstractHook {
     this.relevantTools = validated.relevantTools;
     this.name = 'HOL Audit Trail Hook';
     this.description =
-      'Hook to add HOL-standards-compliant audit trail to HCS topics. Supported only in AgentMode.AUTONOMOUS. Blocked in RETURN_BYTES and CUSTOM modes.';
+      'Hook to add HOL-standards-compliant audit trail to HCS topics. Supported in AgentMode.AUTONOMOUS and AgentMode.CUSTOM. Blocked in RETURN_BYTES mode.';
     this.sessionId = validated.sessionId;
     this.loggingClient = loggingClient;
   }
@@ -79,12 +78,9 @@ export class HolAuditTrailHook extends AbstractHook {
   async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    if (
-      params.context.mode === AgentMode.RETURN_BYTES ||
-      params.context.mode === AgentMode.CUSTOM
-    ) {
+    if (params.context.mode === AgentMode.RETURN_BYTES) {
       throw new Error(
-        `Unsupported hook: HolAuditTrailHook only supports AgentMode.AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
+        `Unsupported hook: HolAuditTrailHook does not support AgentMode.RETURN_BYTES. Stopping the agent execution before tool ${method} is executed.`,
       );
     }
   }
