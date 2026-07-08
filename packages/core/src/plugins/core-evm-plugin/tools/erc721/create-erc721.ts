@@ -92,7 +92,7 @@ export class CreateErc721Tool extends BaseTool {
     const erc721Address = await getERC721Address(client, raw);
     const humanMessage = postProcess(erc721Address, raw);
 
-    return { ...result, erc721Address, humanMessage };
+    return { ...(result as ExecuteStrategyResult), erc721Address, humanMessage };
   }
 
   async handleError(error: unknown, _context: Context): Promise<any> {
