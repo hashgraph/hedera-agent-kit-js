@@ -2,6 +2,8 @@
 
 Google Agent Development Kit (ADK) integration for Hedera Agent Kit. Wraps Hedera tools as ADK tools so you can use them with Gemini and the ADK framework.
 
+> **Part of the Hedera Agent Kit:** This package is an adapter for the core [`@hashgraph/hedera-agent-kit`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) SDK.
+
 ## Getting started
 
 ### 1. Install dependencies
