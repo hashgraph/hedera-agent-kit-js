@@ -2,6 +2,8 @@
 
 LangChain integration for Hedera Agent Kit. Wraps Hedera tools as LangChain `StructuredTool` instances so you can use them with LangChain agents and LangGraph workflows.
 
+> **Part of the Hedera Agent Kit:** This package is an adapter for the core [`@hashgraph/hedera-agent-kit`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) SDK.
+
 ## Getting started
 
 ### 1. Install dependencies
