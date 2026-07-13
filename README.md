@@ -36,7 +36,7 @@ The Hedera Agent Kit is extensible with third party plugins by other projects.
 
 ## Agent Kit Functionality
 
-The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
 👉 See [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HEDERAPLUGINS.md) for the full catalogue & usage examples for Hedera Tools.
 
@@ -131,7 +131,7 @@ Add the following to the .env file:
 ```env
 # Required: Hedera credentials (get free testnet account at https://portal.hedera.com/dashboard)
 ACCOUNT_ID="0.0.xxxxx"
-PRIVATE_KEY="0x..." # ECDSA encoded private key
+PRIVATE_KEY="0x..." # ECDSA or ED25519 private key (see note below)
 
 # Optional: Add the API key for your chosen AI provider
 OPENAI_API_KEY="sk-proj-..."      # For OpenAI (https://platform.openai.com/api-keys)
@@ -139,6 +139,19 @@ ANTHROPIC_API_KEY="sk-ant-..."    # For Claude (https://console.anthropic.com)
 GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com/keys)
 # Ollama doesn't need an API key (runs locally)
 ```
+
+##### About Private Keys
+
+Hedera supports two key types: **ECDSA (secp256k1)** and **ED25519**. These examples default to **ECDSA**. To switch to ED25519, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
+// PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+Both constructors accept hex (`0x...`) and DER (`302e...`) encoded keys. The untyped `PrivateKey.fromString()` is deprecated — use the typed constructors instead. There is no reliable way to infer the key type from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with `INVALID_SIGNATURE`. Note: the agent kit's built-in EVM/ERC tools currently require an ECDSA operator key; the Hedera EVM itself supports both key types.
+
+See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
 
