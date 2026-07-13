@@ -273,6 +273,8 @@ _See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
 
 - You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md)
 
+- For a complete, annotated custom-plugin starter (v4 `BaseTool` pattern, non-transaction tools, and a no-LLM smoke test), see [examples/plugin](examples/plugin)
+
 - This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
 - If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
