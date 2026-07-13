@@ -151,7 +151,13 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
     context: Context,
     client: Client,
   ): Promise<any>;
-  abstract secondaryAction(request: any, client: Client, context: Context): Promise<any>;
+  // Override in subclasses that require a secondary action (e.g. transaction signing).
+  // Throws by default so a misconfigured shouldSecondaryAction=true fails loudly rather than silently.
+  async secondaryAction(_request: any, _client: Client, _context: Context): Promise<any> {
+    throw new Error(
+      `${this.name}: secondaryAction called but not implemented. Override it or ensure shouldSecondaryAction returns false.`,
+    );
+  }
 }
 
 export default Tool;
