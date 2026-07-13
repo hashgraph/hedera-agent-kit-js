@@ -72,6 +72,9 @@ const context = {
 };
 ```
 
+> [!NOTE]
+> Policies and hooks are both attached through the same `context.hooks` array — there is no separate `policies` field. `AbstractPolicy` extends `AbstractHook`, so a policy is just a hook that can block execution.
+
 > [!TIP]
 > **Example Application**: See [Option I: Run the Audit Trail Agent](DEVEXAMPLES.md#option-i-run-the-audit-trail-agent)
 > in the Developer Examples for a complete working implementation across different frameworks.
@@ -386,9 +389,8 @@ parameter structures using one of three patterns:
 
 **Example**: `HcsAuditTrailHook` logs all inputs to HCS without needing to know each tool's schema.
 
-```
+```typescript
 async postToolExecutionHook(
-  context: Context,
   params: PostSecondaryActionParams,
   method: string
 ) {
@@ -414,9 +416,8 @@ async postToolExecutionHook(
 
 **Example**:
 
-```
+```typescript
 public async postParamsNormalizationHook(
-  context: Context,
   params: PostParamsNormalizationParams,
   method: string
 ): Promise<any> {
@@ -424,11 +425,13 @@ public async postParamsNormalizationHook(
   switch (method) {
     case 'transfer_hbar':
     case 'transfer_hbar_with_allowance': {
-      // Both tools share the 'transfers' structure
-      const p = params.normalisedParams as { transfers: Array<{ to: string; amount: number }> };
+      // Both tools share the normalised 'hbarTransfers' structure
+      const p = params.normalisedParams as { hbarTransfers: Array<{ accountId: string; amount: Hbar }> };
 
-      // Example: Log total transfer amount
-      const total = p.transfers.reduce((sum, t) => sum + t.amount, 0);
+      // Example: log the total credited amount (skip the sender's negative entry)
+      const total = p.hbarTransfers
+        .filter(t => !t.amount.isNegative())
+        .reduce((sum, t) => sum + t.amount.toBigNumber().toNumber(), 0);
       console.log(`Total HBAR being transferred: ${total}`);
       break;
     }
@@ -472,7 +475,6 @@ export class MaxRecipientsPolicy extends AbstractPolicy {
   }
 
   protected async shouldBlockPostParamsNormalization(
-    context: Context,
     params: PostParamsNormalizationParams,
     method: string
   ): Promise<boolean> {
@@ -512,32 +514,32 @@ const policy = new MaxRecipientsPolicy(
 ```typescript
 import {
   AbstractHook,
-  Context,
   PreToolExecutionParams,
   PostParamsNormalizationParams,
   PostCoreActionParams,
   PostSecondaryActionParams
-} from '@/shared';
+} from '@hashgraph/hedera-agent-kit';
 
 export class MyCustomHook extends AbstractHook {
   name = 'My Custom Hook';
   description = 'Detailed explanation of what this hook does';
   relevantTools = ['create_account', 'transfer_hbar']; // List specific tools
 
-  // Implement any of the 4 hook methods you need:
+  // Implement any of the 4 hook methods you need.
 
-  async preToolExecutionHook(context: Context, params: PreToolExecutionParams, method: string) {
+  async preToolExecutionHook(params: PreToolExecutionParams, method: string) {
     // Early in the lifecycle - before parameter normalization
     if (!this.relevantTools.includes(method)) return;
 
-    // Access client from params object
+    // Access client, context, and raw params from the params object
     const client = params.client;
+    const context = params.context;
     const rawParams = params.rawParams;
 
     // Your logic here
   }
 
-  async postParamsNormalizationHook(context: Context, params: PostParamsNormalizationParams, method: string) {
+  async postParamsNormalizationHook(params: PostParamsNormalizationParams, method: string) {
     // After parameters are validated and cleaned
     if (!this.relevantTools.includes(method)) return;
 
@@ -548,7 +550,7 @@ export class MyCustomHook extends AbstractHook {
     // Your logic here
   }
 
-  async postCoreActionHook(context: Context, params: PostCoreActionParams, method: string) {
+  async postCoreActionHook(params: PostCoreActionParams, method: string) {
     // After main logic (e.g., transaction created but not submitted)
     if (!this.relevantTools.includes(method)) return;
 
@@ -559,7 +561,7 @@ export class MyCustomHook extends AbstractHook {
     // Your logic here
   }
 
-  async postToolExecutionHook(context: Context, params: PostSecondaryActionParams, method: string) {
+  async postToolExecutionHook(params: PostSecondaryActionParams, method: string) {
     // After everything completes
     if (!this.relevantTools.includes(method)) return;
 
@@ -578,19 +580,19 @@ export class MyCustomHook extends AbstractHook {
 2. **Description**: Clearly explain what the hook does and when to use it
 3. **Error Handling**: Wrap your logic in try-catch to avoid breaking tool execution
 4. **Performance**: Keep hook logic lightweight
-5. **State**: Use `context` object to persist data across hook invocations
+5. **State**: Use instance fields on your hook class to persist data across invocations
 
 ### Template for New Policy
 
 ```typescript
 import {
   AbstractPolicy,
-  Context,
   PreToolExecutionParams,
   PostParamsNormalizationParams,
   PostCoreActionParams,
   PostSecondaryActionParams
-} from '@/shared';
+} from '@hashgraph/hedera-agent-kit';
+import { Hbar } from '@hiero-ledger/sdk';
 
 export class MyCustomPolicy extends AbstractPolicy {
   name = 'My Custom Policy';
@@ -602,7 +604,6 @@ export class MyCustomPolicy extends AbstractPolicy {
   // These methods can return boolean or Promise<boolean>
 
   protected shouldBlockPreToolExecution(
-    context: Context,
     params: PreToolExecutionParams,
     method: string
   ): boolean | Promise<boolean> {
@@ -616,23 +617,28 @@ export class MyCustomPolicy extends AbstractPolicy {
   }
 
   protected shouldBlockPostParamsNormalization(
-    context: Context,
     params: PostParamsNormalizationParams,
     method: string
   ): boolean | Promise<boolean> {
     // Block based on normalized parameters
     const {normalisedParams} = params;
 
-    // Example: block if amount > 1000
-    if ('amount' in normalisedParams) {
-      return normalisedParams.amount > 1000;
-    }
-
-    return false;
+    // Example: payment-intent policy for transfer_hbar_tool — block unless
+    // every recipient and amount matches an approved payment intent.
+    // For this tool the normalised amounts are Hbar instances, and the array
+    // also contains the sender's negative (debit) entry — skip it.
+    const approved = { recipient: '0.0.800', maxAmount: new Hbar(10) };
+    const recipients = (normalisedParams.hbarTransfers ?? []).filter(
+      (t: any) => !t.amount.isNegative(),
+    );
+    return recipients.some(
+      (t: any) =>
+        String(t.accountId) !== approved.recipient ||
+        t.amount.toTinybars().greaterThan(approved.maxAmount.toTinybars()),
+    );
   }
 
   protected shouldBlockPostCoreAction(
-    context: Context,
     params: PostCoreActionParams,
     method: string
   ): boolean | Promise<boolean> {
@@ -646,7 +652,6 @@ export class MyCustomPolicy extends AbstractPolicy {
   }
 
   protected shouldBlockPostSecondaryAction(
-    context: Context,
     params: PostSecondaryActionParams,
     method: string
   ): boolean | Promise<boolean> {
@@ -670,10 +675,9 @@ export class MyCustomPolicy extends AbstractPolicy {
 
 **Common Policy Patterns:**
 
-```
+```typescript
 // 1. Threshold Policy
 protected shouldBlockPostParamsNormalization(
-  context: Context,
   params: PostParamsNormalizationParams,
   method: string
 ): boolean {
@@ -682,7 +686,6 @@ protected shouldBlockPostParamsNormalization(
 
 // 2. Allowlist/Blocklist Policy
 protected shouldBlockPreToolExecution(
-  context: Context,
   params: PreToolExecutionParams,
   method: string
 ): boolean {
@@ -691,7 +694,6 @@ protected shouldBlockPreToolExecution(
 
 // 3. Time-based Policy
 protected shouldBlockPreToolExecution(
-  context: Context,
   params: PreToolExecutionParams,
   method: string
 ): boolean {
@@ -699,15 +701,15 @@ protected shouldBlockPreToolExecution(
   return hour < 9 || hour > 17; // Block outside business hours
 }
 
-// 4. Rate Limiting Policy (using context)
+// 4. Rate Limiting Policy (using an instance field)
+private callCount = 0;
+
 protected shouldBlockPreToolExecution(
-  context: Context,
   params: PreToolExecutionParams,
   method: string
 ): boolean {
-  const callCount = (context.state.callCount || 0) + 1;
-  context.state.callCount = callCount;
-  return callCount > this.maxCallsPerSession;
+  this.callCount++;
+  return this.callCount > this.maxCallsPerSession;
 }
 ```
 
