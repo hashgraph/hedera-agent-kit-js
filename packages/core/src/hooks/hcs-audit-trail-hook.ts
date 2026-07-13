@@ -31,7 +31,7 @@ export class HcsAuditTrailHook extends AbstractHook {
   loggingClient?: Client;
 
   /**
-   * @param relevantTools Tool names to audit (e.g. `['transfer_hbar', 'create_token']`).
+   * @param relevantTools Tool names to audit (e.g. `['transfer_hbar_tool', 'create_fungible_token_tool']`).
    * @param hcsTopicId Id of a **pre-existing** HCS topic to log to — the hook does not create it.
    * @param loggingClient Optional client used to submit audit messages; defaults to the agent's
    *   operator client. Must be allowed to submit to `hcsTopicId`.

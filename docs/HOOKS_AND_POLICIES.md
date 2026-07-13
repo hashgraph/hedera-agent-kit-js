@@ -64,9 +64,9 @@ import { HcsAuditTrailHook, MaxRecipientsPolicy, RejectToolPolicy } from '@hashg
 
 const context = {
   hooks: [
-    new HcsAuditTrailHook(['transfer_hbar'], '0.0.12345'),
+    new HcsAuditTrailHook(['transfer_hbar_tool'], '0.0.12345'),
     new MaxRecipientsPolicy(5),
-    new RejectToolPolicy(['delete_account']),
+    new RejectToolPolicy(['delete_account_tool']),
   ],
   // ... other configuration
 };
@@ -102,7 +102,7 @@ Provides an immutable audit trail by logging tool executions to a Hedera Consens
 
 **Parameters**:
 
-- `relevantTools`: `string[]` - List of tools to audit (e.g., `['transfer_hbar', 'create_token']`).
+- `relevantTools`: `string[]` - List of tools to audit (e.g., `['transfer_hbar_tool', 'create_fungible_token_tool']`).
 - `hcsTopicId`: `string` - The pre-created Hedera topic ID (e.g., `'0.0.12345'`).
 - `loggingClient?`: `Client` - (Optional) A separate Hedera client for logging. If not provided, defaults to the agent's
   operator client. Must have submission access to the topic.
@@ -113,7 +113,7 @@ Provides an immutable audit trail by logging tool executions to a Hedera Consens
 import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
 
 const auditHook = new HcsAuditTrailHook(
-  ['transfer_hbar', 'create_token'],
+  ['transfer_hbar_tool', 'create_fungible_token_tool'],
   '0.0.12345' // Ensure this topic exists and the agent can post to it
 );
 
@@ -164,7 +164,7 @@ INDEXED registry as the session topic to list audit entries.
 import { HolAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
 
 const holAuditHook = new HolAuditTrailHook({
-  relevantTools: ['transfer_hbar', 'create_token'],
+  relevantTools: ['transfer_hbar_tool', 'create_fungible_token_tool'],
   sessionId: '0.0.12345'
 });
 
@@ -195,12 +195,12 @@ exceed a defined threshold to prevent massive unauthorized transfers.
 **Default Supported Tools**:
 By default, the policy knows how to count recipients for:
 
-- `transfer_hbar`
-- `transfer_hbar_with_allowance`
-- `airdrop_fungible_token`
-- `transfer_fungible_token_with_allowance`
-- `transfer_non_fungible_token`
-- `transfer_non_fungible_token_with_allowance`
+- `transfer_hbar_tool`
+- `transfer_hbar_with_allowance_tool`
+- `airdrop_fungible_token_tool`
+- `transfer_fungible_token_with_allowance_tool`
+- `transfer_non_fungible_token_tool`
+- `transfer_non_fungible_token_with_allowance_tool`
 
 **Parameters**:
 
@@ -244,14 +244,14 @@ this policy ensures the agent cannot execute it under any circumstances.
 
 **Parameters**:
 
-- `relevantTools`: `string[]` - The list of tool methods to be blocked (e.g., `['delete_account', 'freeze_token']`).
+- `relevantTools`: `string[]` - The list of tool methods to be blocked (e.g., `['delete_account_tool', 'delete_topic_tool']`).
 
 **Example Usage**:
 
 ```typescript
 import { RejectToolPolicy } from '@hashgraph/hedera-agent-kit/policies';
 
-const safetyPolicy = new RejectToolPolicy(['delete_account']);
+const safetyPolicy = new RejectToolPolicy(['delete_account_tool']);
 
 const context = {
   hooks: [safetyPolicy],
@@ -423,8 +423,8 @@ public async postParamsNormalizationHook(
 ): Promise<any> {
   // Filter and branch based on the tool
   switch (method) {
-    case 'transfer_hbar':
-    case 'transfer_hbar_with_allowance': {
+    case 'transfer_hbar_tool':
+    case 'transfer_hbar_with_allowance_tool': {
       // Both tools share the normalised 'hbarTransfers' structure
       const p = params.normalisedParams as { hbarTransfers: Array<{ accountId: string; amount: Hbar }> };
 
@@ -435,7 +435,7 @@ public async postParamsNormalizationHook(
       console.log(`Total HBAR being transferred: ${total}`);
       break;
     }
-    case 'create_account': {
+    case 'create_account_tool': {
       const p = params.normalisedParams as { initialBalance: number };
       console.log(`Creating account with balance: ${p.initialBalance}`);
       break;
@@ -523,7 +523,7 @@ import {
 export class MyCustomHook extends AbstractHook {
   name = 'My Custom Hook';
   description = 'Detailed explanation of what this hook does';
-  relevantTools = ['create_account', 'transfer_hbar']; // List specific tools
+  relevantTools = ['create_account_tool', 'transfer_hbar_tool']; // List specific tools
 
   // Implement any of the 4 hook methods you need.
 
@@ -597,7 +597,7 @@ import { Hbar } from '@hiero-ledger/sdk';
 export class MyCustomPolicy extends AbstractPolicy {
   name = 'My Custom Policy';
   description = 'Detailed explanation of what this policy blocks';
-  relevantTools = ['transfer_hbar', 'transfer_fungible_token'];
+  relevantTools = ['transfer_hbar_tool', 'airdrop_fungible_token_tool'];
 
   // Implement at least one of the shouldBlock... methods for the policy to function
   // Return true to BLOCK execution, false to ALLOW
