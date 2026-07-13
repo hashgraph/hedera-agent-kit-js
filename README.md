@@ -8,8 +8,25 @@ Build Hedera-powered AI agents **in under a minute**.
 
 > **Upgrading from v3?** See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for all breaking changes.
 
-## 📋 Contents
+## Packages
 
+The Hedera Agent Kit is organized as a monorepo containing the core SDK and multiple framework adapter packages:
+
+| Package | NPM Link | Description |
+|---------|----------|-------------|
+| **`@hashgraph/hedera-agent-kit`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) | Core SDK & plugins for Hedera network integration |
+| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils) |
+| **`@hashgraph/hedera-agent-kit-ai-sdk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) | Vercel AI SDK adapter (compatible with standard tools) |
+| **`@hashgraph/hedera-agent-kit-elizaos`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos) | ElizaOS adapter (custom Eliza Actions) |
+| **`@hashgraph/hedera-agent-kit-mcp`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp) | Model Context Protocol (MCP) Server toolkit |
+| **`@hashgraph/hedera-agent-kit-adk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk) | Google Agent Development Kit (ADK) adapter |
+| **`create-hedera-agent`** | [npm](https://www.npmjs.com/package/create-hedera-agent) | CLI scaffold tool to bootstrap Next.js agent apps |
+
+---
+
+## Contents
+
+- [Packages](#-packages)
 - [Key Features](#key-features)
 - [About the Agent Kit Functionality](#agent-kit-functionality)
 - [Third Party Plugins](#third-party-plugins)
@@ -255,6 +272,8 @@ _See more in [docs/PLUGINS.md](docs/PLUGINS.md)_
 ## Creating Plugins & Contributing
 
 - You can find a guide for creating plugins in [docs/PLUGINS.md](docs/PLUGINS.md)
+
+- For a complete, annotated custom-plugin starter (v4 `BaseTool` pattern, non-transaction tools, and a no-LLM smoke test), see [examples/plugin](examples/plugin)
 
 - This guide also has instructions for [publishing and registering your plugin](docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 

@@ -122,6 +122,19 @@ See `example-plugin.ts` for a complete working example that demonstrates:
 - Integration with Hedera Agent Kit utilities (PromptGenerator, handleTransaction)
 - Support for different operation modes (AUTONOMOUS vs RETURN_BYTES)
 
+## Testing Your Plugin (no LLM required)
+
+You can smoke-test a plugin without an LLM, operator credentials, or a funded account: instantiate the plugin and call `tool.execute()` directly. In `RETURN_BYTES` mode, transaction tools return frozen transaction bytes without signing or submitting anything — a safe dry run.
+
+See [smoke-test.ts](smoke-test.ts) for a complete runnable example. Run it with:
+
+```bash
+npm install
+npm test
+```
+
+Need an audit trail? `BaseTool`-based tools can log executions to an HCS topic via `HcsAuditTrailHook` — see [docs/HOOKS_AND_POLICIES.md](../../docs/HOOKS_AND_POLICIES.md).
+
 ## Distribution
 
 Plugins can be distributed as:

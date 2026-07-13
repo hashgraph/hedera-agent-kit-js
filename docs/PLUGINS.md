@@ -461,9 +461,36 @@ if (toolCall) {
 }
 ```
 
+### Testing Your Plugin (no LLM required)
+
+You do not need an LLM, operator credentials, or a funded account to smoke-test a plugin. Tools are plain objects — instantiate the plugin and call `tool.execute()` directly:
+
+```typescript
+import assert from 'node:assert';
+import { Client } from '@hiero-ledger/sdk';
+import { AgentMode, Context } from '@hashgraph/hedera-agent-kit';
+import myPlugin from './my-plugin';
+
+const client = Client.forTestnet(); // no operator needed — nothing is signed or submitted
+const context: Context = { mode: AgentMode.RETURN_BYTES, accountId: '0.0.1001' };
+
+const tools = myPlugin.tools(context);
+const myTool = tools.find(t => t.method === 'my_tool')!;
+
+// Non-transaction tools return their result directly.
+// Transaction tools in RETURN_BYTES mode return frozen transaction bytes
+// without signing or submitting — a safe dry run.
+const result = await myTool.execute(client, context, { requiredParam: 'value' });
+assert.ok(result);
+```
+
+See [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts) for a complete runnable example that also verifies the hook lifecycle.
+
+**Optional audit logging:** `BaseTool`-based tools can log their executions to an HCS topic via `HcsAuditTrailHook` — add it to `context.hooks`, no tool changes required. See [HOOKS_AND_POLICIES.md](HOOKS_AND_POLICIES.md).
+
 ### Examples and References
 
-- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts)
+- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
 - See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
