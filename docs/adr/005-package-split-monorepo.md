@@ -213,7 +213,12 @@ Example:
 - `@hashgraph/hedera-agent-kit-langchain@4.5.1`
 - `@hashgraph/hedera-agent-kit-ai-sdk@4.1.3`
 
+> [!NOTE]
+> **Initial Monorepo Release Versioning**:
+> In this initial release of the monorepo, the core package `@hashgraph/hedera-agent-kit` is released at version `4.0.0` (continuing from the v3 line), while the newly split integration/adapter packages (such as `@hashgraph/hedera-agent-kit-langchain`, `@hashgraph/hedera-agent-kit-ai-sdk`, `@hashgraph/hedera-agent-kit-elizaos`, and `@hashgraph/hedera-agent-kit-mcp`) start their lifecycle at version `1.0.0`. These `1.x` integration packages are fully compatible with the `4.x` core package.
+
 This keeps package releases flexible while preserving a simple compatibility signal: packages on the same major version are intended to work together.
+
 
 ## Consequences
 
