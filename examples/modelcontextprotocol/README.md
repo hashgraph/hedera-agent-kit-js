@@ -42,7 +42,7 @@ npm run build
 The server requires a `.env` file or environment variables:
 ```env
 HEDERA_OPERATOR_ID=0.0.xxxx
-HEDERA_OPERATOR_KEY=302e...
+HEDERA_OPERATOR_KEY=3030...
 ```
 
 ## Supported Arguments
