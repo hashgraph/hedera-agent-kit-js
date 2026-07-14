@@ -18,7 +18,7 @@ Create a `.env` file:
 
 ```
 ACCOUNT_ID=0.0.12345
-PRIVATE_KEY=302e...
+PRIVATE_KEY=3030...
 GEMINI_API_KEY=your-gemini-api-key
 ```
 

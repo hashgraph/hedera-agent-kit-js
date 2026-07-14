@@ -64,7 +64,7 @@ Edit your `.env.local` to set your keys and mode:
 2. Create or access your Hedera account
 3. Generate or retrieve your **ECDSA private key** (not ED25519)
 4. The key format should be:
-   - DER hex starting with `303002...` OR
+   - DER hex starting with `3030...` OR
    - 0x-prefixed 64-character hex string
 
 > **Important:** It is possible to use ED25519 keys for autonomous mode, however, this example application is configured for ECDSA keys. If you want to use ED25519 you can update the `createHederaClient` function in `src/lib/agent-config.ts`

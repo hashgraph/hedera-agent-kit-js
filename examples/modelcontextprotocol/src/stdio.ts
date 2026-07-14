@@ -127,7 +127,8 @@ export async function main() {
 
   // Set operator from environment variables if they exist
   const operatorId = process.env.HEDERA_OPERATOR_ID;
-  const operatorKey = PrivateKey.fromStringDer(process.env.HEDERA_OPERATOR_KEY!);
+  const operatorKey = PrivateKey.fromStringECDSA(process.env.HEDERA_OPERATOR_KEY!);
+  // const operatorKey = PrivateKey.fromStringED25519(process.env.HEDERA_OPERATOR_KEY!); // Use this line if you have an ED25519 key
 
   if (operatorId && operatorKey) {
     try {
