@@ -78,6 +78,8 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
 
     expect(result).toBeDefined();
     expect(result.humanMessage).toContain('Token successfully minted');
+    expect(result.humanMessage).toContain('Serial(s):');
+    expect(result.raw.serials).toHaveLength(1);
     expect(supplyAfter).toBe(supplyBefore + 1);
   });
 
@@ -100,6 +102,8 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
 
     expect(result).toBeDefined();
     expect(result.humanMessage).toContain('Token successfully minted');
+    expect(result.humanMessage).toContain('Serial(s):');
+    expect(result.raw.serials).toHaveLength(uris.length);
     expect(supplyAfter).toBe(supplyBefore + uris.length);
   });
 
