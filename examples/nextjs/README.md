@@ -2,6 +2,9 @@
 
 This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera Agent Kit, supporting both **AUTONOMOUS** and **RETURN_BYTES (HITL)** execution modes.
 
+> [!NOTE]
+> This template uses the **LangChain adapter** (`@hashgraph/hedera-agent-kit-langchain`). If you are building with the **Vercel AI SDK** (`streamText`/`generateText`), use [`@hashgraph/hedera-agent-kit-ai-sdk`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) instead — see [examples/ai-sdk](../ai-sdk). Mapping LangChain tools to AI SDK tools by hand leads to `Type instantiation is excessively deep` TypeScript errors.
+
 > [!IMPORTANT]
 > **Migrating from v3 to v4?** Check out our [Migration Guide](../../docs/MIGRATION-v4.md).
 > 
