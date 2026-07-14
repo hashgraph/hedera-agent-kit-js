@@ -47,17 +47,6 @@ The Hedera Agent Kit is an open-source toolkit that brings intelligent agent wor
 
 As of v4, the Hedera Agent Kit is organized as a monorepo of `@hashgraph`-scoped packages. You install the core package plus only the toolkit for your framework (LangChain, Vercel AI SDK, ElizaOS, or MCP). See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for details.
 
-| Framework | Package | Example |
-| --------- | ------- | ------- |
-| LangChain | [`@hashgraph/hedera-agent-kit-langchain`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | [examples/langchain](examples/langchain), [examples/langchain-v1](examples/langchain-v1) |
-| Vercel AI SDK | [`@hashgraph/hedera-agent-kit-ai-sdk`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) | [examples/ai-sdk](examples/ai-sdk) |
-| Model Context Protocol (MCP) | [`@hashgraph/hedera-agent-kit-mcp`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp) | [examples/modelcontextprotocol](examples/modelcontextprotocol) |
-| ElizaOS | [`@hashgraph/hedera-agent-kit-elizaos`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos) | [ElizaOS guide](docs/DEVEXAMPLES.md#option-f-try-out-the-hedera-agent-kit-with-elizaos) |
-| Google ADK | [`@hashgraph/hedera-agent-kit-adk`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk) | [examples/adk](examples/adk) |
-
-> [!TIP]
-> Building with the Vercel AI SDK (`streamText`/`generateText`)? Use `@hashgraph/hedera-agent-kit-ai-sdk` — its `getTools()` returns natively typed AI SDK tools. Do not map LangChain tools to AI SDK tools by hand; it leads to `Type instantiation is excessively deep` build errors.
-
 The Hedera Agent Kit is extensible with third party plugins by other projects.
 
 ---
