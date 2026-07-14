@@ -80,7 +80,7 @@ The Hedera Agent Kit provides a flexible and powerful system for putting limits 
 
 For more information on hooks and policies, see the [Hooks and Policies documentation](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md).
 
-Try out an example [Audit Hook Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-try-out-the-audit-hook-agent) to see how hooks and policies work in practice.
+Try out an example [Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-audit-trail-agent) to see how hooks and policies work in practice.
 
 ---
 
@@ -92,12 +92,15 @@ You can try out examples of the different types of agents you can build by follo
 First follow instructions in the [Developer Examples to clone and configure the example](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md), then choose from one of the examples to run:
 
 - **Option A -** [Example Tool Calling Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
-- **Option B -** [Example Structured Chat Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent)
-- **Option C -** [Example Return Bytes Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+- **Option B -** [Example Structured Chat Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent-langchain-v03-only)
+- **Option C -** [Example Human in the Loop Chat Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
 - **Option D -** [Example MCP Server](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
-- **Option E -** [Example ElizaOS Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-e-try-out-the-hedera-agent-kit-with-elizaos)
-- **Option F -** [Example Preconfigured MCP Client Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-g-try-out-the-preconfigured-mcp-client-agent)
-- **Option G -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-try-out-the-google-adk-agent)
+- **Option E -** [Example External MCP Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-e-try-out-the-external-mcp-agent)
+- **Option F -** [Example ElizaOS Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-f-try-out-the-hedera-agent-kit-with-elizaos)
+- **Option G -** [Example Preconfigured MCP Client Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-g-try-out-the-preconfigured-mcp-client-agent)
+- **Option H -** [Example Policy Enforcement Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
+- **Option I -** [Example Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-audit-trail-agent)
+- **Option J -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-j-try-out-the-google-adk-agent)
 
 ---
 

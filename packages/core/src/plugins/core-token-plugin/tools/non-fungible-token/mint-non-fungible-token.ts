@@ -32,16 +32,25 @@ Example: "Mint 0.0.6465503 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5g
 `;
 };
 
-const postProcess = (response: RawTransactionResponse) => {
+/**
+ * Formats the mint NFT transaction response into a human-readable message.
+ * Includes the token ID and minted serial number(s) for immediate transactions,
+ * or the schedule ID for scheduled transactions.
+ * @param response - The raw transaction response from Hedera.
+ * @returns A human-readable string describing the mint result.
+ */
+const postProcess = (response: RawTransactionResponse): string => {
   if (response.scheduleId) {
     return `Scheduled mint transaction created successfully.
 Transaction ID: ${response.transactionId.toString()}
 Schedule ID: ${response.scheduleId.toString()}`;
   }
   const tokenIdStr = response.tokenId ? response.tokenId.toString() : 'unknown';
+  const serialsStr = response.serials.length ? response.serials.join(', ') : 'unknown';
   return `Token successfully minted.
 Transaction ID: ${response.transactionId.toString()}
-Token ID: ${tokenIdStr}`;
+Token ID: ${tokenIdStr}
+Serial(s): ${serialsStr}`;
 };
 
 export const MINT_NON_FUNGIBLE_TOKEN_TOOL = 'mint_non_fungible_token_tool';

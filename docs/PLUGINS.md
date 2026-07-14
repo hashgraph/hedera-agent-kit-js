@@ -380,6 +380,34 @@ Add your plugin to the main plugins index (src/plugins/index.ts):
 - Respect the AgentMode (`AUTONOMOUS` vs `RETURN_BYTES`)
 - Implement proper transaction building patterns
 
+**Multi-Account Signing**
+
+`handleTransaction()` signs with the operator of whichever `Client` you pass — the toolkit's client is just the default your tool receives. To sign from a different account than the agent's operator (e.g. a separate treasury or distributor wallet), build a dedicated client inside your tool and pass that one instead:
+
+```typescript
+import { Client, PrivateKey, TransferTransaction } from '@hiero-ledger/sdk';
+import { BaseTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
+
+export class TreasuryPayoutTool extends BaseTool {
+  // method, name, description, parameters, normalizeParams, coreAction:
+  // see the Step-by-Step Guide above. coreAction builds the TransferTransaction.
+
+  // A client whose operator is the treasury account — not the agent's operator.
+  // The account ID is a string, but the key must be a PrivateKey instance.
+  private treasuryClient = Client.forTestnet().setOperator(
+    process.env.TREASURY_ACCOUNT_ID!,
+    PrivateKey.fromStringECDSA(process.env.TREASURY_PRIVATE_KEY!), // or fromStringED25519 for an ED25519 key
+  );
+
+  async secondaryAction(tx: TransferTransaction, _client: Client, context: Context) {
+    // Sign and submit as the treasury account instead of the agent's operator
+    return handleTransaction(tx, this.treasuryClient, context);
+  }
+}
+```
+
+The `AgentMode` is still respected. In `RETURN_BYTES` mode nothing is signed server-side: `handleTransaction()` returns unsigned bytes for `context.accountId` (the connected user's account) regardless of which client you pass, so human-in-the-loop flows are unaffected. The signer swap above only changes behaviour in `AUTONOMOUS` mode.
+
 ### Tool Output Parsing
 
 The Hedera Agent Kit tools return a structured JSON output that needs to be parsed to be useful for the agent and the user.
