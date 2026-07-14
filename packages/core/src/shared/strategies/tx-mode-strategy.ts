@@ -22,6 +22,8 @@ export interface RawTransactionResponse {
   status: string;
   accountId: AccountId | null;
   tokenId: TokenId | null;
+  /** Serial numbers assigned to newly minted NFTs; empty array for non-NFT transactions. */
+  serials: string[];
   transactionId: string;
   topicId: TopicId | null;
   scheduleId: ScheduleId | null;
@@ -49,6 +51,7 @@ export class ExecuteStrategy implements TxModeStrategy {
       status: receipt.status.toString(),
       accountId: receipt.accountId,
       tokenId: receipt.tokenId,
+      serials: receipt.serials.map((s) => s.toString()),
       transactionId: tx.transactionId?.toString() ?? '',
       topicId: receipt.topicId,
       scheduleId: receipt.scheduleId,

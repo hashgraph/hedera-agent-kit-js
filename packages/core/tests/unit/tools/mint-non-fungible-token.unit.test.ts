@@ -26,6 +26,7 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
     const raw = {
       status: 'SUCCESS',
       tokenId: { toString: () => '0.0.5005' },
+      serials: ['1'],
       transactionId: { toString: () => '0.0.1234@1700000000.000000001' },
     } as any;
     return { raw, humanMessage: post ? post(raw) : JSON.stringify(raw) } as any;
@@ -87,8 +88,10 @@ describe('mint-non-fungible-token tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw.status).toBe('SUCCESS');
+    expect(res.raw.serials).toEqual(['1']);
     expect(res.humanMessage).toContain('Token successfully minted');
     expect(res.humanMessage).toContain('0.0.1234@');
+    expect(res.humanMessage).toContain('Serial(s): 1');
 
     expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledTimes(1);
     expect(mockedBuilder.mintNonFungibleToken).toHaveBeenCalledWith(normalisedParams);
