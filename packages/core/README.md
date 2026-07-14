@@ -319,7 +319,7 @@ _See more in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/
 
 - This guide also has instructions for [publishing and registering your plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to help our community find and use it.
 
-- If you would like to contribute and suggest improvements for the cord SDK and MCP server, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
+- If you would like to contribute and suggest improvements for the core SDK and MCP server, see [CONTRIBUTING.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/CONTRIBUTING.md) for details on how to contribute to the Hedera Agent Kit.
 
 ## License
 
