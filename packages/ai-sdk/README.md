@@ -2,6 +2,8 @@
 
 Vercel AI SDK integration for Hedera Agent Kit. Wraps Hedera tools as Vercel AI SDK tools so you can use them with `generateText()` and any AI SDK-compatible model.
 
+> **Part of the Hedera Agent Kit:** This package is an adapter for the core [`@hashgraph/hedera-agent-kit`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) SDK.
+
 ## Getting started
 
 ### 1. Install dependencies

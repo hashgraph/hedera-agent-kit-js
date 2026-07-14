@@ -7,6 +7,10 @@ import {
   optionalScheduledTransactionParamsNormalised,
 } from './common.zod';
 
+// Structural check on `__isLong__`; survives ESM/CJS dual copies where an instanceof
+// check against the imported Long constructor would silently fail.
+const zLong = z.custom<Long>((v) => Long.isLong(v), { message: 'Expected Long' });
+
 export const transferHbarParameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
     transfers: z
@@ -34,7 +38,7 @@ export const transferHbarParametersNormalised = (context: Context = {}) =>
     hbarTransfers: z.array(
       z.object({
         accountId: z.union([z.string(), z.instanceof(AccountId)]),
-        amount: z.union([z.number(), z.string(), z.instanceof(Hbar), z.instanceof(Long)]),
+        amount: z.union([z.number(), z.string(), z.instanceof(Hbar), zLong]),
       }),
     ),
     transactionMemo: z.string().optional(),
@@ -64,7 +68,7 @@ export const createAccountParametersNormalised = (_context: Context = {}) =>
     accountMemo: z.string().optional(),
     initialBalance: z.union([z.string(), z.number()]).optional(),
     key: z.instanceof(Key).optional(),
-    maxAutomaticTokenAssociations: z.union([z.number(), z.instanceof(Long)]).optional(),
+    maxAutomaticTokenAssociations: z.union([z.number(), zLong]).optional(),
   });
 
 export const deleteAccountParameters = (_context: Context = {}) =>
@@ -107,7 +111,7 @@ export const updateAccountParameters = (_context: Context = {}) =>
 export const updateAccountParametersNormalised = (_context: Context = {}) =>
   optionalScheduledTransactionParamsNormalised(_context).extend({
     accountId: z.instanceof(AccountId),
-    maxAutomaticTokenAssociations: z.union([z.number(), z.instanceof(Long)]).optional(),
+    maxAutomaticTokenAssociations: z.union([z.number(), zLong]).optional(),
     stakedAccountId: z.union([z.string(), z.instanceof(AccountId)]).optional(),
     accountMemo: z.string().optional(),
     declineStakingReward: z.boolean().optional(),
@@ -209,7 +213,7 @@ export const transferHbarWithAllowanceParametersNormalised = (_context: Context 
     hbarTransfers: z.array(
       z.object({
         accountId: z.union([z.string(), z.instanceof(AccountId)]),
-        amount: z.union([z.number(), z.string(), z.instanceof(Hbar), z.instanceof(Long)]),
+        amount: z.union([z.number(), z.string(), z.instanceof(Hbar), zLong]),
       }),
     ),
     hbarApprovedTransfer: z.object({
