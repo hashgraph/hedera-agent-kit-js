@@ -270,7 +270,7 @@ export default tool;
 ```typescript
 import { z } from "zod";
 import { Context, Tool } from "@hashgraph/hedera-agent-kit";
-import { Client } from "@hashgraph/sdk";
+import { Client } from "@hiero-ledger/sdk";
 
 const myToolParameters = (context: Context = {}) =>
   z.object({
@@ -346,19 +346,24 @@ Create your plugin index file (index.ts):
 
   export default { myCustomPlugin, myCustomPluginToolNames };
 ```
-**Step 4: Register Your Plugin**
+**Step 4: Use Your Plugin**
 
-Add your plugin to the main plugins index (src/plugins/index.ts):
+If you are building an **external / custom plugin** (the common case), there is **nothing to register in this repository**. Your plugin is a plain object — import it and pass it to the toolkit's `plugins: [...]` array, exactly as shown in [Using Your Custom Plugin](#using-your-custom-plugin) below:
 
-``` typescript
-  import { myCustomPlugin, myCustomPluginToolNames } from './my-custom-plugin';
+```typescript
+import { myCustomPlugin } from './my-custom-plugin';
 
-  export {
-    // ... existing exports
-    myCustomPlugin,
-    myCustomPluginToolNames,
-  };
+const toolkit = new HederaLangchainToolkit({
+  client,
+  configuration: {
+    plugins: [myCustomPlugin],
+    context: { mode: AgentMode.AUTONOMOUS },
+  },
+});
 ```
+
+> [!NOTE]
+> Editing this repository's `packages/core/src/plugins/index.ts` is **only** needed when you are contributing a plugin **into the core SDK** via a pull request — not for your own external plugin. See [Publish and Register Your Plugin](#publish-and-register-your-plugin) for that flow.
 
 ### Best Practices
 
