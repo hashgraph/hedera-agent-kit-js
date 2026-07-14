@@ -495,6 +495,7 @@ See [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts) for a comp
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
 - For migrating existing v3 tools to `BaseTool`, see the [Migration Guide](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking)
+- To expose your plugin's tools over the Model Context Protocol (including non-custodial `RETURN_BYTES` servers), see [MCP.md](MCP.md)
 ## Publish and Register Your Plugin
 
 > All commits for your plugin must be [DCO signed](https://wiki.linuxfoundation.org/dco). To avoid having pull requests blocked in the future, always include a sign-off.
