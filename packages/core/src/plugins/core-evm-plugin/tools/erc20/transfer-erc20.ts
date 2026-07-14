@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgentMode, type Context } from '@/shared/configuration';
+import { isReturnBytesMode, type Context } from '@/shared/configuration';
 import { BaseTool } from '@/shared/tools';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client, Status } from '@hiero-ledger/sdk';
@@ -84,7 +84,7 @@ export class TransferErc20Tool extends BaseTool {
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (context.mode === AgentMode.RETURN_BYTES) {
+    if (isReturnBytesMode(context.mode)) {
       return await handleTransaction(transaction, client, context);
     }
     return await handleTransaction(transaction, client, context, postProcess);

@@ -84,12 +84,13 @@ const context = {
 Provides an immutable audit trail by logging tool executions to a Hedera Consensus Service (HCS) topic.
 
 > [!IMPORTANT]  
-> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM`. It throws before the tool
-> executes in `RETURN_BYTES` mode — no transaction was submitted, so there is nothing to audit.
+> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`. It throws before the
+> tool executes in `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes — no transaction was submitted, so there is nothing to
+> audit.
 >
-> In `CUSTOM` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
-> (`{ raw: RawTransactionResponse, humanMessage: string }`), which is enforced by the `TransactionStrategy` interface.
-> This guarantees the hook receives the same shape as in `AUTONOMOUS` mode and can log the audit entry correctly.
+> In `CUSTOM_EXECUTE_TX` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
+> (`{ raw: RawTransactionResponse, humanMessage: string }`). This guarantees the hook receives the same shape as in
+> `AUTONOMOUS` mode and can log the audit entry correctly.
 
 > [!WARNING]  
 > **HIP-991 (Paid Topics)**: If a paid topic is used, it will incur submission fees. Ensure the `loggingClient` has
@@ -145,12 +146,13 @@ Hook that writes [HOL-standards-compliant](https://hol.org) audit trails to an H
 INDEXED registry as the session topic to list audit entries.
 
 > [!IMPORTANT]  
-> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM`. It throws before the tool
-> executes in `RETURN_BYTES` mode — no transaction was submitted, so there is nothing to audit.
+> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`. It throws before the
+> tool executes in `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes — no transaction was submitted, so there is nothing to
+> audit.
 >
-> In `CUSTOM` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
-> (`{ raw: RawTransactionResponse, humanMessage: string }`), which is enforced by the `TransactionStrategy` interface.
-> This guarantees the hook receives the same shape as in `AUTONOMOUS` mode and can write a compliant HOL audit entry.
+> In `CUSTOM_EXECUTE_TX` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
+> (`{ raw: RawTransactionResponse, humanMessage: string }`). This guarantees the hook receives the same shape as in
+> `AUTONOMOUS` mode and can write a compliant HOL audit entry.
 
 **Prerequisites**:
 

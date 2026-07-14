@@ -90,7 +90,7 @@ describe('HcsAuditTrailHook Integration Tests', () => {
       .mockImplementation(async () => {});
 
     const context: Context = {
-      mode: AgentMode.CUSTOM,
+      mode: AgentMode.CUSTOM_EXECUTE_TX,
       hooks: [hook],
       accountId: profile.operator.accountId.toString(),
       transactionStrategy: new PassthroughStrategy(),

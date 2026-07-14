@@ -51,7 +51,7 @@ describe('Custom Transaction Strategy Integration Tests', () => {
     }
 
     const context: Context = {
-      mode: AgentMode.CUSTOM,
+      mode: AgentMode.CUSTOM_EXECUTE_TX,
       accountId: executor.accountId.toString(),
       transactionStrategy: new CustomTrackingStrategy(),
     };

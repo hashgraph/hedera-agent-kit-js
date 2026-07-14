@@ -1,6 +1,6 @@
 import {
   AbstractHook,
-  AgentMode,
+  isReturnBytesMode,
   PostSecondaryActionParams,
   PreToolExecutionParams,
 } from '@/shared';
@@ -11,13 +11,14 @@ import { Client, TopicMessageSubmitTransaction } from '@hiero-ledger/sdk';
  * Hook to add an audit trail of tool executions to a Hedera Consensus Service (HCS) topic.
  *
  * @remarks
- * Supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM`.
+ * Supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`.
  *
- * - In `RETURN_BYTES` mode it throws before the tool executes, because no transaction was
- *   submitted — there is nothing to audit.
- * - In `CUSTOM` mode the strategy must return `ExecuteStrategyResult` (i.e. `{ raw, humanMessage }`),
- *   which is enforced by the `TransactionStrategy` interface. This guarantees the same audit
- *   entry shape as AUTONOMOUS mode, so remote signing and HITL flows are fully supported.
+ * - In `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes it throws before the tool executes, because
+ *   no transaction was submitted — there is nothing to audit.
+ * - In `CUSTOM_EXECUTE_TX` mode the strategy must return `ExecuteStrategyResult`
+ *   (i.e. `{ raw, humanMessage }`), which is enforced by the `TransactionStrategy` interface. This
+ *   guarantees the same audit entry shape as AUTONOMOUS mode, so remote signing and HITL flows are
+ *   fully supported.
  *
  * **Requires a pre-existing topic.** The hook does not create an HCS topic. Create the topic
  * first — via the `create_topic_tool`.
@@ -45,7 +46,7 @@ export class HcsAuditTrailHook extends AbstractHook {
     this.relevantTools = relevantTools;
     this.name = 'HCS Audit Trail Hook';
     this.description =
-      'Hook to add audit trail to HCS messages. Supported in AgentMode.AUTONOMOUS and AgentMode.CUSTOM. Blocked in RETURN_BYTES mode.';
+      'Hook to add audit trail to HCS messages. Supported in AgentMode.AUTONOMOUS and AgentMode.CUSTOM_EXECUTE_TX. Blocked in RETURN_BYTES and CUSTOM_RETURN_BYTES modes.';
     this.hcsTopicId = hcsTopicId;
     this.loggingClient = loggingClient;
   }
@@ -53,9 +54,9 @@ export class HcsAuditTrailHook extends AbstractHook {
   async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    if (params.context.mode === AgentMode.RETURN_BYTES) {
+    if (isReturnBytesMode(params.context.mode)) {
       throw new Error(
-        `Unsupported hook: HcsAuditTrailHook does not support AgentMode.RETURN_BYTES. Stopping the agent execution before tool ${method} is executed.`,
+        `Unsupported hook: HcsAuditTrailHook does not support AgentMode.RETURN_BYTES or AgentMode.CUSTOM_RETURN_BYTES. Stopping the agent execution before tool ${method} is executed.`,
       );
     }
   }

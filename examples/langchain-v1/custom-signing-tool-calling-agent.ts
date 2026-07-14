@@ -94,12 +94,12 @@ async function bootstrap(): Promise<void> {
   // Hedera client setup (Testnet by default)
   const agentClient = Client.forTestnet().setOperator(operatorAccountId, operatorPrivateKey);
 
-  // Prepare Hedera toolkit with AgentMode.CUSTOM and our custom approval strategy
+  // Prepare Hedera toolkit with AgentMode.CUSTOM_EXECUTE_TX and our custom approval strategy
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client: agentClient,
     configuration: {
       context: {
-        mode: AgentMode.CUSTOM,
+        mode: AgentMode.CUSTOM_EXECUTE_TX,
         accountId: operatorAccountId,
         transactionStrategy: new CLITransactionApprovalStrategy(),
       },

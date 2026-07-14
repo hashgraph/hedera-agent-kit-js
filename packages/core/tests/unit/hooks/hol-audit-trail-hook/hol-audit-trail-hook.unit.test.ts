@@ -132,26 +132,29 @@ describe('HolAuditTrailHook', () => {
       await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
     });
 
-    it('should throw when mode is RETURN_BYTES for a relevant tool', async () => {
-      const context = { mode: AgentMode.RETURN_BYTES };
-      const params = { context } as PreToolExecutionParams;
+    it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+      'should throw when mode is %s for a relevant tool',
+      async mode => {
+        const context = { mode };
+        const params = { context } as PreToolExecutionParams;
 
-      await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-        'Unsupported hook: HolAuditTrailHook does not support AgentMode.RETURN_BYTES. Stopping the agent execution before tool test_tool is executed.',
-      );
-    });
+        await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
+          'Unsupported hook: HolAuditTrailHook does not support AgentMode.RETURN_BYTES or AgentMode.CUSTOM_RETURN_BYTES. Stopping the agent execution before tool test_tool is executed.',
+        );
+      },
+    );
 
-    it('should not throw when mode is CUSTOM for a relevant tool', async () => {
-      const context = { mode: AgentMode.CUSTOM };
+    it('should not throw when mode is CUSTOM_EXECUTE_TX for a relevant tool', async () => {
+      const context = { mode: AgentMode.CUSTOM_EXECUTE_TX };
       const params = { context } as PreToolExecutionParams;
 
       await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
     });
   });
 
-  describe('postToolExecutionHook in CUSTOM mode', () => {
-    it('should write audit entry when mode is CUSTOM and toolResult has ExecuteStrategyResult shape', async () => {
-      const context = { mode: AgentMode.CUSTOM };
+  describe('postToolExecutionHook in CUSTOM_EXECUTE_TX mode', () => {
+    it('should write audit entry when mode is CUSTOM_EXECUTE_TX and toolResult has ExecuteStrategyResult shape', async () => {
+      const context = { mode: AgentMode.CUSTOM_EXECUTE_TX };
       const postParams = makePostParams({ context });
 
       await hook.postToolExecutionHook(postParams, 'test_tool');

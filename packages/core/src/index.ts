@@ -3,7 +3,7 @@
 
 // Primary types
 export { default as HederaAgentAPI } from './shared/api';
-export { AgentMode } from './shared/configuration';
+export { AgentMode, isReturnBytesMode, isCustomMode } from './shared/configuration';
 export type { Configuration, Context } from './shared/configuration';
 export type { Plugin } from './shared/plugin';
 export { PluginRegistry } from './shared/plugin';
@@ -25,9 +25,10 @@ export { handleTransaction } from './shared/strategies/tx-mode-strategy';
 export type {
   RawTransactionResponse,
   ExecuteStrategyResult,
+  ReturnBytesStrategyResult,
   TransactionStrategy,
 } from './shared/strategies/tx-mode-strategy';
-export { ExecuteStrategy } from './shared/strategies/tx-mode-strategy';
+export { ExecuteStrategy, ReturnBytesStrategy } from './shared/strategies/tx-mode-strategy';
 export { AccountResolver } from './shared/utils/account-resolver';
 export { PromptGenerator } from './shared/utils/prompt-generator';
 export {

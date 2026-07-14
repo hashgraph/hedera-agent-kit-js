@@ -262,7 +262,7 @@ describe('HolAuditTrailHook Integration Tests', () => {
       });
 
     const context: Context = {
-      mode: AgentMode.CUSTOM,
+      mode: AgentMode.CUSTOM_EXECUTE_TX,
       hooks: [hook],
       accountId: executor.accountId.toString(),
       transactionStrategy: new PassthroughStrategy(),

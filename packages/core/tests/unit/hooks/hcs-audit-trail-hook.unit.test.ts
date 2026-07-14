@@ -63,27 +63,30 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     expect(postMessageSpy).not.toHaveBeenCalled();
   });
 
-  it('should throw if mode is RETURN_BYTES in preToolExecutionHook', async () => {
-    const operatorClient = {} as Client;
-    const context = { mode: AgentMode.RETURN_BYTES };
-    const params = { context, client: operatorClient } as PreToolExecutionParams;
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'should throw if mode is %s in preToolExecutionHook',
+    async mode => {
+      const operatorClient = {} as Client;
+      const context = { mode };
+      const params = { context, client: operatorClient } as PreToolExecutionParams;
 
-    await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-      'Unsupported hook: HcsAuditTrailHook does not support AgentMode.RETURN_BYTES. Stopping the agent execution before tool test_tool is executed.',
-    );
-  });
+      await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
+        'Unsupported hook: HcsAuditTrailHook does not support AgentMode.RETURN_BYTES or AgentMode.CUSTOM_RETURN_BYTES. Stopping the agent execution before tool test_tool is executed.',
+      );
+    },
+  );
 
-  it('should not throw if mode is CUSTOM in preToolExecutionHook', async () => {
+  it('should not throw if mode is CUSTOM_EXECUTE_TX in preToolExecutionHook', async () => {
     const operatorClient = {} as Client;
-    const context = { mode: AgentMode.CUSTOM };
+    const context = { mode: AgentMode.CUSTOM_EXECUTE_TX };
     const params = { context, client: operatorClient } as PreToolExecutionParams;
 
     await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
   });
 
-  it('should log message in postToolExecutionHook when mode is CUSTOM', async () => {
+  it('should log message in postToolExecutionHook when mode is CUSTOM_EXECUTE_TX', async () => {
     const operatorClient = { isOperatorClient: true } as unknown as Client;
-    const context = { mode: AgentMode.CUSTOM };
+    const context = { mode: AgentMode.CUSTOM_EXECUTE_TX };
     const params = {
       context,
       normalisedParams: { amount: 50 },

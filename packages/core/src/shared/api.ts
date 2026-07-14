@@ -1,7 +1,7 @@
 import { Client } from '@hiero-ledger/sdk';
 
 import type { Context } from './configuration';
-import { AgentMode } from './configuration';
+import { isCustomMode } from './configuration';
 import { Tool } from './tools';
 
 class HederaAgentAPI {
@@ -18,8 +18,10 @@ class HederaAgentAPI {
     }
     this.context = context || {};
 
-    if (this.context.mode === AgentMode.CUSTOM && !this.context.transactionStrategy) {
-      throw new Error('transactionStrategy must be provided in Context when AgentMode is CUSTOM');
+    if (isCustomMode(this.context.mode) && !this.context.transactionStrategy) {
+      throw new Error(
+        'transactionStrategy must be provided in Context when AgentMode is CUSTOM_EXECUTE_TX or CUSTOM_RETURN_BYTES',
+      );
     }
 
     this.tools = tools || [];

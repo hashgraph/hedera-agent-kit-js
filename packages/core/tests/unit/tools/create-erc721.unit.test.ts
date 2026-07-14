@@ -125,21 +125,24 @@ describe('createERC721 tool (unit)', () => {
     );
   });
 
-  it('returns early when in RETURN_BYTES mode', async () => {
-    (mockedNormaliser.normaliseCreateERC721Params as Mock).mockResolvedValue(normalisedParams);
-    (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'returns early when in %s mode (skips address lookup)',
+    async mode => {
+      (mockedNormaliser.normaliseCreateERC721Params as Mock).mockResolvedValue(normalisedParams);
+      (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
 
-    const customContext: any = { accountId: '0.0.1001', mode: AgentMode.RETURN_BYTES };
-    const tool = toolFactory(customContext);
-    const client = makeClient();
+      const customContext: any = { accountId: '0.0.1001', mode };
+      const tool = toolFactory(customContext);
+      const client = makeClient();
 
-    const res = await tool.execute(client, customContext, params);
+      const res = await tool.execute(client, customContext, params);
 
-    expect(res).toBeDefined();
-    expect(res.raw).toBeDefined();
-    expect(res.erc721Address).toBeUndefined();
-    expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
-  });
+      expect(res).toBeDefined();
+      expect(res.raw).toBeDefined();
+      expect(res.erc721Address).toBeUndefined();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
+    },
+  );
 
   it('returns error message when an Error is thrown', async () => {
     (mockedBuilder.executeTransaction as Mock).mockImplementation(() => {

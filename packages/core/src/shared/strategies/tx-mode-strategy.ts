@@ -21,7 +21,7 @@ export interface RawTransactionResponse {
  * Standard result envelope returned by all transaction execution strategies.
  *
  * Both `ExecuteStrategy` (used in `AgentMode.AUTONOMOUS`) and user-supplied
- * `TransactionStrategy` implementations (used in `AgentMode.CUSTOM`) must return
+ * `TransactionStrategy` implementations (used in `AgentMode.CUSTOM_EXECUTE_TX`) must return
  * this shape. The consistent shape is what allows audit-trail hooks
  * (`HcsAuditTrailHook`, `HolAuditTrailHook`) to work identically across both modes.
  */
@@ -47,10 +47,11 @@ export interface ReturnBytesStrategyResult {
  * Interface for pluggable transaction signing and execution strategies.
  *
  * @typeParam TResult - The result shape returned by `handle`. Defaults to
- *   `ExecuteStrategyResult` so that user-provided strategies (set via
- *   `Context.transactionStrategy` in `AgentMode.CUSTOM`) are statically required
- *   to return `{ raw: RawTransactionResponse, humanMessage: string }`. This is what
- *   enables audit-trail hooks to work without modification in `CUSTOM` mode.
+ *   `ExecuteStrategyResult`. In `AgentMode.CUSTOM_EXECUTE_TX` a user-provided strategy
+ *   (set via `Context.transactionStrategy`) must return
+ *   `{ raw: RawTransactionResponse, humanMessage: string }`, which is what enables audit-trail
+ *   hooks to work without modification. In `AgentMode.CUSTOM_RETURN_BYTES` the strategy returns
+ *   `ReturnBytesStrategyResult` (`{ bytes: Uint8Array }`) instead.
  *
  * Built-in implementations:
  * - `ExecuteStrategy` — signs and executes on-chain (`AgentMode.AUTONOMOUS`).
@@ -134,9 +135,12 @@ const getStrategyFromContext = (context: Context): TransactionStrategy<unknown> 
   switch (context.mode) {
     case AgentMode.RETURN_BYTES:
       return new ReturnBytesStrategy();
-    case AgentMode.CUSTOM:
+    case AgentMode.CUSTOM_EXECUTE_TX:
+    case AgentMode.CUSTOM_RETURN_BYTES:
       if (!context.transactionStrategy) {
-        throw new Error('transactionStrategy must be provided in Context when AgentMode is CUSTOM');
+        throw new Error(
+          'transactionStrategy must be provided in Context when AgentMode is CUSTOM_EXECUTE_TX or CUSTOM_RETURN_BYTES',
+        );
       }
       return context.transactionStrategy;
     case AgentMode.AUTONOMOUS:

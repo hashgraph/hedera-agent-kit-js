@@ -48,4 +48,4 @@ An agent that returns transaction bytes for manual signing/execution instead of 
 
 ### Custom Signing Agent
 `npm run langchain:custom-signing-tool-calling-agent`
-An agent using `AgentMode.CUSTOM` with an interactive human-in-the-loop console strategy. Demonstrates how to plug in a custom `TxModeStrategy` — a pattern that extends to remote TEE enclaves, MPC threshold signers, and KMS APIs. See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for the full reference.
+An agent using `AgentMode.CUSTOM_EXECUTE_TX` with an interactive human-in-the-loop console strategy. Demonstrates how to plug in a custom `TxModeStrategy` — a pattern that extends to remote TEE enclaves, MPC threshold signers, and KMS APIs. See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for the full reference.

@@ -468,7 +468,7 @@ npm run langchain:audit-trail-agent
 
 ### Option J: Run the Custom Signing Agent
 
-This example demonstrates `AgentMode.CUSTOM` with an interactive human-in-the-loop console strategy — a pattern that also covers remote TEE enclaves, MPC threshold signers, Fireblocks/AWS KMS integrations, and any other delegated signing flow. The agent halts before each transaction and prompts for approval in the terminal before delegating to the custom strategy.
+This example demonstrates `AgentMode.CUSTOM_EXECUTE_TX` with an interactive human-in-the-loop console strategy — a pattern that also covers remote TEE enclaves, MPC threshold signers, Fireblocks/AWS KMS integrations, and any other delegated signing flow. The agent halts before each transaction and prompts for approval in the terminal before delegating to the custom strategy.
 
 **Found at:**
 - `examples/langchain/custom-signing-tool-calling-agent.ts` (LangChain v0.3)

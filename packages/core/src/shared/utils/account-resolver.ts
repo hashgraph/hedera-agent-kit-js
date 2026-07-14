@@ -1,12 +1,12 @@
 import { Client, PublicKey } from '@hiero-ledger/sdk';
-import { Context, AgentMode } from '@/shared/configuration';
+import { Context, AgentMode, isReturnBytesMode } from '@/shared/configuration';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 
 export class AccountResolver {
   /**
    * Gets the default account based on the agent mode and context.
-   * In RETURN_BYTES mode, prefers context.accountId (user's account).
+   * In RETURN_BYTES / CUSTOM_RETURN_BYTES mode, prefers context.accountId (user's account).
    * In AUTONOMOUS mode or when no context account, uses an operator account.
    */
   static getDefaultAccount(context: Context, client: Client): string {
@@ -56,7 +56,7 @@ export class AccountResolver {
    * Gets a description of which account will be used as default for prompts.
    */
   static getDefaultAccountDescription(context: Context): string {
-    if (context.mode === AgentMode.RETURN_BYTES && context.accountId) {
+    if (isReturnBytesMode(context.mode) && context.accountId) {
       return `user account (${context.accountId})`;
     }
     return 'operator account';
