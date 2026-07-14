@@ -13,7 +13,7 @@ describe('buildAuditEntry', () => {
 
   it('should build a valid audit entry with all fields provided', () => {
     const entry = buildAuditEntry({
-      tool: 'transfer_hbar',
+      tool: 'transfer_hbar_tool',
       params: { amount: 100, to: '0.0.456' },
       result: {
         raw: { status: 'SUCCESS', transactionId: '0.0.1@123' },
@@ -24,7 +24,7 @@ describe('buildAuditEntry', () => {
     expect(entry.type).toBe(HOL_AUDIT_ENTRY_TYPE);
     expect(entry.version).toBe(HOL_AUDIT_ENTRY_VERSION);
     expect(entry.source).toBe(HOL_AUDIT_ENTRY_SOURCE);
-    expect(entry.tool).toBe('transfer_hbar');
+    expect(entry.tool).toBe('transfer_hbar_tool');
     expect(entry.params).toEqual({ amount: 100, to: '0.0.456' });
     expect(entry.result.raw).toEqual({ status: 'SUCCESS', transactionId: '0.0.1@123' });
     expect(entry.result.message).toBe('Transfer of 100 HBAR succeeded');
@@ -32,7 +32,7 @@ describe('buildAuditEntry', () => {
 
   it('should produce entries that pass auditEntrySchema Zod validation', () => {
     const entry = buildAuditEntry({
-      tool: 'create_token',
+      tool: 'create_fungible_token_tool',
       params: { name: 'Test Token' },
       result: {
         raw: { tokenId: '0.0.789' },
