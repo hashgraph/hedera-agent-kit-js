@@ -106,7 +106,7 @@ Add your Hedera credentials and OpenAI API key:
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=3030...
 OPENAI_API_KEY=sk-proj-...
 ```
 
@@ -119,7 +119,7 @@ PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
 // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
 ```
 
-Both constructors accept hex (`0x...`) and DER (`302e...`) encoded keys. The untyped `PrivateKey.fromString()` is deprecated — use the typed constructors instead. There is no reliable way to infer the key type from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with `INVALID_SIGNATURE`. Note: the agent kit's built-in EVM/ERC tools currently require an ECDSA operator key; the Hedera EVM itself supports both key types.
+Both constructors accept hex (`0x...`) and DER-encoded keys. DER-encoded ED25519 keys start with `302e...`; DER-encoded ECDSA keys start with `3030...`. The untyped `PrivateKey.fromString()` is deprecated — use the typed constructors instead. There is no reliable way to infer the key type from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with `INVALID_SIGNATURE`. Note: the agent kit's built-in EVM/ERC tools currently require an ECDSA operator key; the Hedera EVM itself supports both key types.
 
 See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
