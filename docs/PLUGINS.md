@@ -521,6 +521,32 @@ See [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts) for a comp
 
 **Optional audit logging:** `BaseTool`-based tools can log their executions to an HCS topic via `HcsAuditTrailHook` — add it to `context.hooks`, no tool changes required. See [HOOKS_AND_POLICIES.md](HOOKS_AND_POLICIES.md).
 
+### Troubleshooting: duplicate transitive dependencies (protobufjs & the Hedera SDK chain)
+
+**Symptom.** Intermittent runtime **protobuf errors** — type/registry mismatches or `instanceof`-style failures during transaction serialization — when your plugin depends on the Hedera SDK chain **alongside another SDK** (for example an asset-tokenization / ATS SDK) that drags in a different `protobufjs` major.
+
+**Cause.** The Hedera SDK chain currently spans two `protobufjs` majors: `@hiero-ledger/sdk` resolves `protobufjs@8.x`, while the `@hiero-ledger/proto` / `@hashgraph/proto` packages resolve `protobufjs@7.x`. npm and yarn can legitimately keep **both** copies in the tree, but protobuf keeps a global type registry that does not tolerate two majors loaded at once — hence the runtime errors. This cannot be fixed from inside a published plugin: `overrides`/`resolutions` declared in a library's `package.json` are ignored for downstream installs — only the **consumer/app root** can force a single copy.
+
+**Fix.** Pin a single `protobufjs` from your app's root `package.json`:
+
+```jsonc
+// npm — package.json
+"overrides": { "protobufjs": "8.0.0" }
+```
+
+```jsonc
+// yarn / pnpm — package.json
+"resolutions": { "protobufjs": "8.0.0" }
+```
+
+Pin to the version `@hiero-ledger/sdk` resolves (currently `8.0.0`), since the transaction signing/serialization path runs through it, then re-test. Confirm only one copy remains:
+
+```bash
+npm ls protobufjs      # or: pnpm why protobufjs / yarn why protobufjs
+```
+
+The same single-copy rule applies to any other "singleton" transitive dependency whose object identity must be shared across the whole tree.
+
 ### Examples and References
 
 - See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
