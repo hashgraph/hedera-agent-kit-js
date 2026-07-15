@@ -2,6 +2,9 @@
 
 This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera Agent Kit, supporting both **AUTONOMOUS** and **RETURN_BYTES (HITL)** execution modes.
 
+> [!NOTE]
+> This template uses the **LangChain adapter** (`@hashgraph/hedera-agent-kit-langchain`). If you are building with the **Vercel AI SDK** (`streamText`/`generateText`), use [`@hashgraph/hedera-agent-kit-ai-sdk`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) instead — see [examples/ai-sdk](../ai-sdk).
+
 > [!IMPORTANT]
 > **Migrating from v3 to v4?** Check out our [Migration Guide](../../docs/MIGRATION-v4.md).
 > 
@@ -61,7 +64,7 @@ Edit your `.env.local` to set your keys and mode:
 2. Create or access your Hedera account
 3. Generate or retrieve your **ECDSA private key** (not ED25519)
 4. The key format should be:
-   - DER hex starting with `303002...` OR
+   - DER hex starting with `3030...` OR
    - 0x-prefixed 64-character hex string
 
 > **Important:** It is possible to use ED25519 keys for autonomous mode, however, this example application is configured for ECDSA keys. If you want to use ED25519 you can update the `createHederaClient` function in `src/lib/agent-config.ts`

@@ -36,19 +36,22 @@ Add in your [Hedera API](https://portal.hedera.com/dashboard) and [OPENAPI](http
 
 ```env
 ACCOUNT_ID= 0.0.xxxxx
-PRIVATE_KEY= 302e...
+PRIVATE_KEY= 3030...
 OPENAI_API_KEY= sk-proj-...
 ```
 
 ##### About Private Keys
 
-Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
+Hedera supports two key types: **ECDSA (secp256k1)** and **ED25519**. These examples default to **ECDSA**. To switch to ED25519, uncomment the appropriate line in the agent's `.ts` file:
 
 ```ts
+PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
 // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
 ```
 
-For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+Both constructors accept hex (0x...) and DER encoded keys. The untyped PrivateKey.fromString() is deprecated — use the typed constructors instead. For a DER-encoded key you can also use PrivateKey.fromStringDer(), which detects the key type automatically. For a raw hex key the type cannot be inferred from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with INVALID_SIGNATURE.
+
+See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
 > Create similar .env files for each of the other framework examples
 
@@ -277,11 +280,22 @@ npm run build
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=3030...
 OPENAI_API_KEY=sk-proj-...
 ```
 
-**Note about private keys:** The Hedera Agent Kit supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default (e.g., `302e...`). If you have an **ED25519** key, uncomment the appropriate line in `external-mcp-agent.ts` to use `PrivateKey.fromStringED25519()` instead. Learn more about [Hedera key types](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+##### About Private Keys
+
+Hedera supports two key types: **ECDSA (secp256k1)** and **ED25519**. These examples default to **ECDSA**. To switch to ED25519, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
+// PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+Both constructors accept hex (`0x...`) and DER-encoded keys. DER-encoded ED25519 keys start with `302e...`; DER-encoded ECDSA keys start with `3030...`. The untyped `PrivateKey.fromString()` is deprecated — use the typed constructors instead. There is no reliable way to infer the key type from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with `INVALID_SIGNATURE`. Note: the agent kit's built-in EVM/ERC tools currently require an ECDSA operator key; the Hedera EVM itself supports both key types.
+
+See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
 3. Update the MCP server path in `external-mcp-agent.ts` in the `args` array with the absolute path to your built MCP server.
 
@@ -447,7 +461,7 @@ This example demonstrates how to use the Hedera Agent Kit with [Google's Agent D
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=3030...
 GEMINI_API_KEY=your-gemini-api-key
 ```
 

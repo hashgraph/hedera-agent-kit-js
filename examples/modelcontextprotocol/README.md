@@ -45,7 +45,7 @@ npm run build
 The stdio server requires a `.env` file or environment variables:
 ```env
 HEDERA_OPERATOR_ID=0.0.xxxx
-HEDERA_OPERATOR_KEY=302e...
+HEDERA_OPERATOR_KEY=3030...
 ```
 
 The HTTP server takes no credentials — it is designed for the non-custodial `RETURN_BYTES` mode (see [docs/MCP.md](../../docs/MCP.md#non-custodial-setup-http--return_bytes)).

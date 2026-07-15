@@ -35,7 +35,7 @@ The server holds an operator account and executes transactions itself. Provide c
 
 ```env
 HEDERA_OPERATOR_ID=0.0.xxxx
-HEDERA_OPERATOR_KEY=302e...
+HEDERA_OPERATOR_KEY=3030...
 ```
 
 ```typescript
