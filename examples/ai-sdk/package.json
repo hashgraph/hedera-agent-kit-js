@@ -4,6 +4,7 @@
   "scripts": {
     "test": "echo \"No tests specified for example package\"",
     "ai-sdk:tool-calling-agent": "tsx tool-calling-agent.ts",
+    "ai-sdk:streaming-tool-calling-agent": "tsx streaming-tool-calling-agent.ts",
     "ai-sdk:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
     "ai-sdk:mcp-external-agent": "tsx mcp-external-agent.ts",
     "ai-sdk:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts",

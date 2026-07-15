@@ -52,6 +52,13 @@ Interacts with the Hedera network using standard tools.
 npm run ai-sdk:tool-calling-agent
 ```
 
+### Streaming Tool Calling Agent
+Same as the basic agent, but **streams the response token by token** using `streamText` instead of `generateText`.
+
+```bash
+npm run ai-sdk:streaming-tool-calling-agent
+```
+
 ### Plugin Tool Calling Agent
 Demonstrates how to use custom plugins.
 
