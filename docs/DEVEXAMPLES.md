@@ -68,6 +68,7 @@ Try out one or more of the example agents:
 * **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
 * **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
 * **Option J -** [Example Google ADK Agent](#option-j-try-out-the-google-adk-agent)
+* **Option K -** [Example Streaming Tool Calling Agent](#option-k-run-the-streaming-tool-calling-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -520,3 +521,31 @@ npx adk web
 This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
 
 > **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
+
+---
+
+### Option K: Run the Streaming Tool Calling Agent
+
+Same as the basic tool calling agent, but the agent's responses are **streamed token by token** instead of returned all at once — using `agent.stream()` instead of `agent.invoke()` in LangChain v1, and `streamText` instead of `generateText` in the AI SDK.
+
+**Found at:**
+- `examples/ai-sdk/streaming-tool-calling-agent.ts`
+- `examples/langchain-v1/streaming-tool-calling-agent.ts`
+
+#### Running the Example
+
+##### AI SDK
+
+```bash
+cd examples/ai-sdk
+npm install
+npm run ai-sdk:streaming-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:streaming-tool-calling-agent
+```
