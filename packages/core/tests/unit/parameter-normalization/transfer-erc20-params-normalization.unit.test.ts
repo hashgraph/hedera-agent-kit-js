@@ -5,12 +5,19 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { ERC20_TRANSFER_FUNCTION_ABI } from '@/shared/constants/contracts';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { AccountResolver } from '@/shared/utils/account-resolver';
+import { getERC20Decimals } from '@/shared/hedera-utils/decimals-utils';
 
 // Mock AccountResolver
 vi.mock('@/shared/utils/account-resolver', () => ({
   AccountResolver: {
     getHederaEVMAddress: vi.fn(),
   },
+}));
+
+// Mock only getERC20Decimals, keep the real toBaseUnit
+vi.mock('@/shared/hedera-utils/decimals-utils', async importOriginal => ({
+  ...(await importOriginal<object>()),
+  getERC20Decimals: vi.fn(),
 }));
 
 describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
@@ -32,6 +39,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
     mockedAccountResolver.getHederaEVMAddress.mockResolvedValue(
       '0x1234567890123456789012345678901234567890',
     );
+    vi.mocked(getERC20Decimals).mockResolvedValue(2);
   });
 
   afterEach(() => {
@@ -56,9 +64,11 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       mockClient,
     );
 
+    expect(getERC20Decimals).toHaveBeenCalledWith('0.0.5678', mockMirrorNode);
+    // amount converted from display units to base units using the contract decimals (2)
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0x1234567890123456789012345678901234567890',
-      100,
+      '10000',
     ]);
     expect(result.contractId).toBe('0.0.5678');
     expect(result.gas).toBe(100_000);
@@ -93,7 +103,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
     );
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-      50,
+      '5000',
     ]);
     expect(result.contractId).toBe('0.0.5678');
     expect(result.gas).toBe(100_000);
@@ -130,12 +140,14 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
     expect(result.contractId).toBe('0.0.8888');
   });
 
-  it('handles large amount values', async () => {
+  it('handles large amount values with 18 decimals', async () => {
     const params = {
       contractId: '0.0.5678',
       recipientAddress: '0x1234567890123456789012345678901234567890',
       amount: 1_000_000_000,
     };
+
+    vi.mocked(getERC20Decimals).mockResolvedValue(18);
 
     const parsedParams = transferERC20Parameters().parse(params);
 
@@ -150,7 +162,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
 
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0x1234567890123456789012345678901234567890',
-      1_000_000_000,
+      '1000000000000000000000000000',
     ]);
     expect(result.contractId).toBe('0.0.5678');
     expect(result.gas).toBe(100_000);
@@ -308,6 +320,31 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           mockClient,
         ),
       ).rejects.toThrow('Account not found');
+    });
+
+    it('throws when getERC20Decimals fails', async () => {
+      const params = {
+        contractId: '0.0.5678',
+        recipientAddress: '0.0.9999',
+        amount: 100,
+      };
+
+      vi.mocked(getERC20Decimals).mockRejectedValue(
+        new Error('Failed to read decimals of ERC20 contract 0.0.5678'),
+      );
+
+      const parsedParams = transferERC20Parameters().parse(params);
+
+      await expect(
+        HederaParameterNormaliser.normaliseTransferERC20Params(
+          parsedParams,
+          contractAbi,
+          functionName,
+          context,
+          mockMirrorNode,
+          mockClient,
+        ),
+      ).rejects.toThrow('Failed to read decimals of ERC20 contract 0.0.5678');
     });
 
     it('throws when getHederaAccountId fails', async () => {

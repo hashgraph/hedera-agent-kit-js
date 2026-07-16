@@ -80,7 +80,7 @@ import {
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from './mirrornode/hedera-mirrornode-service.interface';
-import { toBaseUnit } from './decimals-utils';
+import { getERC20Decimals, toBaseUnit } from './decimals-utils';
 import { TokenTransferMinimalParams, TransferHbarInput } from './types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -1097,10 +1097,12 @@ export default class HederaParameterNormaliser {
       parsedParams.contractId,
       mirrorNode,
     );
+    const decimals = await getERC20Decimals(contractId, mirrorNode);
+    const baseAmount = toBaseUnit(parsedParams.amount, decimals).toFixed();
     const iface = new ethers.Interface(factoryContractAbi);
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
       recipientAddress,
-      parsedParams.amount,
+      baseAmount,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
