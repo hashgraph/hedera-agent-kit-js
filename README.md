@@ -207,7 +207,10 @@ async function main() {
     client,
     configuration: {
       plugins: allCorePlugins,
-      context: { mode: AgentMode.AUTONOMOUS },
+      context: {
+        mode: AgentMode.RETURN_BYTES,
+        accountId: process.env.ACCOUNT_ID!,
+      },
     },
   });
 
@@ -228,6 +231,42 @@ async function main() {
 main().catch(console.error);
 ```
 
+`RETURN_BYTES` is the safer quick-start default for demos that may prepare ledger writes: the kit returns transaction bytes for review and signing instead of submitting them automatically. Balance and other read-only prompts still work normally.
+
+For transfer-like prompts, add an explicit approval check before invoking the agent:
+
+```typescript
+const WRITE_INTENT =
+  /\b(transfer|send|airdrop|mint|burn|approve|allowance|create token|delete account)\b/i;
+
+function requireApproval(
+  prompt: string,
+  approval?: {
+    confirmed: boolean;
+    amount?: string;
+    recipient?: string;
+    memo?: string;
+    network?: string;
+    maxFee?: string;
+  },
+) {
+  if (!WRITE_INTENT.test(prompt)) return;
+
+  const missing = [
+    !approval?.confirmed && 'operator confirmation',
+    !approval?.amount && 'amount',
+    !approval?.recipient && 'recipient',
+    !approval?.memo && 'memo',
+    !approval?.network && 'network',
+    !approval?.maxFee && 'max fee',
+  ].filter(Boolean);
+
+  if (missing.length) {
+    throw new Error(`Approval required before preparing transaction bytes: ${missing.join(', ')}`);
+  }
+}
+```
+
 ### 4 – Run Your "Hello Hedera Agent Kit" Example
 
 From the root directory, run your example agent:
@@ -246,8 +285,8 @@ npx tsx index.ts
 
 This tool has two execution modes with AI agents; autonomous execution and return bytes. If you set:
 
-- `mode: AgentMode.RETURN_BYTE` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned.
-- `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
+- `mode: AgentMode.RETURN_BYTES` prepares a transaction and returns the bytes for a separate approval/signing flow.
+- `mode: AgentMode.AUTONOMOUS` executes transactions autonomously with the operator account configured on the Hedera client.
 
 ### Hedera Plugins & Tools
 
