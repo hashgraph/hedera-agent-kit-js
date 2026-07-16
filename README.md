@@ -246,8 +246,10 @@ npx tsx index.ts
 
 This tool has two execution modes with AI agents; autonomous execution and return bytes. If you set:
 
-- `mode: AgentMode.RETURN_BYTE` the transaction will be executed, and the bytes to execute the Hedera transaction will be returned.
-- `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the accountID set (the operator account can be set in the client with `.setOperator(process.env.ACCOUNT_ID!`)
+- `mode: AgentMode.RETURN_BYTES` the transaction is **not** executed — the tool freezes it and returns unsigned transaction bytes, so the calling application, wallet, or user can sign and submit them. This keeps signing keys out of the agent entirely.
+- `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the operator account set in the client with `.setOperator(...)`.
+
+See [docs/MCP.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/MCP.md) for a guide to building non-custodial MCP servers on top of `RETURN_BYTES` mode.
 
 ### Hedera Plugins & Tools
 
