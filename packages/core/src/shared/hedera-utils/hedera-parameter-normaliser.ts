@@ -80,7 +80,7 @@ import {
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from './mirrornode/hedera-mirrornode-service.interface';
-import { getERC20Decimals, toBaseUnit } from './decimals-utils';
+import { toBaseUnit } from './decimals-utils';
 import { TokenTransferMinimalParams, TransferHbarInput } from './types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -961,12 +961,15 @@ export default class HederaParameterNormaliser {
     // Create an interface for encoding
     const iface = new ethers.Interface(factoryContractAbi);
 
+    // initialSupply is given in display units; the factory contract expects base units
+    const baseInitialSupply = toBaseUnit(parsedParams.initialSupply, parsedParams.decimals).toFixed();
+
     // Encode the function call
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
       parsedParams.tokenName,
       parsedParams.tokenSymbol,
       parsedParams.decimals,
-      parsedParams.initialSupply,
+      baseInitialSupply,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);
@@ -1097,7 +1100,7 @@ export default class HederaParameterNormaliser {
       parsedParams.contractId,
       mirrorNode,
     );
-    const decimals = await getERC20Decimals(contractId, mirrorNode);
+    const decimals = await mirrorNode.getERC20Decimals(contractId);
     const baseAmount = toBaseUnit(parsedParams.amount, decimals).toFixed();
     const iface = new ethers.Interface(factoryContractAbi);
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [

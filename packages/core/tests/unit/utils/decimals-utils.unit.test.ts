@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import BigNumber from 'bignumber.js';
 import { toBaseUnit, toDisplayUnit } from '@hashgraph/hedera-agent-kit';
-import { getERC20Decimals } from '@/shared/hedera-utils/decimals-utils';
 
 describe('decimals-utils', () => {
   describe('toBaseUnit', () => {
@@ -62,47 +61,6 @@ describe('decimals-utils', () => {
       const base = toBaseUnit(amount, decimals);
       const display = toDisplayUnit(base, decimals);
       expect(display.isEqualTo(new BigNumber(1.5))).toBe(true);
-    });
-  });
-
-  describe('getERC20Decimals', () => {
-    const mockMirrorNode = {
-      getContractInfo: vi.fn().mockResolvedValue({ evm_address: '0xabc' }),
-      getBaseUrl: () => 'https://mirror.example/api/v1',
-    } as any;
-
-    afterEach(() => {
-      vi.unstubAllGlobals();
-    });
-
-    it('reads decimals via the mirror node contracts/call endpoint', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          result: '0x0000000000000000000000000000000000000000000000000000000000000012',
-        }),
-      });
-      vi.stubGlobal('fetch', fetchMock);
-
-      await expect(getERC20Decimals('0.0.5678', mockMirrorNode)).resolves.toBe(18);
-      expect(fetchMock).toHaveBeenCalledWith(
-        'https://mirror.example/api/v1/contracts/call',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ data: '0x313ce567', to: '0xabc' }),
-        }),
-      );
-    });
-
-    it('throws when the contract call fails', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({ ok: false, status: 400, statusText: 'Bad Request' }),
-      );
-
-      await expect(getERC20Decimals('0.0.5678', mockMirrorNode)).rejects.toThrow(
-        'Failed to read decimals of ERC20 contract 0.0.5678: 400 Bad Request',
-      );
     });
   });
 

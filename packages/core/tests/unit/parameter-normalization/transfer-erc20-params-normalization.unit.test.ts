@@ -5,19 +5,12 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { ERC20_TRANSFER_FUNCTION_ABI } from '@/shared/constants/contracts';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { AccountResolver } from '@/shared/utils/account-resolver';
-import { getERC20Decimals } from '@/shared/hedera-utils/decimals-utils';
 
 // Mock AccountResolver
 vi.mock('@/shared/utils/account-resolver', () => ({
   AccountResolver: {
     getHederaEVMAddress: vi.fn(),
   },
-}));
-
-// Mock only getERC20Decimals, keep the real toBaseUnit
-vi.mock('@/shared/hedera-utils/decimals-utils', async importOriginal => ({
-  ...(await importOriginal<object>()),
-  getERC20Decimals: vi.fn(),
 }));
 
 describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
@@ -27,7 +20,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
   let mockClient: Client;
   let encodeSpy: any;
   let mockedAccountResolver: any;
-  const mockMirrorNode = { getAccount: vi.fn() } as any;
+  const mockMirrorNode = { getAccount: vi.fn(), getERC20Decimals: vi.fn() } as any;
 
   beforeEach(() => {
     encodeSpy = vi.spyOn(ethers.Interface.prototype, 'encodeFunctionData');
@@ -39,7 +32,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
     mockedAccountResolver.getHederaEVMAddress.mockResolvedValue(
       '0x1234567890123456789012345678901234567890',
     );
-    vi.mocked(getERC20Decimals).mockResolvedValue(2);
+    mockMirrorNode.getERC20Decimals.mockResolvedValue(2);
   });
 
   afterEach(() => {
@@ -64,7 +57,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       mockClient,
     );
 
-    expect(getERC20Decimals).toHaveBeenCalledWith('0.0.5678', mockMirrorNode);
+    expect(mockMirrorNode.getERC20Decimals).toHaveBeenCalledWith('0.0.5678');
     // amount converted from display units to base units using the contract decimals (2)
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       '0x1234567890123456789012345678901234567890',
@@ -147,7 +140,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
       amount: 1_000_000_000,
     };
 
-    vi.mocked(getERC20Decimals).mockResolvedValue(18);
+    mockMirrorNode.getERC20Decimals.mockResolvedValue(18);
 
     const parsedParams = transferERC20Parameters().parse(params);
 
@@ -329,7 +322,7 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
         amount: 100,
       };
 
-      vi.mocked(getERC20Decimals).mockRejectedValue(
+      mockMirrorNode.getERC20Decimals.mockRejectedValue(
         new Error('Failed to read decimals of ERC20 contract 0.0.5678'),
       );
 

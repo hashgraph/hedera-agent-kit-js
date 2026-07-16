@@ -21,6 +21,9 @@ import {
 } from './types';
 import BigNumber from 'bignumber.js';
 
+// Function selector of ERC20 `decimals()`
+const ERC20_DECIMALS_SELECTOR = '0x313ce567';
+
 export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeService {
   private readonly baseUrl: string;
 
@@ -38,11 +41,15 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
    * write would otherwise fail. Non-404 statuses throw immediately; an
    * exhausted 404 throws via `buildError`.
    */
-  private async fetchJson<T>(url: string, buildError: (response: Response) => string): Promise<T> {
+  private async fetchJson<T>(
+    url: string,
+    buildError: (response: Response) => string,
+    init?: RequestInit,
+  ): Promise<T> {
     const maxAttempts = 3;
     let delayMs = 1000;
     for (let attempt = 1; ; attempt++) {
-      const response = await fetch(url);
+      const response = await fetch(url, init);
 
       if (response.ok) {
         return (await response.json()) as T;
@@ -197,6 +204,24 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
       url,
       r => `Failed to get contract info for ${contractId}: ${r.status} ${r.statusText}`,
     );
+  }
+
+  /**
+   * Reads the `decimals()` value of an ERC20 contract via the mirror node
+   * read-only `/contracts/call` endpoint.
+   */
+  async getERC20Decimals(contractId: string): Promise<number> {
+    const contractInfo = await this.getContractInfo(contractId);
+    const { result } = await this.fetchJson<{ result: string }>(
+      `${this.baseUrl}/contracts/call`,
+      r => `Failed to read decimals of ERC20 contract ${contractId}: ${r.status} ${r.statusText}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address }),
+      },
+    );
+    return Number(BigInt(result));
   }
 
   async getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse> {
