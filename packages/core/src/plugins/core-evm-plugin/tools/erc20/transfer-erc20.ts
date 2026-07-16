@@ -30,7 +30,7 @@ This tool will transfer a given amount of an existing ERC20 token on Hedera. ERC
 Parameters:
 - contractId (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
 - recipientAddress (str, required): The EVM or Hedera address to which the tokens will be transferred. This can be the EVM address or the Hedera account id.
-- amount (number, required): The amount to be transferred
+- amount (number, required): The amount to be transferred, given in display units.
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}

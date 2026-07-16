@@ -24,7 +24,7 @@ Parameters:
 - tokenName (str, required): The name of the token
 - tokenSymbol (str, required): The symbol of the token
 - decimals (int, optional): The number of decimals the token supports. Defaults to 18
-- initialSupply (int, optional): The initial supply of the token. Defaults to 0
+- initialSupply (int, optional): The initial supply of the token, given in display units. Defaults to 0
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${PromptGenerator.getParameterUsageInstructions()}
