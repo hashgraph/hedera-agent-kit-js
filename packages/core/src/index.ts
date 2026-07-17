@@ -13,7 +13,7 @@ export { ToolDiscovery } from './shared/tool-discovery';
 export { default as HederaBuilder } from './shared/hedera-utils/hedera-builder';
 export { AbstractPolicy } from './shared/policy';
 export { AbstractHook } from './shared/hook';
-export {
+export type {
   PreToolExecutionParams,
   PostParamsNormalizationParams,
   PostCoreActionParams,
@@ -33,7 +33,7 @@ export {
   transactionToolOutputParser,
   untypedQueryOutputParser,
 } from './shared/utils/default-tool-output-parsing';
-export { IHederaMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
+export type { IHederaMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 export { getMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 export { HederaMirrornodeServiceDefaultImpl } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service-default-impl';
 export { toBaseUnit, toDisplayUnit } from './shared/hedera-utils/decimals-utils';
