@@ -65,6 +65,17 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
   Status: Validated by HAK team, v4-compatible release
 
 
+- [HAK LayerZero Plugin](https://www.npmjs.com/package/hak-layerzero-plugin) enables AI agents to send cross-chain messages and query fees between Hedera and 150+ EVM chains (Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain, Avalanche, and more) via [**LayerZero V2**](https://layerzero.network/), exposing tools for chain discovery (`layerzero_get_supported_chains`), fee estimation (`layerzero_get_message_fee`), message sending (`layerzero_send_message`), and delivery tracking (`layerzero_get_message_status`):
+
+  NPM: https://www.npmjs.com/package/hak-layerzero-plugin
+
+  Github repository: https://github.com/jmgomezl/hak-layerzero-plugin
+
+  Version: hak-layerzero-plugin@1.0.0
+
+  Status: Not validated by HAK team, v4-compatible release
+
+
 - [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
 
   NPM: https://www.npmjs.com/package/coincap-hedera-plugin

@@ -64,6 +64,8 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
+- **[hak-layerzero-plugin](https://www.npmjs.com/package/hak-layerzero-plugin)** — Enables AI agents to send cross-chain messages and query fees between Hedera and 150+ EVM chains via [LayerZero V2](https://layerzero.network/). Tools: `layerzero_get_supported_chains`, `layerzero_get_message_fee`, `layerzero_send_message`, `layerzero_get_message_status`. [GitHub](https://github.com/jmgomezl/hak-layerzero-plugin)
+
 _[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 
 ### Hooks and Policies
