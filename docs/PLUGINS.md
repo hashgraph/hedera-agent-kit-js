@@ -107,6 +107,18 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Status: Validated by HAK team, v4-compatible release
 
+
+- [HAK GitHub Pay Plugin](https://www.npmjs.com/package/hak-github-pay-plugin) pays open-source contributors in HBAR when their GitHub pull request is merged, with payment policy, the GitHub-to-Hedera identity registry, receipts, and software-release provenance all sealed immutably on Hedera Consensus Service. It exposes the core actions (`github_pay_register_contributor`, `github_pay_set_payment_policy`, `github_pay_set_payment_cap`, `github_pay_pay_on_merge`, `github_pay_query_contributor_payments`, `github_pay_seal_release_provenance`, `github_pay_query_team_summary`) for registering contributors, setting label-to-HBAR policies and spending caps, paying on merge (HMAC-validated webhook, idempotent, cap-enforced), querying payment history as CSV, and sealing SHA-256 release provenance:
+
+  NPM: https://www.npmjs.com/package/hak-github-pay-plugin
+
+  Github repository: https://github.com/jmgomezl/hak-plugin-github-pay
+
+  Version: hak-github-pay-plugin@2.3.0
+
+  Status: Not validated by HAK team, v4-compatible release
+
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.

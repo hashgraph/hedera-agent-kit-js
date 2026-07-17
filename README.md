@@ -64,6 +64,8 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
+- **[hak-github-pay-plugin](https://www.npmjs.com/package/hak-github-pay-plugin)** — Pays open-source contributors in HBAR when their GitHub PR is merged; payment policy, identity, receipts, and release provenance live immutably on Hedera Consensus Service. Tools: `github_pay_register_contributor`, `github_pay_set_payment_policy`, `github_pay_set_payment_cap`, `github_pay_pay_on_merge`, `github_pay_query_contributor_payments`, `github_pay_seal_release_provenance`, `github_pay_query_team_summary`. [GitHub](https://github.com/jmgomezl/hak-plugin-github-pay)
+
 _[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 
 ### Hooks and Policies
