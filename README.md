@@ -64,6 +64,8 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
+- **[hak-axelar-plugin](https://www.npmjs.com/package/hak-axelar-plugin)** — Enables AI agents to bridge ITS tokens and send GMP messages between Hedera and 60+ chains via [Axelar Amplifier](https://axelar.network/). Tools: `axelar_get_supported_chains`, `axelar_get_message_fee`, `axelar_send_message`, `axelar_send_token`, `axelar_get_message_status`. [GitHub](https://github.com/jmgomezl/hak-axelar-plugin)
+
 _[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
 
 ### Hooks and Policies
