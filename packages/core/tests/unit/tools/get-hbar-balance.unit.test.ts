@@ -71,7 +71,7 @@ describe('get-hbar-balance tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
-    expect(res.humanMessage).toContain('Failed to get HBAR balance');
+    expect(res.humanMessage).toContain('Failed to execute Get HBAR Balance');
     expect(res.humanMessage).toContain('boom');
   });
 
@@ -89,6 +89,6 @@ describe('get-hbar-balance tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
-    expect(res.humanMessage).toBe('Failed to get HBAR balance');
+    expect(res.humanMessage).toBe('Failed to execute Get HBAR Balance');
   });
 });

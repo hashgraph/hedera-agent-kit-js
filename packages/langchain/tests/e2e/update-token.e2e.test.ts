@@ -47,7 +47,7 @@ describe('Get Token Info Query E2E Tests', () => {
       autoRenewAccountId: executor.accountId.toString(),
       adminKey: executor.privateKey.publicKey as PublicKey,
       treasuryAccountId: executor.accountId.toString(),
-      metadataKey: profile.operator.privateKey.publicKey as PublicKey,
+      metadataKey: executor.privateKey.publicKey as PublicKey,
     });
     tokenIdFT = createTokenResp.tokenId!;
 

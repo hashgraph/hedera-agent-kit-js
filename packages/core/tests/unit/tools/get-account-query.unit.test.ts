@@ -87,7 +87,7 @@ describe('get-account-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to get account query');
+    expect(res.humanMessage).toContain('Failed to execute Get Account Query');
     expect(res.humanMessage).toContain('boom');
   });
 
@@ -103,6 +103,6 @@ describe('get-account-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Failed to get account query');
+    expect(res.humanMessage).toBe('Failed to execute Get Account Query');
   });
 });

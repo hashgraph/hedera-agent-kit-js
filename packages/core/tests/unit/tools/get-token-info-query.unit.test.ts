@@ -101,9 +101,9 @@ describe('get-token-info-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to get token info');
+    expect(res.humanMessage).toContain('Failed to execute Get Token Info');
     expect(res.humanMessage).toContain('token not found');
-    expect(res.raw.error).toContain('Failed to get token info');
+    expect(res.raw.error).toContain('Failed to execute Get Token Info');
     expect(res.raw.error).toContain('token not found');
   });
 
@@ -119,8 +119,8 @@ describe('get-token-info-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to get token info');
-    expect(res.raw.error).toContain('Failed to get token info');
+    expect(res.humanMessage).toContain('Failed to execute Get Token Info');
+    expect(res.raw.error).toContain('Failed to execute Get Token Info');
   });
 
   it('handles infinite supply tokens correctly', async () => {

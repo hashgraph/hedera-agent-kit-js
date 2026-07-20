@@ -148,7 +148,7 @@ describe('get-pending-airdrop-query tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to get pending airdrops');
-    expect(res.raw.error).toContain('Failed to get pending airdrops');
+    expect(res.humanMessage).toContain('Failed to execute Get Pending Airdrops');
+    expect(res.raw.error).toContain('Failed to execute Get Pending Airdrops');
   });
 });

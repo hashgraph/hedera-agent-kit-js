@@ -1,7 +1,7 @@
 import { PrecheckStatusError, ReceiptStatusError } from '@hiero-ledger/sdk';
 import { BaseTool } from './tools';
 import { Context } from './configuration';
-import { TOOL_STATUS } from '@/shared/utils';
+import { TOOL_STATUS } from './utils/default-tool-output-parsing';
 
 /**
  * Abstract base class for all Hedera transaction tools.

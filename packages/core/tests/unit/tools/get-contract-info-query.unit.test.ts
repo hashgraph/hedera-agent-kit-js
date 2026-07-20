@@ -91,7 +91,7 @@ describe('get-contract-info tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { contractId: '0.0.8888' });
 
-    expect(res.humanMessage).toContain('Failed to get contract info');
-    expect(res.raw.error).toContain('Failed to get contract info');
+    expect(res.humanMessage).toContain('Failed to execute Get Contract Info');
+    expect(res.raw.error).toContain('Failed to execute Get Contract Info');
   });
 });

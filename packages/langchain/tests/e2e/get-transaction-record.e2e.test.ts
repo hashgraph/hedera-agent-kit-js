@@ -115,10 +115,10 @@ describe('Get Transaction Record E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
       expect(parsedResponse).toBeDefined();
-      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get transaction record');
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to execute Get Transaction Record Query');
       expect(parsedResponse[0].parsedData.raw.error).toContain('Not Found');
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        'Failed to get transaction record',
+        'Failed to execute Get Transaction Record Query',
       );
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Not Found');
     },
@@ -144,9 +144,9 @@ describe('Get Transaction Record E2E Tests', () => {
       expect(parsedResponse[0].parsedData.raw.error).toContain(
         'Invalid transactionId format: invalid-tx-id',
       );
-      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get transaction record');
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to execute Get Transaction Record Query');
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        'Failed to get transaction record',
+        'Failed to execute Get Transaction Record Query',
       );
     },
   );
