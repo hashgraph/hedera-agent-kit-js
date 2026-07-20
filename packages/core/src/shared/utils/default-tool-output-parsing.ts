@@ -1,4 +1,35 @@
 /**
+ * Shared status constants for the `raw.status` field.
+ *
+ * Using this object at every write site (instead of bare string literals) gives
+ * compile-time protection against typos
+ *
+ * | Value          | Set by                                                                                          |
+ * |----------------|-------------------------------------------------------------------------------------------------|
+ * | `SUCCESS`      | `BaseTool.execute()` (defaulted for any tool that reaches the end without an explicit status),  |
+ * |                | `ReturnBytesStrategy`, and `ExecuteStrategy` (receipt is always `SUCCESS` here — non-SUCCESS    |
+ * |                | receipts throw before the return).                                                              |
+ * | `ERROR`        | `BaseTransactionTool.handleError()` (receipt/precheck failures) or `BaseTool.handleError()`    |
+ * |                | (generic). Receipt/precheck failures additionally set `raw.errorCode` (SDK status name, e.g.   |
+ * |                | `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId`.                                        |
+ * | `PARSE_ERROR`  | `transactionToolOutputParser` / `untypedQueryOutputParser` when the output is malformed.        |
+ */
+export const TOOL_STATUS = {
+  SUCCESS: 'SUCCESS',
+  ERROR: 'ERROR',
+  PARSE_ERROR: 'PARSE_ERROR',
+} as const;
+
+/**
+ * Well-known string values that appear in `raw.status` across all tool outputs.
+ * Derived from {@link TOOL_STATUS} so the type and the runtime values are always in sync.
+ *
+ * Use {@link classifyToolResult} to map these into the stable
+ * `ToolResultStatus` discriminated union (`success | failure | parse_error | unknown`).
+ */
+export type ToolRawStatus = (typeof TOOL_STATUS)[keyof typeof TOOL_STATUS];
+
+/**
  * Parse a transaction tool's JSON output into a normalized shape.
  *
  * Accepts a stringified JSON `rawOutput` produced by a transaction tool and
@@ -28,7 +59,7 @@ export const transactionToolOutputParser = (
   } catch (error) {
     console.error(`[transactionToolOutputParser] Failed to parse JSON:`, rawOutput, error);
     return {
-      raw: { status: 'PARSE_ERROR', error: error, originalOutput: rawOutput },
+      raw: { status: TOOL_STATUS.PARSE_ERROR, error: error, originalOutput: rawOutput },
       humanMessage: 'Error: Failed to parse tool output. The output was malformed.',
     };
   }
@@ -62,7 +93,7 @@ export const transactionToolOutputParser = (
   // Fallback for anything else
   console.error(`[transactionToolOutputParser] Parsed object has unknown shape:`, parsedObject);
   return {
-    raw: { status: 'PARSE_ERROR', originalOutput: rawOutput, parsedObject },
+    raw: { status: TOOL_STATUS.PARSE_ERROR, originalOutput: rawOutput, parsedObject },
     humanMessage: 'Error: Parsed tool output had an unexpected format.',
   };
 };
@@ -90,7 +121,7 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
   } catch (error) {
     console.error(`untypedQueryOutputParser failed to parse JSON:`, error);
     return {
-      raw: { status: 'PARSE_ERROR', error: error, originalOutput: rawOutput },
+      raw: { status: TOOL_STATUS.PARSE_ERROR, error: error, originalOutput: rawOutput },
       humanMessage: 'Error: Failed to parse tool output. The output was malformed.',
     };
   }
@@ -107,7 +138,7 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
     );
     return {
       raw: {
-        status: 'PARSE_ERROR',
+        status: TOOL_STATUS.PARSE_ERROR,
         error: "Parsed object missing 'raw' or 'humanMessage'",
         originalOutput: rawOutput,
       },
@@ -125,17 +156,6 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
 };
 
 /**
- * Well-known string values that appear in `raw.status` across all tool outputs.
- *
- * | Value          | Set by                                                                                       |
- * |----------------|----------------------------------------------------------------------------------------------|
- * | `'SUCCESS'`    | `ReturnBytesStrategy`, query tool `coreAction` implementations, and `ExecuteStrategy` (receipt is always `SUCCESS` here — non-SUCCESS receipts throw before the return) |
- * | `'ERROR'`      | `BaseTransactionTool.handleError()` (receipt failures) or `BaseTool.handleError()` (generic). Receipt failures additionally set `raw.errorCode` (e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId`. |
- * | `'PARSE_ERROR'`| `transactionToolOutputParser` / `untypedQueryOutputParser` when the output is malformed      |
- */
-export type ToolRawStatus = 'SUCCESS' | 'ERROR' | 'PARSE_ERROR';
-
-/**
  * Discriminated union describing a tool result that has been classified into
  * a stable success / failure / parse_error / unknown shape.
  *
@@ -143,8 +163,9 @@ export type ToolRawStatus = 'SUCCESS' | 'ERROR' | 'PARSE_ERROR';
  *   payload typed as `T`. `transactionId` is lifted out when present.
  * - `failure`: `raw.status === 'ERROR'` or `raw.error` is a string. `errorCode`
  *   is the specific SDK status name (e.g. `'INSUFFICIENT_PAYER_BALANCE'`) when
- *   the failure was a Hedera network receipt error, or `'ERROR'` for generic
- *   caught exceptions.
+ *   the failure was a Hedera network receipt or precheck error, or `'ERROR'` for
+ *   generic caught exceptions. `transactionId` is lifted out when present
+ *   (receipt and precheck failures both set it).
  * - `parse_error`: `raw.status === 'PARSE_ERROR'` or the envelope was
  *   structurally malformed (missing `raw`, non-object, etc.).
  * - `unknown`: `raw.status` is a non-empty string that does not match any of
@@ -155,7 +176,13 @@ export type ToolRawStatus = 'SUCCESS' | 'ERROR' | 'PARSE_ERROR';
  */
 export type ToolResultStatus<T = unknown> =
   | { kind: 'success'; transactionId?: string; data: T; humanMessage: string }
-  | { kind: 'failure'; errorCode: number | string; error: string; humanMessage: string }
+  | {
+      kind: 'failure';
+      errorCode: string;
+      transactionId?: string;
+      error: string;
+      humanMessage: string;
+    }
   | { kind: 'parse_error'; originalOutput: unknown; humanMessage: string }
   | { kind: 'unknown'; humanMessage: string };
 
@@ -200,7 +227,7 @@ export const classifyToolResult = <T = unknown>(parsed: {
     };
   }
 
-  if (raw.status === 'PARSE_ERROR') {
+  if (raw.status === TOOL_STATUS.PARSE_ERROR) {
     return {
       kind: 'parse_error',
       originalOutput: 'originalOutput' in raw ? raw.originalOutput : raw,
@@ -208,7 +235,7 @@ export const classifyToolResult = <T = unknown>(parsed: {
     };
   }
 
-  if (raw.status === 'SUCCESS') {
+  if (raw.status === TOOL_STATUS.SUCCESS) {
     return {
       kind: 'success',
       transactionId: typeof raw.transactionId === 'string' ? raw.transactionId : undefined,
@@ -217,7 +244,7 @@ export const classifyToolResult = <T = unknown>(parsed: {
     };
   }
 
-  if (raw.status === 'ERROR' || typeof raw.error === 'string') {
+  if (raw.status === TOOL_STATUS.ERROR || typeof raw.error === 'string') {
     return {
       kind: 'failure',
       // Prefer raw.errorCode (SDK status name, e.g. 'INSUFFICIENT_PAYER_BALANCE')
@@ -228,6 +255,7 @@ export const classifyToolResult = <T = unknown>(parsed: {
           : typeof raw.status === 'string'
             ? raw.status
             : 'UNKNOWN',
+      transactionId: typeof raw.transactionId === 'string' ? raw.transactionId : undefined,
       error: typeof raw.error === 'string' ? raw.error : humanMessage,
       humanMessage,
     };

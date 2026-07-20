@@ -139,7 +139,8 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
         fetchedMessages += 1;
         const data: TopicMessagesAPIResponse = await this.fetchJson<TopicMessagesAPIResponse>(
           url,
-          r => `Failed to get topic messages for ${queryParams.topicId}: ${r.status} ${r.statusText}`,
+          r =>
+            `Failed to get topic messages for ${queryParams.topicId}: ${r.status} ${r.statusText}`,
         );
 
         arrayOfMessages.push(...data.messages);
@@ -203,7 +204,8 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     const url = `${this.baseUrl}/accounts/${accountId}/airdrops/pending`;
     return this.fetchJson<TokenAirdropsResponse>(
       url,
-      r => `Failed to fetch pending airdrops for an account ${accountId}: ${r.status} ${r.statusText}`,
+      r =>
+        `Failed to fetch pending airdrops for an account ${accountId}: ${r.status} ${r.statusText}`,
     );
   }
 

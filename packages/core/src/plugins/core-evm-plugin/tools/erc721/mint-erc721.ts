@@ -3,17 +3,11 @@ import { AgentMode, type Context } from '@/shared/configuration';
 import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import {
-  ERC721_MINT_FUNCTION_ABI,
-  ERC721_MINT_FUNCTION_NAME,
-} from '@/shared/constants/contracts';
+import { ERC721_MINT_FUNCTION_ABI, ERC721_MINT_FUNCTION_NAME } from '@/shared/constants/contracts';
 import { mintERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';

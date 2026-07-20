@@ -1,6 +1,10 @@
 import z from 'zod';
 
-import { HOL_AUDIT_ENTRY_TYPE, HOL_AUDIT_ENTRY_VERSION, HOL_AUDIT_ENTRY_SOURCE } from '@/hooks/hol-audit-trail-hook/audit/constants';
+import {
+  HOL_AUDIT_ENTRY_TYPE,
+  HOL_AUDIT_ENTRY_VERSION,
+  HOL_AUDIT_ENTRY_SOURCE,
+} from '@/hooks/hol-audit-trail-hook/audit/constants';
 
 export type AuditEntry = {
   type: typeof HOL_AUDIT_ENTRY_TYPE;

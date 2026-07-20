@@ -100,7 +100,7 @@ export class GetTokenInfoQueryTool extends BaseTool {
     };
 
     return {
-      raw: { tokenId: normalisedParams.tokenId, tokenInfo, status: 'SUCCESS' },
+      raw: { tokenId: normalisedParams.tokenId, tokenInfo },
       humanMessage: postProcess(tokenInfo),
     };
   }
@@ -111,13 +111,6 @@ export class GetTokenInfoQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get token info';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_token_info_query_tool]', message);
-    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

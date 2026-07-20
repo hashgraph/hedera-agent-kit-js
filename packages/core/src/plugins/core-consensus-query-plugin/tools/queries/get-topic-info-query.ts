@@ -90,7 +90,7 @@ export class GetTopicInfoQueryTool extends BaseTool {
     };
 
     return {
-      raw: { topicId: normalisedParams.topicId, topicInfo, status: 'SUCCESS' },
+      raw: { topicId: normalisedParams.topicId, topicInfo },
       humanMessage: postProcess(topicInfo),
     };
   }
@@ -101,13 +101,6 @@ export class GetTopicInfoQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null; // Not applicable for query tools
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get topic info';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_topic_info_query_tool]', message);
-    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

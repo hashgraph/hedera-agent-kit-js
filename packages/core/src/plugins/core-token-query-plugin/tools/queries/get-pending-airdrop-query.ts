@@ -138,7 +138,7 @@ export class GetPendingAirdropQueryTool extends BaseTool {
     };
 
     return {
-      raw: { accountId, pendingAirdrops: enrichedResponse, status: 'SUCCESS' },
+      raw: { accountId, pendingAirdrops: enrichedResponse },
       humanMessage: postProcess(accountId, enrichedAirdrops),
     };
   }
@@ -149,13 +149,6 @@ export class GetPendingAirdropQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get pending airdrops';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_pending_airdrop_query_tool]', message);
-    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

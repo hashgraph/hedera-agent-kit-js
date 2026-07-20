@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Client } from '@hiero-ledger/sdk';
 import { Context } from './configuration';
+import { TOOL_STATUS } from '@/shared/utils';
 
 import {
   PreToolExecutionParams,
@@ -31,8 +32,8 @@ export interface Tool {
  *
  * | `raw.status`    | Source                                          | Meaning                                                                 |
  * |-----------------|-------------------------------------------------|-------------------------------------------------------------------------|
- * | `'SUCCESS'`     | `coreAction` (query tools) or `ExecuteStrategy` | Operation completed successfully                                         |
- * | `'ERROR'`       | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt failures. |
+ * | `'SUCCESS'`     | `BaseTool.execute()` (defaulted via `??=`), `ReturnBytesStrategy`, or `ExecuteStrategy` | Operation completed successfully. Any tool that reaches the end of `execute()` without an explicit `raw.status` is automatically assigned `'SUCCESS'`. |
+ * | `'ERROR'`       | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt/precheck failures. |
  * | `'PARSE_ERROR'` | `transactionToolOutputParser` / `untypedQueryOutputParser` | Output is not valid JSON or has an unexpected shape.                     |
  *
  * Use {@link classifyToolResult} to map these into the stable
@@ -77,6 +78,13 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
       let result = coreActionResult;
       if (await this.shouldSecondaryAction(coreActionResult, context)) {
         result = await this.secondaryAction(coreActionResult, client, context); // optional secondary action like tx signing, is not required for query tools and can be omitted
+      }
+
+      // Default raw.status to SUCCESS for any tool that did not set it explicitly.
+      // ExecuteStrategy and ReturnBytesStrategy already set it; this covers query
+      // tools and third-party tools that return a raw envelope without a status.
+      if (result && typeof result.raw === 'object' && result.raw !== null) {
+        result.raw.status ??= TOOL_STATUS.SUCCESS;
       }
 
       // 7. PostToolExecutionHook
@@ -155,13 +163,14 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
    * Default error handler called when any step of `execute()` throws.
    * Returns `{ raw: { status: 'ERROR', error: string }, humanMessage: string }`.
    * Transaction tools extend `BaseTransactionTool` which overrides this to
-   * additionally extract structured fields from `ReceiptStatusError`.
+   * additionally extract structured fields from `ReceiptStatusError` and
+   * `PrecheckStatusError`.
    */
   async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = `Failed to execute ${this.name}`;
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error(`[${this.method}]`, message);
-    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
+    return { raw: { status: TOOL_STATUS.ERROR, error: message }, humanMessage: message };
   }
 
   // Abstract steps

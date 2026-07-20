@@ -11,10 +11,7 @@ import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import {
-  getERC721FactoryAddress,
-  ERC721_FACTORY_ABI,
-} from '@/shared/constants/contracts';
+import { getERC721FactoryAddress, ERC721_FACTORY_ABI } from '@/shared/constants/contracts';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
 

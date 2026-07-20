@@ -98,7 +98,7 @@ export class GetContractInfoQueryTool extends BaseTool {
     );
 
     return {
-      raw: { contractId: contractInfo.contract_id, contractInfo, status: 'SUCCESS' },
+      raw: { contractId: contractInfo.contract_id, contractInfo },
       humanMessage: postProcess(contractInfo),
     };
   }
@@ -109,13 +109,6 @@ export class GetContractInfoQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null; // Not applicable for query tools
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get contract info';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_contract_info_query_tool]', message);
-    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

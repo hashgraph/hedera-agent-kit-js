@@ -2,10 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import { Client } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { transferNonFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -79,6 +76,7 @@ export class TransferNonFungibleTokenWithAllowanceTool extends BaseTransactionTo
   }
 }
 
-const tool = (context: Context): BaseTransactionTool => new TransferNonFungibleTokenWithAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool =>
+  new TransferNonFungibleTokenWithAllowanceTool(context);
 
 export default tool;

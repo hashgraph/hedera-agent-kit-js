@@ -2,10 +2,7 @@ import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
 import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import { Client } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -48,7 +45,7 @@ export class ApproveNftAllowanceTool extends BaseTransactionTool {
   method = APPROVE_NFT_ALLOWANCE_TOOL;
   name = 'Approve NFT Allowance';
   description: string;
-  parameters:  ReturnType<typeof approveNftAllowanceParameters>;
+  parameters: ReturnType<typeof approveNftAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {

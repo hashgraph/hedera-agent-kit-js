@@ -8,6 +8,7 @@ import {
   TransactionId,
 } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
+import { TOOL_STATUS } from '@/shared/utils/default-tool-output-parsing';
 
 interface TxModeStrategy {
   handle<T extends Transaction>(
@@ -75,7 +76,7 @@ class ReturnBytesStrategy implements TxModeStrategy {
       throw new Error('Account ID is required in context for RETURN_BYTES mode');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
-    return { bytes: tx.toBytes(), status: 'SUCCESS' };
+    return { bytes: tx.toBytes(), status: TOOL_STATUS.SUCCESS };
   }
 }
 

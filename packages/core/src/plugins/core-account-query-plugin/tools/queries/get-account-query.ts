@@ -74,7 +74,7 @@ export class GetAccountQueryTool extends BaseTool {
       hbarBalance,
     };
     return {
-      raw: { accountId: normalisedParams.accountId, account: accountWithHbar, status: 'SUCCESS' },
+      raw: { accountId: normalisedParams.accountId, account: accountWithHbar },
       humanMessage: postProcess(accountWithHbar),
     };
   }
@@ -86,16 +86,6 @@ export class GetAccountQueryTool extends BaseTool {
   async secondaryAction(_request: any, _client: Client, _context: Context): Promise<any> {
     // No secondary action for queries
     return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get account query';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_account_query_tool]', message);
-    return {
-      raw: { status: 'ERROR', error: message },
-      humanMessage: message,
-    };
   }
 }
 

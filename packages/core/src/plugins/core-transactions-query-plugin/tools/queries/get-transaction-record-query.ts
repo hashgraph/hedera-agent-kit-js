@@ -98,7 +98,6 @@ export class GetTransactionRecordQueryTool extends BaseTool {
       raw: {
         transactionId: normalisedParams.transactionId,
         transactionRecord: transactionRecord,
-        status: 'SUCCESS',
       },
       humanMessage: postProcess(transactionRecord, normalisedParams.transactionId),
     };
@@ -110,13 +109,6 @@ export class GetTransactionRecordQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get transaction record';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_transaction_record_query_tool]', message);
-    return { raw: { status: 'ERROR', error: message }, humanMessage: message };
   }
 }
 

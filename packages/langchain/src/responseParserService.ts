@@ -6,7 +6,7 @@ function convertBytes(data: any): any {
     return { ...data, raw: { ...data.raw, bytes: new Uint8Array(data.raw.bytes.data) } };
   }
   if (data?.bytes && typeof data.bytes === 'object' && data.bytes.type === 'Buffer') {
-    return { bytes: new Uint8Array(data.bytes.data) };
+    return { ...data, bytes: new Uint8Array(data.bytes.data) };
   }
   return data;
 }
