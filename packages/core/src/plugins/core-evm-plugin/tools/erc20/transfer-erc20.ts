@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import { AgentMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -53,7 +50,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const TRANSFER_ERC20_TOOL = 'transfer_erc20_tool';
 
-export class TransferErc20Tool extends BaseTool {
+export class TransferErc20Tool extends BaseTransactionTool {
   method = TRANSFER_ERC20_TOOL;
   name = 'Transfer ERC20';
   description: string;
@@ -93,18 +90,8 @@ export class TransferErc20Tool extends BaseTool {
     }
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to transfer ERC20';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_erc20_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new TransferErc20Tool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferErc20Tool(context);
 
 export default tool;

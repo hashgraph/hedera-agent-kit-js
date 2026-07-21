@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { BaseTool } from '@/shared/tools';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import {
@@ -149,13 +149,6 @@ export class GetPendingAirdropQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get pending airdrops';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_pending_airdrop_query_tool]', message);
-    return { raw: { status: Status.InvalidTransaction, error: message }, humanMessage: message };
   }
 }
 

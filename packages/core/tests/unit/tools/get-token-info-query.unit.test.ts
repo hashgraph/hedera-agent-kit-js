@@ -74,6 +74,7 @@ describe('get-token-info-query tool (unit)', () => {
     expect(res.raw).toEqual({
       tokenId: params.tokenId,
       tokenInfo: { ...fakeToken, token_id: params.tokenId },
+      status: 'SUCCESS',
     });
     expect(res.humanMessage).toContain(`${params.tokenId}`);
     expect(res.humanMessage).toContain(`Token Name**: ${fakeToken.name}`);
@@ -100,9 +101,9 @@ describe('get-token-info-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to get token info');
+    expect(res.humanMessage).toContain('Failed to execute Get Token Info');
     expect(res.humanMessage).toContain('token not found');
-    expect(res.raw.error).toContain('Failed to get token info');
+    expect(res.raw.error).toContain('Failed to execute Get Token Info');
     expect(res.raw.error).toContain('token not found');
   });
 
@@ -118,8 +119,8 @@ describe('get-token-info-query tool (unit)', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to get token info');
-    expect(res.raw.error).toContain('Failed to get token info');
+    expect(res.humanMessage).toContain('Failed to execute Get Token Info');
+    expect(res.raw.error).toContain('Failed to execute Get Token Info');
   });
 
   it('handles infinite supply tokens correctly', async () => {

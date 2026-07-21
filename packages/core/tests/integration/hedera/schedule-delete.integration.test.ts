@@ -91,8 +91,10 @@ describe('Schedule Delete Integration Tests', () => {
       const tool = scheduleDeleteTool(context);
       const result = await tool.execute(operatorClient, context, params);
 
-      expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to delete scheduled transaction');
+      expect(result.raw.status).toBe('ERROR');
+      expect(result.raw.errorCode).toBe('INVALID_SCHEDULE_ID');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.humanMessage).toContain('Failed to execute Delete Scheduled Transaction');
     });
 
     it('should fail with malformed schedule ID', async () => {
@@ -104,7 +106,7 @@ describe('Schedule Delete Integration Tests', () => {
       const result = await tool.execute(operatorClient, context, params);
 
       expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to delete scheduled transaction');
+      expect(result.humanMessage).toContain('Failed to execute Delete Scheduled Transaction');
     });
   });
 });

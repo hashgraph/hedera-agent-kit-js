@@ -119,9 +119,9 @@ describe('UpdateTopicTool', () => {
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
-    expect(res.humanMessage).toContain('Failed to update topic');
+    expect(res.humanMessage).toContain('Failed to execute Update Topic');
     expect(res.humanMessage).toContain('kaboom');
-    expect(res.raw.error).toContain('Failed to update topic');
+    expect(res.raw.error).toContain('Failed to execute Update Topic');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -133,8 +133,8 @@ describe('UpdateTopicTool', () => {
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
-    expect(res.humanMessage).toContain('Failed to update topic');
-    expect(res.raw.error).toContain('Failed to update topic');
+    expect(res.humanMessage).toContain('Failed to execute Update Topic');
+    expect(res.raw.error).toContain('Failed to execute Update Topic');
   });
 
   it('fails if the user public key does not match the topic admin key', async () => {

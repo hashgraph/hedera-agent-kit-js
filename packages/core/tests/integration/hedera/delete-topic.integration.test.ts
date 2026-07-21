@@ -50,7 +50,7 @@ describe('Delete Topic Integration Tests', () => {
     const tool = deleteTopicTool(context);
     const result: any = await tool.execute(executorClient, context, params);
 
-    expect(result.humanMessage).toContain('Failed to delete the topic');
+    expect(result.humanMessage).toContain('Failed to execute Delete Topic');
     expect(result.raw.status).toBeDefined();
   });
 });

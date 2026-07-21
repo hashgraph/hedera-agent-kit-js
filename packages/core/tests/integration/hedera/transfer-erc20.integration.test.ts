@@ -165,8 +165,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
       expect(result.raw.error).toContain('Invalid parameters');
     });
 
@@ -180,8 +180,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
     });
 
     it('should fail when amount is negative', async () => {
@@ -197,8 +197,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
     });
 
     it('should fail when recipientAddress is invalid', async () => {
@@ -211,8 +211,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
     });
   });
 });

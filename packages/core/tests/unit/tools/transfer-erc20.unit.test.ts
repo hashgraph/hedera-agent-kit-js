@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey} from '@hiero-ledger/sdk';
 import toolFactory, { TRANSFER_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/transfer-erc20';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -130,7 +130,7 @@ describe('transferERC20 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('insufficient balance');
     expect(res.raw.error).toContain('insufficient balance');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -143,9 +143,9 @@ describe('transferERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to transfer ERC20');
-    expect(res.raw.error).toBe('Failed to transfer ERC20');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toBe('Failed to execute Transfer ERC20');
+    expect(res.raw.error).toBe('Failed to execute Transfer ERC20');
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles parameter validation errors', async () => {
@@ -162,7 +162,7 @@ describe('transferERC20 tool (unit)', () => {
       'Invalid parameters: Field "amount" must be greater than zero',
     );
     expect(res.raw.error).toContain('Invalid parameters: Field "amount" must be greater than zero');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles address resolution errors', async () => {
@@ -177,6 +177,6 @@ describe('transferERC20 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('Account not found: 0.0.9999');
     expect(res.raw.error).toContain('Account not found: 0.0.9999');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 });
