@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import BigNumber from 'bignumber.js';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client } from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { BaseTool } from '@/shared/tools';
@@ -86,16 +86,6 @@ export class GetAccountQueryTool extends BaseTool {
   async secondaryAction(_request: any, _client: Client, _context: Context): Promise<any> {
     // No secondary action for queries
     return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get account query';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_account_query_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
   }
 }
 

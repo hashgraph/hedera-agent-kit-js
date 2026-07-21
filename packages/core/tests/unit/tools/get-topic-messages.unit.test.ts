@@ -105,7 +105,7 @@ describe('Get Topic Messages Tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to get topic messages');
-    expect(res.raw.error).toBe('Failed to get topic messages');
+    expect(res.humanMessage).toBe('Failed to execute Get Topic Messages');
+    expect(res.raw.error).toBe('Failed to execute Get Topic Messages');
   });
 });

@@ -8,6 +8,7 @@ import {
   TransactionId,
 } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
+import { TOOL_STATUS } from '@/shared/utils/default-tool-output-parsing';
 
 interface TxModeStrategy {
   handle<T extends Transaction>(
@@ -51,7 +52,7 @@ export class ExecuteStrategy implements TxModeStrategy {
       status: receipt.status.toString(),
       accountId: receipt.accountId,
       tokenId: receipt.tokenId,
-      serials: receipt.serials.map((s) => s.toString()),
+      serials: receipt.serials.map(s => s.toString()),
       transactionId: tx.transactionId?.toString() ?? '',
       topicId: receipt.topicId,
       scheduleId: receipt.scheduleId,
@@ -64,12 +65,18 @@ export class ExecuteStrategy implements TxModeStrategy {
 }
 
 class ReturnBytesStrategy implements TxModeStrategy {
+  /**
+   * Serialises the transaction to bytes instead of submitting it.
+   *
+   * `raw.status` is always `'SUCCESS'` and `raw.bytes` contains the serialised
+   * transaction.
+   */
   async handle(tx: Transaction, client: Client, context: Context) {
     if (!context.accountId)
       throw new Error('Account ID is required in context for RETURN_BYTES mode');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
-    return { bytes: tx.toBytes() };
+    return { bytes: tx.toBytes(), status: TOOL_STATUS.SUCCESS };
   }
 }
 

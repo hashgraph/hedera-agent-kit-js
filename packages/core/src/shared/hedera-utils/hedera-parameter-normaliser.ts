@@ -48,7 +48,7 @@ import {
   transferHbarWithAllowanceParameters,
   transferHbarWithAllowanceParametersNormalised,
   updateAccountParameters,
-  updateAccountParametersNormalised
+  updateAccountParametersNormalised,
 } from '@/shared/parameter-schemas/account.zod';
 import {
   createTopicParameters,
@@ -79,7 +79,7 @@ import {
 } from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import z from 'zod';
-import { IHederaMirrornodeService } from './mirrornode/hedera-mirrornode-service.interface';
+import { IHederaMirrornodeService } from '@/shared';
 import { getERC20Decimals, toBaseUnit } from './decimals-utils';
 import { TokenTransferMinimalParams, TransferHbarInput } from './types';
 import { AccountResolver } from '@/shared/utils/account-resolver';

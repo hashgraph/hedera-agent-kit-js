@@ -48,7 +48,7 @@ describe('get-hbar-balance tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.1001' } as any);
 
-    expect(res.raw).toEqual({ accountId: '0.0.1001', hbarBalance: '123.456789' });
+    expect(res.raw).toEqual({ accountId: '0.0.1001', hbarBalance: '123.456789', status: 'SUCCESS' });
     expect(res.humanMessage).toContain('Account 0.0.1001 has a balance of 123.456789 HBAR');
 
     const { default: HederaParameterNormaliser } = await import(
@@ -71,7 +71,7 @@ describe('get-hbar-balance tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
-    expect(res.humanMessage).toContain('Failed to get HBAR balance');
+    expect(res.humanMessage).toContain('Failed to execute Get HBAR Balance');
     expect(res.humanMessage).toContain('boom');
   });
 
@@ -89,6 +89,6 @@ describe('get-hbar-balance tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { accountId: '0.0.x' } as any);
-    expect(res.humanMessage).toBe('Failed to get HBAR balance');
+    expect(res.humanMessage).toBe('Failed to execute Get HBAR Balance');
   });
 });

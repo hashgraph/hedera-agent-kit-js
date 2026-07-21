@@ -162,7 +162,7 @@ describe('Get Token Info Query Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
 
-    expect(result.humanMessage).toContain('Failed to get token info');
+    expect(result.humanMessage).toContain('Failed to execute Get Token Info');
     expect(result.raw.error).toBeDefined();
   });
 

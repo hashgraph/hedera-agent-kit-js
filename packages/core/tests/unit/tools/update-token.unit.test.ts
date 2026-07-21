@@ -121,9 +121,9 @@ describe('update-token tool (unit)', () => {
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
-    expect(res.humanMessage).toContain('Failed to update token');
+    expect(res.humanMessage).toContain('Failed to execute Update Token');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to update token');
+    expect(res.raw.error).toContain('Failed to execute Update Token');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -135,8 +135,8 @@ describe('update-token tool (unit)', () => {
     const client = makeClient();
 
     const res: any = await tool.execute(client, context, params as any);
-    expect(res.humanMessage).toContain('Failed to update token');
-    expect(res.raw.error).toContain('Failed to update token');
+    expect(res.humanMessage).toContain('Failed to execute Update Token');
+    expect(res.raw.error).toContain('Failed to execute Update Token');
   });
 
   it('fails if the user public key does not match the token admin key', async () => {

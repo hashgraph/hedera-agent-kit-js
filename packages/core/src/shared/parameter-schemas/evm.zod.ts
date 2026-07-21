@@ -24,11 +24,7 @@ export const transferERC20Parameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
     contractId: z.string().describe('The id of the ERC20 contract.'),
     recipientAddress: z.string().describe('Address to which the tokens will be transferred.'),
-    amount: z
-      .number()
-      .describe(
-        'The amount of tokens to transfer. Given in display units.',
-      ),
+    amount: z.number().describe('The amount of tokens to transfer. Given in display units.'),
   });
 
 export const createERC721Parameters = (context: Context = {}) =>
@@ -55,9 +51,7 @@ export const createERC20Parameters = (context: Context = {}) =>
       .min(0)
       .optional()
       .default(0)
-      .describe(
-        'The initial supply of the token. Given in display units.',
-      ),
+      .describe('The initial supply of the token. Given in display units.'),
   });
 
 export const transferERC721Parameters = (context: Context = {}) =>
