@@ -26,6 +26,7 @@ const transferERC20Prompt = (context: Context = {}) => {
 ${contextSnippet}
 
 This tool will transfer a given amount of an existing ERC20 token on Hedera. ERC20 is an EVM compatible fungible token.
+Use this tool whenever the user wants to transfer, send, or move ERC20 tokens from a contract to a recipient.
 
 Parameters:
 - contractId (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
@@ -37,6 +38,9 @@ ${usageInstructions}
 
 Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means transferring the amount of 1 of the ERC20 token with contract id 0.0.6473135 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
 Example: "Transfer 1 ERC20 token 0xd94dc7f82f103757f715514e4a37186be6e4580b to 0.0.6473135" means transferring the amount of 1 of the ERC20 token with contract id 0xd94dc7f82f103757f715514e4a37186be6e4580b to the 0.0.6473135 Hedera account id.
+Example: "Send 25 erc20 tokens from contract 0.0.1234 to 0.0.5678" means transferring 25 tokens of the ERC20 contract 0.0.1234 to account 0.0.5678.
+Example: "Move 200 erc20 tokens of contract 0.0.3333 to address 0.0.4444" means transferring 200 tokens of the ERC20 contract 0.0.3333 to address 0.0.4444.
+Example: "Send 1000 ERC20 tokens (contract address: 0.0.5555) to recipient 0.0.6666" means transferring 1000 tokens of the ERC20 contract 0.0.5555 to account 0.0.6666.
 `;
 };
 
