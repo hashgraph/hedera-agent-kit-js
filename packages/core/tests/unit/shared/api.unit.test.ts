@@ -15,6 +15,17 @@ const tool: Tool = {
 };
 
 describe('HederaAgentAPI', () => {
+  it('throws when client is undefined', () => {
+    expect(() => new HederaAgentAPI(undefined as unknown as Client)).toThrow(
+      'HederaAgentAPI requires a connected Client',
+    );
+  });
+
+  it('throws when client has no ledgerId', () => {
+    const disconnected = {} as unknown as Client;
+    expect(() => new HederaAgentAPI(disconnected)).toThrow('Client must be connected to a network');
+  });
+
   it('lists registered tools without exposing executable handlers', () => {
     const api = new HederaAgentAPI(client, {}, [tool]);
 

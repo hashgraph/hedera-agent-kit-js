@@ -75,9 +75,11 @@ class HederaAgentAPI {
    * @param client - Connected Hiero SDK `Client`; must have `ledgerId` set.
    * @param context - Optional execution context; defaults to `{}`.
    * @param tools - Optional tool registry; defaults to `[]`.
+   * @throws {Error} When `client` is falsy ("HederaAgentAPI requires a connected Client").
    * @throws {Error} When `client.ledgerId` is falsy ("Client must be connected to a network").
    */
   constructor(client: Client, context?: Context, tools?: Tool[]) {
+    if (!client) throw new Error('HederaAgentAPI requires a connected Client');
     this.client = client;
     if (!this.client.ledgerId) {
       throw new Error('Client must be connected to a network');
