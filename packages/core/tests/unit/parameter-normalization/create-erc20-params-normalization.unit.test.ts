@@ -49,11 +49,12 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       mockClient,
     );
 
+    // initialSupply converted from display units to base units (1000 * 10^8)
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       parsedParams.tokenName,
       parsedParams.tokenSymbol,
       parsedParams.decimals,
-      parsedParams.initialSupply,
+      '100000000000',
     ]);
 
     expect(result.contractId).toBe(factoryContractId);
@@ -82,7 +83,7 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       parsedParams.tokenName,
       parsedParams.tokenSymbol,
       18,
-      0,
+      '0',
     ]);
 
     expect(result.contractId).toBe(factoryContractId);
@@ -109,11 +110,12 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       mockClient,
     );
 
+    // with 0 decimals, display units equal base units
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       parsedParams.tokenName,
       parsedParams.tokenSymbol,
       0,
-      500,
+      '500',
     ]);
 
     expect(result.contractId).toBe(factoryContractId);
@@ -140,11 +142,12 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
       mockClient,
     );
 
+    // 1_000_000_000 * 10^18
     expect(encodeSpy).toHaveBeenCalledWith(functionName, [
       parsedParams.tokenName,
       parsedParams.tokenSymbol,
       18,
-      1_000_000_000,
+      '1000000000000000000000000000',
     ]);
 
     expect(result.contractId).toBe(factoryContractId);

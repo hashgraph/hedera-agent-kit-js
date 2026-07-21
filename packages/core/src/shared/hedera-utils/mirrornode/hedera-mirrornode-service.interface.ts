@@ -23,6 +23,7 @@ export interface IHederaMirrornodeService {
   getTopicInfo(topicId: string): Promise<TopicInfo>;
   getTokenInfo(tokenId: string): Promise<TokenInfo>;
   getContractInfo(contractId: string): Promise<ContractInfo>;
+  getERC20Decimals(contractId: string): Promise<number>;
   getTransactionRecord(transactionId: string, nonce?: number): Promise<TransactionDetailsResponse>;
   getExchangeRate(timestamp?: string): Promise<ExchangeRateResponse>;
   getPendingAirdrops(accountId: string): Promise<TokenAirdropsResponse>;
