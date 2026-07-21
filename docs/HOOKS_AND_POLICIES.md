@@ -60,7 +60,8 @@ Hooks can execute at 4 different points during a tool's lifecycle:
 Add hooks and policies to your agent's context during initialization:
 
 ```typescript
-import { HcsAuditTrailHook, MaxRecipientsPolicy, RejectToolPolicy } from '@hashgraph/hedera-agent-kit';
+import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
+import { MaxRecipientsPolicy, RejectToolPolicy } from '@hashgraph/hedera-agent-kit/policies';
 
 const context = {
   hooks: [
