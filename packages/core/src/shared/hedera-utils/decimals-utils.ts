@@ -1,12 +1,19 @@
 import BigNumber from 'bignumber.js';
-import { IHederaMirrornodeService } from './mirrornode/hedera-mirrornode-service.interface';
+import { IHederaMirrornodeService } from '@/shared';
 
 // Function selector of ERC20 `decimals()`
 const ERC20_DECIMALS_SELECTOR = '0x313ce567';
 
+// HTTP statuses that indicate a transient failure worth retrying (e.g. solo mirror-node web3 warmup)
+const RETRYABLE_STATUSES = new Set([429, 502, 503, 504]);
+
 /**
  * Reads the `decimals()` value of an ERC20 contract via the mirror node
- * read-only `/contracts/call` endpoint
+ * read-only `/contracts/call` endpoint.
+ *
+ * Retries on transient 5xx/429 responses (up to 5 attempts, exponential backoff starting at 1s)
+ * to handle cases where the mirror node's web3 simulation module is temporarily unavailable
+ * (e.g. during solo network warmup).  Non-transient errors (e.g. 400) throw immediately.
  *
  * @param contractId - The Hedera contract ID (shard.realm.num).
  * @param mirrorNode - Mirror node service used to resolve the contract and perform the call.
@@ -17,18 +24,30 @@ export async function getERC20Decimals(
   mirrorNode: IHederaMirrornodeService,
 ): Promise<number> {
   const contractInfo = await mirrorNode.getContractInfo(contractId);
-  const response = await fetch(`${mirrorNode.getBaseUrl()}/contracts/call`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address }),
-  });
-  if (!response.ok) {
+  const url = `${mirrorNode.getBaseUrl()}/contracts/call`;
+  const body = JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address });
+  const maxAttempts = 5;
+  let delayMs = 1000;
+
+  for (let attempt = 1; ; attempt++) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    if (response.ok) {
+      const { result } = (await response.json()) as { result: string };
+      return Number(BigInt(result));
+    }
+    if (RETRYABLE_STATUSES.has(response.status) && attempt < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      delayMs *= 2;
+      continue;
+    }
     throw new Error(
       `Failed to read decimals of ERC20 contract ${contractId}: ${response.status} ${response.statusText}`,
     );
   }
-  const { result } = (await response.json()) as { result: string };
-  return Number(BigInt(result));
 }
 
 /**
