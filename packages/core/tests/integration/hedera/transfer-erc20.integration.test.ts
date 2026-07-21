@@ -12,6 +12,7 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
+  waitForMirrorTx,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 
@@ -49,6 +50,8 @@ describe('Transfer ERC20 Integration Tests', () => {
     }
 
     testTokenAddress = createResult.erc20Address;
+
+    await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
   });
 
   afterAll(async () => {
