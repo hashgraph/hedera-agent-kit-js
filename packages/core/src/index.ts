@@ -32,7 +32,9 @@ export { PromptGenerator } from './shared/utils/prompt-generator';
 export {
   transactionToolOutputParser,
   untypedQueryOutputParser,
+  classifyToolResult,
 } from './shared/utils/default-tool-output-parsing';
+export type { ToolResultStatus } from './shared/utils/default-tool-output-parsing';
 export { IHederaMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 export { getMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 export { HederaMirrornodeServiceDefaultImpl } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service-default-impl';

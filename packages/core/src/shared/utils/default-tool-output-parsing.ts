@@ -123,3 +123,96 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
     humanMessage: parsedObject.humanMessage,
   };
 };
+
+/**
+ * Discriminated union describing a tool result that has been classified into
+ * a stable success / failure / parse_error shape.
+ *
+ * - `success`: the underlying tool reported a non-error status. `data` exposes
+ *   the original `raw` payload typed as `T`. `transactionId` is lifted out
+ *   when present so consumers don't need to know which sub-field carries it.
+ * - `failure`: the tool surfaced an error — either an SDK `Status` object
+ *   (`raw.status` is an object with a numeric `_code`, e.g. `Status.InvalidTransaction`)
+ *   or an explicit `raw.error` string. `errorCode` is normalised to the
+ *   numeric SDK code when available, falling back to the string status.
+ * - `parse_error`: the upstream parser could not interpret the tool output
+ *   (`raw.status === 'PARSE_ERROR'`) or the envelope was malformed.
+ */
+export type ToolResultStatus<T = unknown> =
+  | { kind: 'success'; transactionId?: string; data: T; humanMessage: string }
+  | { kind: 'failure'; errorCode: number | string; error: string; humanMessage: string }
+  | { kind: 'parse_error'; originalOutput: unknown; humanMessage: string };
+
+/**
+ * Classify the `{ raw, humanMessage }` envelope returned by
+ * {@link transactionToolOutputParser} or {@link untypedQueryOutputParser}
+ * into a typed, discriminated `ToolResultStatus<T>`.
+ *
+ * This is an **additive, opt-in** helper. Existing parsers continue to return
+ * `{ raw: any; humanMessage: string }` unchanged. Consumers that want a
+ * single, type-safe surface for branching on success vs. failure can pass
+ * that envelope here and `switch` on `kind`.
+ *
+ * @example
+ * ```ts
+ * const envelope = transactionToolOutputParser(rawOutput);
+ * const result = classifyToolResult<{ transactionId: string; topicId?: string }>(envelope);
+ * switch (result.kind) {
+ *   case 'success':
+ *     return { txId: result.transactionId, topicId: result.data.topicId };
+ *   case 'failure':
+ *     throw new Error(`tool failed (${result.errorCode}): ${result.error}`);
+ *   case 'parse_error':
+ *     throw new Error(`tool output unparseable: ${result.humanMessage}`);
+ * }
+ * ```
+ *
+ * @param parsed The envelope returned by one of the default tool parsers.
+ * @returns A `ToolResultStatus<T>` tagged union safe to `switch` on.
+ */
+export const classifyToolResult = <T = unknown>(parsed: {
+  raw: any;
+  humanMessage: string;
+}): ToolResultStatus<T> => {
+  const humanMessage = parsed?.humanMessage ?? '';
+  const raw = parsed?.raw;
+
+  if (raw == null || typeof raw !== 'object') {
+    return {
+      kind: 'parse_error',
+      originalOutput: raw,
+      humanMessage: humanMessage || 'Error: Tool output had an unexpected format.',
+    };
+  }
+
+  if (raw.status === 'PARSE_ERROR') {
+    return {
+      kind: 'parse_error',
+      originalOutput: 'originalOutput' in raw ? raw.originalOutput : raw,
+      humanMessage,
+    };
+  }
+
+  const statusIsObject = raw.status !== null && typeof raw.status === 'object';
+  if (statusIsObject || typeof raw.error === 'string') {
+    const errorCode =
+      statusIsObject && '_code' in (raw.status as object)
+        ? (raw.status as { _code: number })._code
+        : typeof raw.status === 'string'
+          ? raw.status
+          : 'UNKNOWN';
+    return {
+      kind: 'failure',
+      errorCode,
+      error: typeof raw.error === 'string' ? raw.error : humanMessage,
+      humanMessage,
+    };
+  }
+
+  return {
+    kind: 'success',
+    transactionId: typeof raw.transactionId === 'string' ? raw.transactionId : undefined,
+    data: raw as T,
+    humanMessage,
+  };
+};
