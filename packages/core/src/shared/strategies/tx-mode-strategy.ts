@@ -52,7 +52,7 @@ export class ExecuteStrategy implements TxModeStrategy {
       status: receipt.status.toString(),
       accountId: receipt.accountId,
       tokenId: receipt.tokenId,
-      serials: receipt.serials.map((s) => s.toString()),
+      serials: receipt.serials.map(s => s.toString()),
       transactionId: tx.transactionId?.toString() ?? '',
       topicId: receipt.topicId,
       scheduleId: receipt.scheduleId,

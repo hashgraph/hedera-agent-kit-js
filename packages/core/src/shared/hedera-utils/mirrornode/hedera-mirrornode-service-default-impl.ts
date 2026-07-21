@@ -256,6 +256,19 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
     );
   }
 
+  async callContract(to: string, data: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/contracts/call`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data, to }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to call contract ${to}: ${response.status} ${response.statusText}`);
+    }
+    const { result } = (await response.json()) as { result: string };
+    return result;
+  }
+
   getBaseUrl(): string {
     return this.baseUrl;
   }

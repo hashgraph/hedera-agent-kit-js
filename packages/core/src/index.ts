@@ -40,7 +40,7 @@ export type { ToolResultStatus, ToolRawStatus } from './shared/utils/default-too
 export { IHederaMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 export { getMirrornodeService } from './shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 export { HederaMirrornodeServiceDefaultImpl } from './shared/hedera-utils/mirrornode/hedera-mirrornode-service-default-impl';
-export { toBaseUnit, toDisplayUnit } from './shared/hedera-utils/decimals-utils';
+export { toBaseUnit, toDisplayUnit, getERC20Decimals } from './shared/hedera-utils/decimals-utils';
 export { toHbar } from './shared/hedera-utils/hbar-conversion-utils';
 export type { TransferHbarInput, TokenTransferMinimalParams } from './shared/hedera-utils/types';
 

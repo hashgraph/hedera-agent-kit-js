@@ -17,17 +17,10 @@ export async function getERC20Decimals(
   mirrorNode: IHederaMirrornodeService,
 ): Promise<number> {
   const contractInfo = await mirrorNode.getContractInfo(contractId);
-  const response = await fetch(`${mirrorNode.getBaseUrl()}/contracts/call`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address }),
-  });
-  if (!response.ok) {
-    throw new Error(
-      `Failed to read decimals of ERC20 contract ${contractId}: ${response.status} ${response.statusText}`,
-    );
+  if (!contractInfo.evm_address) {
+    throw new Error(`ERC20 contract ${contractId} has no EVM address`);
   }
-  const { result } = (await response.json()) as { result: string };
+  const result = await mirrorNode.callContract(contractInfo.evm_address, ERC20_DECIMALS_SELECTOR);
   return Number(BigInt(result));
 }
 
