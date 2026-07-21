@@ -7,20 +7,22 @@
 Build Hedera-powered AI agents **in under a minute**.
 
 > **Upgrading from v3?** See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for all breaking changes.
+>
+> **Building a custom plugin?** See the [Custom Plugin Authoring Guide](docs/PLUGINS.md#creating-a-plugin) — the v4 `BaseTool` pattern, a runnable starter in [`examples/plugin`](examples/plugin), and a no-LLM smoke test.
 
 ## Packages
 
 The Hedera Agent Kit is organized as a monorepo containing the core SDK and multiple framework adapter packages:
 
-| Package | NPM Link | Description |
-|---------|----------|-------------|
-| **`@hashgraph/hedera-agent-kit`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) | Core SDK & plugins for Hedera network integration |
-| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils) |
-| **`@hashgraph/hedera-agent-kit-ai-sdk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) | Vercel AI SDK adapter (compatible with standard tools) |
-| **`@hashgraph/hedera-agent-kit-elizaos`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos) | ElizaOS adapter (custom Eliza Actions) |
-| **`@hashgraph/hedera-agent-kit-mcp`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp) | Model Context Protocol (MCP) Server toolkit |
-| **`@hashgraph/hedera-agent-kit-adk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk) | Google Agent Development Kit (ADK) adapter |
-| **`create-hedera-agent`** | [npm](https://www.npmjs.com/package/create-hedera-agent) | CLI scaffold tool to bootstrap Next.js agent apps |
+| Package                                     | NPM Link                                                                   | Description                                            |
+|---------------------------------------------|----------------------------------------------------------------------------|--------------------------------------------------------|
+| **`@hashgraph/hedera-agent-kit`**           | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit)           | Core SDK & plugins for Hedera network integration      |
+| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils)       |
+| **`@hashgraph/hedera-agent-kit-ai-sdk`**    | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk)    | Vercel AI SDK adapter (compatible with standard tools) |
+| **`@hashgraph/hedera-agent-kit-elizaos`**   | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos)   | ElizaOS adapter (custom Eliza Actions)                 |
+| **`@hashgraph/hedera-agent-kit-mcp`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp)       | Model Context Protocol (MCP) Server toolkit            |
+| **`@hashgraph/hedera-agent-kit-adk`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk)       | Google Agent Development Kit (ADK) adapter             |
+| **`create-hedera-agent`**                   | [npm](https://www.npmjs.com/package/create-hedera-agent)                   | CLI scaffold tool to bootstrap Next.js agent apps      |
 
 ---
 
@@ -64,7 +66,9 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
-_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
+👉 **Build your own plugin:** follow the [Custom Plugin Authoring Guide](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#creating-a-plugin) (v4 `BaseTool` pattern, a runnable starter in [`examples/plugin`](https://github.com/hashgraph/hedera-agent-kit-js/tree/main/examples/plugin), and a no-LLM smoke test), then [publish and register it](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to get it listed here.
+
+_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#creating-a-plugin)_
 
 ### Hooks and Policies
 
