@@ -385,7 +385,7 @@ const toolkit = new HederaLangchainToolkit({
 - Respect the AgentMode (`AUTONOMOUS` vs `RETURN_BYTES`)
 - Implement proper transaction building patterns
 
-**Multi-Account Signing**
+### Multi-Account Signing
 
 `handleTransaction()` signs with the operator of whichever `Client` you pass — the toolkit's client is just the default your tool receives. To sign from a different account than the agent's operator (e.g. a separate treasury or distributor wallet), build a dedicated client inside your tool and pass that one instead:
 
@@ -411,7 +411,7 @@ export class TreasuryPayoutTool extends BaseTool {
 }
 ```
 
-The `AgentMode` is still respected. In `RETURN_BYTES` mode nothing is signed server-side: `handleTransaction()` returns unsigned bytes for `context.accountId` (the connected user's account) regardless of which client you pass, so human-in-the-loop flows are unaffected. The signer swap above only changes behaviour in `AUTONOMOUS` mode.
+The signer swap above only changes behaviour in `AUTONOMOUS` mode — see [Signer and transport setups](#signer-and-transport-setups) for how `AgentMode` drives signing; `RETURN_BYTES` flows are unaffected by which client you pass.
 
 ### The `Context` object
 
@@ -624,15 +624,15 @@ See [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts) for a comp
 
 ```jsonc
 // npm — package.json
-"overrides": { "protobufjs": "8.0.0" }
+"overrides": { "protobufjs": "8.0.1" }
 ```
 
 ```jsonc
 // yarn / pnpm — package.json
-"resolutions": { "protobufjs": "8.0.0" }
+"resolutions": { "protobufjs": "8.0.1" }
 ```
 
-Pin to the version `@hiero-ledger/sdk` resolves (currently `8.0.0`), since the transaction signing/serialization path runs through it, then re-test. Confirm only one copy remains:
+`@hiero-ledger/sdk` resolves `protobufjs@8.0.0`, which is why that's the major to standardize on, but pin to `8.0.1` (or later) instead of `8.0.0` itself — `8.0.0` and `7.5.4` are both affected by [CVE-2026-41242](https://github.com/protobufjs/protobuf.js/security/advisories/GHSA-xq3m-2v4x-88gg) (critical, arbitrary code execution via crafted protobuf definitions), fixed in `8.0.1`/`7.5.5`. Then re-test. Confirm only one copy remains:
 
 ```bash
 npm ls protobufjs      # or: pnpm why protobufjs / yarn why protobufjs
