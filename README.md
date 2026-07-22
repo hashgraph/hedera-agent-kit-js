@@ -253,7 +253,8 @@ HAK supports three transaction execution modes:
 
 - `mode: AgentMode.AUTONOMOUS` — signs and broadcasts transactions directly using the operator key set on the client. Ideal for local testing, scripts, and fully autonomous agents.
 - `mode: AgentMode.RETURN_BYTES` — returns serialized unsigned transaction bytes to the caller for external signing (e.g. MetaMask, HashPack, or any wallet). Ideal for stateless servers, browser extensions, and dApps.
-- `mode: AgentMode.CUSTOM` — delegates signing to a pluggable `TxModeStrategy` implementation (e.g. remote TEE, MPC threshold signing, KMS API, or human-in-the-loop console). Ideal for institutional key management and secure enclave workflows.
+- `mode: AgentMode.CUSTOM_EXECUTE_TX` — delegates signing **and execution** to a pluggable `TransactionStrategy` (e.g. remote TEE, MPC, KMS, HITL console). Returns a full receipt; compatible with audit-trail hooks.
+- `mode: AgentMode.CUSTOM_RETURN_BYTES` — delegates transaction assembly to a pluggable `TransactionStrategy` that returns unsigned bytes for out-of-band signing. Enables delegated-payer flows.
 
 For full configuration examples, built-in strategies, and a reference implementation, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md). For building non-custodial MCP servers on top of `RETURN_BYTES` mode, see [docs/MCP.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/MCP.md).
 

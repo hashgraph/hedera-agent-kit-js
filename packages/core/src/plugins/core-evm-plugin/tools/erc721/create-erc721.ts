@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgentMode, type Context } from '@/shared/configuration';
+import { isReturnBytesMode, type Context } from '@/shared/configuration';
 import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import {
@@ -83,13 +83,13 @@ export class CreateErc721Tool extends BaseTransactionTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     const result = await handleTransaction(transaction, client, context);
 
-    if (context.mode === AgentMode.RETURN_BYTES) return result;
+    if (isReturnBytesMode(context.mode)) return result;
 
     const raw = (result as ExecuteStrategyResult).raw;
     const erc721Address = await getERC721Address(client, raw);
     const humanMessage = postProcess(erc721Address, raw);
 
-    return { ...result, erc721Address, humanMessage };
+    return { ...(result as ExecuteStrategyResult), erc721Address, humanMessage };
   }
 }
 

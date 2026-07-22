@@ -45,9 +45,9 @@ Open the strategy seam and make it a first-class extension point, in layers.
 ### 2. Add a pluggable custom mode + context field
 
 - Add `Context.transactionStrategy` — a user-supplied `TransactionStrategy` instance.
-- Add `AgentMode.CUSTOM`, resolved by `getStrategyFromContext` to `context.transactionStrategy`,
-  with validation (in both `getStrategyFromContext` and the `HederaAgentAPI` constructor) that the
-  strategy is present.
+- Add `AgentMode.CUSTOM_EXECUTE_TX` and `AgentMode.CUSTOM_RETURN_BYTES` (see §4 below), both
+  resolved by `getStrategyFromContext` to `context.transactionStrategy`, with validation (in both
+  `getStrategyFromContext` and the `HederaAgentAPI` constructor) that the strategy is present.
 
 The strategy receives the **unfrozen** `Transaction` plus the full `Context`, so it can set the
 transaction ID, freeze, sign, add signatures, and/or execute — whatever the integration needs.
