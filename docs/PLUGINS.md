@@ -462,6 +462,86 @@ submission happen is driven by `context.mode`:**
 > External-wallet signing is expressed through `RETURN_BYTES`: the kit hands back unsigned
 > transaction bytes and the host app relays them to whatever wallet or signing flow it uses.
 
+### Calling a Smart Contract from a Custom Tool
+
+The kit deliberately does **not** ship a generic "execute any contract" tool: handing an LLM arbitrary calldata is a large attack surface (a prompt injection could call `approve()` on your tokens, for example), and a generic tool cannot offer a meaningful parameter schema. Instead, wrap each contract function you want the agent to use as its own tool. Each wrapper gets a precise Zod schema, and the set of tools you register is an allowlist by construction — the agent can only ever call what you wrapped.
+
+The kit already exports the building blocks: `HederaBuilder.executeTransaction()` builds a `ContractExecuteTransaction` (with optional payable amount and scheduling support), and `handleTransaction()` submits it or returns unsigned bytes depending on the `AgentMode`. Use `ethers` (a dependency of the kit; add it to your own `package.json` too) to ABI-encode the call.
+
+```typescript
+import { z } from 'zod';
+import { ethers } from 'ethers';
+import { Client, Hbar, HbarUnit } from '@hiero-ledger/sdk';
+import {
+  BaseTool,
+  Context,
+  HederaBuilder,
+  handleTransaction,
+  transactionToolOutputParser,
+} from '@hashgraph/hedera-agent-kit';
+
+// Fixed at build time — the agent can only ever call this contract.
+const ESCROW_CONTRACT_ID = '0.0.12345';
+const ESCROW_ABI = [
+  'function release(uint256 dealId)',
+  'function deposit(uint256 dealId) payable',
+];
+const escrowInterface = new ethers.Interface(ESCROW_ABI);
+
+export const DEPOSIT_ESCROW_TOOL = 'deposit_escrow_tool';
+
+const depositEscrowParameters = z.object({
+  dealId: z.number().int().describe('The id of the escrow deal to deposit into.'),
+  amount: z.number().positive().describe('The amount of HBAR to deposit.'),
+});
+
+export class DepositEscrowTool extends BaseTool {
+  method = DEPOSIT_ESCROW_TOOL;
+  name = 'Deposit Escrow';
+  description = `
+  Deposits HBAR into an escrow deal.
+
+  Parameters:
+  - dealId (number, required): The id of the escrow deal
+  - amount (number, required): The amount of HBAR to deposit
+  `;
+  parameters = depositEscrowParameters;
+  outputParser = transactionToolOutputParser;
+
+  async normalizeParams(
+    params: z.infer<typeof depositEscrowParameters>,
+    _context: Context,
+    _client: Client,
+  ) {
+    const parsed = depositEscrowParameters.parse(params);
+    const encoded = escrowInterface.encodeFunctionData('deposit', [parsed.dealId]);
+    return {
+      contractId: ESCROW_CONTRACT_ID,
+      functionParameters: ethers.getBytes(encoded),
+      gas: 100_000,
+      // payableAmount is in TINYBARS — convert from HBAR explicitly
+      payableAmount: Hbar.from(parsed.amount, HbarUnit.Hbar).toTinybars().toNumber(),
+      schedulingParams: { isScheduled: false },
+    };
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.executeTransaction(normalisedParams);
+  }
+
+  async secondaryAction(tx: any, client: Client, context: Context) {
+    // Submits in AUTONOMOUS mode, returns unsigned bytes in RETURN_BYTES mode
+    return handleTransaction(tx, client, context);
+  }
+}
+
+const tool = (_context: Context) => new DepositEscrowTool();
+
+export default tool;
+```
+
+A non-payable call (e.g. `release(uint256 dealId)`) is the same tool minus the `amount` parameter and `payableAmount` field. Register the tools in a plugin as shown in the Step-by-Step Guide above.
+
 ### Tool Output Parsing
 
 The Hedera Agent Kit tools return a structured JSON output that needs to be parsed to be useful for the agent and the user.
