@@ -66,31 +66,84 @@ describe('decimals-utils', () => {
   });
 
   describe('getERC20Decimals', () => {
-    const callContractMock = vi.fn();
     const mockMirrorNode = {
       getContractInfo: vi.fn().mockResolvedValue({ evm_address: '0xabc' }),
-      callContract: callContractMock,
+      getBaseUrl: () => 'https://mirror.example/api/v1',
     } as any;
 
     afterEach(() => {
-      vi.clearAllMocks();
+      vi.unstubAllGlobals();
+      vi.useRealTimers();
     });
 
     it('reads decimals via the mirror node contracts/call endpoint', async () => {
-      callContractMock.mockResolvedValue(
-        '0x0000000000000000000000000000000000000000000000000000000000000012',
-      );
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: '0x0000000000000000000000000000000000000000000000000000000000000012',
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
 
       await expect(getERC20Decimals('0.0.5678', mockMirrorNode)).resolves.toBe(18);
-      expect(callContractMock).toHaveBeenCalledWith('0xabc', '0x313ce567');
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://mirror.example/api/v1/contracts/call',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ data: '0x313ce567', to: '0xabc' }),
+        }),
+      );
     });
 
     it('throws when the contract call fails', async () => {
-      callContractMock.mockRejectedValue(new Error('400 Bad Request'));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: false, status: 400, statusText: 'Bad Request' }),
+      );
 
       await expect(getERC20Decimals('0.0.5678', mockMirrorNode)).rejects.toThrow(
-        '400 Bad Request',
+        'Failed to read decimals of ERC20 contract 0.0.5678: 400 Bad Request',
       );
+    });
+
+    it('retries on 503 and succeeds on the next attempt', async () => {
+      vi.useFakeTimers();
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({ ok: false, status: 503, statusText: 'Service Unavailable' })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            result: '0x0000000000000000000000000000000000000000000000000000000000000012',
+          }),
+        });
+      vi.stubGlobal('fetch', fetchMock);
+
+      // Attach the assertion before running timers to avoid unhandled rejection warnings
+      const assertion = expect(getERC20Decimals('0.0.5678', mockMirrorNode)).resolves.toBe(18);
+      await vi.runAllTimersAsync();
+      await assertion;
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('throws after exhausting all retries on persistent 503', async () => {
+      vi.useFakeTimers();
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' });
+      vi.stubGlobal('fetch', fetchMock);
+
+      // Attach the rejection handler before running timers to avoid unhandled rejection warnings
+      const assertion = expect(
+        getERC20Decimals('0.0.5678', mockMirrorNode),
+      ).rejects.toThrow(
+        'Failed to read decimals of ERC20 contract 0.0.5678: 503 Service Unavailable',
+      );
+      await vi.runAllTimersAsync();
+      await assertion;
+
+      expect(fetchMock).toHaveBeenCalledTimes(5);
     });
   });
 
