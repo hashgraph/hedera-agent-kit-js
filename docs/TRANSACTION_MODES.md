@@ -257,5 +257,7 @@ const agent = new HederaAgentKit({
 ## 6. Example Projects & References
 
 For practical examples, check out:
-- **LangChain Example**: [custom-signing-tool-calling-agent.ts](file:///Users/stanislawkurzyp/Documents/arianelabs/hedera-agent-kit-js/examples/langchain/custom-signing-tool-calling-agent.ts) - An interactive human-in-the-loop CLI strategy built using standard prompts.
-- **LangChain v1 (LangGraph) Example**: [custom-signing-tool-calling-agent.ts](file:///Users/stanislawkurzyp/Documents/arianelabs/hedera-agent-kit-js/examples/langchain-v1/custom-signing-tool-calling-agent.ts) - Same console-based HITL strategy, integrated into a multi-turn LangGraph agent.
+- **LangChain Example**: [custom-signing-tool-calling-agent.ts](../examples/langchain/custom-signing-tool-calling-agent.ts) - An interactive human-in-the-loop CLI strategy built using standard prompts.
+- **LangChain v1 (LangGraph) Example**: [custom-signing-tool-calling-agent.ts](../examples/langchain-v1/custom-signing-tool-calling-agent.ts) - Same console-based HITL strategy, integrated into a multi-turn LangGraph agent.
+- **LangChain Delegated Payer Example**: [delegated-payer-bytes-agent.ts](../examples/langchain/delegated-payer-bytes-agent.ts) - `CUSTOM_RETURN_BYTES` strategy that stamps the user's account as fee payer and returns unsigned bytes for out-of-band signing.
+- **LangChain v1 (LangGraph) Delegated Payer Example**: [delegated-payer-bytes-agent.ts](../examples/langchain-v1/delegated-payer-bytes-agent.ts) - Same delegated-payer pattern integrated into a multi-turn LangGraph agent.

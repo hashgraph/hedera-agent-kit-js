@@ -13,7 +13,8 @@
     "langchain:policy-enforcement-agent": "tsx policy-enforcement-agent.ts",
     "langchain:audit-trail-agent": "tsx audit-trail-agent.ts",
     "langchain:external-mcp-return-bytes-agent": "tsx external-mcp-return-bytes-agent.ts",
-    "langchain:custom-signing-tool-calling-agent": "tsx custom-signing-tool-calling-agent.ts"
+    "langchain:custom-signing-tool-calling-agent": "tsx custom-signing-tool-calling-agent.ts",
+    "langchain:delegated-payer-bytes-agent": "tsx delegated-payer-bytes-agent.ts"
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.81.0",

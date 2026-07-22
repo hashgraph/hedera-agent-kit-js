@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Transaction } from '@hiero-ledger/sdk';
+import { Client, Transaction, TransactionId } from '@hiero-ledger/sdk';
 import transferHbarTool from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
 import { AgentMode, type Context } from '@/shared/configuration';
 import {
@@ -8,7 +8,8 @@ import {
   type TestAccount,
   verifyHbarBalanceChange,
 } from '@hashgraph/hedera-agent-kit-tests';
-import { TransactionStrategy, RawTransactionResponse, ExecuteStrategy } from '@/shared/strategies/tx-mode-strategy';
+import { TransactionStrategy, RawTransactionResponse, ExecuteStrategy, ReturnBytesStrategyResult } from '@/shared/strategies/tx-mode-strategy';
+import { TOOL_STATUS } from '@/shared/utils/default-tool-output-parsing';
 import { z } from 'zod';
 import { transferHbarParameters } from '@/shared/parameter-schemas/account.zod';
 
@@ -87,5 +88,58 @@ describe('Custom Transaction Strategy Integration Tests', () => {
       amountToTransfer,
       executorWrapper,
     );
+  });
+
+  it('should return serialized bytes in RETURN_BYTES mode without executing the transaction', async () => {
+    const context: Context = {
+      mode: AgentMode.RETURN_BYTES,
+      accountId: executor.accountId.toString(),
+    };
+
+    const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
+      transfers: [{ accountId: recipient.accountId.toString(), amount: 0.1 }],
+      transactionMemo: 'RETURN_BYTES integration test',
+    };
+
+    const tool = transferHbarTool(context);
+    const result = await tool.execute(executorClient, context, params);
+
+    expect(result.bytes).toBeInstanceOf(Uint8Array);
+    expect(result.bytes.length).toBeGreaterThan(0);
+    // Verify the bytes represent a valid transaction that can be re-hydrated
+    expect(() => Transaction.fromBytes(result.bytes)).not.toThrow();
+  });
+
+  it('should invoke a custom bytes strategy in CUSTOM_RETURN_BYTES mode', async () => {
+    let strategyCalled = false;
+
+    class CustomBytesStrategy implements TransactionStrategy<ReturnBytesStrategyResult> {
+      async handle(tx: Transaction, client: Client, context: Context) {
+        strategyCalled = true;
+        if (!context.accountId) throw new Error('Account ID required');
+        tx.setTransactionId(TransactionId.generate(context.accountId));
+        tx.freezeWith(client);
+        return { bytes: tx.toBytes(), status: TOOL_STATUS.SUCCESS };
+      }
+    }
+
+    const context: Context = {
+      mode: AgentMode.CUSTOM_RETURN_BYTES,
+      accountId: executor.accountId.toString(),
+      transactionStrategy: new CustomBytesStrategy(),
+    };
+
+    const params: z.infer<ReturnType<typeof transferHbarParameters>> = {
+      transfers: [{ accountId: recipient.accountId.toString(), amount: 0.1 }],
+      transactionMemo: 'CUSTOM_RETURN_BYTES integration test',
+    };
+
+    const tool = transferHbarTool(context);
+    const result = await tool.execute(executorClient, context, params);
+
+    expect(strategyCalled).toBe(true);
+    expect(result.bytes).toBeInstanceOf(Uint8Array);
+    expect(result.bytes.length).toBeGreaterThan(0);
+    expect(() => Transaction.fromBytes(result.bytes)).not.toThrow();
   });
 });

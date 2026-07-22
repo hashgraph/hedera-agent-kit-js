@@ -31,6 +31,7 @@ describe('Transaction Mode Strategies & custom signing (unit)', () => {
           status: { toString: () => 'SUCCESS' },
           accountId: '0.0.1001',
           tokenId: '0.0.2002',
+          serials: [],
           topicId: '0.0.3003',
           scheduleId: '0.0.4040',
         }),
