@@ -1,5 +1,6 @@
 import { AccountId, Client, ScheduleId, TokenId, TopicId, Transaction, TransactionId, } from '@hiero-ledger/sdk';
 import { AgentMode, Context } from '@/shared/configuration';
+import { TOOL_STATUS } from '@/shared/utils/default-tool-output-parsing';
 
 /** Receipt fields extracted from a submitted Hedera transaction. */
 export interface RawTransactionResponse {
@@ -9,6 +10,8 @@ export interface RawTransactionResponse {
   accountId: AccountId | null;
   /** Newly created token ID, or `null` when the transaction did not create a token. */
   tokenId: TokenId | null;
+  /** Serial numbers assigned to newly minted NFTs; empty array for non-NFT transactions. */
+  serials: string[];
   /** Full transaction ID string (e.g. `"0.0.1234@1700000000.000000000"`). */
   transactionId: string;
   /** Newly created topic ID, or `null` when the transaction did not create a topic. */
@@ -41,6 +44,8 @@ export interface ExecuteStrategyResult {
 export interface ReturnBytesStrategyResult {
   /** Serialized unsigned transaction bytes ready for client-side signing. */
   bytes: Uint8Array;
+  /** Always `TOOL_STATUS.SUCCESS`; signals to the tool output pipeline that serialization succeeded. */
+  status?: string;
 }
 
 /**
@@ -101,6 +106,7 @@ export class ExecuteStrategy implements TransactionStrategy<ExecuteStrategyResul
       status: receipt.status.toString(),
       accountId: receipt.accountId,
       tokenId: receipt.tokenId,
+      serials: receipt.serials.map(s => s.toString()),
       transactionId: tx.transactionId?.toString() ?? '',
       topicId: receipt.topicId,
       scheduleId: receipt.scheduleId,
@@ -127,7 +133,7 @@ export class ReturnBytesStrategy implements TransactionStrategy<ReturnBytesStrat
       throw new Error('Account ID is required in context for RETURN_BYTES mode');
     const id = TransactionId.generate(context.accountId);
     tx.setTransactionId(id).freezeWith(client);
-    return { bytes: tx.toBytes() } as ReturnBytesStrategyResult;
+    return { bytes: tx.toBytes(), status: TOOL_STATUS.SUCCESS } as ReturnBytesStrategyResult;
   }
 }
 

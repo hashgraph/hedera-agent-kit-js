@@ -1,12 +1,9 @@
 import { z } from 'zod';
-import { isReturnBytesMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { AgentMode, type Context } from '@/shared/configuration';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -55,7 +52,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const TRANSFER_ERC721_TOOL = 'transfer_erc721_tool';
 
-export class TransferErc721Tool extends BaseTool {
+export class TransferErc721Tool extends BaseTransactionTool {
   method = TRANSFER_ERC721_TOOL;
   name = 'Transfer ERC721';
   description: string;
@@ -90,23 +87,13 @@ export class TransferErc721Tool extends BaseTool {
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (isReturnBytesMode(context.mode)) {
+    if (context.mode === AgentMode.RETURN_BYTES) {
       return await handleTransaction(transaction, client, context);
     }
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const message =
-      'Failed to transfer ERC721' + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_erc721_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new TransferErc721Tool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferErc721Tool(context);
 
 export default tool;

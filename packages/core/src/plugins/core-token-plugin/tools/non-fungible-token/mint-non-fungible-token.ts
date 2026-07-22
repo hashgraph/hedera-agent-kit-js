@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { mintNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -32,21 +29,30 @@ Example: "Mint 0.0.6465503 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5g
 `;
 };
 
-const postProcess = (response: RawTransactionResponse) => {
+/**
+ * Formats the mint NFT transaction response into a human-readable message.
+ * Includes the token ID and minted serial number(s) for immediate transactions,
+ * or the schedule ID for scheduled transactions.
+ * @param response - The raw transaction response from Hedera.
+ * @returns A human-readable string describing the mint result.
+ */
+const postProcess = (response: RawTransactionResponse): string => {
   if (response.scheduleId) {
     return `Scheduled mint transaction created successfully.
 Transaction ID: ${response.transactionId.toString()}
 Schedule ID: ${response.scheduleId.toString()}`;
   }
   const tokenIdStr = response.tokenId ? response.tokenId.toString() : 'unknown';
+  const serialsStr = response.serials.length ? response.serials.join(', ') : 'unknown';
   return `Token successfully minted.
 Transaction ID: ${response.transactionId.toString()}
-Token ID: ${tokenIdStr}`;
+Token ID: ${tokenIdStr}
+Serial(s): ${serialsStr}`;
 };
 
 export const MINT_NON_FUNGIBLE_TOKEN_TOOL = 'mint_non_fungible_token_tool';
 
-export class MintNonFungibleTokenTool extends BaseTool {
+export class MintNonFungibleTokenTool extends BaseTransactionTool {
   method = MINT_NON_FUNGIBLE_TOKEN_TOOL;
   name = 'Mint Non-Fungible Token';
   description: string;
@@ -79,18 +85,8 @@ export class MintNonFungibleTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to mint non-fungible token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[mint_non_fungible_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new MintNonFungibleTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new MintNonFungibleTokenTool(context);
 
 export default tool;

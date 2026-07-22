@@ -18,7 +18,7 @@ const MCP_SERVER_URL = process.env.MCP_SERVER_URL ?? 'http://localhost:3001/mcp'
 
 async function bootstrap(): Promise<void> {
   const operatorAccountId = process.env.ACCOUNT_ID!;
-  const operatorPrivateKey = PrivateKey.fromStringDer(process.env.PRIVATE_KEY!);
+  const operatorPrivateKey = PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!);
   // const operatorPrivateKey = PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!); // Use this line if you have an ED25519 key
 
   // Hedera client for signing and executing the returned transaction bytes

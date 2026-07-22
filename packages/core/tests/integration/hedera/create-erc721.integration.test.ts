@@ -115,8 +115,8 @@ describe('Create ERC721 Integration Tests', () => {
       expect(result.raw.error).toContain(
         'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
       );
-      expect(result.raw.error).toContain('Failed to create ERC721 token');
-      expect(result.humanMessage).toContain('Failed to create ERC721 token');
+      expect(result.raw.error).toContain('Failed to execute Create ERC721 Token');
+      expect(result.humanMessage).toContain('Failed to execute Create ERC721 Token');
     });
 
     it('should fail when tokenName is invalid type', async () => {
@@ -129,8 +129,8 @@ describe('Create ERC721 Integration Tests', () => {
       const tool = createERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to create ERC721 token');
-      expect(result.humanMessage).toContain('Failed to create ERC721 token');
+      expect(result.raw.error).toContain('Failed to execute Create ERC721 Token');
+      expect(result.humanMessage).toContain('Failed to execute Create ERC721 Token');
 
       expect(result.raw.error).toContain('Invalid parameters: Field "tokenName"');
       expect(result.humanMessage).toContain('Invalid parameters: Field "tokenName"');
@@ -146,8 +146,8 @@ describe('Create ERC721 Integration Tests', () => {
       const tool = createERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to create ERC721 token');
-      expect(result.humanMessage).toContain('Failed to create ERC721 token');
+      expect(result.raw.error).toContain('Failed to execute Create ERC721 Token');
+      expect(result.humanMessage).toContain('Failed to execute Create ERC721 Token');
 
       expect(result.raw.error).toContain('Invalid parameters: Field "baseURI"');
       expect(result.humanMessage).toContain('Invalid parameters: Field "baseURI"');

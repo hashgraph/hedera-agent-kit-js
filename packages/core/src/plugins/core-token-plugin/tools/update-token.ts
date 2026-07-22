@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, PublicKey, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -113,7 +110,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const UPDATE_TOKEN_TOOL = 'update_token_tool';
 
-export class UpdateTokenTool extends BaseTool {
+export class UpdateTokenTool extends BaseTransactionTool {
   method = UPDATE_TOKEN_TOOL;
   name = 'Update Token';
   description: string;
@@ -152,18 +149,8 @@ export class UpdateTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to update token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[update_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new UpdateTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new UpdateTokenTool(context);
 
 export default tool;

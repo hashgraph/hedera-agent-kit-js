@@ -26,6 +26,7 @@ vi.mock('@/shared/strategies/tx-mode-strategy', () => ({
     const raw = {
       status: 'SUCCESS',
       tokenId: { toString: () => '0.0.5005' },
+      serials: ['1'],
       transactionId: { toString: () => '0.0.1234@1700000000.000000001' },
     } as any;
     return { raw, humanMessage: post ? post(raw) : JSON.stringify(raw) } as any;
@@ -87,8 +88,10 @@ describe('mint-non-fungible-token tool (unit)', () => {
 
     expect(res).toBeDefined();
     expect(res.raw.status).toBe('SUCCESS');
+    expect(res.raw.serials).toEqual(['1']);
     expect(res.humanMessage).toContain('Token successfully minted');
     expect(res.humanMessage).toContain('0.0.1234@');
+    expect(res.humanMessage).toContain('Serial(s): 1');
 
     expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledTimes(1);
     expect(mockedBuilder.mintNonFungibleToken).toHaveBeenCalledWith(normalisedParams);
@@ -108,9 +111,9 @@ describe('mint-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to mint non-fungible token');
+    expect(res.humanMessage).toContain('Failed to execute Mint Non-Fungible Token');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to mint non-fungible token');
+    expect(res.raw.error).toContain('Failed to execute Mint Non-Fungible Token');
     expect(res.raw.error).toContain('boom');
   });
 
@@ -123,7 +126,7 @@ describe('mint-non-fungible-token tool (unit)', () => {
     const client = makeClient();
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Failed to mint non-fungible token');
-    expect(res.raw.error).toBe('Failed to mint non-fungible token');
+    expect(res.humanMessage).toBe('Failed to execute Mint Non-Fungible Token');
+    expect(res.raw.error).toBe('Failed to execute Mint Non-Fungible Token');
   });
 });

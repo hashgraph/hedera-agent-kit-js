@@ -1,4 +1,28 @@
 import BigNumber from 'bignumber.js';
+import { IHederaMirrornodeService } from './mirrornode/hedera-mirrornode-service.interface';
+
+// Function selector of ERC20 `decimals()`
+const ERC20_DECIMALS_SELECTOR = '0x313ce567';
+
+/**
+ * Reads the `decimals()` value of an ERC20 contract via the mirror node
+ * read-only `/contracts/call` endpoint
+ *
+ * @param contractId - The Hedera contract ID (shard.realm.num).
+ * @param mirrorNode - Mirror node service used to resolve the contract and perform the call.
+ * @returns The number of decimals the token uses.
+ */
+export async function getERC20Decimals(
+  contractId: string,
+  mirrorNode: IHederaMirrornodeService,
+): Promise<number> {
+  const contractInfo = await mirrorNode.getContractInfo(contractId);
+  if (!contractInfo.evm_address) {
+    throw new Error(`ERC20 contract ${contractId} has no EVM address`);
+  }
+  const result = await mirrorNode.callContract(contractInfo.evm_address, ERC20_DECIMALS_SELECTOR);
+  return Number(BigInt(result));
+}
 
 /**
  * Converts a token amount to base units (the smallest denomination).

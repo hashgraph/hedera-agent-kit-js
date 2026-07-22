@@ -95,9 +95,9 @@ describe('update-account tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params as any);
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to update account');
+    expect(res.humanMessage).toContain('Failed to execute Update Account');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to update account');
+    expect(res.raw.error).toContain('Failed to execute Update Account');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -111,7 +111,7 @@ describe('update-account tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params as any);
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to update account');
-    expect(res.raw.error).toContain('Failed to update account');
+    expect(res.humanMessage).toContain('Failed to execute Update Account');
+    expect(res.raw.error).toContain('Failed to execute Update Account');
   });
 });

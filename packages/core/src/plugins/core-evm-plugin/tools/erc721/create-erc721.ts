@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { isReturnBytesMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status, TransactionRecordQuery } from '@hiero-ledger/sdk';
+import { AgentMode, type Context } from '@/shared/configuration';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import {
   ExecuteStrategyResult,
   handleTransaction,
@@ -11,10 +11,7 @@ import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import {
-  getERC721FactoryAddress,
-  ERC721_FACTORY_ABI,
-} from '@/shared/constants/contracts';
+import { getERC721FactoryAddress, ERC721_FACTORY_ABI } from '@/shared/constants/contracts';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
 
@@ -49,7 +46,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const CREATE_ERC721_TOOL = 'create_erc721_tool';
 
-export class CreateErc721Tool extends BaseTool {
+export class CreateErc721Tool extends BaseTransactionTool {
   method = CREATE_ERC721_TOOL;
   name = 'Create ERC721 Token';
   description: string;
@@ -86,26 +83,16 @@ export class CreateErc721Tool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     const result = await handleTransaction(transaction, client, context);
 
-    if (isReturnBytesMode(context.mode)) return result;
+    if (context.mode === AgentMode.RETURN_BYTES) return result;
 
     const raw = (result as ExecuteStrategyResult).raw;
     const erc721Address = await getERC721Address(client, raw);
     const humanMessage = postProcess(erc721Address, raw);
 
-    return { ...(result as ExecuteStrategyResult), erc721Address, humanMessage };
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const message =
-      'Failed to create ERC721 token' + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_erc721_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+    return { ...result, erc721Address, humanMessage };
   }
 }
 
-const tool = (context: Context): BaseTool => new CreateErc721Tool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateErc721Tool(context);
 
 export default tool;

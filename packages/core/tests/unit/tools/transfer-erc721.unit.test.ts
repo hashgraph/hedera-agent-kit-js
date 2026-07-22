@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey} from '@hiero-ledger/sdk';
 import toolFactory, { TRANSFER_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/transfer-erc721';
 import { transferERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -132,7 +132,7 @@ describe('transferERC721 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('token not owned by sender');
     expect(res.raw.error).toContain('token not owned by sender');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -145,9 +145,9 @@ describe('transferERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to transfer ERC721');
-    expect(res.raw.error).toBe('Failed to transfer ERC721');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toBe('Failed to execute Transfer ERC721');
+    expect(res.raw.error).toBe('Failed to execute Transfer ERC721');
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles parameter validation errors', async () => {
@@ -166,7 +166,7 @@ describe('transferERC721 tool (unit)', () => {
     expect(res.raw.error).toContain(
       'Invalid parameters: Field "tokenId" - Number must be greater than or equal to 0',
     );
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles address resolution errors', async () => {
@@ -181,7 +181,7 @@ describe('transferERC721 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('From account not found: 0.0.9999');
     expect(res.raw.error).toContain('From account not found: 0.0.9999');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles missing fromAddress by using context account', async () => {

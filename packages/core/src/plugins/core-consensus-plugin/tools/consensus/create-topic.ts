@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { createTopicParameters } from '@/shared/parameter-schemas/consensus.zod';
@@ -34,7 +34,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const CREATE_TOPIC_TOOL = 'create_topic_tool';
 
-export class CreateTopicTool extends BaseTool {
+export class CreateTopicTool extends BaseTransactionTool {
   method = CREATE_TOPIC_TOOL;
   name = 'Create Topic';
   description: string;
@@ -71,18 +71,8 @@ export class CreateTopicTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to create topic';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_topic_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new CreateTopicTool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateTopicTool(context);
 
 export default tool;

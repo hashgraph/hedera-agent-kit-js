@@ -1,11 +1,14 @@
 # Hedera MCP Server
 
-This is a Model Context Protocol (MCP) server for Hedera, allowing LLMs to interact with the Hedera network.
+This is a runnable Model Context Protocol (MCP) server for Hedera, with stdio and HTTP transports.
+
+> [!IMPORTANT]
+> For the concepts behind this example — custodial vs. non-custodial architecture, `RETURN_BYTES` mode, key custody, response shapes, and connecting from Claude Desktop or remote MCP clients — see **[docs/MCP.md](../../docs/MCP.md)**. This README only covers running the example.
 
 ## Prerequisites
 
 - Node.js >= 18
-- A Hedera Testnet or Mainnet account (Operator ID and Key)
+- A Hedera Testnet or Mainnet account (Operator ID and Key) — only needed for the stdio (custodial) server
 
 ## Installation & Setup
 
@@ -39,11 +42,13 @@ npm run build
 
 ## Configuration
 
-The server requires a `.env` file or environment variables:
+The stdio server requires a `.env` file or environment variables:
 ```env
 HEDERA_OPERATOR_ID=0.0.xxxx
-HEDERA_OPERATOR_KEY=302e...
+HEDERA_OPERATOR_KEY=3030...
 ```
+
+The HTTP server takes no credentials — it is designed for the non-custodial `RETURN_BYTES` mode (see [docs/MCP.md](../../docs/MCP.md#non-custodial-setup-http--return_bytes)).
 
 ## Supported Arguments
 
@@ -53,26 +58,20 @@ HEDERA_OPERATOR_KEY=302e...
 - `--account-id`: Specific account ID context (in format `0.0.?????`).
 - `--public-key`: Specific public key context (ECDSA DER encoded).
 
-
 ## Running
 
-### Stdio Server
+### Stdio Server (custodial — signs with the operator key)
 ```bash
 npm run start:stdio
 ```
 
-> [!WARNING]
-> The HTTP server (`http.ts`) does **not** set an operator on the Hedera client, because it is designed to be used in `RETURN_BYTES` mode where the calling client handles signing. If you start it without `--agent-mode=returnBytes`, the default `ExecuteStrategy` will be used and **every transaction tool call will fail** with:
-> ```
-> `transactionId` must be set or `client` must be provided with `freezeWith`
-> ```
-> This error means the SDK cannot auto-generate a transaction ID (no operator) and none was pre-set (not in return-bytes mode). **The plain `pnpm start:http` command is not ready for autonomous/execute mode** unless you also configure an operator on the client.
-
-
-### HTTP Server (Return Bytes Mode)
+### HTTP Server (non-custodial — returns unsigned transaction bytes)
 ```bash
 npm run start:http:return-bytes
 ```
+
+> [!WARNING]
+> The HTTP server (`http.ts`) does not set an operator on the Hedera client, so it only works in `RETURN_BYTES` mode. The plain `npm start:http` command will fail on every transaction tool call — see [docs/MCP.md](../../docs/MCP.md#non-custodial-setup-http--return_bytes) for the explanation.
 
 > [!NOTE]
 > The `start:*` scripts in `package.json` do not specify a `--tools` array. Therefore, they will load all available tools from the Hedera Agent Kit SDK by default.
@@ -93,52 +92,9 @@ const server = new HederaMCPToolkit({
 });
 ```
 
-> [!IMPORTANT]
-> When using the HTTP server in `RETURN_BYTES` mode, you must provide the account context by passing the `x-hedera-account-id` header in your requests. This ensures the server remains stateless while identifying which account the transactions are being built for. For a complete implementation example using LangChain, see [external-mcp-return-bytes-agent.ts](../../examples/langchain-v1/external-mcp-return-bytes-agent.ts).
-
-### Using with Antigravity / Claude Desktop
-#### As a local MCP server
-Add the following to your MCP client configuration (e.g., `claude_desktop_config.json` or Antigravity Settings):
-
-```json
-{
-  "mcpServers": {
-    "hedera": {
-      "command": "node",
-      "args": [
-        "{path-to}/hedera-agent-kit/examples/modelcontextprotocol/dist/stdio.js",
-        "--ledger-id=testnet"
-      ],
-      "env": {
-        "HEDERA_OPERATOR_ID": "0.0.YOUR_ACCOUNT_ID",
-        "HEDERA_OPERATOR_KEY": "YOUR_PRIVATE_KEY"
-      }
-    }
-  }
-}
-```
-
-Replace `0.0.YOUR_ACCOUNT_ID` and `YOUR_PRIVATE_KEY` with your actual Hedera credentials.
-This configuration will start the server locally and connect the client app to it.
-
-#### As a remote MCP server
-If you want to run the server on a remote machine, ensure it is accessible over the network and update the client configuration to point to the server's address:
-
-```json
-{
-  "mcpServers": {
-    "hedera": {
-      "url": "http://remote-server-address:port/mcp",
-      "headers": {
-        "x-hedera-account-id": "0.0.YOUR_ACCOUNT_ID"
-      }
-    }
-  }
-}
-```
-
 ---
 
 ## See Also
 
-- **[LangChain Integration (Return-Bytes)](../langchain-v1/external-mcp-return-bytes-agent.ts)**: A complete implementation example using LangChain that connects to this MCP server in `RETURN_BYTES` mode. It includes logic for parsing the returned tool results and signing/executing transaction bytes locally.
+- **[docs/MCP.md](../../docs/MCP.md)**: Architecture guide — key custody, `RETURN_BYTES`, client configuration (Claude Desktop, remote), response shapes, safety checklist.
+- **[LangChain Integration (Return-Bytes)](../langchain-v1/external-mcp-return-bytes-agent.ts)**: A complete client that connects to this server in `RETURN_BYTES` mode and signs/executes the returned transaction bytes locally.

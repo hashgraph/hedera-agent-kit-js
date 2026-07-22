@@ -101,9 +101,9 @@ describe('CreateTopicTool', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to create topic');
+    expect(res.humanMessage).toContain('Failed to execute Create Topic');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to create topic');
+    expect(res.raw.error).toContain('Failed to execute Create Topic');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -116,7 +116,7 @@ describe('CreateTopicTool', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to create topic');
-    expect(res.raw.error).toContain('Failed to create topic');
+    expect(res.humanMessage).toContain('Failed to execute Create Topic');
+    expect(res.raw.error).toContain('Failed to execute Create Topic');
   });
 });

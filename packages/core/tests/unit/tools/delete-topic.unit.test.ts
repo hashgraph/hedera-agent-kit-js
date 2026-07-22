@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client} from '@hiero-ledger/sdk';
 import toolFactory, {
   DELETE_TOPIC_TOOL,
   DeleteTopicTool,
@@ -91,10 +91,10 @@ describe('DeleteTopicTool', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to delete the topic');
+    expect(res.humanMessage).toContain('Failed to execute Delete Topic');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to delete the topic');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.error).toContain('Failed to execute Delete Topic');
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -107,8 +107,8 @@ describe('DeleteTopicTool', () => {
     });
 
     const res: any = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to delete the topic');
-    expect(res.raw.error).toContain('Failed to delete the topic');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toContain('Failed to execute Delete Topic');
+    expect(res.raw.error).toContain('Failed to execute Delete Topic');
+    expect(res.raw.status).toBe('ERROR');
   });
 });

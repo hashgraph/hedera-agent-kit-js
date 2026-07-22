@@ -78,6 +78,8 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
 
     expect(result).toBeDefined();
     expect(result.humanMessage).toContain('Token successfully minted');
+    expect(result.humanMessage).toContain('Serial(s):');
+    expect(result.raw.serials).toHaveLength(1);
     expect(supplyAfter).toBe(supplyBefore + 1);
   });
 
@@ -100,6 +102,8 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
 
     expect(result).toBeDefined();
     expect(result.humanMessage).toContain('Token successfully minted');
+    expect(result.humanMessage).toContain('Serial(s):');
+    expect(result.raw.serials).toHaveLength(uris.length);
     expect(supplyAfter).toBe(supplyBefore + uris.length);
   });
 
@@ -135,6 +139,9 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
 
     expect(result).toBeDefined();
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('INVALID_TOKEN_ID');
+    expect(result.raw.transactionId).toBeDefined();
     expect(result.humanMessage).toContain('INVALID_TOKEN_ID');
     expect(result.raw.error).toContain('INVALID_TOKEN_ID');
   });

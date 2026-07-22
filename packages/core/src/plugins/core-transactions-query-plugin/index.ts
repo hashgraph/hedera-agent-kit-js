@@ -13,10 +13,7 @@ export const coreTransactionQueryPlugin: Plugin = {
   },
 };
 
-export {
-  getTransactionRecordQuery,
-  GET_TRANSACTION_RECORD_QUERY_TOOL,
-};
+export { getTransactionRecordQuery, GET_TRANSACTION_RECORD_QUERY_TOOL };
 
 export const coreTransactionQueryPluginToolNames = {
   GET_TRANSACTION_RECORD_QUERY_TOOL,

@@ -36,19 +36,22 @@ Add in your [Hedera API](https://portal.hedera.com/dashboard) and [OPENAPI](http
 
 ```env
 ACCOUNT_ID= 0.0.xxxxx
-PRIVATE_KEY= 302e...
+PRIVATE_KEY= 3030...
 OPENAI_API_KEY= sk-proj-...
 ```
 
 ##### About Private Keys
 
-Hedera supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default. To use an **ED25519** key, uncomment the appropriate line in the agent's `.ts` file:
+Hedera supports two key types: **ECDSA (secp256k1)** and **ED25519**. These examples default to **ECDSA**. To switch to ED25519, uncomment the appropriate line in the agent's `.ts` file:
 
 ```ts
+PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
 // PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
 ```
 
-For more information about Hedera key types and formats, see the [Hedera documentation on Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+Both constructors accept hex (0x...) and DER encoded keys. The untyped PrivateKey.fromString() is deprecated — use the typed constructors instead. For a DER-encoded key you can also use PrivateKey.fromStringDer(), which detects the key type automatically. For a raw hex key the type cannot be inferred from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with INVALID_SIGNATURE.
+
+See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
 > Create similar .env files for each of the other framework examples
 
@@ -66,6 +69,7 @@ Try out one or more of the example agents:
 * **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
 * **Option J -** [Example Custom Signing Agent](#option-j-run-the-custom-signing-agent)
 * **Option K -** [Example Google ADK Agent](#option-k-try-out-the-google-adk-agent)
+* **Option L -** [Example Streaming Tool Calling Agent](#option-l-run-the-streaming-tool-calling-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -162,24 +166,8 @@ npm install
 npm run langchain:return-bytes-tool-calling-agent
 ```
 
-**⚠️ Breaking Change: v4.0.0 Migration from Buffer to Uint8Array**
-
-`RETURN_BYTES` now standardizes `raw.bytes` to `Uint8Array` across Node.js and web. If you previously parsed Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), migrate to a `Uint8Array` parser.
-
-Before:
-
-```ts
-const realBytes = Buffer.isBuffer(bytesObject)
-  ? bytesObject
-  : Buffer.from(bytesObject.data);
-```
-
-After:
-
-```ts
-const bytes = toolCall.parsedData.raw.bytes;
-const tx = Transaction.fromBytes(bytes);
-```
+> [!NOTE]
+> Since v4.0.0, `RETURN_BYTES` standardizes `raw.bytes` to `Uint8Array` — see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array) if you previously parsed Node `Buffer` payloads. For the full non-custodial pattern built on this mode, see [docs/MCP.md](MCP.md).
 
 The agent will start a CLI chatbot that you can interact with. You can make requests in natural language, and this demo will demonstrate an app with a workflow that requires a human in the loop to approve actions and execute transactions.
 
@@ -229,6 +217,9 @@ In this example, we can just take the returned bytes and execute the transaction
 
 ### Option D: Try Out the MCP Server
 
+> [!NOTE]
+> For the architecture behind this example (custodial vs. non-custodial, `RETURN_BYTES`, key custody), see [docs/MCP.md](MCP.md).
+
 1. Navigate to the MCP examples directory:
 
 ```bash
@@ -262,25 +253,7 @@ npm run start:http:return-bytes
 ```
 
 
-**Optional: Test out Claude Desktop or an IDE to operate the Hedera MCP server.**
-
-5. Create/edit Claude Desktop or your IDE MCP config file:
-```json
-{
-"mcpServers": {
-  "hedera-mcp-server": {
-        "command": "node",
-        "args": [
-          "<Path>/hedera-agent-kit-js/examples/modelcontextprotocol/dist/stdio.js"
-        ],
-        "env": {
-          "HEDERA_OPERATOR_ID": "0.0.xxxx",
-          "HEDERA_OPERATOR_KEY": "302e...."
-        }
-      }
-  }
-}
-```
+**Optional:** connect Claude Desktop or your IDE to the running server — see [docs/MCP.md](MCP.md#connecting-from-claude-desktop-or-an-ide) for the client configuration.
 
 
 ### Option E: Try Out the External MCP Agent
@@ -309,11 +282,22 @@ npm run build
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=3030...
 OPENAI_API_KEY=sk-proj-...
 ```
 
-**Note about private keys:** The Hedera Agent Kit supports both **ECDSA** and **ED25519** private keys. The examples use **ECDSA** by default (e.g., `302e...`). If you have an **ED25519** key, uncomment the appropriate line in `external-mcp-agent.ts` to use `PrivateKey.fromStringED25519()` instead. Learn more about [Hedera key types](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519).
+##### About Private Keys
+
+Hedera supports two key types: **ECDSA (secp256k1)** and **ED25519**. These examples default to **ECDSA**. To switch to ED25519, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
+// PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+Both constructors accept hex (`0x...`) and DER-encoded keys. DER-encoded ED25519 keys start with `302e...`; DER-encoded ECDSA keys start with `3030...`. The untyped `PrivateKey.fromString()` is deprecated — use the typed constructors instead. There is no reliable way to infer the key type from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with `INVALID_SIGNATURE`. Note: the agent kit's built-in EVM/ERC tools currently require an ECDSA operator key; the Hedera EVM itself supports both key types.
+
+See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
 3. Update the MCP server path in `external-mcp-agent.ts` in the `args` array with the absolute path to your built MCP server.
 
@@ -509,7 +493,7 @@ This example demonstrates how to use the Hedera Agent Kit with [Google's Agent D
 
 ```env
 ACCOUNT_ID=0.0.xxxxx
-PRIVATE_KEY=302e...
+PRIVATE_KEY=3030...
 GEMINI_API_KEY=your-gemini-api-key
 ```
 
@@ -537,3 +521,31 @@ npx adk web
 This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
 
 > **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
+
+---
+
+### Option L: Run the Streaming Tool Calling Agent
+
+Same as the basic tool calling agent, but the agent's responses are **streamed token by token** instead of returned all at once — using `agent.stream()` instead of `agent.invoke()` in LangChain v1, and `streamText` instead of `generateText` in the AI SDK.
+
+**Found at:**
+- `examples/ai-sdk/streaming-tool-calling-agent.ts`
+- `examples/langchain-v1/streaming-tool-calling-agent.ts`
+
+#### Running the Example
+
+##### AI SDK
+
+```bash
+cd examples/ai-sdk
+npm install
+npm run ai-sdk:streaming-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:streaming-tool-calling-agent
+```

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { isReturnBytesMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status, TransactionRecordQuery } from '@hiero-ledger/sdk';
+import { AgentMode, type Context } from '@/shared/configuration';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import {
   ExecuteStrategyResult,
   handleTransaction,
@@ -24,7 +24,7 @@ Parameters:
 - tokenName (str, required): The name of the token
 - tokenSymbol (str, required): The symbol of the token
 - decimals (int, optional): The number of decimals the token supports. Defaults to 18
-- initialSupply (int, optional): The initial supply of the token. Defaults to 0
+- initialSupply (int, optional): The initial supply of the token, given in display units. Defaults to 0
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${PromptGenerator.getParameterUsageInstructions()}
@@ -46,7 +46,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const CREATE_ERC20_TOOL = 'create_erc20_tool';
 
-export class CreateErc20Tool extends BaseTool {
+export class CreateErc20Tool extends BaseTransactionTool {
   method = CREATE_ERC20_TOOL;
   name = 'Create ERC20 Token';
   description: string;
@@ -83,26 +83,16 @@ export class CreateErc20Tool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     const result = await handleTransaction(transaction, client, context);
 
-    if (isReturnBytesMode(context.mode)) return result;
+    if (context.mode === AgentMode.RETURN_BYTES) return result;
 
     const raw = (result as ExecuteStrategyResult).raw;
     const erc20Address = await getERC20Address(client, raw);
     const humanMessage = postProcess(erc20Address, raw);
 
-    return { ...(result as ExecuteStrategyResult), erc20Address, humanMessage };
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const message =
-      'Failed to create ERC20 token' + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_erc20_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+    return { ...result, erc20Address, humanMessage };
   }
 }
 
-const tool = (context: Context): BaseTool => new CreateErc20Tool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateErc20Tool(context);
 
 export default tool;

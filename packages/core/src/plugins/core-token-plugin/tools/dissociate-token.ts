@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { dissociateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -41,7 +38,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DISSOCIATE_TOKEN_TOOL = 'dissociate_token_tool';
 
-export class DissociateTokenTool extends BaseTool {
+export class DissociateTokenTool extends BaseTransactionTool {
   method = DISSOCIATE_TOKEN_TOOL;
   name = 'Dissociate Token';
   description: string;
@@ -74,18 +71,8 @@ export class DissociateTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to dissociate token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[dissociate_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new DissociateTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new DissociateTokenTool(context);
 
 export default tool;

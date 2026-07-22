@@ -1,19 +1,13 @@
 import { z } from 'zod';
-import { isReturnBytesMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { AgentMode, type Context } from '@/shared/configuration';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import {
-  ERC721_MINT_FUNCTION_ABI,
-  ERC721_MINT_FUNCTION_NAME,
-} from '@/shared/constants/contracts';
+import { ERC721_MINT_FUNCTION_ABI, ERC721_MINT_FUNCTION_NAME } from '@/shared/constants/contracts';
 import { mintERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import { assertEcdsaOperator } from '@/plugins/core-evm-plugin/utils/operator-key';
@@ -58,7 +52,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const MINT_ERC721_TOOL = 'mint_erc721_tool';
 
-export class MintErc721Tool extends BaseTool {
+export class MintErc721Tool extends BaseTransactionTool {
   method = MINT_ERC721_TOOL;
   name = 'Mint ERC721';
   description: string;
@@ -93,23 +87,13 @@ export class MintErc721Tool extends BaseTool {
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (isReturnBytesMode(context.mode)) {
+    if (context.mode === AgentMode.RETURN_BYTES) {
       return await handleTransaction(transaction, client, context);
     }
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to mint ERC721';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[mint_erc721_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new MintErc721Tool(context);
+const tool = (context: Context): BaseTransactionTool => new MintErc721Tool(context);
 
 export default tool;

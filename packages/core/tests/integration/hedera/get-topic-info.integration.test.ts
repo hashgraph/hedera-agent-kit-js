@@ -68,7 +68,7 @@ describe('Get Topic Info Query Integration Tests', () => {
       topicId: '0.0.999999999',
     });
 
-    expect(result.humanMessage).toContain('Failed to get topic info');
+    expect(result.humanMessage).toContain('Failed to execute Get Topic Info');
   });
 
   afterEach(async () => {

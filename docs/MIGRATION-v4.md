@@ -566,7 +566,7 @@ Hooks and policies tap into stages 1, 3, 5, and 7 automatically — **you never 
 
 ### Step-by-step migration
 
-Below is a fully annotated before/after comparison using the `transfer_hbar` tool as the reference example.
+Below is a fully annotated before/after comparison using the `transfer_hbar_tool` tool as the reference example.
 
 #### Before (v3 — functional `Tool` object)
 
@@ -746,7 +746,7 @@ export class TransferHbarTool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_hbar_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }

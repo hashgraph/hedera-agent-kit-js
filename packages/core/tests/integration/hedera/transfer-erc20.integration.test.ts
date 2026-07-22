@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { Client } from '@hiero-ledger/sdk';
+import {
+  Client,
+  ContractCallQuery,
+  ContractFunctionParameters,
+  ContractId,
+} from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import transferERC20Tool from '@/plugins/core-evm-plugin/tools/erc20/transfer-erc20';
 import { AgentMode, type Context } from '@/shared/configuration';
@@ -51,6 +56,17 @@ describe('Transfer ERC20 Integration Tests', () => {
     executorClient?.close();
   });
 
+  // Reads balanceOf(holder) straight from the consensus nodes, so the value is
+  // consistent immediately after the transfer receipt (no mirror node ingestion lag).
+  const getErc20Balance = async (holderEvmAddress: string): Promise<string> => {
+    const result = await new ContractCallQuery()
+      .setContractId(ContractId.fromEvmAddress(0, 0, testTokenAddress))
+      .setGas(100_000)
+      .setFunction('balanceOf', new ContractFunctionParameters().addAddress(holderEvmAddress))
+      .execute(executorClient);
+    return result.getUint256(0).toString();
+  };
+
   describe('Valid Transfer ERC20 Scenarios', () => {
     afterEach(async () => {
       if (recipient) {
@@ -75,6 +91,12 @@ describe('Transfer ERC20 Integration Tests', () => {
 
       expect(result.raw.status.toString()).toBe('SUCCESS');
       expect(result.raw.transactionId).toBeDefined();
+
+      // 10 display units with 18 decimals must arrive as 10 * 10^18 base units
+      const recipientInfo = await executorWrapper.getAccountInfo(recipientAccountId);
+      expect(await getErc20Balance(recipientInfo.contractAccountId!)).toBe(
+        10_000_000_000_000_000_000n.toString(),
+      );
     });
 
     it('should transfer tokens using EVM addresses', async () => {
@@ -97,6 +119,11 @@ describe('Transfer ERC20 Integration Tests', () => {
 
       expect(result.raw.status.toString()).toBe('SUCCESS');
       expect(result.raw.transactionId).toBeDefined();
+
+      // 5 display units with 18 decimals must arrive as 5 * 10^18 base units
+      expect(await getErc20Balance(recipientEvmAddress!)).toBe(
+        5_000_000_000_000_000_000n.toString(),
+      );
     });
 
     it('should schedule transfer of ERC20 tokens to another account using Hedera address', async () => {
@@ -135,8 +162,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
       expect(result.raw.error).toContain('Invalid parameters');
     });
 
@@ -150,8 +177,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
     });
 
     it('should fail when amount is negative', async () => {
@@ -167,8 +194,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
     });
 
     it('should fail when recipientAddress is invalid', async () => {
@@ -181,8 +208,8 @@ describe('Transfer ERC20 Integration Tests', () => {
       const tool = transferERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to transfer ERC20');
-      expect(result.humanMessage).toContain('Failed to transfer ERC20');
+      expect(result.raw.error).toContain('Failed to execute Transfer ERC20');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC20');
     });
   });
 });

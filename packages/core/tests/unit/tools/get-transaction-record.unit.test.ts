@@ -147,7 +147,7 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
     const tool = toolFactory(context);
     (mockService.getTransactionRecord as any).mockRejectedValue(new Error('boom'));
     const result = await tool.execute(client, context, { transactionId: '0.0.1-1-1' });
-    expect(result.humanMessage).toContain('Failed to get transaction record');
+    expect(result.humanMessage).toContain('Failed to execute Get Transaction Record Query');
     expect(result.humanMessage).toContain('boom');
   });
 
@@ -157,6 +157,6 @@ describe('Tool Logic - getTransactionRecordQuery', () => {
       throw 'string error';
     });
     const result = await tool.execute(client, context, { transactionId: '0.0.1-1-1' });
-    expect(result.humanMessage).toBe('Failed to get transaction record');
+    expect(result.humanMessage).toBe('Failed to execute Get Transaction Record Query');
   });
 });

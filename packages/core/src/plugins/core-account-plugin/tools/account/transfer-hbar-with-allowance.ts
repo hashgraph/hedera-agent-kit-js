@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { transferHbarWithAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -37,7 +34,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const TRANSFER_HBAR_WITH_ALLOWANCE_TOOL = 'transfer_hbar_with_allowance_tool';
 
-export class TransferHbarWithAllowanceTool extends BaseTool {
+export class TransferHbarWithAllowanceTool extends BaseTransactionTool {
   method = TRANSFER_HBAR_WITH_ALLOWANCE_TOOL;
   name = 'Transfer HBAR with allowance';
   description: string;
@@ -65,18 +62,8 @@ export class TransferHbarWithAllowanceTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to transfer HBAR with allowance';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_hbar_with_allowance_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new TransferHbarWithAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferHbarWithAllowanceTool(context);
 
 export default tool;

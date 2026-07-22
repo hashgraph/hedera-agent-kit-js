@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { deleteAccountParameters } from '@/shared/parameter-schemas/account.zod';
@@ -36,7 +33,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DELETE_ACCOUNT_TOOL = 'delete_account_tool';
 
-export class DeleteAccountTool extends BaseTool {
+export class DeleteAccountTool extends BaseTransactionTool {
   method = DELETE_ACCOUNT_TOOL;
   name = 'Delete Account';
   description: string;
@@ -64,18 +61,8 @@ export class DeleteAccountTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete account';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[delete_account_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new DeleteAccountTool(context);
+const tool = (context: Context): BaseTransactionTool => new DeleteAccountTool(context);
 
 export default tool;

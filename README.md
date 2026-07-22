@@ -7,20 +7,22 @@
 Build Hedera-powered AI agents **in under a minute**.
 
 > **Upgrading from v3?** See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for all breaking changes.
+>
+> **Building a custom plugin?** See the [Custom Plugin Authoring Guide](docs/PLUGINS.md#creating-a-plugin) — the v4 `BaseTool` pattern, a runnable starter in [`examples/plugin`](examples/plugin), and a no-LLM smoke test.
 
 ## Packages
 
 The Hedera Agent Kit is organized as a monorepo containing the core SDK and multiple framework adapter packages:
 
-| Package | NPM Link | Description |
-|---------|----------|-------------|
-| **`@hashgraph/hedera-agent-kit`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) | Core SDK & plugins for Hedera network integration |
-| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils) |
-| **`@hashgraph/hedera-agent-kit-ai-sdk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) | Vercel AI SDK adapter (compatible with standard tools) |
-| **`@hashgraph/hedera-agent-kit-elizaos`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos) | ElizaOS adapter (custom Eliza Actions) |
-| **`@hashgraph/hedera-agent-kit-mcp`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp) | Model Context Protocol (MCP) Server toolkit |
-| **`@hashgraph/hedera-agent-kit-adk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk) | Google Agent Development Kit (ADK) adapter |
-| **`create-hedera-agent`** | [npm](https://www.npmjs.com/package/create-hedera-agent) | CLI scaffold tool to bootstrap Next.js agent apps |
+| Package                                     | NPM Link                                                                   | Description                                            |
+|---------------------------------------------|----------------------------------------------------------------------------|--------------------------------------------------------|
+| **`@hashgraph/hedera-agent-kit`**           | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit)           | Core SDK & plugins for Hedera network integration      |
+| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils)       |
+| **`@hashgraph/hedera-agent-kit-ai-sdk`**    | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk)    | Vercel AI SDK adapter (compatible with standard tools) |
+| **`@hashgraph/hedera-agent-kit-elizaos`**   | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos)   | ElizaOS adapter (custom Eliza Actions)                 |
+| **`@hashgraph/hedera-agent-kit-mcp`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp)       | Model Context Protocol (MCP) Server toolkit            |
+| **`@hashgraph/hedera-agent-kit-adk`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk)       | Google Agent Development Kit (ADK) adapter             |
+| **`create-hedera-agent`**                   | [npm](https://www.npmjs.com/package/create-hedera-agent)                   | CLI scaffold tool to bootstrap Next.js agent apps      |
 
 ---
 
@@ -53,7 +55,7 @@ The Hedera Agent Kit is extensible with third party plugins by other projects.
 
 ## Agent Kit Functionality
 
-The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins-tools) of this page
+The list of currently available Hedera plugins and functionality can be found in the [Plugins & Tools section](#hedera-plugins--tools) of this page
 
 👉 See [docs/HEDERAPLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HEDERAPLUGINS.md) for the full catalogue & usage examples for Hedera Tools.
 
@@ -64,7 +66,9 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
-_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
+👉 **Build your own plugin:** follow the [Custom Plugin Authoring Guide](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#creating-a-plugin) (v4 `BaseTool` pattern, a runnable starter in [`examples/plugin`](https://github.com/hashgraph/hedera-agent-kit-js/tree/main/examples/plugin), and a no-LLM smoke test), then [publish and register it](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to get it listed here.
+
+_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#creating-a-plugin)_
 
 ### Hooks and Policies
 
@@ -80,7 +84,7 @@ The Hedera Agent Kit provides a flexible and powerful system for putting limits 
 
 For more information on hooks and policies, see the [Hooks and Policies documentation](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md).
 
-Try out an example [Audit Hook Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-try-out-the-audit-hook-agent) to see how hooks and policies work in practice.
+Try out an example [Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-audit-trail-agent) to see how hooks and policies work in practice.
 
 ---
 
@@ -152,7 +156,7 @@ Add the following to the .env file:
 ```env
 # Required: Hedera credentials (get free testnet account at https://portal.hedera.com/dashboard)
 ACCOUNT_ID="0.0.xxxxx"
-PRIVATE_KEY="0x..." # ECDSA encoded private key
+PRIVATE_KEY="0x..." # ECDSA or ED25519 private key (see note below)
 
 # Optional: Add the API key for your chosen AI provider
 OPENAI_API_KEY="sk-proj-..."      # For OpenAI (https://platform.openai.com/api-keys)
@@ -160,6 +164,19 @@ ANTHROPIC_API_KEY="sk-ant-..."    # For Claude (https://console.anthropic.com)
 GROQ_API_KEY="gsk_..."            # For Groq free tier (https://console.groq.com/keys)
 # Ollama doesn't need an API key (runs locally)
 ```
+
+##### About Private Keys
+
+Hedera supports two key types: **ECDSA (secp256k1)** and **ED25519**. These examples default to **ECDSA**. To switch to ED25519, uncomment the appropriate line in the agent's `.ts` file:
+
+```ts
+PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY!)   // default
+// PrivateKey.fromStringED25519(process.env.PRIVATE_KEY!)
+```
+
+Both constructors accept hex (`0x...`) and DER-encoded keys. DER-encoded ED25519 keys start with `302e...`; DER-encoded ECDSA keys start with `3030...`. The untyped `PrivateKey.fromString()` is deprecated — use the typed constructors instead. There is no reliable way to infer the key type from the string alone, so pick the constructor matching how the key was generated (the Hedera Portal shows the type). A mismatch is rejected by the network with `INVALID_SIGNATURE`. Note: the agent kit's built-in EVM/ERC tools currently require an ECDSA operator key; the Hedera EVM itself supports both key types.
+
+See the Hedera docs on [Keys and Signatures](https://docs.hedera.com/hedera/core-concepts/keys-and-signatures#key-types:-ecdsa-vs-ed25519) and [Accounts and Keys (EVM)](https://docs.hedera.com/evm/differences/accounts-and-keys).
 
 ### 3 – Simple "Hello Hedera Agent Kit" Example
 
@@ -238,7 +255,7 @@ HAK supports three transaction execution modes:
 - `mode: AgentMode.RETURN_BYTES` — returns serialized unsigned transaction bytes to the caller for external signing (e.g. MetaMask, HashPack, or any wallet). Ideal for stateless servers, browser extensions, and dApps.
 - `mode: AgentMode.CUSTOM` — delegates signing to a pluggable `TxModeStrategy` implementation (e.g. remote TEE, MPC threshold signing, KMS API, or human-in-the-loop console). Ideal for institutional key management and secure enclave workflows.
 
-For full configuration examples, built-in strategies, and a reference implementation, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
+For full configuration examples, built-in strategies, and a reference implementation, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md). For building non-custodial MCP servers on top of `RETURN_BYTES` mode, see [docs/MCP.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/MCP.md).
 
 ### Hedera Plugins & Tools
 

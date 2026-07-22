@@ -26,7 +26,7 @@ const makeEntry = (): AuditEntry => ({
   version: '1.0',
   source: 'hedera-agent-kit-js',
   timestamp: new Date().toISOString(),
-  tool: 'transfer_hbar',
+  tool: 'transfer_hbar_tool',
   params: { amount: 100 },
   result: { raw: { status: 'SUCCESS' }, message: 'ok' },
 });

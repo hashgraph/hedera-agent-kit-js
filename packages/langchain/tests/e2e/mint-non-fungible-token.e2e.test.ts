@@ -85,6 +85,9 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         .then(info => info.totalSupply.toInt());
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully minted.');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Serial(s):');
+      expect(parsedResponse[0].parsedData.raw.serials).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.serials.length).toBeGreaterThan(0);
       expect(supplyAfter).toBe(supplyBefore + 1);
     },
   );
@@ -116,6 +119,9 @@ describe('Mint Non-Fungible Token E2E Tests', () => {
         .then(info => info.totalSupply.toInt());
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain('Token successfully minted.');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Serial(s):');
+      expect(parsedResponse[0].parsedData.raw.serials).toBeDefined();
+      expect(parsedResponse[0].parsedData.raw.serials).toHaveLength(uris.length);
       expect(supplyAfter).toBe(supplyBefore + uris.length);
     },
   );

@@ -9,7 +9,7 @@ import {
 
 // Structural check on `__isLong__`; survives ESM/CJS dual copies where an instanceof
 // check against the imported Long constructor would silently fail.
-const zLong = z.custom<Long>((v) => Long.isLong(v), { message: 'Expected Long' });
+const zLong = z.custom<Long>(v => Long.isLong(v), { message: 'Expected Long' });
 
 export const transferHbarParameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
