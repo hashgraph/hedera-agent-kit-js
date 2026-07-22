@@ -19,13 +19,13 @@ The [`@hashgraph/hedera-agent-kit-mcp`](https://www.npmjs.com/package/@hashgraph
 
 The kit has two execution modes (`AgentMode` in `@hashgraph/hedera-agent-kit`), and the mode decides where the private key lives:
 
-|                     | Custodial — `AUTONOMOUS`                          | Non-custodial — `RETURN_BYTES`                                     |
-| ------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
-| Signing key         | On the MCP server (operator set on the `Client`)  | Never on the server; stays in the host app, wallet, or runtime     |
-| Transaction flow    | Server signs **and submits** every transaction    | Server freezes the transaction and returns unsigned bytes          |
-| Typical transport   | stdio, running locally for a single user          | HTTP, potentially remote and shared by many callers                |
-| Account context     | Operator account from env vars                    | Per-request, via the `x-hedera-account-id` header (stateless)      |
-| Use when            | Personal local agent, quick testnet experiments   | Serving third parties, payment/x402 agents, anything user-facing   |
+|                   | Custodial — `AUTONOMOUS`                         | Non-custodial — `RETURN_BYTES`                                   |
+| ----------------- | ------------------------------------------------ | ---------------------------------------------------------------- |
+| Signing key       | On the MCP server (operator set on the `Client`) | Never on the server; stays in the host app, wallet, or runtime   |
+| Transaction flow  | Server signs **and submits** every transaction   | Server freezes the transaction and returns unsigned bytes        |
+| Typical transport | stdio, running locally for a single user         | HTTP, potentially remote and shared by many callers              |
+| Account context   | Operator account from env vars                   | Per-request, via the `x-hedera-account-id` header (stateless)    |
+| Use when          | Personal local agent, quick testnet experiments  | Serving third parties, payment/x402 agents, anything user-facing |
 
 **Default to `RETURN_BYTES` for anything user-facing.** A server that cannot sign cannot lose funds, and the human (or host application) keeps the final approval step: the agent prepares a transaction plan, the operator decides when and where it gets signed and submitted.
 
@@ -41,7 +41,11 @@ HEDERA_OPERATOR_KEY=3030...
 ```typescript
 import { Client } from '@hiero-ledger/sdk';
 import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp';
-import { coreTokenPlugin, coreAccountPlugin, coreConsensusPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import {
+  coreTokenPlugin,
+  coreAccountPlugin,
+  coreConsensusPlugin,
+} from '@hashgraph/hedera-agent-kit/plugins';
 
 const client = Client.forTestnet();
 client.setOperator(process.env.HEDERA_OPERATOR_ID!, process.env.HEDERA_OPERATOR_KEY!);
@@ -140,14 +144,24 @@ In `RETURN_BYTES` mode, a transaction tool:
 1. builds the transaction from the tool arguments,
 2. sets a transaction ID generated from `context.accountId`,
 3. freezes it against the client,
-4. returns `{ bytes }` — the serialized, **unsigned** transaction (`Uint8Array`, from `Transaction.toBytes()`).
+4. returns a `ReturnBytesResult` envelope — the serialized, **unsigned** transaction (`bytes`, a `Uint8Array` from `Transaction.toBytes()`) together with the context a wallet needs to review and sign it:
+
+| Field            | Description                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `bytes`          | Frozen, unsigned transaction (`Uint8Array`).                                              |
+| `status`         | Always `'SUCCESS'` — serializing to bytes cannot fail once the transaction is frozen.     |
+| `transactionId`  | ID set on the frozen transaction, e.g. `0.0.1234@1700000000.000000000`.                   |
+| `payerAccountId` | Account expected to pay for and sign the transaction (the context account).               |
+| `type`           | SDK transaction class name, e.g. `TransferTransaction`.                                   |
+| `expiresAt`      | ISO timestamp after which the network rejects the transaction with `TRANSACTION_EXPIRED`. |
+| `memo`           | Transaction memo; empty string when unset.                                                |
 
 Nothing is signed and nothing is submitted. (Query tools are unaffected by the mode — they always just return data.)
 
 What the caller sees depends on the integration layer:
 
 - **Over MCP**, tool results are JSON text, so the `Uint8Array` arrives JSON-serialized; parse the result and reconstruct the bytes before deserializing (see the client example below).
-- **In-process framework toolkits** (LangChain, AI SDK) parse tool output into `{ raw, humanMessage }`, where `raw.bytes` is a `Uint8Array`. Since v4 this is standardized across Node.js and web — if you previously parsed Node `Buffer` payloads, see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array).
+- **In-process framework toolkits** (LangChain, AI SDK) parse tool output into `{ raw, humanMessage }`, where `raw` is the `ReturnBytesResult` envelope (`raw.bytes` is a `Uint8Array`, alongside `raw.transactionId`, `raw.payerAccountId`, `raw.type`, `raw.expiresAt`, and `raw.memo`). Since v4 the bytes are standardized to `Uint8Array` across Node.js and web — if you previously parsed Node `Buffer` payloads, see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array).
 
 ## Signing and submitting on the client
 

@@ -3,7 +3,16 @@ import { Plugin } from './plugin';
 import { AbstractHook } from './hook';
 
 export enum AgentMode {
+  /**
+   * Tools sign and execute transactions directly with the configured operator key
+   * and return the receipt (`{ raw, humanMessage }`).
+   */
   AUTONOMOUS = 'autonomous',
+  /**
+   * Tools freeze the transaction with `context.accountId` as payer and return it
+   * unsigned as a `ReturnBytesResult` (`bytes`, `transactionId`, `payerAccountId`,
+   * `type`) for external signing, e.g. by a wallet via WalletConnect.
+   */
   RETURN_BYTES = 'returnBytes',
 }
 

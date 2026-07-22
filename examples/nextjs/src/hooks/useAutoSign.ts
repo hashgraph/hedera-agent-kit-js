@@ -1,52 +1,21 @@
-import { useEffect } from 'react';
-import { getPairedAccountId } from '@/lib/walletconnect';
+import { useEffect, useRef } from 'react';
 import { AgentMode } from '@/types';
 
 interface UseAutoSignProps {
     mode: AgentMode | undefined;
     pendingBytes: string | null;
     isSigning: boolean;
-    accountId: string;
     signAndExecute: () => Promise<void>;
-    onAccountIdChange: (accountId: string) => void;
-    onOpenReview: (open: boolean) => void;
 }
 
-export function useAutoSign({
-    mode,
-    pendingBytes,
-    isSigning,
-    accountId,
-    signAndExecute,
-    onAccountIdChange,
-    onOpenReview,
-}: UseAutoSignProps) {
-    const reviewVisible = mode === "human" && Boolean(pendingBytes);
+export function useAutoSign({ mode, pendingBytes, isSigning, signAndExecute }: UseAutoSignProps) {
+    // sign each transaction at most once; rejection in the wallet is final
+    const attemptedBytesRef = useRef<string | null>(null);
 
     useEffect(() => {
-        if (!reviewVisible || isSigning) return;
-
-        (async () => {
-            try {
-                let acct = accountId;
-                if (!acct) {
-                    try { 
-                        acct = await getPairedAccountId(); 
-                        onAccountIdChange(acct); 
-                    } catch { 
-                    }
-                }
-                
-                if (acct && !isSigning && pendingBytes) {
-                    await signAndExecute();
-                } else {
-                    onOpenReview(true);
-                }
-            } catch {
-                onOpenReview(true);
-            }
-        })();
-    }, [reviewVisible, isSigning, accountId, pendingBytes, signAndExecute, onAccountIdChange, onOpenReview]);
-
-    return { reviewVisible };
+        if (mode !== 'human' || !pendingBytes || isSigning) return;
+        if (attemptedBytesRef.current === pendingBytes) return;
+        attemptedBytesRef.current = pendingBytes;
+        void signAndExecute();
+    }, [mode, pendingBytes, isSigning, signAndExecute]);
 }

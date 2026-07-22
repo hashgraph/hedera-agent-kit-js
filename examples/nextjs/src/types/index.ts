@@ -16,10 +16,19 @@ export type AgentResponse = ApiResponse<{
   result: string;
 }>;
 
+// Envelope returned by RETURN_BYTES mode tools (bytes + signing context)
+export type PendingTransaction = {
+  bytesBase64: string;
+  transactionId?: string;
+  payerAccountId?: string;
+  transactionType?: string;
+  expiresAt?: string;
+  memo?: string;
+};
+
 export type WalletPrepareResponse = ApiResponse<{
   result?: string;
-  bytesBase64?: string;
-}>;
+} & Partial<PendingTransaction>>;
 
 export type ChatState = {
   messages: Message[];

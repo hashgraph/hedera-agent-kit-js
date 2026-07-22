@@ -6,31 +6,41 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageList } from "@/components/MessageList";
 import { MessageInput } from "@/components/MessageInput";
-import { TransactionStatus } from "@/components/TransactionStatus";
 import { signAndExecuteBytes, getPairedAccountId, connectWallet, ensureWalletConnector } from "@/lib/walletconnect";
 import { useMessageSubmit } from "@/hooks/useMessageSubmit";
 import { useAutoSign } from "@/hooks/useAutoSign";
-import { Message, AgentMode } from "@/types";
+import { Message, AgentMode, PendingTransaction } from "@/types";
+
+// WalletConnect rejections are plain objects, not Error instances
+function errorMessage(e: unknown): string {
+    if (e instanceof Error) return e.message;
+    if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+        return (e as { message: string }).message;
+    }
+    try {
+        return JSON.stringify(e);
+    } catch {
+        return String(e);
+    }
+}
 
 export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [pendingBytes, setPendingBytes] = useState<string | null>(null);
-    const [openReview, setOpenReview] = useState(false);
+    const [pendingTx, setPendingTx] = useState<PendingTransaction | null>(null);
     const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
     const mode = process.env.NEXT_PUBLIC_AGENT_MODE as AgentMode | undefined;
     const [accountId, setAccountId] = useState<string>('');
-    const [txStatus, setTxStatus] = useState<string | null>(null);
     const [isSigning, setIsSigning] = useState(false);
 
     const { submitMessage } = useMessageSubmit({
         mode,
         onMessagesChange: setMessages,
-        onPendingBytesChange: setPendingBytes,
-        onTxStatusReset: () => setTxStatus(null),
+        onPendingBytesChange: setPendingTx,
+        onTxStatusReset: () => { },
     });
 
     const focusComposer = useCallback(() => {
@@ -53,7 +63,6 @@ export default function Chat() {
 
         setError(null);
         setLoading(true);
-        setOpenReview(false);
 
         try {
             await submitMessage(input, messages);
@@ -67,14 +76,13 @@ export default function Chat() {
     }, [input, messages, submitMessage, focusComposer]);
 
     const handleSign = useCallback(async () => {
-        if (!pendingBytes) return;
+        if (!pendingTx) return;
         try {
-            setTxStatus('pending');
             setIsSigning(true);
-            
+
             // ensure connector initialised
             await ensureWalletConnector('warn');
-            
+
             // ensure we have an account id; if not, attempt to pair then derive
             let acct = accountId;
             if (!acct) {
@@ -89,32 +97,27 @@ export default function Chat() {
                     setAccountId(acct);
                 }
             }
-            
-            const bytes = typeof window === 'undefined' 
-                ? Buffer.from(pendingBytes, 'base64') 
-                : Uint8Array.from(atob(pendingBytes), c => c.charCodeAt(0));
-            
+
+            const bytes = typeof window === 'undefined'
+                ? Buffer.from(pendingTx.bytesBase64, 'base64')
+                : Uint8Array.from(atob(pendingTx.bytesBase64), c => c.charCodeAt(0));
+
             const result = await signAndExecuteBytes({ bytes, accountId: acct });
-            setTxStatus('confirmed');
             setMessages(m => [...m, { role: 'assistant', content: JSON.stringify(result) }]);
-            setPendingBytes(null);
-            setOpenReview(false);
         } catch (e) {
-            setTxStatus(null);
-            setError(e instanceof Error ? e.message : String(e));
+            // rejection in the wallet is final: discard the prepared bytes
+            setMessages(m => [...m, { role: 'assistant', content: `Transaction was not signed (${errorMessage(e)}). The prepared bytes were discarded.` }]);
         } finally {
+            setPendingTx(null);
             setIsSigning(false);
         }
-    }, [pendingBytes, accountId]);
+    }, [pendingTx, accountId]);
 
     useAutoSign({
         mode,
-        pendingBytes,
+        pendingBytes: pendingTx?.bytesBase64 ?? null,
         isSigning,
-        accountId,
         signAndExecute: handleSign,
-        onAccountIdChange: setAccountId,
-        onOpenReview: setOpenReview,
     });
 
     return (
@@ -143,15 +146,6 @@ export default function Chat() {
                     disabled={loading}
                 />
             </CardFooter>
-
-            <TransactionStatus
-                open={openReview}
-                onOpenChange={setOpenReview}
-                txStatus={txStatus}
-                onSign={handleSign}
-            />
         </Card>
     );
 }
-
-

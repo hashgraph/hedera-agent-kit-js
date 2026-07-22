@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
         const executor = createAgentExecutorWithPrompt(llm, tools, chatPrompt, true);
         const response = await executor.invoke({ input, history: historyMessages });
 
-        const maybeBytes = extractBytesFromAgentResponse(response);
-        if (maybeBytes) {
-            return createSuccessResponse({ mode: bootstrap.mode, bytesBase64: maybeBytes });
+        const pendingTx = extractBytesFromAgentResponse(response);
+        if (pendingTx) {
+            return createSuccessResponse({ mode: bootstrap.mode, ...pendingTx });
         }
         
         const result = extractResultFromResponse(response);
