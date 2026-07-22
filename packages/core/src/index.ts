@@ -3,6 +3,7 @@
 
 // Primary types
 export { default as HederaAgentAPI } from './shared/api';
+export type { ToolSummary } from './shared/api';
 export { AgentMode } from './shared/configuration';
 export type { Configuration, Context } from './shared/configuration';
 export type { Plugin } from './shared/plugin';
