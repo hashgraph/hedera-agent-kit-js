@@ -39,7 +39,7 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
    */
   private async fetchJson<T>(url: string, buildError: (response: Response) => string): Promise<T> {
     const RETRYABLE_STATUSES = new Set([404, 429, 502, 503, 504]);
-    const maxAttempts = 5;
+    const maxAttempts = 3;
     let delayMs = 1000;
     for (let attempt = 1; ; attempt++) {
       let response: Response;

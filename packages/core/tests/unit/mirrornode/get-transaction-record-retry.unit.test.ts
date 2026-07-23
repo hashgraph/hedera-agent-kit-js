@@ -42,7 +42,7 @@ describe('mirror node getTransactionRecord - 404 retry with backoff', () => {
     await vi.runAllTimersAsync();
     await assertion;
 
-    expect(fetchMock).toHaveBeenCalledTimes(5); // maxAttempts
+    expect(fetchMock).toHaveBeenCalledTimes(3); // maxAttempts
   });
 
   it('does not retry non-404 errors', async () => {
