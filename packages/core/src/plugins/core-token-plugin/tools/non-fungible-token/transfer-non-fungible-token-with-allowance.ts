@@ -67,6 +67,17 @@ export class TransferNonFungibleTokenWithAllowanceTool extends BaseTransactionTo
     return await handleTransaction(tx, client, context, postProcess);
   }
 
+  async handleError(error: unknown, context: Context): Promise<any> {
+    const result = await super.handleError(error, context);
+    if (result?.raw?.errorCode === 'TOKEN_NOT_ASSOCIATED_TO_ACCOUNT') {
+      result.humanMessage +=
+        ' The recipient account has not associated this HTS token.' +
+        ' Use the associate_token_tool to associate the account first,' +
+        ' or ensure the account has maxAutoAssociations set to -1.';
+    }
+    return result;
+  }
+
   async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
     return false;
   }

@@ -68,38 +68,23 @@ describe('BaseTransactionTool.handleError()', () => {
     });
   });
 
-  describe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT — actionable hint appended', () => {
-    it('includes the associate_token_tool hint in humanMessage', async () => {
+  describe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT — structured fields preserved, no hint in base class', () => {
+    it('sets errorCode and preserves raw.error without any hint', async () => {
       const err = makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
       const result = await tool.handleError(err, ctx);
 
       expect(result.raw.status).toBe('ERROR');
       expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
-      expect(result.humanMessage).toContain('associate_token_tool');
-      expect(result.humanMessage).toContain('maxAutoAssociations');
+      expect(result.raw.error).toBe(err.message);
+      expect(result.humanMessage).not.toContain('associate_token_tool');
+      expect(result.humanMessage).not.toContain('maxAutoAssociations');
     });
 
-    it('humanMessage still contains the original SDK error message', async () => {
+    it('humanMessage contains the original SDK error message', async () => {
       const err = makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
       const result = await tool.handleError(err, ctx);
 
       expect(result.humanMessage).toContain(err.message);
-    });
-
-    it('raw.error is the original SDK message without the hint', async () => {
-      const err = makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
-      const result = await tool.handleError(err, ctx);
-
-      // raw.error must equal the original SDK message, not the enriched one
-      expect(result.raw.error).toBe(err.message);
-      expect(result.raw.error).not.toContain('associate_token_tool');
-    });
-
-    it('does not add the association hint for unrelated status codes', async () => {
-      const err = makeReceiptStatusError(Status.InsufficientPayerBalance);
-      const result = await tool.handleError(err, ctx);
-
-      expect(result.humanMessage).not.toContain('associate_token_tool');
     });
   });
 

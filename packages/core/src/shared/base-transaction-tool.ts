@@ -37,13 +37,7 @@ export abstract class BaseTransactionTool extends BaseTool {
   async handleError(error: unknown, context: Context): Promise<any> {
     if (error instanceof ReceiptStatusError || error instanceof PrecheckStatusError) {
       const errorCode = error.status.toString();
-      const associationHint =
-        errorCode === 'TOKEN_NOT_ASSOCIATED_TO_ACCOUNT'
-          ? ' The recipient account has not associated this HTS token.' +
-            ' Use the associate_token_tool to associate the account first,' +
-            ' or ensure the account has maxAutoAssociations set to -1.'
-          : '';
-      const message = `Failed to execute ${this.name}: ${error.message}${associationHint}`;
+      const message = `Failed to execute ${this.name}: ${error.message}`;
       console.error(`[${this.method}]`, message);
       return {
         raw: {
