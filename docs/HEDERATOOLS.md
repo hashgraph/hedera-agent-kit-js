@@ -55,6 +55,8 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [CREATE_ERC721_TOOL](#create_erc721_tool)
     - [MINT_ERC721_TOOL](#mint_erc721_tool)
     - [TRANSFER_ERC721_TOOL](#transfer_erc721_tool)
+- [DEX Tools](#dex-tools)
+    - [SWAP_TOKENS_TOOL](#swap_tokens_tool)
 - [EVM Query Tools](#evm-query-tools)
     - [GET_CONTRACT_INFO_QUERY_TOOL](#get_contract_info_query_tool)
 - [Transaction Query Tools](#transaction-query-tools)
@@ -1169,6 +1171,43 @@ Send ERC721 0.0.12345 token ID 5 from 0x123... to 0x456...
 
 ```
 Schedule transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x1234567890123456789012345678901234567890. Make it expire 01.02.2026 and wait for its expiration time with executing it.
+```
+
+---
+
+## DEX Tools
+
+### SWAP_TOKENS_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
+
+Swaps an exact amount of one token for another on a Hedera DEX by calling a Uniswap V2 style router's `swapExactTokensForTokens`. Works with any compatible router (e.g. SaucerSwap). Supports scheduled transactions.
+
+> **Allowance required:** the input token must already have an allowance granted to the router contract. For HTS tokens, use [`APPROVE_TOKEN_ALLOWANCE_TOOL`](#approve_token_allowance_tool) first.
+
+#### Parameters
+
+| Parameter          | Type       | Required | Default      | Description                                                                       |
+|--------------------|------------|----------|--------------|-----------------------------------------------------------------------------------|
+| `routerContractId` | `string`   | ✅        | —            | The DEX router contract (EVM address or Hedera ID).                               |
+| `path`             | `string[]` | ✅        | —            | Ordered swap route, input token to output token (e.g. `["0.0.111", "0.0.222"]`).  |
+| `amountIn`         | `string`   | ✅        | —            | Exact input amount, in the token's smallest unit (integer string).               |
+| `amountOutMin`     | `string`   | ✅        | —            | Minimum acceptable output, in the output token's smallest unit. Slippage floor.  |
+| `recipientAddress` | `string`   | ❌        | operator     | Address that receives the output tokens (EVM or Hedera ID).                       |
+| `deadlineSeconds`  | `number`   | ❌        | now + 20 min | Unix timestamp after which the swap is invalid.                                   |
+| `gas`              | `number`   | ❌        | `1000000`    | Gas limit for the router call.                                                    |
+
+#### Example Prompts
+
+```
+Swap 100000000 base units of token 0.0.111 for at least 95000000 of token 0.0.222 using router 0.0.12345
+Swap 5000000 of 0.0.111 for 0.0.222 via router 0.0.12345, minimum out 4900000
+```
+
+#### Example (Scheduled)
+
+```
+Schedule a swap of 100000000 of token 0.0.111 for at least 95000000 of 0.0.222 on router 0.0.12345. Make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---
