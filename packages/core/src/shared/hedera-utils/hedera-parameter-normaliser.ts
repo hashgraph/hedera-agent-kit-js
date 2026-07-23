@@ -82,9 +82,6 @@ import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared';
 import { getERC20Decimals, toBaseUnit } from './decimals-utils';
 import BigNumber from 'bignumber.js';
-
-// HTS token amounts are stored as int64; derive the ceiling from the SDK so it stays in sync.
-const HTS_INT64_MAX = new BigNumber(Long.MAX_VALUE.toString());
 import { TokenTransferMinimalParams, TransferHbarInput } from './types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -104,6 +101,9 @@ import {
   optionalScheduledTransactionParams,
   optionalScheduledTransactionParamsNormalised,
 } from '@/shared/parameter-schemas/common.zod';
+
+// HTS token amounts are stored as int64; derive the ceiling from the SDK so it stays in sync.
+const HTS_INT64_MAX = new BigNumber(Long.MAX_VALUE.toString());
 
 export default class HederaParameterNormaliser {
   static parseParamsWithSchema(
@@ -577,13 +577,11 @@ export default class HederaParameterNormaliser {
         );
       }
 
-      const baseAmount = baseAmountBN.toNumber();
-
       return new TokenAllowance({
         ownerAccountId: AccountId.fromString(ownerAccountId),
         spenderAccountId: AccountId.fromString(spenderAccountId),
         tokenId: TokenId.fromString(tokenAllowance.tokenId),
-        amount: Long.fromNumber(baseAmount),
+        amount: Long.fromString(baseAmountBN.toFixed()),
       });
     });
 

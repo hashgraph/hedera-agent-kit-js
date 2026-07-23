@@ -54,11 +54,12 @@ export async function getERC20Decimals(
  * Converts a token amount to base units (the smallest denomination).
  * Example: toBaseUnit(1.5, 8) => BigNumber(150000000)
  *
- * @param amount - The human-readable token amount (number or BigNumber).
+ * @param amount - The human-readable token amount (number, numeric string, or BigNumber).
+ *   Pass a numeric string for values above 2^53 to avoid JS number precision loss.
  * @param decimals - The number of decimals the token uses.
  * @returns The amount in base units as BigNumber.
  */
-export function toBaseUnit(amount: number | BigNumber, decimals: number): BigNumber {
+export function toBaseUnit(amount: number | string | BigNumber, decimals: number): BigNumber {
   const amountBN = new BigNumber(amount);
   const multiplier = new BigNumber(10).pow(decimals);
   return amountBN.multipliedBy(multiplier).integerValue(BigNumber.ROUND_FLOOR);
