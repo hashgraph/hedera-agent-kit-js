@@ -30,11 +30,23 @@ export async function getERC20Decimals(
   let delayMs = 1000;
 
   for (let attempt = 1; ; attempt++) {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+    } catch (err) {
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        delayMs *= 2;
+        continue;
+      }
+      throw new Error(
+        `Failed to read decimals of ERC20 contract ${contractId}: ${(err as Error).message}`,
+      );
+    }
     if (response.ok) {
       const { result } = (await response.json()) as { result: string };
       return Number(BigInt(result));
