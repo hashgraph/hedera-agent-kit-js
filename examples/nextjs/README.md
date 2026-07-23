@@ -89,14 +89,12 @@ nextjs/
 │   │   ├── Chat.tsx                # Main chat interface
 │   │   ├── MessageInput.tsx        # Chat input
 │   │   ├── MessageList.tsx         # Chat message list
-│   │   ├── TransactionStatus.tsx   # Transaction status display
 │   │   ├── WalletConnect.tsx       # WalletConnect integration
 │   │   ├── WalletConnectClient.tsx # WalletConnect client wrapper
 │   │   └── ui/                     # Reusable UI components (shadcn/ui)
 │   ├── hooks/
-│   │   ├── useAutoSign.ts          # Auto-signing hook (autonomous mode)
-│   │   ├── useMessageSubmit.ts     # Chat submit handling
-│   │   └── useWalletConnect.tsx    # WalletConnect lifecycle hook
+│   │   ├── useAutoSign.ts          # Auto-signing hook (human/HITL mode)
+│   │   └── useMessageSubmit.ts     # Chat submit handling
 │   ├── lib/
 │   │   ├── agent-config.ts         # Agent bootstrap and toolkit configuration
 │   │   ├── agent-factory.ts        # LLM/toolkit/agent executor factory

@@ -102,10 +102,30 @@ async function bootstrap(): Promise<void> {
         try {
           const parsed = JSON.parse(content);
           if (parsed?.bytes || parsed?.raw?.bytes) {
-            const bytesObject = parsed.bytes || parsed.raw.bytes;
+            // Over MCP the RETURN_BYTES envelope may arrive directly or wrapped under `raw`.
+            const envelope = parsed.raw ?? parsed;
+            const bytesObject = envelope.bytes;
             const realBytes = Buffer.isBuffer(bytesObject)
               ? bytesObject
               : Buffer.from(bytesObject.data || bytesObject);
+
+            // Print everything the caller needs to review, sign, and verify the transaction.
+            console.log('\n--- RETURN_BYTES envelope ---');
+            console.log(
+              JSON.stringify(
+                {
+                  status: envelope.status,
+                  type: envelope.type,
+                  transactionId: envelope.transactionId,
+                  payerAccountId: envelope.payerAccountId,
+                  expiresAt: envelope.expiresAt,
+                  memo: envelope.memo,
+                  bytesLength: realBytes.length,
+                },
+                null,
+                2,
+              ),
+            );
 
             console.log('Transaction bytes found. Executing...');
             const tx = Transaction.fromBytes(realBytes);

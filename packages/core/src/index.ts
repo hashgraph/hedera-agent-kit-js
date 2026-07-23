@@ -27,6 +27,7 @@ export { handleTransaction } from './shared/strategies/tx-mode-strategy';
 export type {
   RawTransactionResponse,
   ExecuteStrategyResult,
+  ReturnBytesResult,
 } from './shared/strategies/tx-mode-strategy';
 export { ExecuteStrategy } from './shared/strategies/tx-mode-strategy';
 export { AccountResolver } from './shared/utils/account-resolver';

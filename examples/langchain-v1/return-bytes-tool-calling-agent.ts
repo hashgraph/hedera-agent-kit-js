@@ -123,8 +123,28 @@ async function bootstrap(): Promise<void> {
 
       // 2. Handle RETURN_BYTES mode
       if (toolCall.parsedData?.raw?.bytes) {
+        // RETURN_BYTES mode returns a structured ReturnBytesResult envelope alongside the raw
+        // bytes. Print everything the caller needs to review, sign, and verify the transaction.
+        const envelope = toolCall.parsedData.raw;
+        console.log('\n--- RETURN_BYTES envelope ---');
+        console.log(
+          JSON.stringify(
+            {
+              status: envelope.status,
+              type: envelope.type,
+              transactionId: envelope.transactionId,
+              payerAccountId: envelope.payerAccountId,
+              expiresAt: envelope.expiresAt,
+              memo: envelope.memo,
+              bytesLength: envelope.bytes.length,
+            },
+            null,
+            2,
+          ),
+        );
+
         console.log('Transaction bytes found. Executing...');
-        const bytes = toolCall.parsedData.raw.bytes;
+        const bytes = envelope.bytes;
         const tx = Transaction.fromBytes(bytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);

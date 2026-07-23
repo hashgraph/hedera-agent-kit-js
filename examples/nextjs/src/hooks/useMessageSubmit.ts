@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
 import { API_ENDPOINTS } from '@/lib/constants';
-import { Message, AgentMode, WalletPrepareResponse, AgentResponse } from '@/types';
+import { Message, AgentMode, WalletPrepareResponse, AgentResponse, PendingTransaction } from '@/types';
 import { getPairedAccountId } from '@/lib/walletconnect';
 
 interface UseMessageSubmitProps {
     mode: AgentMode | undefined;
     onMessagesChange: (updateFn: (messages: Message[]) => Message[]) => void;
-    onPendingBytesChange: (bytes: string | null) => void;
+    onPendingBytesChange: (tx: PendingTransaction | null) => void;
     onTxStatusReset: () => void;
 }
 
@@ -35,8 +35,19 @@ export function useMessageSubmit({
         }
 
         if (json.bytesBase64) {
-            onPendingBytesChange(json.bytesBase64);
-            onMessagesChange(m => [...m, { role: "assistant", content: "Transaction requires signature." }]);
+            const { bytesBase64, transactionId, payerAccountId, transactionType, expiresAt, memo } = json;
+            onPendingBytesChange({ bytesBase64, transactionId, payerAccountId, transactionType, expiresAt, memo });
+            const summary = [
+                transactionType && `type: ${transactionType}`,
+                payerAccountId && `payer: ${payerAccountId}`,
+                transactionId && `id: ${transactionId}`,
+                memo && `memo: ${memo}`,
+                expiresAt && `expires: ${new Date(expiresAt).toLocaleTimeString()}`,
+            ].filter(Boolean).join(', ');
+            onMessagesChange(m => [...m, {
+                role: "assistant",
+                content: `Transaction requires signature${summary ? ` (${summary})` : ''}.`,
+            }]);
             return;
         }
 
