@@ -41,6 +41,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
     - [AIRDROP_FUNGIBLE_TOKEN_TOOL](#airdrop_fungible_token_tool)
     - [APPROVE_TOKEN_ALLOWANCE_TOOL](#approve_token_allowance_tool)
     - [DELETE_TOKEN_ALLOWANCE_TOOL](#delete_token_allowance_tool)
+    - [TRANSFER_FUNGIBLE_TOKEN_TOOL](#transfer_fungible_token_tool)
     - [TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL](#transfer_fungible_token_with_allowance_tool)
     - [APPROVE_NFT_ALLOWANCE_TOOL](#approve_nft_allowance_tool)
     - [DELETE_NFT_ALLOWANCE_TOOL](#delete_nft_allowance_tool)
@@ -834,6 +835,41 @@ Delete fungible token allowance(s).
 ```
 Delete token allowance for account 0.0.123 on token 0.0.456
 Remove allowance for spender 0.0.123 on tokens 0.0.456 and 0.0.789
+```
+
+---
+
+### TRANSFER_FUNGIBLE_TOKEN_TOOL
+
+**Supports Hooks & Policies**: ✅ Yes
+
+Transfers a fungible token directly from the sender's own account (no allowance required). Supports scheduled transactions.
+
+> [!NOTE]
+> Use this tool when the sender owns the tokens directly. For allowance-based transfers (where a spender acts on behalf of a token owner), use `TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL` instead.
+
+#### Parameters
+
+| Parameter         | Type                                         | Required | Description                                                                             |
+|-------------------|----------------------------------------------|----------|-----------------------------------------------------------------------------------------|
+| `tokenId`         | `string`                                     | ✅        | The token ID to transfer (e.g. `"0.0.12345"`).                                         |
+| `transfers`       | `Array<{accountId: string, amount: number}>` | ✅        | List of recipient transfers. Each object has `accountId` (recipient) and `amount` (in display units). |
+| `senderAccountId` | `string`                                     | ❌        | Account ID of the token owner/sender (defaults to operator if omitted).                 |
+| `transactionMemo` | `string`                                     | ❌        | Memo for the transaction.                                                               |
+
+#### Example Prompts
+
+```
+Transfer 100 of token 0.0.12345 to account 0.0.67890
+Send 50 TKN (token id: 0.0.12345) to 0.0.2002 and 75 TKN to 0.0.3003
+Transfer 25 of my fungible tokens 0.0.12345 from account 0.0.1001 to 0.0.2002
+Send 10 tokens 0.0.12345 to 0.0.2002 with memo "Payment"
+```
+
+#### Example (Scheduled)
+
+```
+Transfer 50 of token 0.0.12345 to account 0.0.67890. Schedule this transaction and make it expire 01.02.2026 and wait for its expiration time with executing it.
 ```
 
 ---

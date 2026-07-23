@@ -19,6 +19,8 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParameters,
   mintNonFungibleTokenParametersNormalised,
+  transferFungibleTokenParameters,
+  transferFungibleTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParameters,
   transferFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenParameters,
@@ -610,6 +612,58 @@ export default class HederaParameterNormaliser {
     };
     // Delegate to the approval normalizer
     return this.normaliseApproveTokenAllowance(approveParams, context, client, mirrorNode);
+  }
+
+  static async normaliseTransferFungibleToken(
+    params: z.infer<ReturnType<typeof transferFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+    mirrornode: IHederaMirrornodeService,
+  ): Promise<z.infer<ReturnType<typeof transferFungibleTokenParametersNormalised>>> {
+    const parsedParams = this.parseParamsWithSchema(
+      params,
+      transferFungibleTokenParameters,
+      context,
+    );
+
+    const senderAccountId = AccountResolver.resolveAccount(
+      parsedParams.senderAccountId,
+      context,
+      client,
+    );
+
+    const tokenInfo = await mirrornode.getTokenInfo(parsedParams.tokenId);
+    const tokenDecimals = Number(tokenInfo.decimals);
+
+    const tokenTransfers: TokenTransferMinimalParams[] = [];
+    let totalAmount = 0;
+
+    for (const transfer of parsedParams.transfers) {
+      totalAmount += transfer.amount;
+      tokenTransfers.push({
+        tokenId: parsedParams.tokenId,
+        accountId: transfer.accountId,
+        amount: toBaseUnit(transfer.amount, tokenDecimals).toNumber(),
+      });
+    }
+
+    tokenTransfers.push({
+      tokenId: parsedParams.tokenId,
+      accountId: senderAccountId,
+      amount: toBaseUnit(-totalAmount, tokenDecimals).toNumber(),
+    });
+
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      schedulingParams,
+      tokenId: parsedParams.tokenId,
+      tokenTransfers,
+      transactionMemo: parsedParams.transactionMemo,
+    };
   }
 
   static async normaliseTransferFungibleTokenWithAllowance(

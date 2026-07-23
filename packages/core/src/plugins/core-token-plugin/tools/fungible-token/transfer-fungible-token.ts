@@ -4,24 +4,32 @@ import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import { Client } from '@hiero-ledger/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
-import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
+import { transferFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
 
-const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
+const transferFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
+  const senderDesc = PromptGenerator.getAccountParameterDescription('senderAccountId', context);
 
   return `
 ${contextSnippet}
 
-This tool will transfer a HTS fungible token using an existing **token allowance**.
+Use this tool to transfer HTS fungible tokens that the sender **owns directly** — no allowance is involved.
+The sender must hold the tokens in their own account. The tool signs the transfer with the sender's key.
+
+DO NOT use this tool when:
+- The user mentions "allowance", "approved", or "on behalf of"
+- The user is spending tokens that belong to a different account via a pre-approved allowance
+
+Use transfer_fungible_token_with_allowance_tool instead for allowance-based transfers.
 
 Parameters:
 - tokenId (string, required): The token ID to transfer (e.g. "0.0.12345")
-- sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
+- ${senderDesc}
 - transfers (array of objects, required): List of token transfers. Each object should contain:
   - accountId (string, required): Recipient account ID
   - amount (number, required): Amount of tokens to transfer in display unit
@@ -30,44 +38,43 @@ ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 
-Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
-Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+Example: Send 25 of my fungible tokens with id 0.0.33333 to 0.0.2002
+Example 2: Transfer 50 TKN (token id: '0.0.33333') from my account to 0.0.2002 and 75 TKN to 0.0.3003
 `;
 };
 
 const postProcess = (response: RawTransactionResponse) => {
   if (response.scheduleId) {
-    return `Scheduled allowance transfer created successfully.
+    return `Scheduled fungible token transfer created successfully.
 Transaction ID: ${response.transactionId}
 Schedule ID: ${response.scheduleId.toString()}`;
   }
-  return `Fungible tokens successfully transferred with allowance.
+  return `Fungible tokens successfully transferred.
 Transaction ID: ${response.transactionId}`;
 };
 
-export const TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
-  'transfer_fungible_token_with_allowance_tool';
+export const TRANSFER_FUNGIBLE_TOKEN_TOOL = 'transfer_fungible_token_tool';
 
-export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool {
-  method = TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
-  name = 'Transfer Fungible Token with Allowance';
+export class TransferFungibleTokenTool extends BaseTransactionTool {
+  method = TRANSFER_FUNGIBLE_TOKEN_TOOL;
+  name = 'Transfer Fungible Token';
   description: string;
-  parameters: ReturnType<typeof transferFungibleTokenWithAllowanceParameters>;
+  parameters: ReturnType<typeof transferFungibleTokenParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {
     super();
-    this.description = transferFungibleTokenWithAllowancePrompt(context);
-    this.parameters = transferFungibleTokenWithAllowanceParameters(context);
+    this.description = transferFungibleTokenPrompt(context);
+    this.parameters = transferFungibleTokenParameters(context);
   }
 
   async normalizeParams(
-    params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
+    params: z.infer<ReturnType<typeof transferFungibleTokenParameters>>,
     context: Context,
     client: Client,
   ) {
     const mirrornode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
-    return HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+    return HederaParameterNormaliser.normaliseTransferFungibleToken(
       params,
       context,
       client,
@@ -75,17 +82,12 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool 
     );
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.transferFungibleToken(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 
   async handleError(error: unknown, context: Context): Promise<any> {
@@ -100,7 +102,6 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool 
   }
 }
 
-const tool = (context: Context): BaseTransactionTool =>
-  new TransferFungibleTokenWithAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferFungibleTokenTool(context);
 
 export default tool;
