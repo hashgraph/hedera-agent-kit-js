@@ -67,7 +67,7 @@
     "langchain": "1.2.24",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.0.16",
+    "vitest": "4.1.0",
     "long": "5.3.2"
   }
 }
