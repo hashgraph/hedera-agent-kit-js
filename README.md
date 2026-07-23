@@ -140,6 +140,8 @@ npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agen
 
 > Using a different LLM? Replace `@langchain/openai` with `@langchain/anthropic`, `@langchain/groq`, or `@langchain/ollama`.
 
+> **Building for a bounty or demo review?** Keep Agent Kit packages in normal `dependencies` (not optional dependencies) so reviewers can run the project with one install command. If your app also supports a mock path, document the separate `npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit ...` command that enables live mode.
+
 ### 2 – Configure: Add Environment Variables
 
 Create an `.env` file in the root directory of your project:
@@ -247,6 +249,13 @@ npx tsx index.ts
 ## About the Agent Kit
 
 ### Agent Execution Modes
+
+For judge-friendly bounty submissions, document the mode your demo uses:
+
+- Mock/demo mode can run without `ACCOUNT_ID`, `PRIVATE_KEY`, or an LLM API key. Use it for screenshots, deterministic tests, and first-pass review.
+- Live testnet mode requires Hedera credentials and an LLM provider key when your agent calls an external model.
+- Prefer `AgentMode.RETURN_BYTE` for demos that should require a human to review/sign transactions before submission.
+- Use `AgentMode.AUTONOMOUS` only when the README clearly says the agent can submit transactions with the configured operator account.
 
 This tool has two execution modes with AI agents; autonomous execution and return bytes. If you set:
 
