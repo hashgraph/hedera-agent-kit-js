@@ -457,6 +457,35 @@ export const transferNonFungibleTokenParametersNormalised = (_context: Context) 
     ),
   });
 
+export const transferFungibleTokenParameters = (context: Context = {}) =>
+  optionalScheduledTransactionParams(context).extend({
+    tokenId: z.string().describe('Token ID to transfer (e.g. "0.0.12345")'),
+    senderAccountId: z
+      .string()
+      .optional()
+      .describe('Account ID of the sender. Defaults to operator account if omitted.'),
+    transfers: z
+      .array(
+        z.object({
+          accountId: z.string().describe('Recipient account ID (Required)'),
+          amount: z
+            .number()
+            .nonnegative()
+            .describe('Amount of tokens to transfer in display unit. (Required)'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient transfers'),
+    transactionMemo: z.string().optional().describe('Memo for the transaction'),
+  });
+
+export const transferFungibleTokenParametersNormalised = (context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(context).extend({
+    tokenId: z.string(),
+    tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
+    transactionMemo: z.string().optional(),
+  });
+
 export const transferFungibleTokenWithAllowanceParameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
     tokenId: z.string().describe('Token ID to transfer'),
