@@ -87,6 +87,17 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
+
+  async handleError(error: unknown, context: Context): Promise<any> {
+    const result = await super.handleError(error, context);
+    if (result?.raw?.errorCode === 'TOKEN_NOT_ASSOCIATED_TO_ACCOUNT') {
+      result.humanMessage +=
+        ' The recipient account has not associated this HTS token.' +
+        ' Use the associate_token_tool to associate the account first,' +
+        ' or ensure the account has maxAutoAssociations set to -1.';
+    }
+    return result;
+  }
 }
 
 const tool = (context: Context): BaseTransactionTool =>

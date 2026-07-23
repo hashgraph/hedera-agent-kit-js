@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, LedgerId, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, LedgerId, ReceiptStatusError, Status, TransactionId } from '@hiero-ledger/sdk';
 import toolFactory, {
   TRANSFER_FUNGIBLE_TOKEN_TOOL,
 } from '@/plugins/core-token-plugin/tools/fungible-token/transfer-fungible-token';
@@ -7,6 +7,15 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { handleTransaction } from '@/shared/strategies/tx-mode-strategy';
 import type { Context } from '@/shared/configuration';
+
+function makeReceiptStatusError(statusValue: Status): ReceiptStatusError {
+  const txId = TransactionId.generate(new AccountId(0, 0, 1));
+  return new ReceiptStatusError({
+    transactionReceipt: {} as any,
+    status: statusValue,
+    transactionId: txId,
+  });
+}
 
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser');
 vi.mock('@/shared/hedera-utils/hedera-builder');
@@ -33,7 +42,7 @@ describe('Transfer Fungible Token Tool (unit)', () => {
     expect(tool.method).toBe(TRANSFER_FUNGIBLE_TOKEN_TOOL);
     expect(tool.name).toBe('Transfer Fungible Token');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('This tool will transfer a HTS fungible token');
+    expect(tool.description).toContain('transfer HTS fungible tokens');
     expect(tool.parameters).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });
@@ -137,5 +146,25 @@ describe('Transfer Fungible Token Tool (unit)', () => {
 
     expect(result.humanMessage).toBe('Failed to execute Transfer Fungible Token');
     expect(result.raw.status).toBe('ERROR');
+  });
+
+  it('should append association hint when TOKEN_NOT_ASSOCIATED_TO_ACCOUNT is thrown', async () => {
+    const params = {
+      tokenId: '0.0.9999',
+      transfers: [{ accountId: '0.0.2002', amount: 100 }],
+    };
+
+    (HederaParameterNormaliser.normaliseTransferFungibleToken as any).mockImplementation(() => {
+      throw makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
+    });
+
+    const tool = toolFactory(context);
+    const result = await tool.execute(client, context, params);
+
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+    expect(result.humanMessage).toContain('The recipient account has not associated this HTS token');
+    expect(result.humanMessage).toContain('associate_token_tool');
+    expect(result.humanMessage).toContain('maxAutoAssociations');
   });
 });
