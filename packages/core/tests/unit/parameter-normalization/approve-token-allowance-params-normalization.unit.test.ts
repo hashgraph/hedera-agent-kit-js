@@ -145,4 +145,112 @@ describe('HederaParameterNormaliser.normaliseApproveTokenAllowance', () => {
     // With decimals=0, base = 7
     expect(a.amount!.toString()).toBe(Long.fromNumber(7).toString());
   });
+
+  describe('HTS int64 overflow guard', () => {
+    // Long.MAX_VALUE = 9_223_372_036_854_775_807
+    // With 0 decimals, display amount == base amount, so we can test directly.
+
+    it('rejects an amount whose base-unit value exceeds int64 max', async () => {
+      // 9_223_372_036_854_775_808 is Long.MAX_VALUE + 1
+      // With 0 decimals the display amount equals the base amount.
+      mockMirrorNode.getTokenInfo.mockResolvedValueOnce({ decimals: 0 });
+
+      const params = {
+        spenderAccountId: spender,
+        // 9.3e18 in display units with 0 decimals → base = 9.3e18 > int64 max
+        tokenApprovals: [{ tokenId, amount: 9_300_000_000_000_000_000 }],
+      };
+
+      await expect(
+        HederaParameterNormaliser.normaliseApproveTokenAllowance(
+          params as any,
+          mockContext,
+          mockClient,
+          mockMirrorNode,
+        ),
+      ).rejects.toThrow(/exceeds the HTS int64 maximum/);
+    });
+
+    it('rejects approve(spender, maxUint256) equivalent (Number.MAX_VALUE)', async () => {
+      mockMirrorNode.getTokenInfo.mockResolvedValueOnce({ decimals: 0 });
+
+      const params = {
+        spenderAccountId: spender,
+        tokenApprovals: [{ tokenId, amount: Number.MAX_VALUE }],
+      };
+
+      await expect(
+        HederaParameterNormaliser.normaliseApproveTokenAllowance(
+          params as any,
+          mockContext,
+          mockClient,
+          mockMirrorNode,
+        ),
+      ).rejects.toThrow(/exceeds the HTS int64 maximum/);
+    });
+
+    it('accepts an amount whose base-unit value is exactly int64 max (with 0 decimals)', async () => {
+      // Long.MAX_VALUE = 9_223_372_036_854_775_807
+      // JS cannot represent this exactly as a float64, but BigNumber can.
+      // We use a safe value just below to avoid float64 precision issues in the test itself.
+      mockMirrorNode.getTokenInfo.mockResolvedValueOnce({ decimals: 0 });
+
+      const params = {
+        spenderAccountId: spender,
+        // 9_223_372_036_854_775_000 is safely below int64 max and within float64 precision
+        tokenApprovals: [{ tokenId, amount: 9_223_372_036_854_775_000 }],
+      };
+
+      const res = await HederaParameterNormaliser.normaliseApproveTokenAllowance(
+        params as any,
+        mockContext,
+        mockClient,
+        mockMirrorNode,
+      );
+
+      expect(res.tokenApprovals).toHaveLength(1);
+    });
+
+    it('rejects overflow on the second token when the first is valid', async () => {
+      mockMirrorNode.getTokenInfo
+        .mockResolvedValueOnce({ decimals: 0 }) // first token: fine
+        .mockResolvedValueOnce({ decimals: 0 }); // second token: will overflow
+
+      const params = {
+        spenderAccountId: spender,
+        tokenApprovals: [
+          { tokenId: '0.0.1', amount: 100 },
+          { tokenId: '0.0.2', amount: 9_300_000_000_000_000_000 },
+        ],
+      };
+
+      await expect(
+        HederaParameterNormaliser.normaliseApproveTokenAllowance(
+          params as any,
+          mockContext,
+          mockClient,
+          mockMirrorNode,
+        ),
+      ).rejects.toThrow(/exceeds the HTS int64 maximum/);
+    });
+
+    it('includes the token id in the error message', async () => {
+      mockMirrorNode.getTokenInfo.mockResolvedValueOnce({ decimals: 0 });
+
+      const overflowTokenId = '0.0.9999';
+      const params = {
+        spenderAccountId: spender,
+        tokenApprovals: [{ tokenId: overflowTokenId, amount: 9_300_000_000_000_000_000 }],
+      };
+
+      await expect(
+        HederaParameterNormaliser.normaliseApproveTokenAllowance(
+          params as any,
+          mockContext,
+          mockClient,
+          mockMirrorNode,
+        ),
+      ).rejects.toThrow(new RegExp(overflowTokenId));
+    });
+  });
 });

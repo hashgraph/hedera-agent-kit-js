@@ -81,6 +81,7 @@ import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared';
 import { getERC20Decimals, toBaseUnit } from './decimals-utils';
+import BigNumber from 'bignumber.js';
 import { TokenTransferMinimalParams, TransferHbarInput } from './types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -100,6 +101,9 @@ import {
   optionalScheduledTransactionParams,
   optionalScheduledTransactionParamsNormalised,
 } from '@/shared/parameter-schemas/common.zod';
+
+// HTS token amounts are stored as int64; derive the ceiling from the SDK so it stays in sync.
+const HTS_INT64_MAX = new BigNumber(Long.MAX_VALUE.toString());
 
 export default class HederaParameterNormaliser {
   static parseParamsWithSchema(
@@ -561,13 +565,23 @@ export default class HederaParameterNormaliser {
       // Fallback to 0 if decimals are missing or NaN
       const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
 
-      const baseAmount = toBaseUnit(tokenAllowance.amount, safeDecimals).toNumber();
+      const baseAmountBN = toBaseUnit(tokenAllowance.amount, safeDecimals);
+
+      // HTS amounts are int64 — values above Long.MAX_VALUE revert on-chain.
+      if (baseAmountBN.gt(HTS_INT64_MAX)) {
+        throw new Error(
+          `Allowance amount for token ${tokenAllowance.tokenId} in base units (${baseAmountBN.toFixed()}) ` +
+            `exceeds the HTS int64 maximum of ${HTS_INT64_MAX.toFixed()}. ` +
+            `HTS token amounts are stored as int64, so approve(spender, type(uint256).max) will revert. ` +
+            `Use a display-unit value that converts to at most ${HTS_INT64_MAX.toFixed()} base units.`,
+        );
+      }
 
       return new TokenAllowance({
         ownerAccountId: AccountId.fromString(ownerAccountId),
         spenderAccountId: AccountId.fromString(spenderAccountId),
         tokenId: TokenId.fromString(tokenAllowance.tokenId),
-        amount: Long.fromNumber(baseAmount),
+        amount: Long.fromString(baseAmountBN.toFixed()),
       });
     });
 

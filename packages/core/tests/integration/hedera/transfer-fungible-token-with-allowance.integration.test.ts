@@ -211,4 +211,34 @@ describe('Transfer Fungible Token With Allowance Tool Integration', () => {
     expect(result.humanMessage).toContain('Failed to execute Transfer Fungible Token with Allowance');
     expect(result.humanMessage).toContain('AMOUNT_EXCEEDS_ALLOWANCE');
   });
+
+  it('should return TOKEN_NOT_ASSOCIATED_TO_ACCOUNT with an actionable association hint', async () => {
+    // Acquire a receiver that has maxAutoAssociations=0 so it cannot auto-associate
+    // HTS tokens and will trigger TOKEN_NOT_ASSOCIATED_TO_ACCOUNT on transfer.
+    const unassociatedReceiver = await profile.accounts.acquire({
+      tier: 'MINIMAL',
+      preset: 'pending-airdrop-recipient',
+    });
+
+    try {
+      const context = {};
+      const tool = transferFungibleTokenWithAllowanceTool(context);
+
+      const params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>> = {
+        tokenId: tokenId.toString(),
+        sourceAccountId: executor.accountId.toString(),
+        transfers: [{ accountId: unassociatedReceiver.accountId.toString(), amount: 10 }],
+      };
+
+      const result: any = await tool.execute(spenderClient, context, params);
+
+      expect(result.raw.status).toBe('ERROR');
+      expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.humanMessage).toContain('associate_token_tool');
+      expect(result.humanMessage).toContain('maxAutoAssociations');
+    } finally {
+      await profile.accounts.release(unassociatedReceiver);
+    }
+  });
 });

@@ -28,7 +28,8 @@ Parameters:
 - spenderAccountId (string, required): Spender account ID
 - tokenApprovals (array, required): List of approvals. Each item:
   - tokenId (string): Token ID
-  - amount (number): Amount of tokens to approve (must be a positive number, can be float or int). Given in display units, the tool will handle parsing
+  - amount (number): Amount of tokens to approve (must be a positive number, can be float or int). Given in display units, the tool will handle parsing.
+    IMPORTANT: HTS token amounts are stored as int64 on-chain. The maximum approvable amount in base units is 9,223,372,036,854,775,807. Passing a larger value (e.g. type(uint256).max) will revert. Use a finite, realistic allowance amount.
 - transactionMemo (string, optional): Optional memo for the transaction
 ${usageInstructions}
 `;

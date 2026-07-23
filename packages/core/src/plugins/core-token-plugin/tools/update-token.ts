@@ -93,9 +93,11 @@ Parameters:
 - autoRenewAccountId (string, optional): Account to automatically pay for renewal.
 
 Examples:
-- If the user asks for "my key" → set the field to \`true\`.
+- If the user asks for "my key", "my public key", "my operator key", or any phrase referring to their own key → set the field to \`true\`. Never use the account ID (e.g. "0.0.1002") for a key field.
 - If the user does not mention the key → do not set the field.
-- If the user provides a key → set the field to the provided public key string.
+- If the user provides a Hedera-compatible public key string → set the field to that string.
+
+IMPORTANT: Key fields NEVER accept account IDs. An account ID like "0.0.1002" is not a valid key value. If the user says "my key" without providing a public key string, always use \`true\`.
 
 If the user provides multiple fields in a single request, 
 combine them into **one tool call** with all parameters together.

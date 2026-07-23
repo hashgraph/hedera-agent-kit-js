@@ -68,6 +68,26 @@ describe('BaseTransactionTool.handleError()', () => {
     });
   });
 
+  describe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT — structured fields preserved, no hint in base class', () => {
+    it('sets errorCode and preserves raw.error without any hint', async () => {
+      const err = makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
+      const result = await tool.handleError(err, ctx);
+
+      expect(result.raw.status).toBe('ERROR');
+      expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+      expect(result.raw.error).toBe(err.message);
+      expect(result.humanMessage).not.toContain('associate_token_tool');
+      expect(result.humanMessage).not.toContain('maxAutoAssociations');
+    });
+
+    it('humanMessage contains the original SDK error message', async () => {
+      const err = makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
+      const result = await tool.handleError(err, ctx);
+
+      expect(result.humanMessage).toContain(err.message);
+    });
+  });
+
   describe('generic Error — falls through to BaseTool.handleError()', () => {
     it('sets status ERROR with generic error message', async () => {
       const err = new Error('network timeout');

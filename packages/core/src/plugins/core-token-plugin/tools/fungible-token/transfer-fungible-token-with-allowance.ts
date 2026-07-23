@@ -17,10 +17,16 @@ const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a HTS fungible token using an existing **token allowance**.
+This tool will transfer a HTS (Hedera Token Service) native fungible token using an existing **token allowance**.
+
+IMPORTANT: Do NOT use this tool when:
+- The user mentions "ERC20" or "ERC-20" tokens — use transfer_erc20_tool instead
+- The user mentions a "contract" as the token source — that is an ERC20 transfer, use transfer_erc20_tool instead
+- The user does not explicitly mention an allowance, "spend allowance", or "use allowance" — default to the standard HTS transfer tool in that case
+This tool is ONLY for HTS native fungible tokens transferred via an existing allowance mechanism.
 
 Parameters:
-- tokenId (string, required): The token ID to transfer (e.g. "0.0.12345")
+- tokenId (string, required): The HTS token ID to transfer (e.g. "0.0.12345")
 - sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
 - transfers (array of objects, required): List of token transfers. Each object should contain:
   - accountId (string, required): Recipient account ID
@@ -31,7 +37,7 @@ ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 ${usageInstructions}
 
 Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
-Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+Example 2: Use allowance from 0.0.1002 to send 50 TKN (HTS Fungible token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
 `;
 };
 
@@ -78,6 +84,17 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool 
   async coreAction(normalisedParams: any, context: Context, client: Client) {
     const tx = HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
+  }
+
+  async handleError(error: unknown, context: Context): Promise<any> {
+    const result = await super.handleError(error, context);
+    if (result?.raw?.errorCode === 'TOKEN_NOT_ASSOCIATED_TO_ACCOUNT') {
+      result.humanMessage +=
+        ' The recipient account has not associated this HTS token.' +
+        ' Use the associate_token_tool to associate the account first,' +
+        ' or ensure the account has maxAutoAssociations set to -1.';
+    }
+    return result;
   }
 
   async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
