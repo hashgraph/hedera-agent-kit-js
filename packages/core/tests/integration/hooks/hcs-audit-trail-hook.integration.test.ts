@@ -5,6 +5,7 @@ import { getProfile } from '@hashgraph/hedera-agent-kit-tests';
 import {
   Client,
   TopicCreateTransaction,
+  Transaction,
   AccountId,
   Timestamp,
   PublicKey,
@@ -13,6 +14,11 @@ import {
 import getTransferHbarTool, {
   TRANSFER_HBAR_TOOL,
 } from '@/plugins/core-account-plugin/tools/account/transfer-hbar';
+import {
+  ExecuteStrategy,
+  RawTransactionResponse,
+  TransactionStrategy,
+} from '@/shared/strategies/tx-mode-strategy';
 
 describe('HcsAuditTrailHook Integration Tests', () => {
   const profile = getProfile();
@@ -65,8 +71,41 @@ describe('HcsAuditTrailHook Integration Tests', () => {
 
     const result = await tool.execute(operatorClient, context, params);
     expect(result.raw.error).toContain(
-      'Unsupported hook: HcsAuditTrailHook is available only in Agent Mode AUTONOMOUS',
+      'Unsupported hook: HcsAuditTrailHook does not support AgentMode.RETURN_BYTES',
     );
+  });
+
+  it('should log tool execution in CUSTOM mode', async () => {
+    const hook = new HcsAuditTrailHook([TRANSFER_HBAR_TOOL], topicId, operatorClient);
+
+    class PassthroughStrategy implements TransactionStrategy {
+      private inner = new ExecuteStrategy();
+      async handle(tx: Transaction, client: Client, context: Context, postProcess?: (r: RawTransactionResponse) => string) {
+        return this.inner.handle(tx, client, context, postProcess);
+      }
+    }
+
+    const postMessageSpy = vi
+      .spyOn(hook, 'postMessageToHcsTopic')
+      .mockImplementation(async () => {});
+
+    const context: Context = {
+      mode: AgentMode.CUSTOM_EXECUTE_TX,
+      hooks: [hook],
+      accountId: profile.operator.accountId.toString(),
+      transactionStrategy: new PassthroughStrategy(),
+    };
+
+    const tool = getTransferHbarTool(context);
+    const params = {
+      transfers: [{ accountId: profile.operator.accountId.toString(), amount: 0.0001 }],
+    };
+
+    const result = await tool.execute(operatorClient, context, params);
+
+    expect(result.raw.status).toBe('SUCCESS');
+    expect(postMessageSpy).toHaveBeenCalledTimes(1);
+    expect(postMessageSpy.mock.calls[0][0]).toContain(`Agent executed tool ${TRANSFER_HBAR_TOOL}`);
   });
 
   it('should correctly stringify real SDK classes in nested parameters', async () => {

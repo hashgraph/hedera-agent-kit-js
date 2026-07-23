@@ -1,6 +1,7 @@
 import { Client } from '@hiero-ledger/sdk';
 
 import type { Context } from './configuration';
+import { isCustomMode } from './configuration';
 import type { Tool } from './tools';
 
 /** Lightweight projection of a {@link Tool} for safe introspection — omits the Zod schema and execute handler. */
@@ -85,6 +86,13 @@ class HederaAgentAPI {
       throw new Error('Client must be connected to a network');
     }
     this.context = context || {};
+
+    if (isCustomMode(this.context.mode) && !this.context.transactionStrategy) {
+      throw new Error(
+        'transactionStrategy must be provided in Context when AgentMode is CUSTOM_EXECUTE_TX or CUSTOM_RETURN_BYTES',
+      );
+    }
+
     this.tools = tools || [];
   }
 

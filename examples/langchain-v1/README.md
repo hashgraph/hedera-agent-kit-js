@@ -43,6 +43,29 @@ An agent that returns transaction bytes for **manual signing and execution**, ra
 
 ---
 
+### Custom Signing Agent
+
+```bash
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+An agent using `AgentMode.CUSTOM_EXECUTE_TX` with an interactive human-in-the-loop console strategy built into a LangGraph multi-turn agent. Demonstrates how to plug in a custom `TransactionStrategy` — a pattern that extends to remote TEE enclaves, MPC threshold signers, and KMS APIs. See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for the full reference.
+
+---
+
+### Delegated Payer Bytes Agent
+
+```bash
+npm run langchain:delegated-payer-bytes-agent
+```
+
+An agent using `AgentMode.CUSTOM_RETURN_BYTES` where the AI prepares and freezes a transaction with a **user-supplied fee payer**, then returns unsigned bytes. The caller re-hydrates, signs with their own private key, and submits — the agent never holds the user's key. Useful for dApp backends, TEE flows, and multi-party signing. See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for the full reference.
+
+> [!IMPORTANT]
+> Requires two Hedera accounts: `ACCOUNT_ID` / `PRIVATE_KEY` (agent/service, used only to freeze transactions) and `USER_ACCOUNT_ID` / `USER_PRIVATE_KEY` (user, becomes the fee payer and signs the bytes).
+
+---
+
 ### Policy Enforcement Agent
 
 ```bash

@@ -54,7 +54,7 @@ The HTTP server takes no credentials — it is designed for the non-custodial `R
 
 - `--ledger-id`: `testnet` (default) or `mainnet`.
 - `--tools`: Comma-separated list of tools to enable. If omitted, all tools from the registered plugins are loaded by default.
-- `--agent-mode`: Set the agent mode (`autonomous` or `returnBytes`).
+- `--agent-mode`: Set the agent mode (`AUTONOMOUS`, `RETURN_BYTES`, or `CUSTOM`).
 - `--account-id`: Specific account ID context (in format `0.0.?????`).
 - `--public-key`: Specific public key context (ECDSA DER encoded).
 

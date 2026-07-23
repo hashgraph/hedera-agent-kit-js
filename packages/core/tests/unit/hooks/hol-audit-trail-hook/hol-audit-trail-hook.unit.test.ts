@@ -132,13 +132,39 @@ describe('HolAuditTrailHook', () => {
       await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
     });
 
-    it('should throw when mode is RETURN_BYTES for a relevant tool', async () => {
-      const context = { mode: AgentMode.RETURN_BYTES };
+    it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+      'should throw when mode is %s for a relevant tool',
+      async mode => {
+        const context = { mode };
+        const params = { context } as PreToolExecutionParams;
+
+        await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
+          'Unsupported hook: HolAuditTrailHook does not support AgentMode.RETURN_BYTES or AgentMode.CUSTOM_RETURN_BYTES. Stopping the agent execution before tool test_tool is executed.',
+        );
+      },
+    );
+
+    it('should not throw when mode is CUSTOM_EXECUTE_TX for a relevant tool', async () => {
+      const context = { mode: AgentMode.CUSTOM_EXECUTE_TX };
       const params = { context } as PreToolExecutionParams;
 
-      await expect(hook.preToolExecutionHook(params, 'test_tool')).rejects.toThrow(
-        'Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool test_tool is executed.',
-      );
+      await expect(hook.preToolExecutionHook(params, 'test_tool')).resolves.not.toThrow();
+    });
+  });
+
+  describe('postToolExecutionHook in CUSTOM_EXECUTE_TX mode', () => {
+    it('should write audit entry when mode is CUSTOM_EXECUTE_TX and toolResult has ExecuteStrategyResult shape', async () => {
+      const context = { mode: AgentMode.CUSTOM_EXECUTE_TX };
+      const postParams = makePostParams({ context });
+
+      await hook.postToolExecutionHook(postParams, 'test_tool');
+
+      expect(mockCreateFile).toHaveBeenCalledTimes(1);
+      const fileArgs = mockCreateFile.mock.calls[0][0];
+      const entryContent = JSON.parse(fileArgs.content);
+      expect(entryContent.tool).toBe('test_tool');
+      expect(entryContent.result.raw.status).toBe('SUCCESS');
+      expect(entryContent.result.raw.transactionId).toBe('0.0.1@123');
     });
   });
 
@@ -245,6 +271,28 @@ describe('HolAuditTrailHook', () => {
       );
 
       consoleSpy.mockRestore();
+    });
+
+    it('should use loggingClient when provided instead of params.client', async () => {
+      const loggingClient = {
+        operatorAccountId: { toString: () => '0.0.99999' },
+        operatorPublicKey: 'logging-public-key',
+      } as unknown as Client;
+
+      const hookWithLoggingClient = new HolAuditTrailHook({
+        ...defaultConfig,
+        loggingClient,
+      });
+
+      const context = { mode: AgentMode.AUTONOMOUS };
+      const postParams = makePostParams({ context });
+
+      await hookWithLoggingClient.postToolExecutionHook(postParams, 'test_tool');
+
+      expect(mockCreateFile).toHaveBeenCalledTimes(1);
+      const fileArgs = mockCreateFile.mock.calls[0][0];
+      expect(fileArgs.autoRenewAccountId).toBe('0.0.99999');
+      expect(fileArgs.submitKey).toBe('logging-public-key');
     });
   });
 });
