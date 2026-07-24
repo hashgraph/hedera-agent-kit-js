@@ -525,6 +525,49 @@ export class GetHbarPriceTool extends BaseTool {
 See [packages/core/src/shared/utils/default-tool-output-parsing.ts](../packages/core/src/shared/utils/default-tool-output-parsing.ts)
 for the reference implementations.
 
+### Typed tool results
+
+The `{ raw, humanMessage }` envelope above is intentionally untyped (`raw: any`). When you want
+to branch on success vs. failure with compile-time safety, pass it to `classifyToolResult`,
+which maps it to a discriminated union. Everything below is importable from
+`@hashgraph/hedera-agent-kit`:
+
+```typescript
+import {
+  transactionToolOutputParser,
+  classifyToolResult,
+  TOOL_STATUS, // { SUCCESS, ERROR, PARSE_ERROR } — the known raw.status values
+} from '@hashgraph/hedera-agent-kit';
+
+const envelope = transactionToolOutputParser(rawToolOutput);
+const result = classifyToolResult<{ transactionId: string; topicId?: string }>(envelope);
+
+switch (result.kind) {
+  case 'success':
+    // result.data is typed as T; result.transactionId is lifted out when present
+    console.log('ok', result.transactionId, result.data.topicId);
+    break;
+  case 'failure':
+    // result.errorCode is the SDK status (e.g. 'INSUFFICIENT_PAYER_BALANCE') or 'ERROR'
+    throw new Error(`tool failed (${result.errorCode}): ${result.error}`);
+  case 'parse_error':
+    throw new Error(`tool output unparseable: ${result.humanMessage}`);
+  case 'unknown':
+    throw new Error(result.humanMessage);
+}
+```
+
+`ToolResultStatus<T>` (the return type) and `ToolRawStatus` (the `raw.status` string union) are
+also exported for annotating your own code. `classifyToolResult` is additive and opt-in — the
+parsers still return `{ raw, humanMessage }` unchanged.
+
+**RETURN_BYTES results are typed too.** In `RETURN_BYTES` mode a transaction tool's `raw` is a
+`ReturnBytesResult` (also exported from `@hashgraph/hedera-agent-kit`): `{ bytes, status,
+transactionId, payerAccountId, type, expiresAt, memo }`. Its `status` is always
+`TOOL_STATUS.SUCCESS`, so it classifies as `kind: 'success'`. See
+[MCP.md](MCP.md#what-a-transaction-tool-returns) for the full field table and the wallet
+handoff.
+
 ### Using Your Custom Plugin
 
 #### LangChain v0.3 (Classic)
