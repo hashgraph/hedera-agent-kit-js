@@ -11,7 +11,7 @@ The transaction execution pipeline is governed by the `mode` parameter inside th
 | Mode | signing Strategy | Execution Path | Key Use Case |
 |---|---|---|---|
 | `AgentMode.AUTONOMOUS` | Local Private Key (Operator) | Synchronous on-chain broadcast and receipt retrieval. | Local testing, autonomous agents, and scripts with self-custodied keys. |
-| `AgentMode.RETURN_BYTES` | Out-of-band Client Wallet | Pipeline halts; returns serialized raw unsigned `Uint8Array` bytes to caller. | Stateless MCP servers, browser extensions, dApps, or frontend-mediated flows. |
+| `AgentMode.RETURN_BYTES` | Out-of-band Client Wallet | Pipeline halts; returns a `ReturnBytesResult` envelope (`bytes`, `transactionId`, `payerAccountId`, `type`, `expiresAt`, `memo`) for the caller to sign and broadcast. | Stateless MCP servers, browser extensions, dApps, or frontend-mediated flows. |
 | `AgentMode.CUSTOM_EXECUTE_TX` | Delegated Signing Strategy (`TransactionStrategy` → `ExecuteStrategyResult`) | Synchronous delegated signing (via TEE, MPC, API) and receipt retrieval. | Remote secure enclaves, MPC threshold signature networks, custodial APIs, or console-based HITL. |
 | `AgentMode.CUSTOM_RETURN_BYTES` | Delegated Assembly Strategy (`TransactionStrategy` → `ReturnBytesStrategyResult`) | Strategy freezes and returns serialized bytes; no execution. | Multi-party / delegated-payer flows where the fee payer differs from the asset-owning subject. |
 
@@ -47,26 +47,43 @@ const agent = new HederaAgentKit({
 
 ## 3. Return Bytes Mode (`AgentMode.RETURN_BYTES`)
 
-In this mode, HAK builds and freezes the transaction using the user's `accountId` but does **not** sign or execute it. Instead, the tool execution returns the serialized transaction bytes (`Uint8Array`) inside the raw envelope.
+In this mode, HAK builds and freezes the transaction using the user's `accountId` but does **not** sign or execute it. Instead, the tool returns a `ReturnBytesResult` envelope containing the frozen unsigned transaction and all the context a wallet needs to review, sign, and broadcast it:
 
-This is highly useful for stateless servers (like MCP servers) where the agent is running in the cloud and does not have access to the user's private keys. The calling application receives the bytes, signs them using a local wallet (e.g. MetaMask, HashPack, or a local file key), and broadcasts them.
+| Field | Description |
+|---|---|
+| `bytes` | Frozen, unsigned transaction (`Uint8Array`). |
+| `status` | Always `'SUCCESS'` — serializing to bytes cannot fail once the transaction is frozen. |
+| `transactionId` | ID set on the frozen transaction, e.g. `0.0.1234@1700000000.000000000`. |
+| `payerAccountId` | Account expected to pay for and sign the transaction (the context account). |
+| `type` | SDK transaction class name, e.g. `TransferTransaction`. |
+| `expiresAt` | ISO timestamp after which the network rejects the transaction with `TRANSACTION_EXPIRED`. Sign and submit before this time, or request fresh bytes. |
+| `memo` | Transaction memo; empty string when unset. |
+
+This is highly useful for stateless servers (like MCP servers) where the agent is running in the cloud and does not have access to the user's private keys. The calling application receives the envelope, verifies the transaction context (`type`, `payerAccountId`, `expiresAt`), signs the `bytes` using a local wallet (e.g. MetaMask, HashPack, or a local file key), and broadcasts them.
 
 > [!IMPORTANT]
 > In `RETURN_BYTES` mode, `accountId` is required in the `Context` when running **transaction tools**. It is needed to generate a transaction ID for the payer account before the bytes are frozen. Query tools do not require `accountId`.
 
 ### Code Example: Client-Side execution of returned bytes
 ```typescript
-// 1. Tool call output contains the bytes
-const toolResult = await myAgent.invokeTool('transfer_hbar_tool', params);
-const bytes = toolResult.raw.bytes; // Uint8Array
+import { ReturnBytesResult } from '@hashgraph/hedera-agent-kit';
+import { Transaction } from '@hiero-ledger/sdk';
 
-if (bytes) {
-  // 2. Client-side app signs and executes the transaction
-  const tx = Transaction.fromBytes(bytes);
-  const result = await tx.execute(localHumanClient);
-  const receipt = await result.getReceipt(localHumanClient);
-  console.log(`Transaction broadcast successfully. Status: ${receipt.status}`);
-}
+// 1. Tool result is a ReturnBytesResult envelope
+// Note: bytes access path varies by framework — `raw.bytes` (LangChain) or `bytes` (ADK, AI SDK)
+const result: ReturnBytesResult = parseToolOutput(toolOutput);
+const { bytes, transactionId, payerAccountId, type, expiresAt } = result;
+
+console.log(`Transaction type  : ${type}`);
+console.log(`Payer account     : ${payerAccountId}`);
+console.log(`Transaction ID    : ${transactionId}`);
+console.log(`Expires at        : ${expiresAt}`);
+
+// 2. Client-side app signs and broadcasts the frozen transaction before it expires
+const tx = Transaction.fromBytes(bytes);
+const submit = await tx.execute(localHumanClient);
+const receipt = await submit.getReceipt(localHumanClient);
+console.log(`Broadcast succeeded. Status: ${receipt.status}`);
 ```
 
 ---
