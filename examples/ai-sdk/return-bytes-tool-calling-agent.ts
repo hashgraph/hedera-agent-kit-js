@@ -1,4 +1,4 @@
-import { AgentMode, toUint8Array } from '@hashgraph/hedera-agent-kit';
+import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
   coreTokenPlugin,
   coreAccountPlugin,
@@ -112,16 +112,12 @@ async function bootstrap(): Promise<void> {
       const toolResults = response.steps.flatMap(step => step.toolResults);
 
       for (const toolResult of toolResults) {
-        // The ai-sdk tool output is a JSON string of the tool's return value.
-        const envelope =
-          typeof toolResult.output === 'string'
-            ? JSON.parse(toolResult.output)
-            : (toolResult.output as any);
+        const envelope = toolResult.output as any;
 
         // Only transaction tools return bytes; query tools are skipped here.
         if (!envelope?.bytes) continue;
 
-        const bytes = toUint8Array(envelope.bytes);
+        const bytes = envelope.bytes as Uint8Array;
 
         // RETURN_BYTES mode returns a structured ReturnBytesResult envelope alongside the raw
         // bytes. Print everything the caller needs to review, sign, and verify the transaction.

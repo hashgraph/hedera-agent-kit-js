@@ -165,12 +165,13 @@ Buffer/numeric-keyed object in transit. The kit exports `toUint8Array` to recons
 a ready-to-sign `Uint8Array` (handles every serialized shape, Node and web). Where that reconstruction
 happens depends on the layer:
 
-- **LangChain and ADK toolkits** reconstruct it for you: the parsed envelope's `bytes` (`raw.bytes`
-  for LangChain, `bytes` for ADK) is already a `Uint8Array`, alongside `transactionId`,
-  `payerAccountId`, `type`, `expiresAt`, and `memo`. No extra step needed.
-- **AI SDK and MCP** hand you the raw JSON tool output to parse yourself, so run the `bytes` field
-  through `toUint8Array` before `Transaction.fromBytes` (see the client example below). If you
-  previously parsed Node `Buffer` payloads by hand, see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array).
+- **In-process toolkits (LangChain, ADK, AI SDK)** reconstruct it for you: the parsed envelope's
+  `bytes` (`raw.bytes` for LangChain, `bytes` for ADK and the AI SDK) is already a `Uint8Array`,
+  alongside `transactionId`, `payerAccountId`, `type`, `expiresAt`, and `memo`. No extra step needed.
+- **MCP** crosses a process boundary, so the client receives the raw JSON tool output and parses it
+  itself — run the `bytes` field through `toUint8Array` before `Transaction.fromBytes` (see the
+  client example below). If you previously parsed Node `Buffer` payloads by hand, see the
+  [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array).
 
 ## Signing and submitting on the client
 
