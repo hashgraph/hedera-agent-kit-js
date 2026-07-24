@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.81.0",
-    "@langchain/classic": "1.0.17",
-    "@langchain/core": "1.1.24",
-    "@langchain/openai": "1.2.7",
+    "@langchain/classic": "^1.0.17",
+    "@langchain/core": "^1.1.24",
+    "@langchain/openai": "^1.2.7",
     "cheerio": "1.1.2",
     "dotenv": "17.2.3",
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",

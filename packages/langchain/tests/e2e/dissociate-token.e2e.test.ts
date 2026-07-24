@@ -186,7 +186,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to dissociate');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to execute Dissociate Token');
       expect(parsedResponse[0].parsedData.raw.status).not.toBe('SUCCESS');
     },
   );
@@ -205,7 +205,7 @@ describe('Airdrop Fungible Token E2E Tests', () => {
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to dissociate');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to execute Dissociate Token');
       expect(parsedResponse[0].parsedData.raw.status).not.toBe('SUCCESS');
     },
   );

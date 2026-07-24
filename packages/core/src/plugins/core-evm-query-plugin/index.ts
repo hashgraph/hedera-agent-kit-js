@@ -13,10 +13,7 @@ export const coreEVMQueryPlugin: Plugin = {
   },
 };
 
-export {
-  getContractInfoQuery,
-  GET_CONTRACT_INFO_QUERY_TOOL,
-};
+export { getContractInfoQuery, GET_CONTRACT_INFO_QUERY_TOOL };
 
 export const coreEVMQueryPluginToolNames = {
   GET_CONTRACT_INFO_QUERY_TOOL,

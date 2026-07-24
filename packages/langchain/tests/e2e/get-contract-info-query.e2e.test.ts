@@ -80,8 +80,8 @@ describe('Get Contract Info E2E Tests', () => {
       });
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
-      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to get contract info');
-      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to get contract info');
+      expect(parsedResponse[0].parsedData.raw.error).toContain('Failed to execute Get Contract Info');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to execute Get Contract Info');
     },
   );
 });

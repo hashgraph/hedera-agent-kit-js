@@ -120,10 +120,10 @@ describe('Update Topic E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
+        'Failed to execute Update Topic: Cannot update submitKey: topic was created without a submitKey',
       );
       expect(parsedResponse[0].parsedData.raw.error).toContain(
-        'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
+        'Failed to execute Update Topic: Cannot update submitKey: topic was created without a submitKey',
       );
     },
   );

@@ -105,7 +105,7 @@ describe('delete-nft-allowance tool (unit)', () => {
     const res: any = await tool.execute(client, context, params as any);
 
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to delete NFT allowance');
+    expect(res.humanMessage).toContain('Failed to execute Delete Non Fungible Token Allowance');
     expect(res.humanMessage).toContain('Normalisation error');
   });
 });

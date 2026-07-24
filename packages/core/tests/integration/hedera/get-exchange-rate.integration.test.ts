@@ -84,8 +84,8 @@ describe('Get Exchange Rate', () => {
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalledWith(
-      '[GetExchangeRate] Error getting exchange rate',
-      expect.objectContaining({ message: expect.stringContaining('HTTP error! status: 400') }),
+      '[get_exchange_rate_tool]',
+      expect.stringContaining('Failed to execute Get Exchange Rate: HTTP error! status: 400'),
     );
   });
 });

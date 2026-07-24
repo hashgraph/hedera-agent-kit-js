@@ -26,3 +26,9 @@ const server = new HederaMCPToolkit({
 // Connect `server` to a transport (StdioServerTransport, StreamableHTTPServerTransport, etc.)
 // See examples/modelcontextprotocol/src/stdio.ts and src/http.ts for reference implementations.
 ```
+
+## Execution Modes & Key Custody
+
+The example above is **custodial**: the server holds the operator key and signs transactions itself. For servers that should never hold signing material, configure `mode: AgentMode.RETURN_BYTES` and skip `setOperator` — transaction tools then return frozen, unsigned transaction bytes for the calling host app, wallet, or runtime to sign and submit.
+
+See the [MCP server guide](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/MCP.md) for both architectures, response shapes, and a safety checklist.

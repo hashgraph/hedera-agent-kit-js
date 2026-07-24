@@ -212,7 +212,7 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
     expect(parsedResponse[0].parsedData.humanMessage).toContain(
-      'Failed to transfer fungible token with allowance',
+      'Failed to execute Transfer Fungible Token with Allowance',
     );
     expect(parsedResponse[0].parsedData.humanMessage).toContain('AMOUNT_EXCEEDS_ALLOWANCE');
   });

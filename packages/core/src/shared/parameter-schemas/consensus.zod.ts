@@ -14,10 +14,7 @@ export const getTopicInfoParameters = (_context: Context = {}) => {
 
 export const createTopicParameters = (_context: Context = {}) => {
   return optionalScheduledTransactionParams(_context).extend({
-    isSubmitKey: z
-      .boolean()
-      .optional()
-      .describe('Deprecated: use submitKey instead (optional)'),
+    isSubmitKey: z.boolean().optional().describe('Deprecated: use submitKey instead (optional)'),
     submitKey: z
       .union([z.boolean(), z.string()])
       .optional()

@@ -108,6 +108,9 @@ describe('Mint Fungible Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
 
     expect(result.raw).toBeDefined();
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('TOKEN_MAX_SUPPLY_REACHED');
+    expect(result.raw.transactionId).toBeDefined();
     expect(result.raw.error).toContain('TOKEN_MAX_SUPPLY_REACHED');
   });
 
@@ -121,6 +124,6 @@ describe('Mint Fungible Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
 
     expect(result.humanMessage).toContain('Not Found');
-    expect(result.humanMessage).toContain('Failed to mint fungible token');
+    expect(result.humanMessage).toContain('Failed to execute Mint Fungible Token');
   });
 });

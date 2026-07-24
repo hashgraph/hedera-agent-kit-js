@@ -13,10 +13,7 @@ export const coreMiscQueriesPlugin: Plugin = {
   },
 };
 
-export {
-  getExchangeRateQuery,
-  GET_EXCHANGE_RATE_TOOL,
-};
+export { getExchangeRateQuery, GET_EXCHANGE_RATE_TOOL };
 
 export const coreMiscQueriesPluginsToolNames = {
   GET_EXCHANGE_RATE_TOOL,

@@ -122,7 +122,7 @@ describe('Mint ERC721 Integration Tests', () => {
       const tool = mintERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Failed to mint ERC721');
+      expect(result.humanMessage).toContain('Failed to execute Mint ERC721');
       expect(result.raw.error).toContain('Invalid parameters');
     });
 
@@ -134,8 +134,8 @@ describe('Mint ERC721 Integration Tests', () => {
       const tool = mintERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Failed to mint ERC721');
-      expect(result.raw.error).toContain('Failed to mint ERC721');
+      expect(result.humanMessage).toContain('Failed to execute Mint ERC721');
+      expect(result.raw.error).toContain('Failed to execute Mint ERC721');
     });
   });
 });

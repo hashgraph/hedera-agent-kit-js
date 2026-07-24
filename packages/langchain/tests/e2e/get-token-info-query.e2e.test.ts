@@ -177,7 +177,7 @@ describe('Get Token Info Query E2E Tests', () => {
 
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
-      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to get token info');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to execute Get Token Info');
       expect(parsedResponse[0].parsedData.raw.error).toBeDefined();
     },
   );

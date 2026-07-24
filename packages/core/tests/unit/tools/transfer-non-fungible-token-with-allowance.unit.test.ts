@@ -79,7 +79,7 @@ describe('transfer-nft-with-allowance tool', () => {
       tokenId: '0.0.2001',
       recipients: [{ recipientId: '0.0.3001', serialNumber: 1 }],
     });
-    expect(res.humanMessage).toContain('Failed to transfer non-fungible token with allowance:');
+    expect(res.humanMessage).toContain('Failed to execute Transfer Non Fungible Token with Allowance:');
     expect(res.humanMessage).toContain('boom');
   });
 });

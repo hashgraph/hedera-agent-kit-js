@@ -23,6 +23,16 @@ An agent that uses plugins for tool discovery and execution.
 
 ---
 
+### Streaming Tool Calling Agent
+
+```bash
+npm run langchain:streaming-tool-calling-agent
+```
+
+An agent that **streams its responses token by token** using `agent.stream()` instead of `agent.invoke()`.
+
+---
+
 ### Return Bytes Agent (Human-in-the-Loop)
 
 ```bash

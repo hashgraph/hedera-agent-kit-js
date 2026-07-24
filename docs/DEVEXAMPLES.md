@@ -68,6 +68,7 @@ Try out one or more of the example agents:
 * **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
 * **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
 * **Option J -** [Example Google ADK Agent](#option-j-try-out-the-google-adk-agent)
+* **Option K -** [Example Streaming Tool Calling Agent](#option-k-run-the-streaming-tool-calling-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -164,24 +165,8 @@ npm install
 npm run langchain:return-bytes-tool-calling-agent
 ```
 
-**⚠️ Breaking Change: v4.0.0 Migration from Buffer to Uint8Array**
-
-`RETURN_BYTES` now standardizes `raw.bytes` to `Uint8Array` across Node.js and web. If you previously parsed Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), migrate to a `Uint8Array` parser.
-
-Before:
-
-```ts
-const realBytes = Buffer.isBuffer(bytesObject)
-  ? bytesObject
-  : Buffer.from(bytesObject.data);
-```
-
-After:
-
-```ts
-const bytes = toolCall.parsedData.raw.bytes;
-const tx = Transaction.fromBytes(bytes);
-```
+> [!NOTE]
+> Since v4.0.0, `RETURN_BYTES` standardizes `raw.bytes` to `Uint8Array` — see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array) if you previously parsed Node `Buffer` payloads. For the full non-custodial pattern built on this mode, see [docs/MCP.md](MCP.md).
 
 The agent will start a CLI chatbot that you can interact with. You can make requests in natural language, and this demo will demonstrate an app with a workflow that requires a human in the loop to approve actions and execute transactions.
 
@@ -231,6 +216,9 @@ In this example, we can just take the returned bytes and execute the transaction
 
 ### Option D: Try Out the MCP Server
 
+> [!NOTE]
+> For the architecture behind this example (custodial vs. non-custodial, `RETURN_BYTES`, key custody), see [docs/MCP.md](MCP.md).
+
 1. Navigate to the MCP examples directory:
 
 ```bash
@@ -264,25 +252,7 @@ npm run start:http:return-bytes
 ```
 
 
-**Optional: Test out Claude Desktop or an IDE to operate the Hedera MCP server.**
-
-5. Create/edit Claude Desktop or your IDE MCP config file:
-```json
-{
-"mcpServers": {
-  "hedera-mcp-server": {
-        "command": "node",
-        "args": [
-          "<Path>/hedera-agent-kit-js/examples/modelcontextprotocol/dist/stdio.js"
-        ],
-        "env": {
-          "HEDERA_OPERATOR_ID": "0.0.xxxx",
-          "HEDERA_OPERATOR_KEY": "3030...."
-        }
-      }
-  }
-}
-```
+**Optional:** connect Claude Desktop or your IDE to the running server — see [docs/MCP.md](MCP.md#connecting-from-claude-desktop-or-an-ide) for the client configuration.
 
 
 ### Option E: Try Out the External MCP Agent
@@ -520,3 +490,31 @@ npx adk web
 This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
 
 > **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
+
+---
+
+### Option K: Run the Streaming Tool Calling Agent
+
+Same as the basic tool calling agent, but the agent's responses are **streamed token by token** instead of returned all at once — using `agent.stream()` instead of `agent.invoke()` in LangChain v1, and `streamText` instead of `generateText` in the AI SDK.
+
+**Found at:**
+- `examples/ai-sdk/streaming-tool-calling-agent.ts`
+- `examples/langchain-v1/streaming-tool-calling-agent.ts`
+
+#### Running the Example
+
+##### AI SDK
+
+```bash
+cd examples/ai-sdk
+npm install
+npm run ai-sdk:streaming-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:streaming-tool-calling-agent
+```

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hiero-ledger/sdk';
+import { AccountId, Client, ReceiptStatusError, Status, TransactionId } from '@hiero-ledger/sdk';
 import toolFactory, {
   SUBMIT_TOPIC_MESSAGE_TOOL,
   SubmitTopicMessageTool,
@@ -84,10 +84,29 @@ describe('SubmitTopicMessageTool', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toContain('Failed to submit message to topic');
+    expect(res.humanMessage).toContain('Failed to execute Submit Topic Message');
     expect(res.humanMessage).toContain('boom');
-    expect(res.raw.error).toContain('Failed to submit message to topic');
+    expect(res.raw.error).toContain('Failed to execute Submit Topic Message');
     expect(res.raw.error).toContain('boom');
+  });
+
+  it('handleError with ReceiptStatusError sets errorCode and transactionId', async () => {
+    const txId = TransactionId.generate(new AccountId(0, 0, 1001));
+    const receiptError = new ReceiptStatusError({
+      transactionReceipt: {} as any,
+      status: Status.InsufficientPayerBalance,
+      transactionId: txId,
+    });
+
+    const tool = new SubmitTopicMessageTool(context);
+    const res = await tool.handleError(receiptError, context);
+
+    expect(res.raw.status).toBe('ERROR');
+    expect(res.raw.errorCode).toBe('INSUFFICIENT_PAYER_BALANCE');
+    expect(res.raw.transactionId).toMatch(/^0\.0\.\d+@/);
+    expect(res.raw.error).toBe(receiptError.message);
+    expect(res.humanMessage).toContain('Failed to execute Submit Topic Message');
+    expect(res.humanMessage).toContain('INSUFFICIENT_PAYER_BALANCE');
   });
 
   it('returns aligned generic failure response when a non-Error is thrown', async () => {
@@ -100,7 +119,7 @@ describe('SubmitTopicMessageTool', () => {
     });
 
     const res = await tool.execute(client, context, params);
-    expect(res.humanMessage).toBe('Failed to submit message to topic');
-    expect(res.raw.error).toBe('Failed to submit message to topic');
+    expect(res.humanMessage).toBe('Failed to execute Submit Topic Message');
+    expect(res.raw.error).toBe('Failed to execute Submit Topic Message');
   });
 });

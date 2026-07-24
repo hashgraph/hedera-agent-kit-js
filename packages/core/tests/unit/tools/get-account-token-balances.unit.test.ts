@@ -108,7 +108,7 @@ describe('GetAccountTokenBalancesQueryTool', () => {
     });
     const tool = new GetAccountTokenBalancesQueryTool(context);
     const result = await tool.execute(client, context, { accountId: '0.0.1' });
-    expect(result.humanMessage).toBe('Failed to get account token balances');
-    expect(result.raw.error).toContain('Failed to get account token balances');
+    expect(result.humanMessage).toBe('Failed to execute Get Account Token Balances');
+    expect(result.raw.error).toContain('Failed to execute Get Account Token Balances');
   });
 });

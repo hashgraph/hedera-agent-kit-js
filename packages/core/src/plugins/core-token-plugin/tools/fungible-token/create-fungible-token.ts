@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { createFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -54,7 +51,7 @@ Token ID: ${tokenIdStr}`;
 
 export const CREATE_FUNGIBLE_TOKEN_TOOL = 'create_fungible_token_tool';
 
-export class CreateFungibleTokenTool extends BaseTool {
+export class CreateFungibleTokenTool extends BaseTransactionTool {
   method = CREATE_FUNGIBLE_TOKEN_TOOL;
   name = 'Create Fungible Token';
   description: string;
@@ -93,18 +90,8 @@ export class CreateFungibleTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to create fungible token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_fungible_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new CreateFungibleTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateFungibleTokenTool(context);
 
 export default tool;

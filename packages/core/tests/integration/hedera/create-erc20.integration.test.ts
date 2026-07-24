@@ -100,8 +100,8 @@ describe('Create ERC20 Integration Tests', () => {
       expect(result.raw.error).toContain(
         'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
       );
-      expect(result.raw.error).toContain('Failed to create ERC20 token');
-      expect(result.humanMessage).toContain('Failed to create ERC20 token');
+      expect(result.raw.error).toContain('Failed to execute Create ERC20 Token');
+      expect(result.humanMessage).toContain('Failed to execute Create ERC20 Token');
     });
 
     it('should fail when decimals is invalid', async () => {
@@ -115,8 +115,8 @@ describe('Create ERC20 Integration Tests', () => {
       const tool = createERC20Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.raw.error).toContain('Failed to create ERC20 token');
-      expect(result.humanMessage).toContain('Failed to create ERC20 token');
+      expect(result.raw.error).toContain('Failed to execute Create ERC20 Token');
+      expect(result.humanMessage).toContain('Failed to execute Create ERC20 Token');
 
       expect(result.raw.error).toContain(
         'Invalid parameters: Field "decimals" - Number must be greater than or equal to 0',

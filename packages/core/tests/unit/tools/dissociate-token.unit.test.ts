@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Client, AccountId, TokenId, Status } from '@hiero-ledger/sdk';
+import { Client, AccountId, TokenId} from '@hiero-ledger/sdk';
 import tool from '@/plugins/core-token-plugin/tools/dissociate-token';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -76,8 +76,8 @@ describe('Dissociate Token Tool', () => {
     const toolInstance = tool(context);
     const result = await toolInstance.execute(client, context, params);
 
-    expect(result.humanMessage).toContain('Failed to dissociate token');
-    expect(result.raw.status).toBe(Status.InvalidTransaction);
+    expect(result.humanMessage).toContain('Failed to execute Dissociate Token');
+    expect(result.raw.status).toBe('ERROR');
     expect(result.raw.error).toContain('Test error');
   });
 
@@ -86,8 +86,8 @@ describe('Dissociate Token Tool', () => {
     const params: any = { tokenIds: [] }; // invalid
 
     await expect(toolInstance.execute(client, context, params)).resolves.toMatchObject({
-      raw: { status: Status.InvalidTransaction },
-      humanMessage: expect.stringContaining('Failed to dissociate token'),
+      raw: { status: 'ERROR' },
+      humanMessage: expect.stringContaining('Failed to execute Dissociate Token'),
     });
   });
 

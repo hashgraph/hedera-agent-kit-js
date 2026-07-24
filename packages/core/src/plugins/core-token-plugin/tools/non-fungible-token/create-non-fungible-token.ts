@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { createNonFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -55,7 +52,7 @@ Token ID: ${tokenIdStr}`;
 
 export const CREATE_NON_FUNGIBLE_TOKEN_TOOL = 'create_non_fungible_token_tool';
 
-export class CreateNonFungibleTokenTool extends BaseTool {
+export class CreateNonFungibleTokenTool extends BaseTransactionTool {
   method = CREATE_NON_FUNGIBLE_TOKEN_TOOL;
   name = 'Create Non-Fungible Token';
   description: string;
@@ -94,18 +91,8 @@ export class CreateNonFungibleTokenTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to create non-fungible token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_non_fungible_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new CreateNonFungibleTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateNonFungibleTokenTool(context);
 
 export default tool;

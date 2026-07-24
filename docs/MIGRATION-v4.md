@@ -19,13 +19,13 @@ The old `hedera-agent-kit` package on npm will no longer receive updates.
 
 Framework integrations are no longer bundled in the core package. Each toolkit is its own npm package:
 
-| Package | Exports |
-|---|---|
-| `@hashgraph/hedera-agent-kit` | `HederaAgentAPI`, `AgentMode`, `Configuration`, `Context`, `Plugin`, `Tool`, `ToolDiscovery`, `HederaBuilder`, `handleTransaction`, `ExecuteStrategy`, parameter schemas, mirrornode types |
-| `@hashgraph/hedera-agent-kit-langchain` | `HederaLangchainToolkit`, `ResponseParserService`, `HederaMCPServer` |
-| `@hashgraph/hedera-agent-kit-ai-sdk` | `HederaAIToolkit`, `HederaMCPServer` |
-| `@hashgraph/hedera-agent-kit-elizaos` | `HederaElizaOSToolkit` |
-| `@hashgraph/hedera-agent-kit-mcp` | `HederaMCPToolkit` |
+| Package                                 | Exports                                                                                                                                                                                                   |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@hashgraph/hedera-agent-kit`           | `HederaAgentAPI`, `AgentMode`, `Configuration`, `Context`, `Plugin`, `Tool`, `ToolSummary`, `ToolDiscovery`, `HederaBuilder`, `handleTransaction`, `ExecuteStrategy`, parameter schemas, mirrornode types |
+| `@hashgraph/hedera-agent-kit-langchain` | `HederaLangchainToolkit`, `ResponseParserService`, `HederaMCPServer`                                                                                                                                      |
+| `@hashgraph/hedera-agent-kit-ai-sdk`    | `HederaAIToolkit`, `HederaMCPServer`                                                                                                                                                                      |
+| `@hashgraph/hedera-agent-kit-elizaos`   | `HederaElizaOSToolkit`                                                                                                                                                                                    |
+| `@hashgraph/hedera-agent-kit-mcp`       | `HederaMCPToolkit`                                                                                                                                                                                        |
 
 ### 3. Plugin imports moved to `/plugins` subpath
 
@@ -90,10 +90,10 @@ const toolkit = new HederaLangchainToolkit({
 
 The following deprecated plugin aliases have been removed. Update your imports:
 
-| Removed alias | Replacement |
-|---|---|
-| `coreHTSPlugin` | `coreTokenPlugin` |
-| `coreSCSPlugin` | `coreEVMPlugin` |
+| Removed alias       | Replacement                                                                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `coreHTSPlugin`     | `coreTokenPlugin`                                                                                                                                                                       |
+| `coreSCSPlugin`     | `coreEVMPlugin`                                                                                                                                                                         |
 | `coreQueriesPlugin` | Use individual query plugins: `coreAccountQueryPlugin`, `coreTokenQueryPlugin`, `coreConsensusQueryPlugin`, `coreEVMQueryPlugin`, `coreMiscQueriesPlugin`, `coreTransactionQueryPlugin` |
 
 ### 6. Framework dependencies are now transitive
@@ -157,6 +157,7 @@ Update every import that previously pulled from `@hashgraph/sdk`:
 In v3, `raw.bytes` returned by `ResponseParserService` could be a Node.js `Buffer` or a `{ type: 'Buffer', data: [...] }` plain object, depending on the environment. In v4, `raw.bytes` is always a `Uint8Array` in both Node.js and browser environments.
 
 **Before (v3):**
+
 ```
 const realBytes = parseTransactionBytes(toolCall.parsedData.raw.bytes);
 const realBytes = Buffer.isBuffer(bytesObject)
@@ -164,7 +165,9 @@ const realBytes = Buffer.isBuffer(bytesObject)
 : Buffer.from(bytesObject.data);
 const tx = Transaction.fromBytes(realBytes);
 ```
+
 **After (v4):**
+
 ```
 const bytes = toolCall.parsedData.raw.bytes;
 const tx = Transaction.fromBytes(bytes);
@@ -172,17 +175,42 @@ const tx = Transaction.fromBytes(bytes);
 
 If you have custom code that converts the bytes payload before passing it to `Transaction.fromBytes`, remove that conversion - `raw.bytes` is now a plain `Uint8Array` and can be passed directly.
 
+### 10. AI SDK tool output is now a structured object (was a JSON string)
+
+The `@hashgraph/hedera-agent-kit-ai-sdk` toolkit previously returned each tool's result as a **JSON string**, so `toolResult.output` was a string you had to `JSON.parse` yourself. It now returns the **structured object** directly, and in `RETURN_BYTES` mode the `bytes` field is already a `Uint8Array` (rebuilt from the transport shape for you). This affects **every** tool, not just transaction tools.
+
+**Before:**
+
+```
+const envelope =
+  typeof toolResult.output === 'string' ? JSON.parse(toolResult.output) : toolResult.output;
+const bytes = rebuildUint8Array(envelope.bytes); // Buffer / numeric-keyed object
+const tx = Transaction.fromBytes(bytes);
+```
+
+**After:**
+
+```
+const envelope = toolResult.output; // already an object
+const tx = Transaction.fromBytes(envelope.bytes); // already a Uint8Array
+```
+
+Remove any `JSON.parse(toolResult.output)` and any manual byte reconstruction. If you have code that relied on `toolResult.output` being a string (for any tool), update it to read the object.
+
+> **MCP is unchanged.** Over MCP, tool results still cross a process boundary as JSON text, so the client receives the raw payload and must rebuild `bytes` itself. Use the exported `toUint8Array` helper (`import { toUint8Array } from '@hashgraph/hedera-agent-kit'`) before `Transaction.fromBytes`.
 
 ## Installation Changes
 
 ### LangChain
 
 **Before (v3):**
+
 ```bash
 npm install hedera-agent-kit @hashgraph/sdk @langchain/core langchain @langchain/langgraph @langchain/openai dotenv
 ```
 
 **After (v4):** `@langchain/core` and `langchain` are bundled in the toolkit. Install your LLM provider separately.
+
 ```bash
 # OpenAI
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-langchain @langchain/openai dotenv
@@ -200,11 +228,13 @@ npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agen
 ### Vercel AI SDK
 
 **Before (v3):**
+
 ```bash
 npm install hedera-agent-kit @hashgraph/sdk ai @ai-sdk/openai dotenv
 ```
 
 **After (v4):** `ai` is bundled in the toolkit. LLM provider is **not** bundled, always install it.
+
 ```bash
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai dotenv
 ```
@@ -212,11 +242,13 @@ npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agen
 ### ElizaOS
 
 **Before (v3):**
+
 ```bash
 npm install hedera-agent-kit @hashgraph/sdk
 ```
 
 **After (v4):**
+
 ```bash
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-elizaos
 ```
@@ -224,11 +256,13 @@ npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agen
 ### MCP
 
 **Before (v3):**
+
 ```bash
 npm install hedera-agent-kit @hashgraph/sdk
 ```
 
 **After (v4):**
+
 ```bash
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-mcp
 ```
@@ -250,7 +284,7 @@ import { ChatOpenAI } from '@langchain/openai';
 
 const client = Client.forTestnet().setOperator(
   process.env.ACCOUNT_ID,
-  PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY)
+  PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY),
 );
 
 const toolkit = new HederaLangchainToolkit({
@@ -304,6 +338,7 @@ const response = await agent.invoke({
 ```
 
 **Key changes:**
+
 - `HederaLangchainToolkit` now comes from `@hashgraph/hedera-agent-kit-langchain`
 - `AgentMode` comes from `@hashgraph/hedera-agent-kit`
 - Plugins come from `@hashgraph/hedera-agent-kit/plugins` and must be explicitly passed
@@ -332,7 +367,7 @@ import { generateText } from 'ai';
 
 const client = Client.forTestnet().setOperator(
   process.env.ACCOUNT_ID,
-  PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY)
+  PrivateKey.fromStringECDSA(process.env.PRIVATE_KEY),
 );
 
 const toolkit = new HederaAIToolkit({
@@ -393,6 +428,7 @@ const response = await generateText({
 ```
 
 **Key changes:**
+
 - `HederaAIToolkit` now comes from `@hashgraph/hedera-agent-kit-ai-sdk`
 - `AgentMode` comes from `@hashgraph/hedera-agent-kit`
 - Plugins come from `@hashgraph/hedera-agent-kit/plugins` and must be explicitly passed
@@ -439,6 +475,7 @@ const toolkit = new HederaElizaOSToolkit({
 ```
 
 **Key changes:**
+
 - The `hedera-agent-kit/elizaos` subpath no longer exists
 - ElizaOS is now its own package: `@hashgraph/hedera-agent-kit-elizaos`
 
@@ -483,6 +520,7 @@ const server = new HederaMCPToolkit({
 ```
 
 **Key changes:**
+
 - `HederaMCPToolkit` now comes from `@hashgraph/hedera-agent-kit-mcp`
 - `AgentMode` comes from `@hashgraph/hedera-agent-kit`
 - Plugins come from `@hashgraph/hedera-agent-kit/plugins` and must be explicitly passed
@@ -587,7 +625,8 @@ import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-
 const transferHbarPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const sourceAccountDesc = PromptGenerator.getAccountParameterDescription(
-    'sourceAccountId', context,
+    'sourceAccountId',
+    context,
   );
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
   return `
@@ -620,7 +659,9 @@ const transferHbar = async (
 ) => {
   try {
     const normalisedParams = await HederaParameterNormaliser.normaliseTransferHbar(
-      params, context, client,
+      params,
+      context,
+      client,
     );
     const tx = HederaBuilder.transferHbar(normalisedParams);
     return await handleTransaction(tx, client, context, postProcess);
@@ -668,7 +709,8 @@ import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-
 const transferHbarPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
   const sourceAccountDesc = PromptGenerator.getAccountParameterDescription(
-    'sourceAccountId', context,
+    'sourceAccountId',
+    context,
   );
   const usageInstructions = PromptGenerator.getParameterUsageInstructions();
   return `
@@ -700,9 +742,9 @@ export class TransferHbarTool extends BaseTool {
   // ── Required fields from the Tool interface ──────────────────────────────
   method = TRANSFER_HBAR_TOOL;
   name = 'Transfer HBAR';
-  description: string;                                  // set in constructor
+  description: string; // set in constructor
   parameters: ReturnType<typeof transferHbarParameters>; // set in constructor
-  outputParser = transactionToolOutputParser;           // ✓ optional, same as before
+  outputParser = transactionToolOutputParser; // ✓ optional, same as before
 
   constructor(context: Context) {
     super();
@@ -746,7 +788,7 @@ export class TransferHbarTool extends BaseTool {
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error('[transfer_hbar_tool]', message);
     return {
-      raw: { status: Status.InvalidTransaction, error: message },
+      raw: { status: 'ERROR', error: message },
       humanMessage: message,
     };
   }
@@ -762,14 +804,14 @@ export default tool;
 
 ### What changed – summary
 
-| Aspect | v3 (`Tool` object) | v4 (`BaseTool` class) |
-|---|---|---|
-| Declaration | Object literal `{ method, name, … execute }` | Class extending `BaseTool` |
-| Import | `import type { Tool }` | `import { BaseTool }` |
-| Lifecycle stages | All inside a single `execute()` function | Split into `normalizeParams`, `coreAction`, `secondaryAction` |
-| Hook/Policy support | ✗ None | ✓ Automatic at stages 1, 3, 5, 7 |
-| Error handling | Manual `try/catch` inside `execute` | Override `handleError()` (BaseTool provides a default) |
-| Breaking change? | — | **No** — `BaseTool implements Tool` |
+| Aspect              | v3 (`Tool` object)                           | v4 (`BaseTool` class)                                         |
+| ------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Declaration         | Object literal `{ method, name, … execute }` | Class extending `BaseTool`                                    |
+| Import              | `import type { Tool }`                       | `import { BaseTool }`                                         |
+| Lifecycle stages    | All inside a single `execute()` function     | Split into `normalizeParams`, `coreAction`, `secondaryAction` |
+| Hook/Policy support | ✗ None                                       | ✓ Automatic at stages 1, 3, 5, 7                              |
+| Error handling      | Manual `try/catch` inside `execute`          | Override `handleError()` (BaseTool provides a default)        |
+| Breaking change?    | —                                            | **No** — `BaseTool implements Tool`                           |
 
 ### Migrating a query-only tool
 
@@ -851,6 +893,7 @@ hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (Eli
 ### Import mapping
 
 **Toolkits** (each moved to its own package):
+
 ```diff
 - import { HederaLangchainToolkit } from 'hedera-agent-kit'
 + import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain'
@@ -866,6 +909,7 @@ hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (Eli
 ```
 
 **Core types** (same exports, new package name):
+
 ```diff
 - import { AgentMode, Configuration, Context, Plugin, Tool } from 'hedera-agent-kit'
 + import { AgentMode, Configuration, Context, Plugin, Tool } from '@hashgraph/hedera-agent-kit'
@@ -875,12 +919,14 @@ hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (Eli
 ```
 
 **Plugins** (moved from root to `/plugins` subpath):
+
 ```diff
 - import { coreTokenPlugin, coreAccountPlugin, ... } from 'hedera-agent-kit'
 + import { coreTokenPlugin, coreAccountPlugin, ... } from '@hashgraph/hedera-agent-kit/plugins'
 ```
 
 **Toolkit-specific exports** (moved to their respective toolkit package):
+
 ```diff
 - import { ResponseParserService } from 'hedera-agent-kit'
 + import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain'
@@ -891,6 +937,7 @@ hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (Eli
 ```
 
 **Deprecated aliases** (removed, use replacements):
+
 ```diff
 - import { coreHTSPlugin } from 'hedera-agent-kit'
 + import { coreTokenPlugin } from '@hashgraph/hedera-agent-kit/plugins'
@@ -944,4 +991,3 @@ Example of a valid combination:
 > [!NOTE]
 > **Initial Monorepo Release Versioning**:
 > In this initial release of the monorepo, the core package `@hashgraph/hedera-agent-kit` is released at version `4.0.0` (continuing from the v3 line), while the newly split integration/adapter packages (such as `@hashgraph/hedera-agent-kit-langchain`, `@hashgraph/hedera-agent-kit-ai-sdk`, `@hashgraph/hedera-agent-kit-elizaos`, and `@hashgraph/hedera-agent-kit-mcp`) start their lifecycle at version `1.0.0`. These `1.x` integration packages are fully compatible with the `4.x` core package.
-
