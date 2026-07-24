@@ -9,14 +9,15 @@
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts"
   },
   "dependencies": {
-    "@hiero-ledger/sdk": "2.81.0",
-    "@langchain/classic": "^1.0.17",
-    "@langchain/core": "^1.1.24",
-    "@langchain/openai": "^1.2.7",
+    "@hiero-ledger/sdk": "2.86.2",
+    "@langchain/classic": "^1.0.40",
+    "@langchain/core": "^1.2.3",
+    "@langchain/openai": "^1.5.5",
     "cheerio": "1.1.2",
     "dotenv": "17.2.3",
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",
     "@hashgraph/hedera-agent-kit-langchain": "file:../../packages/langchain",
+    "langchain": "^1.5.3",
     "prompts": "2.4.2"
   },
   "author": "",

@@ -12,21 +12,23 @@
     "ai-sdk:policy-enforcement-agent": "ts-node policy-enforcement-agent.ts"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "^1.0.21",
-    "@ai-sdk/openai": "^3.0.29",
-    "@modelcontextprotocol/sdk": "1.26.0",
-    "ai": "^6.0.86",
+    "@ai-sdk/mcp": "^2.0.16",
+    "@ai-sdk/openai": "^4.0.20",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "ai": "^7.0.37",
     "dotenv": "17.2.3",
     "zod": "^3.23.8",
-    "@hiero-ledger/sdk": "2.81.0",
+    "@hiero-ledger/sdk": "2.86.2",
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",
     "@hashgraph/hedera-agent-kit-ai-sdk": "file:../../packages/ai-sdk",
+    "@hashgraph/hedera-agent-kit-mcp": "file:../../packages/mcp",
     "prompts": "2.4.2"
   },
   "author": "",
   "license": "Apache-2.0",
   "description": "",
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/prompts": "2.4.9",
     "json-schema-to-zod": "^2.6.0",
     "tsx": "4.20.6"

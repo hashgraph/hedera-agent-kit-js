@@ -48,20 +48,20 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "@ai-sdk/mcp": "1.0.21",
+    "@ai-sdk/mcp": "2.0.16",
     "@hashgraph/hedera-agent-kit": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.27.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "zod": "3.25.76"
   },
   "peerDependencies": {
-    "@hiero-ledger/sdk": "^2.81.0",
-    "ai": "^6.0.86"
+    "@hiero-ledger/sdk": "^2.86.2",
+    "ai": "^7.0.37"
   },
   "devDependencies": {
-    "@hiero-ledger/sdk": "2.81.0",
-    "ai": "6.0.86",
+    "@hiero-ledger/sdk": "2.86.2",
+    "ai": "7.0.37",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.0.16"
+    "vitest": "4.1.10"
   }
 }

@@ -10,7 +10,7 @@ import { TransactionStatus } from "@/components/TransactionStatus";
 import { signAndExecuteBytes, getPairedAccountId, connectWallet, ensureWalletConnector } from "@/lib/walletconnect";
 import { useMessageSubmit } from "@/hooks/useMessageSubmit";
 import { useAutoSign } from "@/hooks/useAutoSign";
-import { Message, AgentMode } from "@/types";
+import type { Message, AgentMode, TransactionStatus as TxStatus } from "@/types";
 
 export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -23,7 +23,7 @@ export default function Chat() {
 
     const mode = process.env.NEXT_PUBLIC_AGENT_MODE as AgentMode | undefined;
     const [accountId, setAccountId] = useState<string>('');
-    const [txStatus, setTxStatus] = useState<string | null>(null);
+    const [txStatus, setTxStatus] = useState<TxStatus>(null);
     const [isSigning, setIsSigning] = useState(false);
 
     const { submitMessage } = useMessageSubmit({

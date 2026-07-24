@@ -28,6 +28,11 @@
     "release:validate": "node scripts/release/validate.js",
     "release:prepare": "node scripts/release/prepare.js"
   },
+  "pnpm": {
+    "overrides": {
+      "protobufjs": ">=7.5.5"
+    }
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "8.37.0",
     "@typescript-eslint/parser": "8.37.0",
@@ -37,6 +42,6 @@
     "prettier": "3.6.2",
     "semver": "7.7.2",
     "typescript": "5.8.3",
-    "vitest": "4.0.16"
+    "vitest": "4.1.10"
   }
 }

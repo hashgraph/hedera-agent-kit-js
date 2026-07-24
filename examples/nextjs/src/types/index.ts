@@ -21,6 +21,8 @@ export type WalletPrepareResponse = ApiResponse<{
   bytesBase64?: string;
 }>;
 
+export type TransactionStatus = "pending" | "confirmed" | null;
+
 export type ChatState = {
   messages: Message[];
   input: string;

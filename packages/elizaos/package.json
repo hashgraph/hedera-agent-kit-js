@@ -54,13 +54,13 @@
   },
   "peerDependencies": {
     "@elizaos/core": "^1.7.2",
-    "@hiero-ledger/sdk": "^2.81.0"
+    "@hiero-ledger/sdk": "^2.86.2"
   },
   "devDependencies": {
     "@elizaos/core": "1.7.2",
-    "@hiero-ledger/sdk": "2.81.0",
+    "@hiero-ledger/sdk": "2.86.2",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.0.16"
+    "vitest": "4.1.10"
   }
 }
