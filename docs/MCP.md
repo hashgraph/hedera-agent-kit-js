@@ -160,8 +160,17 @@ Nothing is signed and nothing is submitted. (Query tools are unaffected by the m
 
 What the caller sees depends on the integration layer:
 
-- **Over MCP**, tool results are JSON text, so the `Uint8Array` arrives JSON-serialized; parse the result and reconstruct the bytes before deserializing (see the client example below).
-- **In-process framework toolkits** (LangChain, AI SDK) parse tool output into `{ raw, humanMessage }`, where `raw` is the `ReturnBytesResult` envelope (`raw.bytes` is a `Uint8Array`, alongside `raw.transactionId`, `raw.payerAccountId`, `raw.type`, `raw.expiresAt`, and `raw.memo`). Since v4 the bytes are standardized to `Uint8Array` across Node.js and web — if you previously parsed Node `Buffer` payloads, see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array).
+Tool output is always JSON text, and JSON has no typed-array type, so `bytes` is serialized to a
+Buffer/numeric-keyed object in transit. The kit exports `toUint8Array` to reconstruct it back into
+a ready-to-sign `Uint8Array` (handles every serialized shape, Node and web). Where that reconstruction
+happens depends on the layer:
+
+- **LangChain and ADK toolkits** reconstruct it for you: the parsed envelope's `bytes` (`raw.bytes`
+  for LangChain, `bytes` for ADK) is already a `Uint8Array`, alongside `transactionId`,
+  `payerAccountId`, `type`, `expiresAt`, and `memo`. No extra step needed.
+- **AI SDK and MCP** hand you the raw JSON tool output to parse yourself, so run the `bytes` field
+  through `toUint8Array` before `Transaction.fromBytes` (see the client example below). If you
+  previously parsed Node `Buffer` payloads by hand, see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array).
 
 ## Signing and submitting on the client
 

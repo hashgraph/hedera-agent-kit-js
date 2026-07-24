@@ -1,4 +1,4 @@
-import { AgentMode } from '@hashgraph/hedera-agent-kit';
+import { AgentMode, toUint8Array } from '@hashgraph/hedera-agent-kit';
 import {
   coreTokenPlugin,
   coreAccountPlugin,
@@ -27,17 +27,6 @@ function validateEnv() {
     console.error('Copy .env.example to .env and fill in your keys.');
     process.exit(1);
   }
-}
-
-// In RETURN_BYTES mode the tool output is a JSON string, and after that round-trip the
-// transaction bytes arrive as a Node Buffer JSON object ({ type: 'Buffer', data: number[] }),
-// so rebuild the Uint8Array before deserializing.
-function toUint8Array(bytes: any): Uint8Array {
-  if (bytes instanceof Uint8Array) return bytes;
-  if (bytes?.type === 'Buffer' && Array.isArray(bytes.data)) return new Uint8Array(bytes.data);
-  if (Array.isArray(bytes)) return new Uint8Array(bytes);
-  if (bytes && typeof bytes === 'object') return new Uint8Array(Object.values(bytes) as number[]);
-  return new Uint8Array();
 }
 
 async function bootstrap(): Promise<void> {

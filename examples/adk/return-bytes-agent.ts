@@ -22,16 +22,6 @@ function validateEnv() {
   }
 }
 
-// After the JSON round-trip through the ADK adapter, `bytes` is a numeric-keyed object, not a
-// Uint8Array — rebuild it.
-function toUint8Array(bytes: any): Uint8Array {
-  if (bytes instanceof Uint8Array) return bytes;
-  if (bytes?.type === 'Buffer' && Array.isArray(bytes.data)) return new Uint8Array(bytes.data);
-  if (Array.isArray(bytes)) return new Uint8Array(bytes);
-  if (bytes && typeof bytes === 'object') return new Uint8Array(Object.values(bytes) as number[]);
-  return new Uint8Array();
-}
-
 async function main(): Promise<void> {
   validateEnv();
 
@@ -60,7 +50,8 @@ async function main(): Promise<void> {
     toolContext: {} as any, // ignored by the Hedera tool's execute()
   });
 
-  const bytes = toUint8Array(envelope.bytes);
+  // The ADK adapter rebuilds `bytes` into a Uint8Array, so it is ready to sign as-is.
+  const bytes = envelope.bytes as Uint8Array;
 
   console.log('--- RETURN_BYTES envelope ---');
   console.log(
