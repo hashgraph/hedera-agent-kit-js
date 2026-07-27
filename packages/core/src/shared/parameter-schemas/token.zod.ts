@@ -209,49 +209,49 @@ export const updateTokenParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New admin key. Pass boolean `true` to use the operator/user key, or provide a Hedera-compatible public key string. Required for most property updates.',
+        'New admin key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     kycKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New KYC key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New KYC key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     freezeKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New freeze key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New freeze key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     wipeKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New wipe key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New wipe key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     supplyKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New supply key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New supply key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     feeScheduleKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New fee schedule key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New fee schedule key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     pauseKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New pause key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New pause key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     metadataKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New metadata key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New metadata key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID).',
       ),
     metadata: z
       .string()
