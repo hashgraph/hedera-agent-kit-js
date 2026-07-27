@@ -27,10 +27,12 @@ export { handleTransaction } from './shared/strategies/tx-mode-strategy';
 export type {
   RawTransactionResponse,
   ExecuteStrategyResult,
+  ReturnBytesResult,
 } from './shared/strategies/tx-mode-strategy';
 export { ExecuteStrategy } from './shared/strategies/tx-mode-strategy';
 export { AccountResolver } from './shared/utils/account-resolver';
 export { PromptGenerator } from './shared/utils/prompt-generator';
+export { toUint8Array } from './shared/utils/bytes-utils';
 export {
   transactionToolOutputParser,
   untypedQueryOutputParser,

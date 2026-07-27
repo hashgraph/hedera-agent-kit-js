@@ -1,11 +1,25 @@
-export function extractBytesFromAgentResponse(resp: unknown): string | null {
-    if (isObject(resp) && 'bytes' in resp) {
-        const bytes = (resp as { bytes?: unknown }).bytes;
-        try {
-            const u8 = toUint8(bytes);
-            return toBase64(u8);
-        } catch {
-        }
+import { PendingTransaction } from '@/types';
+
+function toPendingTransaction(obj: Record<string, unknown>): PendingTransaction | null {
+    if (!('bytes' in obj)) return null;
+    try {
+        return {
+            bytesBase64: toBase64(toUint8(obj.bytes)),
+            transactionId: typeof obj.transactionId === 'string' ? obj.transactionId : undefined,
+            payerAccountId: typeof obj.payerAccountId === 'string' ? obj.payerAccountId : undefined,
+            transactionType: typeof obj.type === 'string' ? obj.type : undefined,
+            expiresAt: typeof obj.expiresAt === 'string' ? obj.expiresAt : undefined,
+            memo: typeof obj.memo === 'string' && obj.memo !== '' ? obj.memo : undefined,
+        };
+    } catch {
+        return null;
+    }
+}
+
+export function extractBytesFromAgentResponse(resp: unknown): PendingTransaction | null {
+    if (isObject(resp)) {
+        const direct = toPendingTransaction(resp);
+        if (direct) return direct;
     }
     if (isObject(resp) && 'intermediateSteps' in resp && Array.isArray((resp as { intermediateSteps?: unknown[] }).intermediateSteps)) {
         const steps = (resp as { intermediateSteps: unknown[] }).intermediateSteps;
@@ -13,10 +27,7 @@ export function extractBytesFromAgentResponse(resp: unknown): string | null {
             const obs = (steps[0] as { observation?: unknown }).observation;
             try {
                 const parsed = typeof obs === 'string' ? JSON.parse(obs) : obs;
-                if (isObject(parsed) && 'bytes' in parsed) {
-                    const u8 = toUint8((parsed as { bytes?: unknown }).bytes);
-                    return toBase64(u8);
-                }
+                if (isObject(parsed)) return toPendingTransaction(parsed);
             } catch {
             }
         }
