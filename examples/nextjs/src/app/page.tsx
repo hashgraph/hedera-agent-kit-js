@@ -1,6 +1,6 @@
 import { createAgentBootstrap } from "@/lib/agent-config";
 import WalletConnectClient from "@/components/WalletConnectClient";
-import Chat from "@/components/Chat";
+import ChatClient from "@/components/ChatClient";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,7 +25,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto mt-6 w-full max-w-4xl">
-        <Chat />
+        <ChatClient />
       </main>
     </div>
   );
