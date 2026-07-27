@@ -4,6 +4,8 @@ import Chat from "@/components/Chat";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   const { mode, network } = createAgentBootstrap();
   return (
