@@ -23,6 +23,8 @@ describe('Transaction Mode Strategies & custom signing (unit)', () => {
     // Mock a basic transaction
     mockTx = {
       transactionId: null,
+      transactionValidDuration: 120,
+      transactionMemo: '',
       setTransactionId: vi.fn().mockReturnThis(),
       freezeWith: vi.fn().mockReturnThis(),
       toBytes: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
