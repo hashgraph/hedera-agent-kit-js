@@ -104,13 +104,13 @@ export const updateTopicParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New admin key. Pass boolean `true` to use the operator/user key, or provide a Hedera-compatible public key string.',
+        'New admin key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     submitKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New submit key. Pass boolean `true` to use the operator/user key, or provide a Hedera-compatible public key string.',
+        'New submit key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     autoRenewAccountId: z
       .string()

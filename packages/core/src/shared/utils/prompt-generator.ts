@@ -1,5 +1,5 @@
-import { Context, AgentMode } from '@/shared/configuration';
-import { AccountResolver } from '@/shared/index';
+import { Context, AgentMode, isReturnBytesMode } from '@/shared/configuration';
+import { AccountResolver } from '@/shared';
 
 export class PromptGenerator {
   /**
@@ -8,7 +8,7 @@ export class PromptGenerator {
   static getContextSnippet(context: Context): string {
     const lines = ['Context:'];
 
-    if (context.mode === AgentMode.RETURN_BYTES) {
+    if (isReturnBytesMode(context.mode)) {
       lines.push(`- Mode: Return Bytes (preparing transactions for user signing)`);
       if (context.accountId) {
         lines.push(`- User Account: ${context.accountId} (default for transaction parameters)`);
