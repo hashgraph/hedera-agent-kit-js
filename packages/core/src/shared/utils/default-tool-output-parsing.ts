@@ -39,9 +39,9 @@ export type ToolRawStatus = (typeof TOOL_STATUS)[keyof typeof TOOL_STATUS];
  * - If `rawOutput` is not valid JSON, returns a `raw` object with
  *   `{ status: 'PARSE_ERROR', error, originalOutput }` and a generic error
  *   `humanMessage`.
- * - If the parsed object has a top-level `bytes` field (RETURN_BYTES mode),
- *   the parsed object is returned as `raw` and a default human-friendly message
- *   is provided.
+ * - If the parsed object has a top-level `bytes` field (RETURN_BYTES /
+ *   CUSTOM_RETURN_BYTES mode), the parsed object is returned as `raw` and a
+ *   default human-friendly message is provided.
  * - If the parsed object contains both `raw` and `humanMessage` (EXECUTE_TRANSACTION
  *   mode), any additional top-level fields are merged into the returned `raw`
  *   object so extra tool information is preserved.
@@ -64,7 +64,7 @@ export const transactionToolOutputParser = (
     };
   }
 
-  // Case 1: Handle RETURN_BYTES mode output
+  // Case 1: Handle RETURN_BYTES / CUSTOM_RETURN_BYTES mode output
   if (parsedObject && parsedObject.bytes) {
     return {
       raw: parsedObject, // The 'raw' data *is* the object with the bytes

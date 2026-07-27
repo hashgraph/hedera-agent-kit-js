@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgentMode, type Context } from '@/shared/configuration';
+import { isReturnBytesMode, type Context } from '@/shared/configuration';
 import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client } from '@hiero-ledger/sdk';
@@ -22,22 +22,21 @@ const transferERC20Prompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a given amount of an existing ERC20 token on Hedera. ERC20 is an EVM compatible fungible token.
-Use this tool whenever the user wants to transfer, send, or move ERC20 tokens from a contract to a recipient.
+This tool will transfer a given amount of an existing ERC20 token on Hedera via its EVM smart contract.
+Use this tool when the user mentions "ERC20", "EVM token", or transferring tokens from a smart contract.
+Do NOT use for HTS (Hedera Token Service) native tokens — those are identified by a token ID, not a contract.
 
 Parameters:
-- contractId (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
-- recipientAddress (str, required): The EVM or Hedera address to which the tokens will be transferred. This can be the EVM address or the Hedera account id.
-- amount (number, required): The amount to be transferred, given in display units.
+- contractId (str, required): The ERC20 smart contract address (EVM or Hedera format). This is a CONTRACT address, NOT a token ID.
+- recipientAddress (str, required): Recipient address (EVM or Hedera format).
+- amount (number, required): Amount to transfer in display units.
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 
-Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means transferring the amount of 1 of the ERC20 token with contract id 0.0.6473135 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
-Example: "Transfer 1 ERC20 token 0xd94dc7f82f103757f715514e4a37186be6e4580b to 0.0.6473135" means transferring the amount of 1 of the ERC20 token with contract id 0xd94dc7f82f103757f715514e4a37186be6e4580b to the 0.0.6473135 Hedera account id.
-Example: "Send 25 erc20 tokens from contract 0.0.1234 to 0.0.5678" means transferring 25 tokens of the ERC20 contract 0.0.1234 to account 0.0.5678.
-Example: "Move 200 erc20 tokens of contract 0.0.3333 to address 0.0.4444" means transferring 200 tokens of the ERC20 contract 0.0.3333 to address 0.0.4444.
-Example: "Send 1000 ERC20 tokens (contract address: 0.0.5555) to recipient 0.0.6666" means transferring 1000 tokens of the ERC20 contract 0.0.5555 to account 0.0.6666.
+Example: "Transfer 25 erc20 tokens from contract 0.0.1234 to 0.0.5678" → contractId=0.0.1234, recipientAddress=0.0.5678, amount=25.
+Example: "Send 100 ERC20 tokens (contract: 0.0.5555) to 0.0.6666" → contractId=0.0.5555, recipientAddress=0.0.6666, amount=100.
+Example: "Move 200 erc20 tokens of contract 0x1111...1111 to 0.0.4444" → contractId=0x1111...1111, recipientAddress=0.0.4444, amount=200.
 `;
 };
 
@@ -85,7 +84,7 @@ export class TransferErc20Tool extends BaseTransactionTool {
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (context.mode === AgentMode.RETURN_BYTES) {
+    if (isReturnBytesMode(context.mode)) {
       return await handleTransaction(transaction, client, context);
     }
     return await handleTransaction(transaction, client, context, postProcess);
