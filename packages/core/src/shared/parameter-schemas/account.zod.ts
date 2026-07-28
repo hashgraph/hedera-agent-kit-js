@@ -188,10 +188,10 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
         z.object({
           tokenId: z.string().describe('Token ID (Required)'),
           amount: z
-            .union([z.number().nonnegative(), z.string()])
+            .number()
+            .nonnegative()
             .describe(
               'Amount of tokens to approve (must be positive, can be float or int). ' +
-                'Accepts a number or a numeric string (use a string for values above 2^53 to preserve int64 precision). ' +
                 'Given in display units, the tool will handle parsing. (Required)',
             ),
         }),

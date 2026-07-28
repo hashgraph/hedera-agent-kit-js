@@ -581,7 +581,7 @@ export default class HederaParameterNormaliser {
         ownerAccountId: AccountId.fromString(ownerAccountId),
         spenderAccountId: AccountId.fromString(spenderAccountId),
         tokenId: TokenId.fromString(tokenAllowance.tokenId),
-        amount: Long.fromString(baseAmountBN.toFixed()),
+        amount: Long.fromString(baseAmountBN.toFixed(0)),
       });
     });
 

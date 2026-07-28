@@ -107,7 +107,7 @@ describe('HederaParameterNormaliser.normaliseApproveTokenAllowance', () => {
     expect(res.tokenApprovals?.[0]!.ownerAccountId!.toString()).toBe(resolvedOwner);
   });
 
-  it('throws error when amount is non-integer, zero, or negative', async () => {
+  it('throws error when amount is negative or NaN', async () => {
     const invalids = [-1, Number.NaN];
 
     for (const invalid of invalids) {
@@ -125,6 +125,22 @@ describe('HederaParameterNormaliser.normaliseApproveTokenAllowance', () => {
         ),
       ).rejects.toThrowError(new RegExp(`Invalid parameters: Field "tokenApprovals.0.amount"`));
     }
+  });
+
+  it('rejects a string amount', async () => {
+    const p = {
+      spenderAccountId: spender,
+      tokenApprovals: [{ tokenId, amount: '100' as any }],
+    };
+
+    await expect(
+      HederaParameterNormaliser.normaliseApproveTokenAllowance(
+        p as any,
+        mockContext,
+        mockClient,
+        mockMirrorNode,
+      ),
+    ).rejects.toThrowError(new RegExp(`Invalid parameters: Field "tokenApprovals.0.amount"`));
   });
 
   it('handles missing decimals by defaulting to 0', async () => {
