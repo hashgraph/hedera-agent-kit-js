@@ -138,12 +138,20 @@ describe('Airdrop Fungible Token E2E Tests', () => {
         messages: [
           {
             role: 'user',
-            content: `Airdrop 5 of token ${fakeTokenId} from ${executor.accountId.toString()} to ${recipientId.toString()}`,
+            content:
+              `Use the airdrop fungible token tool to airdrop 5 of token ${fakeTokenId} ` +
+              `from ${executor.accountId.toString()} to the single recipient ${recipientId.toString()}. ` +
+              `There is no transaction memo. Execute immediately and do not ask any follow-up questions.`,
           },
         ],
       });
 
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
+
+      expect(
+        parsedResponse.length,
+        'Expected the agent to call the airdrop tool for the non-existent token',
+      ).toBeGreaterThan(0);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
         'Failed to get token info for a token',

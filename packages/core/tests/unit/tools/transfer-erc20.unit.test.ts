@@ -118,6 +118,29 @@ describe('transferERC20 tool (unit)', () => {
     );
   });
 
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'returns result directly when in %s mode (skips postProcess)',
+    async mode => {
+      mockedNormaliser.normaliseTransferERC20Params.mockResolvedValue(normalisedParams);
+      mockedBuilder.executeTransaction.mockReturnValue({} as any);
+
+      const customContext: any = { accountId: '0.0.1001', mode };
+      const tool = toolFactory(customContext);
+      const client = makeClient();
+
+      const res: any = await tool.execute(client, customContext, params);
+
+      expect(res).toBeDefined();
+      expect(res.raw).toBeDefined();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(Object),
+        customContext,
+      );
+    },
+  );
+
   it('returns error message when an Error is thrown', async () => {
     mockedBuilder.executeTransaction.mockImplementation(() => {
       throw new Error('insufficient balance');

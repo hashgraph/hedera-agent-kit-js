@@ -60,6 +60,17 @@ const actions = toolkit.getTools();
 
 Each action uses LLM-based parameter extraction from user messages and validates inputs against tool schemas before executing transactions on Hedera.
 
+## Execution modes
+
+HAK supports three transaction execution modes — set `mode` in the `context` configuration:
+
+- `AgentMode.AUTONOMOUS` — signs and broadcasts using the operator key on the client.
+- `AgentMode.RETURN_BYTES` — returns unsigned transaction bytes for external signing.
+- `AgentMode.CUSTOM_EXECUTE_TX` — delegates signing and execution to a pluggable `TransactionStrategy` (TEE, MPC, KMS API, or HITL console).
+- `AgentMode.CUSTOM_RETURN_BYTES` — delegates assembly to a pluggable `TransactionStrategy` that returns bytes without executing (multi-party / delegated-payer flows).
+
+See [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md) for full details.
+
 ## License
 
 Apache-2.0

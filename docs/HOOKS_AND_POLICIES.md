@@ -88,8 +88,13 @@ const context = {
 Provides an immutable audit trail by logging tool executions to a Hedera Consensus Service (HCS) topic.
 
 > [!IMPORTANT]  
-> **Autonomous Mode Only**: This hook is strictly available in `AUTONOMOUS` mode. It will throw an error if used in
-> `RETURN_BYTES` mode.
+> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`. It throws before the
+> tool executes in `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes — no transaction was submitted, so there is nothing to
+> audit.
+>
+> In `CUSTOM_EXECUTE_TX` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
+> (`{ raw: RawTransactionResponse, humanMessage: string }`). This guarantees the hook receives the same shape as in
+> `AUTONOMOUS` mode and can log the audit entry correctly.
 
 > [!WARNING]  
 > **HIP-991 (Paid Topics)**: If a paid topic is used, it will incur submission fees. Ensure the `loggingClient` has
@@ -145,8 +150,13 @@ Hook that writes [HOL-standards-compliant](https://hol.org) audit trails to an H
 INDEXED registry as the session topic to list audit entries.
 
 > [!IMPORTANT]  
-> **Autonomous Mode Only**: This hook is strictly available in `AUTONOMOUS` mode. It will throw an error if used in
-> `RETURN_BYTES` mode.
+> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`. It throws before the
+> tool executes in `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes — no transaction was submitted, so there is nothing to
+> audit.
+>
+> In `CUSTOM_EXECUTE_TX` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
+> (`{ raw: RawTransactionResponse, humanMessage: string }`). This guarantees the hook receives the same shape as in
+> `AUTONOMOUS` mode and can write a compliant HOL audit entry.
 
 **Prerequisites**:
 
@@ -158,15 +168,25 @@ INDEXED registry as the session topic to list audit entries.
 
 - `relevantTools`: `string[]` - List of tool names that trigger audit trail logging.
 - `sessionId`: `string` - The Hedera topic ID (format `0.0.xxx`) used as the audit session registry.
+- `loggingClient?`: `Client` - (Optional) A separate Hedera client used to submit audit messages to HCS. Defaults to
+  the agent's operator client. Must have a local operator key capable of signing and submitting transactions.
 
 **Example Usage**:
 
 ```typescript
 import { HolAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
 
+// Basic usage — agent's operator client is used for HCS submissions
 const holAuditHook = new HolAuditTrailHook({
   relevantTools: ['transfer_hbar_tool', 'create_fungible_token_tool'],
   sessionId: '0.0.12345'
+});
+
+// With a dedicated logging client (e.g. when the agent's main client has no local key)
+const holAuditHookWithLogger = new HolAuditTrailHook({
+  relevantTools: ['transfer_hbar', 'create_token'],
+  sessionId: '0.0.12345',
+  loggingClient: myDedicatedLoggingClient,
 });
 
 // Add to your agent configuration
