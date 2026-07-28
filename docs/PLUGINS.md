@@ -167,7 +167,7 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 > [!IMPORTANT]
 > **Transaction tools vs query tools — where each stage runs:**
 > - **Transaction tools** (writing to the network): extend `BaseTransactionTool` (not `BaseTool`). `coreAction` **builds** the transaction only (`return HederaBuilder.xxx(params)`). `secondaryAction` **dispatches** it via `handleTransaction(tx, client, context, postProcess)`, which signs and submits in `AUTONOMOUS` mode or returns frozen bytes in `RETURN_BYTES` mode. Do **not** override `shouldSecondaryAction` — the default `true` keeps both stages active. `BaseTransactionTool` adds Hedera-specific error handling: `ReceiptStatusError` and `PrecheckStatusError` are automatically caught and serialized into `raw.errorCode` + `raw.transactionId`.
-> - **Query/read-only tools** (no on-chain write): extend `BaseTool`. All logic runs inside `coreAction` (call the mirror-node service, return data). Override `shouldSecondaryAction` to return `false` to skip stage 6 entirely. `secondaryAction` is still required by the abstract class — provide a no-op stub.
+> - **Query/read-only tools** (no on-chain write): extend `BaseTool`. All logic runs inside `coreAction` (call the mirror-node service, return data). Override `shouldSecondaryAction` to return `false` to skip stage 6 entirely. You do **not** need to override `secondaryAction` — `BaseTool` provides a default that throws if accidentally called, protecting against misconfiguration.
 >
 > This split ensures that `postCoreActionHook` (stage 5) always fires **after the transaction is formed but before it is submitted**, which is what hooks and policies rely on to inspect or block a transaction pre-submission.
 
@@ -703,7 +703,7 @@ The same single-copy rule applies to any other "singleton" transitive dependency
 
 ### Examples and References
 
-- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
+- See the annotated example plugin in [examples/plugin/](../examples/plugin/) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
 - See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples

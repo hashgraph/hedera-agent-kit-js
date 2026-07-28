@@ -71,7 +71,7 @@ ${usageInstructions}
   async coreAction(
     normalisedParams: {
       hbarAmount: number;
-      resolvedSourceAccount: AccountId;
+      resolvedSourceAccount: string;
       transactionMemo?: string;
     },
     _context: Context,

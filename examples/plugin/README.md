@@ -99,11 +99,11 @@ export class MyQueryTool extends BaseTool {
   outputParser = untypedQueryOutputParser; // required for framework adapters
 
   async coreAction(params, _context, _client) {
+    const result = `Result for ${params.requiredParam}`;
     return { raw: { result }, humanMessage: result };
   }
 
   async shouldSecondaryAction() { return false; }  // skip stage 6
-  async secondaryAction() { return null; }         // required no-op stub
 }
 
 const tool = (_context) => new MyQueryTool();
@@ -116,6 +116,8 @@ export default tool;
 import { BaseTransactionTool, handleTransaction, transactionToolOutputParser } from '@hashgraph/hedera-agent-kit';
 
 export const MY_TX_TOOL = 'my_tx_tool';
+
+const postProcess = (response) => `Operation completed. Transaction ID: ${response.transactionId}`;
 
 export class MyTxTool extends BaseTransactionTool {
   method = MY_TX_TOOL;
