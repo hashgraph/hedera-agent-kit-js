@@ -48,9 +48,9 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "@ai-sdk/mcp": "2.0.16",
+    "@ai-sdk/mcp": "2.0.17",
     "@hashgraph/hedera-agent-kit": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "zod": "3.25.76"
   },
   "peerDependencies": {
