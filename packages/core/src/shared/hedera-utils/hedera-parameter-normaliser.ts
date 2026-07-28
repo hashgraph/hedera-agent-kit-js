@@ -634,23 +634,28 @@ export default class HederaParameterNormaliser {
 
     const tokenInfo = await mirrornode.getTokenInfo(parsedParams.tokenId);
     const tokenDecimals = Number(tokenInfo.decimals);
+    // Fallback to 0 if decimals are missing or NaN
+    const safeDecimals = Number.isFinite(tokenDecimals) ? tokenDecimals : 0;
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
-    let totalAmount = 0;
+    let totalBase = 0;
 
     for (const transfer of parsedParams.transfers) {
-      totalAmount += transfer.amount;
+      const base = toBaseUnit(transfer.amount, safeDecimals).toNumber();
+      totalBase += base;
       tokenTransfers.push({
         tokenId: parsedParams.tokenId,
         accountId: transfer.accountId,
-        amount: toBaseUnit(transfer.amount, tokenDecimals).toNumber(),
+        amount: base,
       });
     }
 
+    // Derive the sender's debit from the sum of already-floored base-unit credits
+    // so the transfer list nets to exactly zero (avoids INVALID_ACCOUNT_AMOUNTS).
     tokenTransfers.push({
       tokenId: parsedParams.tokenId,
       accountId: senderAccountId,
-      amount: toBaseUnit(-totalAmount, tokenDecimals).toNumber(),
+      amount: -totalBase,
     });
 
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled
@@ -678,16 +683,19 @@ export default class HederaParameterNormaliser {
       context,
     );
     const tokenInfo = await mirrodnode.getTokenInfo(parsedParams.tokenId);
-    const tokenDecimals = tokenInfo.decimals;
+    const tokenDecimals = Number(tokenInfo.decimals);
+    // Fallback to 0 if decimals are missing or NaN
+    const safeDecimals = Number.isFinite(tokenDecimals) ? tokenDecimals : 0;
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
-    let totalAmount = 0;
+    let totalBase = 0;
 
     for (const transfer of parsedParams.transfers) {
-      totalAmount += transfer.amount;
+      const base = toBaseUnit(transfer.amount, safeDecimals).toNumber();
+      totalBase += base;
       tokenTransfers.push({
         accountId: transfer.accountId,
-        amount: toBaseUnit(transfer.amount, Number(tokenDecimals)).toNumber(),
+        amount: base,
         tokenId: parsedParams.tokenId,
       });
     }
@@ -704,7 +712,9 @@ export default class HederaParameterNormaliser {
       tokenTransfers,
       approvedTransfer: {
         ownerAccountId: parsedParams.sourceAccountId,
-        amount: toBaseUnit(-totalAmount, Number(tokenDecimals)).toNumber(),
+        // Derive the debit from the sum of already-floored base-unit credits
+        // so the transfer list nets to exactly zero (avoids INVALID_ACCOUNT_AMOUNTS).
+        amount: -totalBase,
       },
       transactionMemo: parsedParams.transactionMemo,
     };

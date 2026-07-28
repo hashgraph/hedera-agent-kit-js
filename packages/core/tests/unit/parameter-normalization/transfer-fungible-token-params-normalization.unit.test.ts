@@ -12,11 +12,6 @@ vi.mock('@/shared/utils/account-resolver', () => ({
     getDefaultPublicKey: vi.fn(),
   },
 }));
-vi.mock('@/shared/utils/token-unit-utils', () => ({
-  toBaseUnit: vi.fn((amount: number, decimals: number) => ({
-    toNumber: () => amount * Math.pow(10, decimals),
-  })),
-}));
 
 describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
   let mockContext: Context;
@@ -229,6 +224,82 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
           mockMirrornode,
         ),
       ).rejects.toThrow(/Number must be greater than or equal to 0/i);
+    });
+  });
+
+  describe('Transfer list balance (regression)', () => {
+    // Helper: sum of all amount entries in the token transfer list
+    const sumAmounts = (ts: { amount: number }[]) => ts.reduce((acc, t) => acc + t.amount, 0);
+
+    it('should produce a transfer list that nets to zero for 0.1 + 0.2 @ 8 decimals', async () => {
+      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 8 });
+      const params = makeParams([
+        { accountId: '0.0.2002', amount: 0.1 },
+        { accountId: '0.0.3003', amount: 0.2 },
+      ]);
+
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleToken(
+        params,
+        mockContext,
+        mockClient,
+        mockMirrornode,
+      );
+
+      expect(sumAmounts(result.tokenTransfers)).toBe(0);
+    });
+
+    it('should produce a transfer list that nets to zero for 1.5 @ 0 decimals', async () => {
+      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 0 });
+      const params = makeParams([{ accountId: '0.0.2002', amount: 1.5 }]);
+
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleToken(
+        params,
+        mockContext,
+        mockClient,
+        mockMirrornode,
+      );
+
+      // toBaseUnit floors: credit = floor(1.5) = 1, debit must be -1
+      const credit = result.tokenTransfers.find((t: any) => t.amount > 0);
+      const debit = result.tokenTransfers.find((t: any) => t.amount < 0);
+      expect(credit?.amount).toBe(1);
+      expect(debit?.amount).toBe(-1);
+      expect(sumAmounts(result.tokenTransfers)).toBe(0);
+    });
+
+    it('should produce a transfer list that nets to zero for 0.001 × 2 @ 2 decimals', async () => {
+      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 2 });
+      const params = makeParams([
+        { accountId: '0.0.2002', amount: 0.001 },
+        { accountId: '0.0.3003', amount: 0.001 },
+      ]);
+
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleToken(
+        params,
+        mockContext,
+        mockClient,
+        mockMirrornode,
+      );
+
+      expect(sumAmounts(result.tokenTransfers)).toBe(0);
+    });
+
+    it('should produce a transfer list that nets to zero for three fractional recipients @ 8 decimals', async () => {
+      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 8 });
+      const params = makeParams([
+        { accountId: '0.0.2002', amount: 0.1 },
+        { accountId: '0.0.3003', amount: 0.2 },
+        { accountId: '0.0.4004', amount: 0.3 },
+      ]);
+
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleToken(
+        params,
+        mockContext,
+        mockClient,
+        mockMirrornode,
+      );
+
+      expect(sumAmounts(result.tokenTransfers)).toBe(0);
     });
   });
 });
