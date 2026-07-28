@@ -1,149 +1,162 @@
-# Hedera Agent Kit Plugin System
+# Example Plugin
 
-This directory contains examples of how to create custom plugins for the Hedera Agent Kit.
+An example plugin for the [Hedera Agent Kit](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) demonstrating the v4 `BaseTool` pattern. Use it as a template when building and publishing your own plugin.
 
-> [!IMPORTANT]
-> **Migrating from v3 to v4?** Check out our [Migration Guide](../../docs/MIGRATION-v4.md).
-> 
-> **Note on Plugins:** Starting with v4, you must **explicitly pass all plugins** in the configuration. An empty plugin array will no longer result in all default tools being imported. For more details, see [Explicit Plugin Opt-In](https://github.com/hashgraph/hedera-agent-kit-js/blob/feat/release/16.04/docs/MIGRATION-v4.md#4-explicit-plugin-opt-in-behavioral-change).
+## Tools
 
-## What are Plugins?
+| Tool method                  | Class                     | Type        | Description                                                                           |
+|------------------------------|---------------------------|-------------|---------------------------------------------------------------------------------------|
+| `example_greeting_tool`      | `ExampleGreetingTool`     | Query       | Generates a personalised greeting in English, Spanish, or French. No on-chain action. |
+| `example_hbar_transfer_tool` | `ExampleHbarTransferTool` | Transaction | Transfers HBAR to account `0.0.800`. Supports `AUTONOMOUS` and `RETURN_BYTES` modes.  |
 
-Plugins are a way to extend the Hedera Agent Kit with custom tools without modifying the core codebase. Each plugin is a logical grouping of tools that can be easily shared and reused across different projects.
+## Installation
 
-## Plugin Structure
+```bash
+npm install @hashgraph/hedera-agent-kit @hiero-ledger/sdk
+# or
+pnpm add @hashgraph/hedera-agent-kit @hiero-ledger/sdk
+```
 
-A plugin must implement the `Plugin` interface:
+When publishing your own plugin as an npm package, declare both as peer dependencies:
 
-```typescript
-interface Plugin {
-  name: string;           // Unique plugin identifier
-  version?: string;       // Optional version string
-  description?: string;   // Optional description
-  tools: (context: Context) => Tool[];  // Factory function that returns tools
-  outputParser?: (rawOutput: string) => { raw: any; humanMessage: string }; // optional output parser. Used by ResponseParserService in langchain adapter. Recommended for LangChain v1
+```json
+{
+  "peerDependencies": {
+    "@hashgraph/hedera-agent-kit": ">=5.0.0",
+    "@hiero-ledger/sdk": ">=2.0.0"
+  }
 }
 ```
 
-### LangChain v1 Support
+## Usage
 
-For LangChain v1, tools should provide an `outputParser` to structure the tool output correctly. This is defined in the `Tool` interface in [typescript/src/shared/tools.ts](../../src/shared/tools.ts).
+### Register the plugin
 
-You can use the default `transactionToolOutputParser` for tools that execute Hedera transactions. This parser is available in [typescript/src/shared/utils/default-tool-output-parsing.ts](../../src/shared/utils/default-tool-output-parsing.ts).
-
-If you don't provide an `outputParser`, a default one will be used, but providing a specific one ensures better handling of transaction results and errors.
-
-## Creating a Plugin
-
-1. **Import Required Types**:
 ```typescript
-import { Plugin, Context, Tool } from 'hedera-agent-kit';
-import { z } from 'zod';
-```
+import { HederaAgentKit, AgentMode } from '@hashgraph/hedera-agent-kit';
+import { Client } from '@hiero-ledger/sdk';
+import examplePlugin from '@your-org/example-plugin'; // or './index'
 
-2. **Create Tool Functions**:
-Each tool should follow the `Tool` interface:
-```typescript
-const createMyTool = (context: Context): Tool => ({
-  method: 'my_tool_name',
-  name: 'My Tool Display Name',
-  description: 'Tool description with parameters and usage info',
-  parameters: z.object({
-    param1: z.string().min(1, 'Parameter is required'),
-    param2: z.boolean().optional().default(false),
-  }),
-  execute: async (client: Client, context: Context, params: any) => {
-    // Your tool implementation
-    return 'Tool result';
-  },
-  outputParser: undefined, // Optional: Define a custom parser or use transactionToolOutputParser for LangChain v1
+const client = Client.forTestnet().setOperator(accountId, privateKey);
+
+const kit = new HederaAgentKit(client, {
+  mode: AgentMode.AUTONOMOUS,
+  plugins: [examplePlugin],
 });
 ```
 
-3. **Export Your Plugin**:
-```typescript
-export const myPlugin: Plugin = {
-  name: 'my-plugin',
-  version: '1.0.0',
-  description: 'My custom plugin description',
-  tools: (context: Context) => [
-    createMyTool(context),
-    // ... other tools
-  ],
-};
-```
-
-## Using Plugins
-
-To use plugins in your application:
+### Import individual factories and tool-name constants
 
 ```typescript
-import { HederaAIToolkit } from 'hedera-agent-kit';
-import { myPlugin } from './my-plugin';
+import {
+  examplePlugin,
+  exampleGreetingTool,
+  exampleHbarTransferTool,
+  EXAMPLE_GREETING_TOOL,
+  EXAMPLE_HBAR_TRANSFER_TOOL,
+  examplePluginToolNames,
+} from '@your-org/example-plugin';
 
-const toolkit = new HederaAIToolkit({
-  client,
-  configuration: {
-    tools: [
-      // Core tools
-      'create_fungible_token_tool',
-      // Plugin tools
-      'my_tool_name',
-    ],
-    plugins: [myPlugin], // Add your plugins here
-    context: {
-      mode: AgentMode.AUTONOMOUS,
-    },
-  },
-});
+// Use constants to reference tools without magic strings
+console.log(EXAMPLE_GREETING_TOOL);       // 'example_greeting_tool'
+console.log(examplePluginToolNames);
+// { EXAMPLE_GREETING_TOOL: 'example_greeting_tool', EXAMPLE_HBAR_TRANSFER_TOOL: 'example_hbar_transfer_tool' }
 ```
 
-## Tool Naming and Conflicts
+## Plugin structure
 
-- Plugin tools should use descriptive, unique names to avoid conflicts
-- If a plugin tool has the same name as a core tool, the core tool takes precedence
-- Consider prefixing your tools with your plugin name (e.g., `myPlugin_greeting_tool`)
+```
+examples/plugin/
+├── index.ts                                   # Plugin definition + re-exports
+├── tools/
+│   ├── greeting/
+│   │   └── example-greeting-tool.ts           # Query tool (no transaction)
+│   └── hbar/
+│       └── example-hbar-transfer-tool.ts      # Transaction tool
+├── smoke-test.ts                              # Runnable test (no LLM, no funds)
+└── README.md
+```
 
-## Best Practices
+Each tool file exports:
 
-1. **Error Handling**: Always wrap tool execution in try-catch blocks
-2. **Parameter Validation**: Use Zod schemas for robust parameter validation
-3. **Documentation**: Provide clear descriptions and parameter documentation
-4. **Context Usage**: Leverage the context parameter for configuration and state
-5. **Async Operations**: Use async/await for Hedera SDK operations
-6. **Logging**: Include appropriate logging for debugging
+- A `string` constant for the tool method name (e.g. `EXAMPLE_GREETING_TOOL`)
+- A named class extending `BaseTool` (e.g. `ExampleGreetingTool`)
+- A **default factory function** `(context: Context) => BaseTool`
 
-## Examples
+`index.ts` re-exports everything and defines the `examplePlugin` object (default export).
 
-See `example-plugin.ts` for a complete working example that demonstrates:
-- Simple tools with parameter validation (greeting tool)
-- Real Hedera transactions using the transaction strategy pattern (HBAR transfer tool)
-- Proper error handling and validation
-- Integration with Hedera Agent Kit utilities (PromptGenerator, handleTransaction)
-- Support for different operation modes (AUTONOMOUS vs RETURN_BYTES)
+## Tool patterns
 
-## Testing Your Plugin (no LLM required)
+### Query tool (no transaction)
 
-You can smoke-test a plugin without an LLM, operator credentials, or a funded account: instantiate the plugin and call `tool.execute()` directly. In `RETURN_BYTES` mode, transaction tools return frozen transaction bytes without signing or submitting anything — a safe dry run.
+```typescript
+import { BaseTool, untypedQueryOutputParser } from '@hashgraph/hedera-agent-kit';
 
-See [smoke-test.ts](smoke-test.ts) for a complete runnable example. Run it with:
+export const MY_QUERY_TOOL = 'my_query_tool';
+
+export class MyQueryTool extends BaseTool {
+  method = MY_QUERY_TOOL;
+  outputParser = untypedQueryOutputParser; // required for framework adapters
+
+  async coreAction(params, _context, _client) {
+    return { raw: { result }, humanMessage: result };
+  }
+
+  async shouldSecondaryAction() { return false; }  // skip stage 6
+  async secondaryAction() { return null; }         // required no-op stub
+}
+
+const tool = (_context) => new MyQueryTool();
+export default tool;
+```
+
+### Transaction tool
+
+```typescript
+import { BaseTransactionTool, handleTransaction, transactionToolOutputParser } from '@hashgraph/hedera-agent-kit';
+
+export const MY_TX_TOOL = 'my_tx_tool';
+
+export class MyTxTool extends BaseTransactionTool {
+  method = MY_TX_TOOL;
+  outputParser = transactionToolOutputParser; // required for framework adapters
+
+  async coreAction(params, _context, _client) {
+    return HederaBuilder.xxx(params); // BUILD only — do not submit here
+  }
+
+  async secondaryAction(transaction, client, context) {
+    return await handleTransaction(transaction, client, context, postProcess);
+  }
+}
+
+const tool = (context) => new MyTxTool(context);
+export default tool;
+```
+
+> [!IMPORTANT]
+> Transaction tools must build in `coreAction` and dispatch in `secondaryAction`. Do **not** override `shouldSecondaryAction` — the default `true` keeps both stages active. This split lets hooks and policies inspect the unsigned transaction before submission (stage 5, `postCoreActionHook`).
+
+## Testing without an LLM
+
+Run the smoke test — no operator credentials, no funds, no network access required:
 
 ```bash
-npm install
-npm test
+npx tsx smoke-test.ts
 ```
 
-Need an audit trail? `BaseTool`-based tools can log executions to an HCS topic via `HcsAuditTrailHook` — see [docs/HOOKS_AND_POLICIES.md](../../docs/HOOKS_AND_POLICIES.md).
+The smoke test:
+1. Checks the plugin shape and tool count.
+2. Calls the greeting tool directly via `tool.execute()`.
+3. Dry-runs the HBAR transfer in `RETURN_BYTES` mode — returns frozen bytes without submitting.
+4. Verifies that a lifecycle hook fires correctly.
 
-## Distribution
+## Publishing as an npm package
 
-Plugins can be distributed as:
-- NPM packages
-- Standalone TypeScript files
-- Part of larger application codebases
+1. **`package.json`** — set `"main"`, `"module"`, and `"types"` to point at your built output; list `@hashgraph/hedera-agent-kit` and `@hiero-ledger/sdk` as `peerDependencies`.
+2. **TypeScript** — ship `.d.ts` declarations alongside your compiled JS.
+3. **Exports** — re-export everything from `index.ts` so consumers can import factories, classes, and string constants individually.
+4. **Versioning** — follow semantic versioning; a breaking change to a tool's parameters or method name is a major bump.
+5. **README** — document each tool's parameters, output shape, and any `Context` fields your plugin reads.
 
-When creating NPM packages, ensure you:
-- Export the plugin as the default export
-- Include proper TypeScript definitions
-- List `hedera-agent-kit` as a peer dependency
-- Follow semantic versioning
+See [docs/PLUGINS.md](../../docs/PLUGINS.md) for the full plugin authoring guide, including the complete `BaseTool` lifecycle and hook/policy integration.
