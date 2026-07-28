@@ -242,7 +242,7 @@ On Solo `release()` is a no-op (the network is destroyed at session end); on tes
 
 ## **5. References**
 
-- [OPERATION_FEES.md](file:///typescript/test/utils/OPERATION_FEES.md) - Hedera operation USD costs
+- `typescript/test/utils/OPERATION_FEES.md` - Hedera operation USD costs
 - `packages/tests/shared/profile/index.ts` - TestProfile type
 - `packages/tests/shared/profile/solo-profile.ts` - Solo adapter (fixed rate, ×10 tier multiplier)
 - `packages/tests/shared/profile/testnet-profile.ts` - Testnet adapter (live rate)

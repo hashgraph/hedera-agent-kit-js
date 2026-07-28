@@ -71,23 +71,23 @@ This tool will update an existing Hedera HTS token. Only the fields provided wil
 
 Key fields (adminKey, kycKey, freezeKey, wipeKey, supplyKey, feeScheduleKey, pauseKey, metadataKey) must contain **Hedera-compatible public keys (as strings) or boolean (true/false)**. You can provide these in one of three ways:
 
-1. **Boolean true** – Set this field to use user/operator key. Injecting of the key will be handled automatically.
+1. **Boolean true** – Set this field to use the user/operator key (e.g. when the user asks for "my key", "my operator key", "my public key", or "use my key"). Injecting of the key will be handled automatically. NEVER set a key field to an account ID string (such as 0.0.x).
 2. **Not provided** – The field will not be updated.
-3. **String** – Provide a Hedera-compatible public key string to set a field explicitly.
+3. **String** – Provide a Hedera-compatible public key string (e.g., 302a...) to set a field explicitly.
 
 Parameters:
 - ${tokenDesc}
 - tokenName (string, optional): New name for the token. Up to 100 characters.
 - tokenSymbol (string, optional): New symbol for the token. Up to 100 characters.
 - treasuryAccountId (string, optional): New treasury account for the token (Hedera account ID).
-- adminKey (boolean|string, optional): New admin key. Pass true to use your operator key, or provide a public key string.
-- kycKey (boolean|string, optional): New KYC key. Pass true to use your operator key, or provide a public key string.
-- freezeKey (boolean|string, optional): New freeze key. Pass true to use your operator key, or provide a public key string.
-- wipeKey (boolean|string, optional): New wipe key. Pass true to use your operator key, or provide a public key string.
-- supplyKey (boolean|string, optional): New supply key. Pass true to use your operator key, or provide a public key string.
-- feeScheduleKey (boolean|string, optional): New fee schedule key. Pass true to use your operator key, or provide a public key string.
-- pauseKey (boolean|string, optional): New pause key. Pass true to use your operator key, or provide a public key string.
-- metadataKey (boolean|string, optional): New metadata key. Pass true to use your operator key, or provide a public key string.
+- adminKey (boolean|string, optional): New admin key. Pass boolean true to use your key/operator key, or provide a public key string.
+- kycKey (boolean|string, optional): New KYC key. Pass boolean true to use your key/operator key, or provide a public key string.
+- freezeKey (boolean|string, optional): New freeze key. Pass boolean true to use your key/operator key, or provide a public key string.
+- wipeKey (boolean|string, optional): New wipe key. Pass boolean true to use your key/operator key, or provide a public key string.
+- supplyKey (boolean|string, optional): New supply key. Pass boolean true to use your key/operator key, or provide a public key string.
+- feeScheduleKey (boolean|string, optional): New fee schedule key. Pass boolean true to use your key/operator key, or provide a public key string.
+- pauseKey (boolean|string, optional): New pause key. Pass boolean true to use your key/operator key, or provide a public key string.
+- metadataKey (boolean|string, optional): New metadata key. Pass boolean true to use your key/operator key, or provide a public key string.
 - metadata (string, optional): New metadata for the token, in bytes (hex or base64).
 - tokenMemo (string, optional): Short public memo for the token, up to 100 characters.
 - autoRenewAccountId (string, optional): Account to automatically pay for renewal.

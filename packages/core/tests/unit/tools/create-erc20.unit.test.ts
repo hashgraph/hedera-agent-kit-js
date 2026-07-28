@@ -128,6 +128,24 @@ describe('createERC20 tool (unit)', () => {
     );
   });
 
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'returns early when in %s mode (skips ERC20 address lookup)',
+    async mode => {
+      (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
+
+      const customContext: any = { accountId: '0.0.1001', mode };
+      const tool = toolFactory(customContext);
+      const client = makeClient();
+
+      const res: any = await tool.execute(client, customContext, params);
+
+      expect(res).toBeDefined();
+      expect(res.raw).toBeDefined();
+      expect(res.erc20Address).toBeUndefined();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
+    },
+  );
+
   it('returns error message when an Error is thrown', async () => {
     (mockedBuilder.executeTransaction as Mock).mockImplementation(() => {
       throw new Error('boom');

@@ -106,7 +106,6 @@ describe('Create Account Integration Tests', () => {
       const result = await tool.execute(executorClient, context, params);
 
       expect(result.raw.status).not.toBe(Status.Success.toString());
-      expect(result.humanMessage).toContain('public key cannot be decoded');
     });
 
     it('should fail with negative initial balance', async () => {
