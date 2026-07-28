@@ -62,7 +62,7 @@
     "@hashgraph/hedera-agent-kit-tests": "workspace:*",
     "@hiero-ledger/sdk": "2.81.0",
     "@langchain/core": "1.1.48",
-    "@langchain/openai": "1.2.7",
+    "@langchain/openai": "1.5.5",
     "dotenv": "17.2.1",
     "langchain": "1.2.24",
     "tsup": "8.5.0",
