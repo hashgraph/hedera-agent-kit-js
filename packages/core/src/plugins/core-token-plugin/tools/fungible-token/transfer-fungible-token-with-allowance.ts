@@ -28,7 +28,7 @@ This tool is ONLY for HTS native fungible tokens transferred via an existing all
 Parameters:
 - tokenId (string, required): The HTS token ID to transfer (e.g. "0.0.12345")
 - sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
-- transfers (array of objects, required): List of token transfers. Each object should contain:
+- transfers (array of objects, required): List of token transfers — accepts multiple recipients at once. Each object should contain:
   - accountId (string, required): Recipient account ID
   - amount (number, required): Amount to transfer in display units
 - transactionMemo (string, optional): Optional memo for the transaction
@@ -38,6 +38,8 @@ ${usageInstructions}
 
 Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
 Example 2: Use allowance from 0.0.1002 to send 50 TKN (HTS Fungible token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+
+If the user specifies multiple recipients in a single request, include them ALL in one tool call as a single transfers array. Do not split the transfer into multiple tool calls.
 `;
 };
 
