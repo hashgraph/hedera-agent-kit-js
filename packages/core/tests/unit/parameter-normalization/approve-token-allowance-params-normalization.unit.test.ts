@@ -167,7 +167,7 @@ describe('HederaParameterNormaliser.normaliseApproveTokenAllowance', () => {
     // With 0 decimals, display amount == base amount, so we can test directly.
 
     it('rejects an amount whose base-unit value exceeds int64 max', async () => {
-      // 9_223_372_036_854_775_808 is Long.MAX_VALUE + 1
+      // Uses 9.3e18 (> Long.MAX_VALUE = 9_223_372_036_854_775_807).
       // With 0 decimals the display amount equals the base amount.
       mockMirrorNode.getTokenInfo.mockResolvedValueOnce({ decimals: 0 });
 

@@ -33,7 +33,6 @@ describe('Update Topic E2E Tests', () => {
     // Create a topic with admin and submit keys so most tests can run updates
     const createTopicResp = await executorWrapper.createTopic({
       autoRenewAccountId: executor.accountId.toString(),
-      isSubmitKey: true,
       adminKey: executor.privateKey.publicKey as PublicKey,
       submitKey: executor.privateKey.publicKey as PublicKey,
       topicMemo: 'initial-topic-memo',
@@ -99,7 +98,6 @@ describe('Update Topic E2E Tests', () => {
       // Create a topic without a submitKey
       const createTopicWithoutSubmitResp = await executorWrapper.createTopic({
         autoRenewAccountId: executor.accountId.toString(),
-        isSubmitKey: false,
         adminKey: executor.privateKey.publicKey as PublicKey,
         topicMemo: 'no-submit',
       });
@@ -160,7 +158,6 @@ describe('Update Topic E2E Tests', () => {
 
       const createSecondaryTopicResp = await secondaryWrapper.createTopic({
         autoRenewAccountId: secondary.accountId.toString(),
-        isSubmitKey: true,
         adminKey: secondary.privateKey.publicKey as PublicKey,
         submitKey: secondary.privateKey.publicKey as PublicKey,
         topicMemo: 'secondary-topic',

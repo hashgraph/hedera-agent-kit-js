@@ -9,6 +9,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { appendTokenAssociationHint } from '@/shared/token-error-hints';
 
 const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -27,7 +28,7 @@ This tool is ONLY for HTS native fungible tokens transferred via an existing all
 
 Parameters:
 - tokenId (string, required): The HTS token ID to transfer (e.g. "0.0.12345")
-- sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
+- sourceAccountId (string, required): Account ID of the token owner (the allowance granter). IMPORTANT: Do NOT infer this from context; it must be explicitly stated by the user.
 - transfers (array of objects, required): List of token transfers — accepts multiple recipients at once. Each object should contain:
   - accountId (string, required): Recipient account ID
   - amount (number, required): Amount to transfer in display units
@@ -89,14 +90,7 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool 
   }
 
   async handleError(error: unknown, context: Context): Promise<any> {
-    const result = await super.handleError(error, context);
-    if (result?.raw?.errorCode === 'TOKEN_NOT_ASSOCIATED_TO_ACCOUNT') {
-      result.humanMessage +=
-        ' The recipient account has not associated this HTS token.' +
-        ' Use the associate_token_tool to associate the account first,' +
-        ' or ensure the account has maxAutoAssociations set to -1.';
-    }
-    return result;
+    return appendTokenAssociationHint(await super.handleError(error, context));
   }
 
   async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {

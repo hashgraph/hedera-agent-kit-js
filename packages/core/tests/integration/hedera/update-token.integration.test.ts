@@ -60,7 +60,6 @@ describe('Update Token Integration Tests', () => {
       submitKey: executor.privateKey.publicKey,
       topicMemo: 'Initial topic memo',
       autoRenewAccountId: executor.accountId.toString(),
-      isSubmitKey: true,
     });
 
     topicId = createResult.topicId!;
@@ -268,7 +267,6 @@ describe('Update Token Integration Tests', () => {
       adminKey: executor.privateKey.publicKey,
       topicMemo: 'No submitKey topic',
       autoRenewAccountId: executor.accountId.toString(),
-      isSubmitKey: true,
     });
     topicId = createResult.topicId!;
     await waitForMirrorTx(executorWrapper, createResult.transactionId!);

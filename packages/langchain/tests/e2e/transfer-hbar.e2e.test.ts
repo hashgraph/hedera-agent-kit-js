@@ -112,7 +112,7 @@ describe('Transfer HBAR E2E Tests with Intermediate Execution Account', () => {
       const balanceBefore = await executorWrapper.getAccountHbarBalance(
         recipient.accountId.toString(),
       );
-      const amountToTransfer = "0.00000001";
+      const amountToTransfer = 0.00000001;
 
       const input = `Transfer ${amountToTransfer} HBAR to ${recipient.accountId.toString()}`;
 
