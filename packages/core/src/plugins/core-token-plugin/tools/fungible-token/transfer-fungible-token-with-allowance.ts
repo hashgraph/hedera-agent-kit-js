@@ -17,21 +17,24 @@ const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a HTS fungible token using an existing **token allowance**.
+Transfers HTS (Hedera Token Service) fungible tokens on behalf of another account using a pre-approved token allowance.
+Use ONLY when the user explicitly mentions spending an "allowance" or transferring tokens pre-approved by another account.
+Do NOT use for ERC20 or EVM smart contract tokens — use transfer_erc20_tool for those.
+Do NOT infer sourceAccountId from context; it must be explicitly provided by the user.
 
 Parameters:
-- tokenId (string, required): The token ID to transfer (e.g. "0.0.12345")
-- sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
-- transfers (array of objects, required): List of token transfers. Each object should contain:
+- tokenId (string, required): HTS token ID (e.g. "0.0.12345"). NOT an ERC20 contract address.
+- sourceAccountId (string, required): Account ID of the token owner who granted the allowance (must be explicitly stated by the user).
+- transfers (array of objects, required): List of token transfers:
   - accountId (string, required): Recipient account ID
-  - amount (number, required): Amount of tokens to transfer in display unit
+  - amount (number, required): Amount to transfer in display units
 - transactionMemo (string, optional): Optional memo for the transaction
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 
-Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
-Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+Example: "Spend allowance from 0.0.1002 to send 25 TKN (token 0.0.33333) to 0.0.2002" → tokenId=0.0.33333, sourceAccountId=0.0.1002, transfers=[{accountId:0.0.2002, amount:25}].
+Example: "Use allowance from 0.0.1002 to send 50 TKN (0.0.33333) to 0.0.2002 and 75 to 0.0.3003" → tokenId=0.0.33333, sourceAccountId=0.0.1002, transfers=[{accountId:0.0.2002,amount:50},{accountId:0.0.3003,amount:75}].
 `;
 };
 

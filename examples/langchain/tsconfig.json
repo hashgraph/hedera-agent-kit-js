@@ -10,6 +10,7 @@
         "disableSizeLimit": true,
         "noErrorTruncation": true,
         "maxNodeModuleJsDepth": 2,
+        "preserveSymlinks": true,
         "types": [
             "node"
         ],

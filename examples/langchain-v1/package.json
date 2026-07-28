@@ -8,23 +8,24 @@
     "test": "echo \"No tests specified for example package\"",
     "langchain:return-bytes-tool-calling-agent": "tsx return-bytes-tool-calling-agent.ts",
     "langchain:plugin-tool-calling-agent": "tsx plugin-tool-calling-agent.ts",
-    "langchain:streaming-tool-calling-agent": "tsx streaming-tool-calling-agent.ts",
     "langchain:external-mcp-agent": "tsx external-mcp-agent.ts",
     "langchain:preconfigured-mcp-client-agent": "tsx preconfigured-mcp-client-agent.ts",
     "langchain:policy-enforcement-agent": "tsx policy-enforcement-agent.ts",
     "langchain:audit-trail-agent": "tsx audit-trail-agent.ts",
-    "langchain:external-mcp-return-bytes-agent": "tsx external-mcp-return-bytes-agent.ts"
+    "langchain:external-mcp-return-bytes-agent": "tsx external-mcp-return-bytes-agent.ts",
+    "langchain:custom-signing-tool-calling-agent": "tsx custom-signing-tool-calling-agent.ts",
+    "langchain:delegated-payer-bytes-agent": "tsx delegated-payer-bytes-agent.ts"
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.81.0",
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",
     "@hashgraph/hedera-agent-kit-langchain": "file:../../packages/langchain",
-    "@langchain/core": "^1.1.24",
+    "@langchain/core": "1.1.48",
     "@langchain/langgraph": "^1.2.1",
     "@langchain/mcp-adapters": "^1.1.3",
-    "@langchain/openai": "^1.2.7",
+    "@langchain/openai": "1.2.7",
     "dotenv": "17.2.3",
-    "langchain": "^1.2.24",
+    "langchain": "1.2.24",
     "prompts": "2.4.2"
   },
   "devDependencies": {

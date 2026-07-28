@@ -1,12 +1,15 @@
 import { BaseMessage, ToolMessage } from '@langchain/core/messages';
+import { toUint8Array } from '@hashgraph/hedera-agent-kit';
 import HederaAgentKitTool from './tool';
 
+// RETURN_BYTES output is JSON text, so `bytes` arrives as a Buffer/numeric-keyed object rather
+// than a Uint8Array (see toUint8Array). Normalize it so consumers get a ready-to-sign Uint8Array.
 function convertBytes(data: any): any {
-  if (data?.raw?.bytes && typeof data.raw.bytes === 'object' && data.raw.bytes.type === 'Buffer') {
-    return { ...data, raw: { ...data.raw, bytes: new Uint8Array(data.raw.bytes.data) } };
+  if (data?.raw?.bytes !== undefined && !(data.raw.bytes instanceof Uint8Array)) {
+    return { ...data, raw: { ...data.raw, bytes: toUint8Array(data.raw.bytes) } };
   }
-  if (data?.bytes && typeof data.bytes === 'object' && data.bytes.type === 'Buffer') {
-    return { ...data, bytes: new Uint8Array(data.bytes.data) };
+  if (data?.bytes !== undefined && !(data.bytes instanceof Uint8Array)) {
+    return { ...data, bytes: toUint8Array(data.bytes) };
   }
   return data;
 }

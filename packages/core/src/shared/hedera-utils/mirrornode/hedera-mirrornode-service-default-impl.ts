@@ -32,23 +32,33 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   }
 
   /**
-   * Fetches JSON from the mirror node, retrying only on 404 with exponential
-   * backoff. A just-created entity (transaction, token, topic, ...) is not
-   * indexed for a few seconds and returns 404, so a read fired right after the
-   * write would otherwise fail. Non-404 statuses throw immediately; an
-   * exhausted 404 throws via `buildError`.
+   * Fetches JSON from the mirror node with exponential backoff retry.
+   * Retries on 404 (entity not yet indexed), 429, 502, 503, 504 (transient
+   * overload), and network-level errors (fetch throws). Non-retryable statuses
+   * throw immediately via `buildError`.
    */
   private async fetchJson<T>(url: string, buildError: (response: Response) => string): Promise<T> {
+    const RETRYABLE_STATUSES = new Set([404, 429, 502, 503, 504]);
     const maxAttempts = 3;
     let delayMs = 1000;
     for (let attempt = 1; ; attempt++) {
-      const response = await fetch(url);
+      let response: Response;
+      try {
+        response = await fetch(url);
+      } catch (err) {
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          delayMs *= 2;
+          continue;
+        }
+        throw new Error(`Network error fetching ${url}: ${(err as Error).message}`);
+      }
 
       if (response.ok) {
         return (await response.json()) as T;
       }
 
-      if (response.status === 404 && attempt < maxAttempts) {
+      if (RETRYABLE_STATUSES.has(response.status) && attempt < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, delayMs));
         delayMs *= 2;
         continue;

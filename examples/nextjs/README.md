@@ -1,6 +1,6 @@
 # Hedera Agent Kit Next.js Example
 
-This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera Agent Kit, supporting both **AUTONOMOUS** and **RETURN_BYTES (HITL)** execution modes.
+This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera Agent Kit, supporting **AUTONOMOUS** and **RETURN_BYTES (HITL)** execution modes. For a full description of all modes (including custom external signers and TEE/MPC integrations), see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
 
 > [!NOTE]
 > This template uses the **LangChain adapter** (`@hashgraph/hedera-agent-kit-langchain`). If you are building with the **Vercel AI SDK** (`streamText`/`generateText`), use [`@hashgraph/hedera-agent-kit-ai-sdk`](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) instead — see [examples/ai-sdk](../ai-sdk).
@@ -16,10 +16,6 @@ This is a [Next.js 15](https://nextjs.org/) template bootstrapped for the Hedera
 
    ```bash
    npm install
-   # or
-   yarn
-   # or
-   pnpm install
    ```
 
 2. **Copy and configure environment variables:**
@@ -33,12 +29,15 @@ Edit your `.env.local` to set your keys and mode:
 | --------------------------- | ---------- | ------------------------------------------- |
 | `NEXT_PUBLIC_AGENT_MODE`    | all        | `autonomous` or `human` (RETURN_BYTES/HITL) |
 | `NEXT_PUBLIC_NETWORK`       | all        | `testnet` (default) or `mainnet`            |
-| `AI_PROVIDER`               | all        | AI provider (`openai`, `anthropic`, `groq`, or `ollama)` |
+| `AI_PROVIDER`               | all        | AI provider (`openai`, `anthropic`, `groq`, or `ollama`) |
 | `HEDERA_OPERATOR_ID`        | autonomous | Operator account ID (server only)           |
 | `HEDERA_OPERATOR_KEY`       | autonomous | Operator private key (server only)          |
 | `NEXT_PUBLIC_WC_PROJECT_ID` | human/HITL | WalletConnect Project ID (client safe)      |
 | `WC_RELAY_URL`              | human/HITL | (Optional) Custom WalletConnect relay URL   |
-| `OPENAI_API_KEY`            | optional   | (Optional) For OpenAI integration           |
+| `OPENAI_API_KEY`            | openai     | Required when `AI_PROVIDER=openai`          |
+| `ANTHROPIC_API_KEY`         | anthropic  | Required when `AI_PROVIDER=anthropic`       |
+| `GROQ_API_KEY`              | groq       | Required when `AI_PROVIDER=groq`            |
+| `OLLAMA_BASE_URL`           | ollama     | Required when `AI_PROVIDER=ollama`          |
 
 > **Note:** Never expose `HEDERA_OPERATOR_KEY` or non-public AI keys to the client.
 
@@ -46,10 +45,6 @@ Edit your `.env.local` to set your keys and mode:
 
    ```bash
    npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -89,14 +84,12 @@ nextjs/
 │   │   ├── Chat.tsx                # Main chat interface
 │   │   ├── MessageInput.tsx        # Chat input
 │   │   ├── MessageList.tsx         # Chat message list
-│   │   ├── TransactionStatus.tsx   # Transaction status display
 │   │   ├── WalletConnect.tsx       # WalletConnect integration
 │   │   ├── WalletConnectClient.tsx # WalletConnect client wrapper
 │   │   └── ui/                     # Reusable UI components (shadcn/ui)
 │   ├── hooks/
-│   │   ├── useAutoSign.ts          # Auto-signing hook (autonomous mode)
-│   │   ├── useMessageSubmit.ts     # Chat submit handling
-│   │   └── useWalletConnect.tsx    # WalletConnect lifecycle hook
+│   │   ├── useAutoSign.ts          # Auto-signing hook (human/HITL mode)
+│   │   └── useMessageSubmit.ts     # Chat submit handling
 │   ├── lib/
 │   │   ├── agent-config.ts         # Agent bootstrap and toolkit configuration
 │   │   ├── agent-factory.ts        # LLM/toolkit/agent executor factory

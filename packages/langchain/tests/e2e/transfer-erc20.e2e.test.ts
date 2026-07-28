@@ -64,7 +64,7 @@ describe('Transfer ERC20 Token E2E Tests', () => {
           return null;
         }
       },
-      { timeoutMs: 15000, intervalMs: 500, description: 'ERC20 contract to be callable' },
+      { timeoutMs: 60000, intervalMs: 500, description: 'ERC20 contract to be callable' },
     );
   });
 

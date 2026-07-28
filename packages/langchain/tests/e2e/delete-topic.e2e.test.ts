@@ -26,20 +26,6 @@ describe('Delete Topic E2E Tests', () => {
     testSetup = await createLangchainTestSetup(undefined, undefined, executorClient);
     agent = testSetup.agent;
     responseParsingService = testSetup.responseParser;
-
-    // create a topic to delete
-    const createInput = 'Create a new Hedera topic';
-    const createResult = await agent.invoke({
-      messages: [
-        {
-          role: 'user',
-          content: createInput,
-        },
-      ],
-    });
-    const createParsedResponse = responseParsingService.parseNewToolMessages(createResult);
-    if (!createParsedResponse[0].parsedData.raw?.topicId)
-      throw new Error('Failed to create topic for delete test');
   });
 
   afterAll(async () => {
