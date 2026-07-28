@@ -789,11 +789,6 @@ export default class HederaParameterNormaliser {
       submitKey: parsedParams.submitKey,
     };
 
-    // Handle legacy isSubmitKey if submitKey is not provided
-    if (parsedParams.isSubmitKey && maybeKeys.submitKey === undefined) {
-      maybeKeys.submitKey = true;
-    }
-
     for (const [field, rawVal] of Object.entries(maybeKeys)) {
       if (rawVal === undefined || rawVal === false) {
         delete (normalised as any)[field];
