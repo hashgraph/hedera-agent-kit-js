@@ -164,6 +164,13 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 [7] postToolExecutionHook       ← hooks/policies
 ```
 
+> [!IMPORTANT]
+> **Transaction tools vs query tools — where each stage runs:**
+> - **Transaction tools** (writing to the network): `coreAction` **builds** the transaction only (`return HederaBuilder.xxx(params)`). `secondaryAction` **dispatches** it via `handleTransaction(tx, client, context, postProcess)`, which signs and submits in `AUTONOMOUS` mode or returns frozen bytes in `RETURN_BYTES` mode. Do **not** override `shouldSecondaryAction` — the default `true` keeps both stages active.
+> - **Query/read-only tools** (no on-chain write): all logic runs inside `coreAction` (call the mirror-node service, return data). Override `shouldSecondaryAction` to return `false` to skip stage 6 entirely. `secondaryAction` is still required by the abstract class — provide a no-op stub.
+>
+> This split ensures that `postCoreActionHook` (stage 5) always fires **after the transaction is formed but before it is submitted**, which is what hooks and policies rely on to inspect or block a transaction pre-submission.
+
 For a step-by-step migration guide with fully annotated before/after code, see
 [Migrating Custom Tools to BaseTool](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking) in the v4 migration guide.
 

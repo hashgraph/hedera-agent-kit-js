@@ -137,17 +137,11 @@ export class UpdateTokenTool extends BaseTransactionTool {
 
     await checkValidityOfUpdates(normalisedParams, mirrornodeService, userPublicKey);
 
-    const tx = HederaBuilder.updateToken(normalisedParams);
-
-    return await handleTransaction(tx, client, context, postProcess);
+    return HederaBuilder.updateToken(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 

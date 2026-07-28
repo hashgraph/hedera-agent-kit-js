@@ -122,7 +122,7 @@ describe('mintERC721 tool (unit)', () => {
   });
 
   it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
-    'returns result directly when in %s mode (skips postProcess)',
+    'returns bytes result when in %s mode',
     async mode => {
       mockedNormaliser.normaliseMintERC721Params.mockResolvedValue(normalisedParams);
       mockedBuilder.executeTransaction.mockReturnValue({} as any);
@@ -140,6 +140,7 @@ describe('mintERC721 tool (unit)', () => {
         expect.anything(),
         expect.any(Object),
         customContext,
+        expect.any(Function),
       );
     },
   );
