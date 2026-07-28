@@ -58,7 +58,7 @@
     "ai": "^6.0.86"
   },
   "devDependencies": {
-    "@hiero-ledger/sdk": "2.81.0",
+    "@hiero-ledger/sdk": "2.86.2",
     "ai": "6.0.86",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
