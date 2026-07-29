@@ -8,6 +8,7 @@ import { transferNonFungibleTokenParameters } from '@/shared/parameter-schemas/t
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { appendTokenAssociationHint } from '@/shared/token-error-hints';
 
 const transferNonFungibleTokenPrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -64,6 +65,10 @@ export class TransferNonFungibleTokenTool extends BaseTransactionTool {
 
   async coreAction(normalisedParams: any, _context: Context, _client: Client) {
     return HederaBuilder.transferNonFungibleToken(normalisedParams);
+  }
+
+  async handleError(error: unknown, context: Context): Promise<any> {
+    return appendTokenAssociationHint(await super.handleError(error, context));
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {

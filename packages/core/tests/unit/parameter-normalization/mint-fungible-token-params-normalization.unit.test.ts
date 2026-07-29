@@ -49,11 +49,9 @@ describe('HederaParameterNormaliser.normaliseMintFungibleTokenParams', () => {
     );
 
     expect(mirrorNode.getTokenInfo).toHaveBeenCalledWith('0.0.1234');
-    expect(result).toEqual({
-      tokenId: '0.0.1234',
-      amount: 500, // base units
-      schedulingParams: { isScheduled: false },
-    });
+    expect(result.tokenId).toBe('0.0.1234');
+    expect(result.amount.toString()).toBe('500'); // base units (5.00 * 10^2)
+    expect(result.schedulingParams).toEqual({ isScheduled: false });
   });
 
   it('should handle decimals=0 correctly (no scaling)', async () => {
@@ -71,11 +69,9 @@ describe('HederaParameterNormaliser.normaliseMintFungibleTokenParams', () => {
       mirrorNode as any,
     );
 
-    expect(result).toEqual({
-      tokenId: '0.0.2222',
-      amount: 123,
-      schedulingParams: { isScheduled: false },
-    });
+    expect(result.tokenId).toBe('0.0.2222');
+    expect(result.amount.toString()).toBe('123');
+    expect(result.schedulingParams).toEqual({ isScheduled: false });
   });
 
   it('should default to 0 decimals if mirror node response is missing', async () => {
@@ -93,11 +89,9 @@ describe('HederaParameterNormaliser.normaliseMintFungibleTokenParams', () => {
       mirrorNode as any,
     );
 
-    expect(result).toEqual({
-      tokenId: '0.0.3333',
-      amount: 10, // no scaling because decimals default to 0
-      schedulingParams: { isScheduled: false },
-    });
+    expect(result.tokenId).toBe('0.0.3333');
+    expect(result.amount.toString()).toBe('10'); // no scaling because decimals default to 0
+    expect(result.schedulingParams).toEqual({ isScheduled: false });
   });
 
   it('should throw if mirror node call fails', async () => {
@@ -145,7 +139,7 @@ describe('HederaParameterNormaliser.normaliseMintFungibleTokenParams', () => {
     );
 
     expect(result.tokenId).toBe('0.0.5555');
-    expect(result.amount).toBe(1000); // scaled by decimals=2
+    expect(result.amount.toString()).toBe('1000'); // scaled by decimals=2
     expect(result.schedulingParams?.isScheduled).toBe(true);
     expect(result.schedulingParams?.payerAccountID?.toString()).toBe('0.0.7777');
     expect(result.schedulingParams?.waitForExpiry).toBe(true);

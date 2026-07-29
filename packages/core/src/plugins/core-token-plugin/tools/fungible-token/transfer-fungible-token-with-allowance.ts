@@ -9,6 +9,7 @@ import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-no
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { appendTokenAssociationHint } from '@/shared/token-error-hints';
 
 const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -17,15 +18,18 @@ const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-Transfers HTS (Hedera Token Service) fungible tokens on behalf of another account using a pre-approved token allowance.
-Use ONLY when the user explicitly mentions spending an "allowance" or transferring tokens pre-approved by another account.
-Do NOT use for ERC20 or EVM smart contract tokens — use transfer_erc20_tool for those.
-Do NOT infer sourceAccountId from context; it must be explicitly provided by the user.
+This tool will transfer a HTS (Hedera Token Service) native fungible token using an existing **token allowance**.
+
+IMPORTANT: Do NOT use this tool when:
+- The user mentions "ERC20" or "ERC-20" tokens — use transfer_erc20_tool instead
+- The user mentions a "contract" as the token source — that is an ERC20 transfer, use transfer_erc20_tool instead
+- The user does not explicitly mention an allowance, "spend allowance", or "use allowance" — default to the standard HTS transfer tool in that case
+This tool is ONLY for HTS native fungible tokens transferred via an existing allowance mechanism.
 
 Parameters:
-- tokenId (string, required): HTS token ID (e.g. "0.0.12345"). NOT an ERC20 contract address.
-- sourceAccountId (string, required): Account ID of the token owner who granted the allowance (must be explicitly stated by the user).
-- transfers (array of objects, required): List of token transfers:
+- tokenId (string, required): The HTS token ID to transfer (e.g. "0.0.12345")
+- sourceAccountId (string, required): Account ID of the token owner (the allowance granter). IMPORTANT: Do NOT infer this from context; it must be explicitly stated by the user.
+- transfers (array of objects, required): List of token transfers — accepts multiple recipients at once. Each object should contain:
   - accountId (string, required): Recipient account ID
   - amount (number, required): Amount to transfer in display units
 - transactionMemo (string, optional): Optional memo for the transaction
@@ -33,8 +37,10 @@ ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 
-Example: "Spend allowance from 0.0.1002 to send 25 TKN (token 0.0.33333) to 0.0.2002" → tokenId=0.0.33333, sourceAccountId=0.0.1002, transfers=[{accountId:0.0.2002, amount:25}].
-Example: "Use allowance from 0.0.1002 to send 50 TKN (0.0.33333) to 0.0.2002 and 75 to 0.0.3003" → tokenId=0.0.33333, sourceAccountId=0.0.1002, transfers=[{accountId:0.0.2002,amount:50},{accountId:0.0.3003,amount:75}].
+Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
+Example 2: Use allowance from 0.0.1002 to send 50 TKN (HTS Fungible token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+
+If the user specifies multiple recipients in a single request, include them ALL in one tool call as a single transfers array. Do not split the transfer into multiple tool calls.
 `;
 };
 
@@ -80,6 +86,10 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool 
 
   async coreAction(normalisedParams: any, _context: Context, _client: Client) {
     return HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
+  }
+
+  async handleError(error: unknown, context: Context): Promise<any> {
+    return appendTokenAssociationHint(await super.handleError(error, context));
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {

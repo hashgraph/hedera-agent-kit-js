@@ -216,4 +216,35 @@ describe('Transfer Fungible Token With Allowance E2E Tests', () => {
     );
     expect(parsedResponse[0].parsedData.humanMessage).toContain('AMOUNT_EXCEEDS_ALLOWANCE');
   });
+
+  it('should surface TOKEN_NOT_ASSOCIATED_TO_ACCOUNT with an actionable hint when recipient has not associated the token', async () => {
+    // Acquire a receiver with maxAutoAssociations=0 so HTS auto-association is disabled.
+    const unassociatedReceiver = await profile.accounts.acquire({
+      tier: 'MINIMAL',
+      preset: 'pending-airdrop-recipient',
+    });
+
+    try {
+      const input =
+        `Use the allowance from account ${executor.accountId.toString()} to send 10 ` +
+        `${tokenId.toString()} tokens to account ${unassociatedReceiver.accountId.toString()}`;
+
+      const result = await agent.invoke({
+        messages: [{ role: 'user', content: input }],
+      });
+
+      const parsedResponse = responseParsingService.parseNewToolMessages(result);
+
+      // The first transfer attempt must fail with the association error and carry the hint.
+      const transferResult = parsedResponse.find(
+        r => r.toolName === 'transfer_fungible_token_with_allowance_tool',
+      );
+      expect(transferResult).toBeDefined();
+      expect(transferResult!.parsedData.raw.status).toBe('ERROR');
+      expect(transferResult!.parsedData.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+      expect(transferResult!.parsedData.humanMessage).toContain('associate_token_tool');
+    } finally {
+      await profile.accounts.release(unassociatedReceiver);
+    }
+  });
 });
