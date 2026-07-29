@@ -69,7 +69,7 @@ describe('create-token tool (unit)', () => {
     tokenName: 'MYTOKEN',
     tokenSymbol: 'MTK',
     decimals: 0,
-    isSubmitKey: true,
+    isSupplyKey: true,
   } as unknown as z.infer<ReturnType<typeof createFungibleTokenParameters>>;
 
   const normalisedParams: z.infer<ReturnType<typeof createFungibleTokenParametersNormalised>> = {

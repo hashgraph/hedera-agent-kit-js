@@ -29,7 +29,6 @@ describe('Get Topic Messages Query E2E Tests', () => {
     // Executor creates topic
     topicAdminKey = executor.privateKey.publicKey;
     const createTopicResp = await executorWrapper.createTopic({
-      isSubmitKey: false,
       adminKey: topicAdminKey,
       autoRenewAccountId: executor.accountId.toString(),
     });
