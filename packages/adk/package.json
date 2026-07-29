@@ -52,7 +52,7 @@
         "@google/adk": "^0.6.1"
     },
     "devDependencies": {
-        "@google/adk": "0.6.1",
+        "@google/adk": "1.4.0",
         "@hiero-ledger/sdk": "2.81.0",
         "tsup": "8.5.0",
         "typescript": "5.8.3",
