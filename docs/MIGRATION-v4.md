@@ -694,9 +694,10 @@ export default tool;
 ```typescript
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-// ── Import BaseTool instead of the raw Tool type ───────────────────────────
-// BaseTool implements Tool, so this remains fully backward-compatible.
-import { BaseTool } from '@/shared/tools';
+// ── Import BaseTransactionTool instead of the raw Tool type ──────────────────
+// BaseTransactionTool extends BaseTool, which implements Tool, so this remains
+// fully backward-compatible. It also sets toolType = 'transaction' automatically.
+import { BaseTransactionTool } from '@hashgraph/hedera-agent-kit';
 import { Client, Status } from '@hiero-ledger/sdk';
 import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
@@ -736,9 +737,11 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const TRANSFER_HBAR_TOOL = 'transfer_hbar_tool';
 
-// ── Extend BaseTool instead of returning an object literal ─────────────────
-// BaseTool<TParams, TNormalisedParams> — generics are optional but help with types.
-export class TransferHbarTool extends BaseTool {
+// ── Extend BaseTransactionTool instead of returning an object literal ────────
+// BaseTransactionTool<TParams, TNormalisedParams> — generics are optional but help with types.
+// It sets toolType = 'transaction' automatically and adds structured error handling
+// for Hedera receipt/precheck failures (ReceiptStatusError, PrecheckStatusError).
+export class TransferHbarTool extends BaseTransactionTool {
   // ── Required fields from the Tool interface ──────────────────────────────
   method = TRANSFER_HBAR_TOOL;
   name = 'Transfer HBAR';
@@ -794,10 +797,10 @@ export class TransferHbarTool extends BaseTool {
   }
 }
 
-// ── Factory function: now returns a BaseTool instance ─────────────────────
-// Return type changed from Tool → BaseTool, but BaseTool implements Tool,
-// so Plugin.tools() and all framework adapters accept this transparently.
-const tool = (context: Context): BaseTool => new TransferHbarTool(context);
+// ── Factory function: returns a BaseTransactionTool instance ─────────────────
+// BaseTransactionTool extends BaseTool, which implements Tool, so Plugin.tools()
+// and all framework adapters accept this transparently.
+const tool = (context: Context): BaseTransactionTool => new TransferHbarTool(context);
 
 export default tool;
 ```
@@ -806,8 +809,8 @@ export default tool;
 
 | Aspect              | v3 (`Tool` object)                           | v4 (`BaseTool` class)                                         |
 | ------------------- | -------------------------------------------- | ------------------------------------------------------------- |
-| Declaration         | Object literal `{ method, name, … execute }` | Class extending `BaseTool`                                    |
-| Import              | `import type { Tool }`                       | `import { BaseTool }`                                         |
+| Declaration         | Object literal `{ method, name, … execute }` | Class extending `BaseTransactionTool` (or `BaseQueryTool` for query tools, `BaseTool` for other) |
+| Import              | `import type { Tool }`                       | `import { BaseTransactionTool }` / `import { BaseQueryTool }` |
 | Lifecycle stages    | All inside a single `execute()` function     | Split into `normalizeParams`, `coreAction`, `secondaryAction` |
 | Hook/Policy support | ✗ None                                       | ✓ Automatic at stages 1, 3, 5, 7                              |
 | Error handling      | Manual `try/catch` inside `execute`          | Override `handleError()` (BaseTool provides a default)        |
@@ -815,10 +818,15 @@ export default tool;
 
 ### Migrating a query-only tool
 
-For tools that only read data (no transaction signing), override `shouldSecondaryAction` to skip stage 6:
+For tools that only read data (no transaction signing), you can extend `BaseTool` directly
+(and override `shouldSecondaryAction` to return `false`), or use the `BaseQueryTool`
+convenience subclass which sets `toolType = 'query'` for you. Both are valid — `BaseQueryTool`
+is just a helper that saves a line:
 
 ```typescript
-export class MyQueryTool extends BaseTool {
+import { BaseQueryTool } from '@hashgraph/hedera-agent-kit';
+
+export class MyQueryTool extends BaseQueryTool {
   // ...
 
   // Stage 4: perform the query and return the result directly

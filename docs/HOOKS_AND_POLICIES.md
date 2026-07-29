@@ -732,7 +732,57 @@ protected shouldBlockPreToolExecution(
   this.callCount++;
   return this.callCount > this.maxCallsPerSession;
 }
+
+// 5. Read-only Policy — block any tool that is not a query tool
+//    Use this to guarantee an agent can never submit a transaction.
+protected shouldBlockPreToolExecution(
+  params: PreToolExecutionParams,
+  method: string
+): boolean {
+  return params.tool.toolType !== TOOL_TYPE.QUERY;
+}
 ```
+
+**Building a read-only agent with `toolType`**
+
+Rather than filtering tools by name prefix, use `toolType` to declaratively build an agent
+that can never submit transactions. This works at two levels:
+
+_Option A — filter before passing tools to the LLM:_
+
+```ts
+import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
+
+const readOnlyTools = toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY);
+// Pass readOnlyTools to your LLM framework — only query tools are exposed.
+```
+
+_Option B — enforce via policy (defence-in-depth):_
+
+```ts
+import { AbstractPolicy, TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
+import type { PreToolExecutionParams } from '@hashgraph/hedera-agent-kit';
+
+export class ReadOnlyPolicy extends AbstractPolicy {
+  name = 'ReadOnlyPolicy';
+
+  protected shouldBlockPreToolExecution(
+    params: PreToolExecutionParams,
+    _method: string,
+  ): boolean {
+    return params.tool.toolType !== TOOL_TYPE.QUERY;
+  }
+}
+
+// Attach to context:
+const context: Context = {
+  hooks: [new ReadOnlyPolicy()],
+  // ...
+};
+```
+
+Both approaches are complementary: Option A reduces the tool list seen by the LLM; Option B
+adds a runtime guardrail that will block even if a transaction tool slips through.
 
 ---
 

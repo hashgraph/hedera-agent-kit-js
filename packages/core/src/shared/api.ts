@@ -5,7 +5,7 @@ import { isCustomMode } from './configuration';
 import type { Tool } from './tools';
 
 /** Lightweight projection of a {@link Tool} for safe introspection — omits the Zod schema and execute handler. */
-export type ToolSummary = Pick<Tool, 'method' | 'name' | 'description'>;
+export type ToolSummary = Pick<Tool, 'method' | 'name' | 'description' | 'toolType'>;
 
 /**
  * Runtime API wrapper around a Hedera/Hiero {@link Client} and a registry of {@link Tool} instances.
@@ -101,7 +101,7 @@ class HederaAgentAPI {
    * @returns Array of {@link ToolSummary} objects, each containing `method`, `name`, and `description`.
    */
   listTools(): ToolSummary[] {
-    return this.tools.map(({ method, name, description }) => ({ method, name, description }));
+    return this.tools.map(({ method, name, description, toolType }) => ({ method, name, description, toolType }));
   }
 
   /**

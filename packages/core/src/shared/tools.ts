@@ -11,6 +11,28 @@ import {
   AbstractHook,
 } from './hook';
 
+/**
+ * Classifies the intent of a tool.
+ *
+ * | Value           | Meaning                                                                                                |
+ * |-----------------|--------------------------------------------------------------------------------------------------------|
+ * | `'query'`       | Read-only — fetches data from the mirror node / network without submitting a transaction.              |
+ * | `'transaction'` | State-mutating — builds and (depending on `AgentMode`) submits a Hedera transaction.                  |
+ * | `'other'`       | Neither of the above; default for tools that do not extend a typed base class.                        |
+ *
+ * Use with {@link TOOL_TYPE} constants for safe comparisons:
+ * ```ts
+ * tools.filter(t => t.toolType === TOOL_TYPE.QUERY)
+ * ```
+ */
+export const TOOL_TYPE = {
+  QUERY: 'query',
+  TRANSACTION: 'transaction',
+  OTHER: 'other',
+} as const;
+
+export type ToolType = (typeof TOOL_TYPE)[keyof typeof TOOL_TYPE];
+
 export interface Tool {
   method: string;
   name: string;
@@ -19,6 +41,8 @@ export interface Tool {
   execute: (client: Client, context: Context, params: any) => Promise<any>;
   // transactionToolOutputParser and untypedQueryOutputParser can be used. If required, define a custom parser
   outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
+  /** Classifies the tool's intent — see {@link ToolType} and {@link TOOL_TYPE}. */
+  toolType?: ToolType;
 }
 
 /**
@@ -45,6 +69,8 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   abstract description: string;
   abstract parameters: z.ZodObject<any, any>;
   outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
+  /** @see {@link ToolType} — defaults to `'other'`; overridden by {@link BaseQueryTool} and {@link BaseTransactionTool}. */
+  toolType: ToolType = TOOL_TYPE.OTHER;
 
   async execute(client: Client, context: Context, params: TParams): Promise<any> {
     try {

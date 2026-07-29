@@ -151,6 +151,14 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 
 > [!IMPORTANT]
 > **`BaseTool` is the recommended way to implement tools in v4.** It is an abstract class that **implements** the `Tool` interface, so it is a fully backward-compatible, non-breaking upgrade. Tools based on the older functional pattern (plain object literals) continue to work, but they **do not support hooks and policies**.
+>
+> **Optional typed helpers — `BaseTransactionTool` and `BaseQueryTool`:**
+> These are thin convenience subclasses of `BaseTool`. You don't have to use them — extending `BaseTool` directly is always fine. They exist purely to set `toolType` for you so consumers can filter by intent without name heuristics:
+> - **`BaseTransactionTool`** — sets `toolType = 'transaction'` and adds structured error handling for Hedera receipt/precheck failures. Use it for tools that build/submit transactions.
+> - **`BaseQueryTool`** — sets `toolType = 'query'`. Use it for read-only tools that fetch data from the mirror node or network.
+> - **`BaseTool`** directly — sets `toolType = 'other'` by default. Override the field with `toolType = TOOL_TYPE.TRANSACTION` (or `'query'`) if you prefer to set the type explicitly without inheriting from a subclass.
+>
+> All three implement `Tool` and are fully interchangeable at the framework adapter level.
 
 `BaseTool` enforces a clean 7-stage lifecycle that lets the hooks and policies system tap in automatically — you never call hooks manually:
 
@@ -189,6 +197,10 @@ Create your tool file (e.g., tools/my-service/my-tool.ts).
 
 ```typescript
 import { z } from "zod";
+// BaseTool is the standard base class for all tools.
+// Optionally swap for BaseTransactionTool (toolType = 'transaction') or
+// BaseQueryTool (toolType = 'query') to have the type set automatically —
+// but extending BaseTool directly is always valid.
 import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
 import { Client } from "@hiero-ledger/sdk";
 
@@ -203,7 +215,9 @@ const myToolParameters = z.object({
 
 export const MY_TOOL = "my_tool";
 
-// Extend BaseTool — BaseTool implements Tool, so this is backward-compatible
+// Extend BaseTool — BaseTool implements Tool, so this is backward-compatible.
+// If this tool submits transactions, extend BaseTransactionTool instead.
+// If this tool only reads data, extend BaseQueryTool instead.
 export class MyTool extends BaseTool {
   method = MY_TOOL;
   name = "My Custom Tool";
@@ -391,9 +405,9 @@ const toolkit = new HederaLangchainToolkit({
 
 ```typescript
 import { Client, PrivateKey, TransferTransaction } from '@hiero-ledger/sdk';
-import { BaseTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
+import { BaseTransactionTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
 
-export class TreasuryPayoutTool extends BaseTool {
+export class TreasuryPayoutTool extends BaseTransactionTool {
   // method, name, description, parameters, normalizeParams, coreAction:
   // see the Step-by-Step Guide above. coreAction builds the TransferTransaction.
 
@@ -499,9 +513,9 @@ non-transaction tools.
 output and must return `{ raw, humanMessage }`:
 
 ```typescript
-import { Context, BaseTool } from '@hashgraph/hedera-agent-kit';
+import { Context, BaseQueryTool } from '@hashgraph/hedera-agent-kit';
 
-export class GetHbarPriceTool extends BaseTool {
+export class GetHbarPriceTool extends BaseQueryTool {
   // ...method, name, description, parameters...
 
   // A custom parser: turn the tool's raw JSON output into { raw, humanMessage }.

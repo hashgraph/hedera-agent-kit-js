@@ -4,6 +4,10 @@ import { z } from 'zod';
 
 import HederaAgentAPI from '../../../src/shared/api';
 import type { Tool } from '../../../src/shared/tools';
+import { BaseTool, TOOL_TYPE } from '@/shared';
+import { BaseQueryTool } from '@/shared/base-query-tool';
+import { BaseTransactionTool } from '@/shared';
+import type { Context } from '@/shared';
 
 const client = Client.forTestnet();
 const tool: Tool = {
@@ -13,6 +17,34 @@ const tool: Tool = {
   parameters: z.object({}),
   execute: async () => ({ ok: true }),
 };
+
+// Minimal concrete subclasses to test toolType defaults
+class ConcreteBaseTool extends BaseTool {
+  method = 'base_tool';
+  name = 'Base Tool';
+  description = 'A base tool';
+  parameters = z.object({});
+  async normalizeParams(params: any) { return params; }
+  async coreAction(_params: any, _context: Context, _client: Client) { return {}; }
+}
+
+class ConcreteQueryTool extends BaseQueryTool {
+  method = 'query_tool';
+  name = 'Query Tool';
+  description = 'A query tool';
+  parameters = z.object({});
+  async normalizeParams(params: any) { return params; }
+  async coreAction(_params: any, _context: Context, _client: Client) { return {}; }
+}
+
+class ConcreteTransactionTool extends BaseTransactionTool {
+  method = 'tx_tool';
+  name = 'Transaction Tool';
+  description = 'A transaction tool';
+  parameters = z.object({});
+  async normalizeParams(params: any) { return params; }
+  async coreAction(_params: any, _context: Context, _client: Client) { return {}; }
+}
 
 describe('HederaAgentAPI', () => {
   it('throws when client is undefined', () => {
@@ -34,6 +66,7 @@ describe('HederaAgentAPI', () => {
         method: 'demo_tool',
         name: 'Demo Tool',
         description: 'A demo tool',
+        toolType: undefined,
       },
     ]);
   });
@@ -42,5 +75,28 @@ describe('HederaAgentAPI', () => {
     const api = new HederaAgentAPI(client, {});
 
     expect(api.listTools()).toEqual([]);
+  });
+});
+
+describe('toolType defaults', () => {
+  it('BaseTool defaults to "other"', () => {
+    const t = new ConcreteBaseTool();
+    expect(t.toolType).toBe(TOOL_TYPE.OTHER);
+  });
+
+  it('BaseQueryTool defaults to "query"', () => {
+    const t = new ConcreteQueryTool();
+    expect(t.toolType).toBe(TOOL_TYPE.QUERY);
+  });
+
+  it('BaseTransactionTool defaults to "transaction"', () => {
+    const t = new ConcreteTransactionTool();
+    expect(t.toolType).toBe(TOOL_TYPE.TRANSACTION);
+  });
+
+  it('listTools() surfaces toolType from BaseTool subclass', () => {
+    const api = new HederaAgentAPI(client, {}, [new ConcreteQueryTool()]);
+    const summary = api.listTools();
+    expect(summary[0].toolType).toBe(TOOL_TYPE.QUERY);
   });
 });
