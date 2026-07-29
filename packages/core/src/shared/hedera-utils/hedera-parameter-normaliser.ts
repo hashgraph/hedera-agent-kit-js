@@ -80,7 +80,7 @@ import {
 import { Context } from '@/shared/configuration';
 import z from 'zod';
 import { IHederaMirrornodeService } from '@/shared';
-import { getERC20Decimals, toBaseUnit } from './decimals-utils';
+import { getERC20Decimals, toBaseUnit, toBaseUnitLong } from './decimals-utils';
 import { TokenTransferMinimalParams, TransferHbarInput } from './types';
 import { AccountResolver } from '@/shared/utils/account-resolver';
 import { ethers } from 'ethers';
@@ -137,19 +137,20 @@ export default class HederaParameterNormaliser {
     const treasuryAccountId = parsedParams.treasuryAccountId ?? defaultAccountId;
     if (!treasuryAccountId) throw new Error('Must include treasury account ID');
 
-    const initialSupply = toBaseUnit(
+    const initialSupply = toBaseUnitLong(
       parsedParams.initialSupply ?? 0,
       parsedParams.decimals,
-    ).toNumber();
+      'Initial supply',
+    );
 
     const isFinite = (parsedParams.supplyType ?? 'infinite') === 'finite';
     const supplyType = isFinite ? TokenSupplyType.Finite : TokenSupplyType.Infinite;
 
     const maxSupply = isFinite
-      ? toBaseUnit(parsedParams.maxSupply ?? 1_000_000, parsedParams.decimals).toNumber() // default finite max supply
+      ? toBaseUnitLong(parsedParams.maxSupply ?? 1_000_000, parsedParams.decimals, 'Max supply') // default finite max supply
       : undefined;
 
-    if (maxSupply !== undefined && initialSupply > maxSupply) {
+    if (maxSupply !== undefined && initialSupply.gt(maxSupply)) {
       throw new Error(`Initial supply (${initialSupply}) cannot exceed max supply (${maxSupply})`);
     }
 
@@ -561,13 +562,15 @@ export default class HederaParameterNormaliser {
       // Fallback to 0 if decimals are missing or NaN
       const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
 
-      const baseAmount = toBaseUnit(tokenAllowance.amount, safeDecimals).toNumber();
-
       return new TokenAllowance({
         ownerAccountId: AccountId.fromString(ownerAccountId),
         spenderAccountId: AccountId.fromString(spenderAccountId),
         tokenId: TokenId.fromString(tokenAllowance.tokenId),
-        amount: Long.fromNumber(baseAmount),
+        amount: toBaseUnitLong(
+          tokenAllowance.amount,
+          safeDecimals,
+          `Allowance amount for token ${tokenAllowance.tokenId}`,
+        ),
       });
     });
 
@@ -626,14 +629,16 @@ export default class HederaParameterNormaliser {
     const tokenInfo = await mirrodnode.getTokenInfo(parsedParams.tokenId);
     const tokenDecimals = tokenInfo.decimals;
 
+    const safeDecimals = Number(tokenDecimals);
     const tokenTransfers: TokenTransferMinimalParams[] = [];
-    let totalAmount = 0;
+    let totalAmountLong = Long.ZERO;
 
     for (const transfer of parsedParams.transfers) {
-      totalAmount += transfer.amount;
+      const recipientLong = toBaseUnitLong(transfer.amount, safeDecimals, 'Transfer amount');
+      totalAmountLong = totalAmountLong.add(recipientLong);
       tokenTransfers.push({
         accountId: transfer.accountId,
-        amount: toBaseUnit(transfer.amount, Number(tokenDecimals)).toNumber(),
+        amount: recipientLong,
         tokenId: parsedParams.tokenId,
       });
     }
@@ -650,7 +655,7 @@ export default class HederaParameterNormaliser {
       tokenTransfers,
       approvedTransfer: {
         ownerAccountId: parsedParams.sourceAccountId,
-        amount: toBaseUnit(-totalAmount, Number(tokenDecimals)).toNumber(),
+        amount: totalAmountLong.negate(),
       },
       transactionMemo: parsedParams.transactionMemo,
     };
@@ -688,7 +693,7 @@ export default class HederaParameterNormaliser {
         throw new Error(`Invalid recipient amount: ${recipient.amount}`);
       }
 
-      const amount = Long.fromString(toBaseUnit(amountRaw, tokenDecimals).toNumber().toString());
+      const amount = toBaseUnitLong(amountRaw, tokenDecimals, 'Airdrop amount');
 
       totalAmount = totalAmount.add(amount);
 
@@ -774,11 +779,6 @@ export default class HederaParameterNormaliser {
       adminKey: parsedParams.adminKey,
       submitKey: parsedParams.submitKey,
     };
-
-    // Handle legacy isSubmitKey if submitKey is not provided
-    if (parsedParams.isSubmitKey && maybeKeys.submitKey === undefined) {
-      maybeKeys.submitKey = true;
-    }
 
     for (const [field, rawVal] of Object.entries(maybeKeys)) {
       if (rawVal === undefined || rawVal === false) {
@@ -1039,7 +1039,7 @@ export default class HederaParameterNormaliser {
     // Fallback to 0 if decimals are missing or NaN
     const safeDecimals = Number.isFinite(decimals) ? decimals : 0;
 
-    const baseAmount = toBaseUnit(parsedParams.amount, safeDecimals).toNumber();
+    const baseAmount = toBaseUnitLong(parsedParams.amount, safeDecimals, 'Mint amount');
 
     // Normalize scheduling parameters (if present and isScheduled = true)
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled

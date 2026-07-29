@@ -41,7 +41,6 @@ describe('Submit Topic Message E2E Tests with Pre-Created Topics', () => {
     const created = await executorWrapper.createTopic({
       topicMemo: 'e2e-test-topic',
       autoRenewAccountId: executor.accountId.toString(),
-      isSubmitKey: false,
     });
     targetTopicId = created.topicId!.toString();
   });

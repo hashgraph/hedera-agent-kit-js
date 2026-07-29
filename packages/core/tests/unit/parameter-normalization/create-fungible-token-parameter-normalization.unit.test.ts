@@ -101,7 +101,7 @@ describe('HederaParameterNormaliser.normaliseCreateFungibleTokenParams', () => {
     );
 
     expect(result.decimals).toBe(0);
-    expect(result.initialSupply).toBe(0);
+    expect(result.initialSupply.toString()).toBe('0');
     expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 
@@ -119,7 +119,7 @@ describe('HederaParameterNormaliser.normaliseCreateFungibleTokenParams', () => {
     );
 
     expect(result.supplyType).toBe(TokenSupplyType.Finite);
-    expect(result.maxSupply).toBe(1_000_000);
+    expect(result.maxSupply?.toString()).toBe('1000000');
     expect(result.schedulingParams?.isScheduled).toBe(false);
   });
 

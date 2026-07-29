@@ -100,4 +100,23 @@ describe('Approve Token Allowance Integration Tests', () => {
     expect(result.raw.status).toBe('SUCCESS');
     expect(result.raw.transactionId).toBeDefined();
   });
+
+  it('rejects an amount that overflows HTS int64 before reaching the network', async () => {
+    // Token has decimals=2. Long.MAX_VALUE / 100 ≈ 9.22e16, so 1e17 display units
+    // converts to 1e19 base units — well above the int64 ceiling.
+    const params: z.infer<ReturnType<typeof approveTokenAllowanceParameters>> = {
+      ownerAccountId: context.accountId!,
+      spenderAccountId: spender.accountId.toString(),
+      tokenApprovals: [{ tokenId: tokenIdFT.toString(), amount: 1e17 }],
+    };
+
+    const tool = approveTokenAllowanceTool(context);
+    const result = await tool.execute(executorClient, context, params);
+
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.humanMessage).toContain('exceeds the HTS int64 maximum');
+    // Error is caught pre-chain in the normalizer — no transaction ID
+    expect(result.raw.transactionId).toBeUndefined();
+    expect(result.raw.errorCode).toBeUndefined();
+  });
 });

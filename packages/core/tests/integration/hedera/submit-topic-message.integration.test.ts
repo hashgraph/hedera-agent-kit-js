@@ -28,7 +28,6 @@ describe('Submit Topic Message Integration Tests', () => {
     // create a topic for each test so tests are isolated
     const created = await operatorWrapper.createTopic({
       autoRenewAccountId: profile.operator.accountId.toString(),
-      isSubmitKey: false,
       topicMemo: 'integration-test-topic',
     });
     topicId = created.topicId!.toString();
