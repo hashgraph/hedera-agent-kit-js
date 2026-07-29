@@ -52,6 +52,12 @@ Note: In terms of the actual context size for your agent, it depends on your use
 
 Use the following steps to set up a locally running model with an agent built with the Hedera Agent Kit.
 
+### Agent Framework Resources
+Below is a list of resources of supported agent frameworks and how to use them with different model providers
+- [AI-SDK](https://ai-sdk.dev/providers/openai-compatible-providers_)
+- [LangChain](https://docs.langchain.com/oss/python/concepts/providers-and-models)
+- [Google ADK](https://adk.dev/agents/models/)
+
 ### Pre-requisites
 
 - Have a local model downloaded and ready to use from your provider of choice (e.g. Ollama, LM Studio).
