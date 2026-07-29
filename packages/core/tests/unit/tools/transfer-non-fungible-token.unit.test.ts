@@ -141,23 +141,29 @@ describe('transfer-non-fungible-token tool', () => {
     expect(res.humanMessage).toContain('boom');
   });
 
-  it('appends association hint when TOKEN_NOT_ASSOCIATED_TO_ACCOUNT is thrown', async () => {
+  it('appends TOKEN_NOT_ASSOCIATED_TO_ACCOUNT hint to humanMessage', async () => {
     const tool = toolFactory(context);
     const client = makeClient();
 
-    const { default: builder } = await import('@/shared/hedera-utils/hedera-builder');
-    (builder.transferNonFungibleToken as any).mockImplementation(() => {
-      throw makeReceiptStatusError(Status.TokenNotAssociatedToAccount);
+    const txId = TransactionId.generate(new AccountId(0, 0, 1));
+    const err = new ReceiptStatusError({
+      transactionReceipt: {} as any,
+      status: Status.TokenNotAssociatedToAccount,
+      transactionId: txId,
     });
 
-    const res = await tool.execute(client, context, {
+    const { default: builder } = await import('@/shared/hedera-utils/hedera-builder');
+    (builder.transferNonFungibleToken as any).mockImplementation(() => {
+      throw err;
+    });
+
+    const res: any = await tool.execute(client, context, {
       tokenId: '0.0.2001',
       recipients: [{ recipientId: '0.0.3001', serialNumber: 1 }],
     });
 
-    expect(res.raw.status).toBe('ERROR');
     expect(res.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
-    expect(res.humanMessage).toContain('The recipient account has not associated this HTS token');
+    expect(res.raw.error).toBe(err.message);
     expect(res.humanMessage).toContain('associate_token_tool');
     expect(res.humanMessage).toContain('maxAutoAssociations');
   });

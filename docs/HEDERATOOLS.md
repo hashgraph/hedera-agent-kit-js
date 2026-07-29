@@ -409,8 +409,6 @@ Create a new topic on the Hedera network. Supports scheduled transactions.
 | `adminKey`        | `boolean \| string` | ❌        | Admin key for the topic. Pass `true` for operator key, or public key.     |
 | `submitKey`       | `boolean \| string` | ❌        | Submit key for the topic. Pass `true` for operator key, or public key.    |
 
-Note: `isSubmitKey` is deprecated. Agent will use `submitKey` instead.
-
 #### Example Prompts
 
 ```

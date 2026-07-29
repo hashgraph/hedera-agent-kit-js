@@ -9,6 +9,7 @@ import {
   TokenSupplyType,
   TokenType,
 } from '@hiero-ledger/sdk';
+import Long from 'long';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 import {
   optionalScheduledTransactionParams,
@@ -72,6 +73,9 @@ export const createFungibleTokenParametersNormalised = (_context: Context = {}) 
         metadataKey: z.custom<PublicKey>().optional().describe('The metadata key for the token.'),
         tokenMemo: z.string().optional().describe('The memo for the token.'),
         tokenType: z.custom<TokenType>().optional().describe('The type of the token.'),
+        // Normalised fields: converted from display units to int64-safe Longs by the normaliser.
+        initialSupply: z.custom<Long | number>(),
+        maxSupply: z.custom<Long | number>().optional(),
       }),
   );
 
@@ -154,6 +158,7 @@ export const mintFungibleTokenParameters = (_context: Context = {}) =>
 export const mintFungibleTokenParametersNormalised = (_context: Context = {}) =>
   mintFungibleTokenParameters(_context)
     .omit({ schedulingParams: true })
+    .extend({ amount: z.custom<Long | number>() })
     .merge(optionalScheduledTransactionParamsNormalised(_context));
 
 export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
@@ -511,7 +516,7 @@ export const transferFungibleTokenWithAllowanceParametersNormalised = (context: 
     tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
     approvedTransfer: z.object({
       ownerAccountId: z.string(),
-      amount: z.number(),
+      amount: z.custom<Long | number>(),
     }),
     transactionMemo: z.string().optional(),
   });

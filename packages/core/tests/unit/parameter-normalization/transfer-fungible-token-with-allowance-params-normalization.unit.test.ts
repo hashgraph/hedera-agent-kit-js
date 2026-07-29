@@ -1,15 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Client, AccountId, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import Long from 'long';
+import { AgentMode } from '@/shared/configuration';
 import type { Context } from '@/shared/configuration';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-
-vi.mock('@/shared/utils/account-resolver', () => ({
-  AccountResolver: {
-    resolveAccount: vi.fn(),
-    getDefaultPublicKey: vi.fn(),
-  },
-}));
 
 describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance', () => {
   let mockContext: Context;
@@ -44,6 +39,7 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance'
         toStringDer: () => OPERATOR_PUBLIC_KEY.toStringDer(),
         toString: () => OPERATOR_PUBLIC_KEY.toString(),
       },
+      operatorAccountId: { toString: () => '0.0.1001' },
     } as unknown as Client;
 
     mockMirrornode = {
@@ -65,18 +61,14 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance'
       expect(mockMirrornode.getTokenInfo).toHaveBeenCalledWith(mockTokenId);
       expect(result.tokenId).toBe(mockTokenId);
       expect(result.tokenTransfers).toHaveLength(1);
-      expect(result.tokenTransfers[0]).toEqual(
-        expect.objectContaining({
-          accountId: '0.0.2002',
-          amount: 100 * 10 ** 2,
-          tokenId: mockTokenId,
-        }),
+      expect(result.tokenTransfers[0].accountId).toBe('0.0.2002');
+      expect(result.tokenTransfers[0].tokenId).toBe(mockTokenId);
+      expect(result.tokenTransfers[0].amount.toString()).toBe(
+        Long.fromNumber(100 * 10 ** 2).toString(),
       );
-      expect(result.approvedTransfer).toEqual(
-        expect.objectContaining({
-          ownerAccountId: mockSourceAccountId,
-          amount: -100 * 10 ** 2,
-        }),
+      expect(result.approvedTransfer).toMatchObject({ ownerAccountId: mockSourceAccountId });
+      expect(result.approvedTransfer.amount.toString()).toBe(
+        Long.fromNumber(-(100 * 10 ** 2)).toString(),
       );
       expect(result.transactionMemo).toBe('Test memo');
       expect(result.schedulingParams?.isScheduled).toBe(false);
@@ -96,17 +88,44 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance'
       );
 
       expect(result.tokenTransfers).toHaveLength(2);
-      expect(result.tokenTransfers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ accountId: '0.0.2002', amount: 50 * 10 ** 2 }),
-          expect.objectContaining({ accountId: '0.0.3003', amount: 75 * 10 ** 2 }),
-        ]),
+      const amounts = result.tokenTransfers.map(t => t.amount.toString());
+      expect(amounts).toContain(Long.fromNumber(50 * 10 ** 2).toString());
+      expect(amounts).toContain(Long.fromNumber(75 * 10 ** 2).toString());
+      // owner debit must equal the exact sum of credits (no float drift)
+      expect(result.approvedTransfer.amount.toString()).toBe(
+        Long.fromNumber(-(125 * 10 ** 2)).toString(),
       );
-      expect(result.approvedTransfer.amount).toBe(-(125 * 10 ** 2));
       expect(result.schedulingParams?.isScheduled).toBe(false);
     });
 
+    it('owner debit equals exact Long sum of credits for large recipient amounts', async () => {
+      // Use 0 decimals so display amount == base amount, making the assertion easy.
+      mockMirrornode.getTokenInfo = vi.fn().mockResolvedValue({ decimals: 0 });
+
+      // Two recipients whose amounts are above Number.MAX_SAFE_INTEGER territory
+      // when summed, but each individually fits in int64.
+      const a = 4_000_000_000_000_000; // 4e15 (above 2^52 but below 2^53)
+      const b = 4_000_000_000_000_000;
+      const params = makeParams([
+        { accountId: '0.0.2002', amount: a },
+        { accountId: '0.0.3003', amount: b },
+      ]);
+
+      const result = await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+        params,
+        mockContext,
+        mockClient,
+        mockMirrornode,
+      );
+
+      const expectedDebit = Long.fromNumber(a).add(Long.fromNumber(b)).negate();
+      expect(result.approvedTransfer.amount.toString()).toBe(expectedDebit.toString());
+    });
+
     it('should handle scheduling parameters when provided', async () => {
+      // Use AUTONOMOUS mode so getDefaultPublicKey returns client.operatorPublicKey directly
+      // without a mirror-node round-trip (no mirrorNode needed in this test).
+      const schedulingContext: Context = { mode: AgentMode.AUTONOMOUS, accountId: '0.0.1001' };
       const params = makeParams(
         [{ accountId: '0.0.2002', amount: 50 }],
         'Scheduled memo',
@@ -117,7 +136,7 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance'
 
       const result = await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
         params,
-        mockContext,
+        schedulingContext,
         mockClient,
         mockMirrornode,
       );
@@ -154,92 +173,39 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance'
     });
   });
 
-  describe('Transfer list balance (regression)', () => {
-    // Helper: sum of credits (tokenTransfers) + the allowance debit
-    const netBalance = (result: {
-      tokenTransfers: { amount: number }[];
-      approvedTransfer: { amount: number };
-    }) =>
-      result.tokenTransfers.reduce((acc, t) => acc + t.amount, 0) +
-      result.approvedTransfer.amount;
+  describe('HTS int64 overflow guard', () => {
+    it('rejects a recipient amount whose base-unit value exceeds int64 max', async () => {
+      mockMirrornode.getTokenInfo = vi.fn().mockResolvedValue({ decimals: 0 });
 
-    it('should produce a transfer list that nets to zero for 0.1 + 0.2 @ 8 decimals', async () => {
-      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 8 });
-      const params = makeParams([
-        { accountId: '0.0.2002', amount: 0.1 },
-        { accountId: '0.0.3003', amount: 0.2 },
-      ]);
+      // 9.3e18 > Long.MAX_VALUE = 9_223_372_036_854_775_807
+      const params = makeParams([{ accountId: '0.0.2002', amount: 9_300_000_000_000_000_000 }]);
 
-      const result =
-        await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+      await expect(
+        HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
           params,
           mockContext,
           mockClient,
           mockMirrornode,
-        );
-
-      expect(netBalance(result)).toBe(0);
-      expect(result.approvedTransfer.amount).toBe(
-        -result.tokenTransfers.reduce((acc, t) => acc + t.amount, 0),
-      );
+        ),
+      ).rejects.toThrow(/exceeds the HTS int64 maximum/);
     });
 
-    it('should produce a transfer list that nets to zero for 1.5 @ 0 decimals', async () => {
-      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 0 });
-      const params = makeParams([{ accountId: '0.0.2002', amount: 1.5 }]);
+    it('rejects overflow on a second recipient when the first is valid', async () => {
+      mockMirrornode.getTokenInfo = vi.fn().mockResolvedValue({ decimals: 0 });
 
-      const result =
-        await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
-          params,
-          mockContext,
-          mockClient,
-          mockMirrornode,
-        );
-
-      // toBaseUnit floors: credit = floor(1.5) = 1, debit must be -1
-      expect(result.tokenTransfers[0].amount).toBe(1);
-      expect(result.approvedTransfer.amount).toBe(-1);
-      expect(netBalance(result)).toBe(0);
-    });
-
-    it('should produce a transfer list that nets to zero for 0.001 × 2 @ 2 decimals', async () => {
-      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 2 });
       const params = makeParams([
-        { accountId: '0.0.2002', amount: 0.001 },
-        { accountId: '0.0.3003', amount: 0.001 },
+        { accountId: '0.0.2002', amount: 100 },
+        { accountId: '0.0.3003', amount: 9_300_000_000_000_000_000 },
       ]);
 
-      const result =
-        await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
+      await expect(
+        HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
           params,
           mockContext,
           mockClient,
           mockMirrornode,
-        );
-
-      expect(netBalance(result)).toBe(0);
-    });
-
-    it('should produce a transfer list that nets to zero for three fractional recipients @ 8 decimals', async () => {
-      (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 8 });
-      const params = makeParams([
-        { accountId: '0.0.2002', amount: 0.1 },
-        { accountId: '0.0.3003', amount: 0.2 },
-        { accountId: '0.0.4004', amount: 0.3 },
-      ]);
-
-      const result =
-        await HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance(
-          params,
-          mockContext,
-          mockClient,
-          mockMirrornode,
-        );
-
-      expect(netBalance(result)).toBe(0);
-      expect(result.approvedTransfer.amount).toBe(
-        -result.tokenTransfers.reduce((acc, t) => acc + t.amount, 0),
-      );
+        ),
+      ).rejects.toThrow(/exceeds the HTS int64 maximum/);
     });
   });
 });

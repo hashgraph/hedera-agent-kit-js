@@ -43,7 +43,7 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
     expect(tool.method).toBe(TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL);
     expect(tool.name).toBe('Transfer Fungible Token with Allowance');
     expect(typeof tool.description).toBe('string');
-    expect(tool.description).toContain('Transfers HTS (Hedera Token Service) fungible tokens');
+    expect(tool.description).toContain('This tool will transfer a HTS (Hedera Token Service) native fungible token');
     expect(tool.parameters).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });
@@ -106,6 +106,31 @@ describe('Transfer Fungible Token with Allowance Tool (unit)', () => {
     expect(result.humanMessage).toContain('Failed to execute Transfer Fungible Token with Allowance');
     expect(result.humanMessage).toContain('boom');
     expect(result.raw.status).toBe('ERROR');
+  });
+
+  it('appends TOKEN_NOT_ASSOCIATED_TO_ACCOUNT hint to humanMessage', async () => {
+    const txId = TransactionId.generate(new AccountId(0, 0, 1));
+    const err = new ReceiptStatusError({
+      transactionReceipt: {} as any,
+      status: Status.TokenNotAssociatedToAccount,
+      transactionId: txId,
+    });
+
+    (
+      HederaParameterNormaliser.normaliseTransferFungibleTokenWithAllowance as any
+    ).mockImplementation(() => { throw err; });
+
+    const tool = toolFactory(context);
+    const result = await tool.execute(client, context, {
+      tokenId: '0.0.9999',
+      sourceAccountId: '0.0.1001',
+      transfers: [{ accountId: '0.0.2002', amount: 10 }],
+    });
+
+    expect(result.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+    expect(result.raw.error).toBe(err.message);
+    expect(result.humanMessage).toContain('associate_token_tool');
+    expect(result.humanMessage).toContain('maxAutoAssociations');
   });
 
   it('should handle non-Error exceptions gracefully', async () => {

@@ -65,8 +65,7 @@ describe('Create Topic Integration Tests', () => {
     it('should handle empty string topicMemo', async () => {
       const params: z.infer<ReturnType<typeof createTopicParameters>> = {
         topicMemo: '',
-        isSubmitKey: false,
-      } as any;
+      };
 
       const tool = createTopicTool(context);
       const result: any = await tool.execute(client, context, params);
