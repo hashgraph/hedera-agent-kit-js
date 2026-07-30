@@ -26,8 +26,31 @@ export abstract class AbstractPolicy extends AbstractHook {
   }
 
   /**
-   * Default implementation - no validation at PostParamsNormalization.
-   * Override in derived classes to implement custom logic.
+   * Override to implement validation after parameters have been normalised but before the
+   * transaction is built. Return `true` to block execution.
+   *
+   * **`hbarTransfers[].amount` is not always a plain number.**
+   * After normalisation it can be `Hbar | Long | number | string` depending on what the caller
+   * supplied. Do not compare it with `>` directly — it will silently return `false` for `Hbar`
+   * and `Long` objects. Use duck-typing to handle all variants:
+   *
+   * ```ts
+   * function isPositive(amt: unknown): boolean {
+   *   if (amt == null) return false;
+   *   if (typeof amt === 'object') {
+   *     // Hbar → .toBigNumber(); Long → already BigNumber-compatible via .toNumber()
+   *     const bn = typeof (amt as any).toBigNumber === 'function'
+   *       ? (amt as any).toBigNumber()
+   *       : amt;
+   *     return typeof (bn as any).isGreaterThan === 'function'
+   *       ? (bn as any).isGreaterThan(0)
+   *       : Number(amt) > 0;
+   *   }
+   *   return Number(amt) > 0;
+   * }
+   * ```
+   *
+   * See `MaxRecipientsPolicy` for a complete reference implementation.
    */
   protected shouldBlockPostParamsNormalization(
     _params: PostParamsNormalizationParams,
