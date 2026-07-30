@@ -325,12 +325,14 @@ Every tool in the kit follows a standardized 7-stage lifecycle. The execution lo
 Each hook receives specialized parameter objects and the **`method`** name (string) representing the tool being
 executed. This allows hooks to target specific tools or apply general logic.
 
-| Hook Stage                    | Params Object Contains                                                                 | Method Parameter | Use Case                                     |
-|:------------------------------|:---------------------------------------------------------------------------------------|:-----------------|:---------------------------------------------|
-| `preToolExecutionHook`        | `context`, `rawParams`, `client`                                                       | `method: string` | Early validation, logging initial state      |
-| `postParamsNormalizationHook` | `context`, `rawParams`, `normalisedParams`, `client`                                   | `method: string` | Parameter-based policies, data enrichment    |
-| `postCoreActionHook`          | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `client`               | `method: string` | Inspect/modify transaction before submission |
-| `postToolExecutionHook`       | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method: string` | Final logging, audit trails, cleanup. For transaction tools `toolResult` is the submission result and `coreActionResult` is the pre-submission value; for query tools they are the same object. |
+| Hook Stage                    | Params Object Contains                                                                          | Method Parameter | Use Case                                     |
+|:------------------------------|:------------------------------------------------------------------------------------------------|:-----------------|:---------------------------------------------|
+| `preToolExecutionHook`        | `context`, `rawParams`, `client`, `toolType`                                                    | `method: string` | Early validation, logging initial state      |
+| `postParamsNormalizationHook` | `context`, `rawParams`, `normalisedParams`, `client`, `toolType`                                | `method: string` | Parameter-based policies, data enrichment    |
+| `postCoreActionHook`          | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `client`, `toolType`            | `method: string` | Inspect/modify transaction before submission |
+| `postToolExecutionHook`       | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client`, `toolType` | `method: string` | Final logging, audit trails, cleanup. For transaction tools `toolResult` is the submission result and `coreActionResult` is the pre-submission value; for query tools they are the same object. |
+
+`toolType` is one of `'query'` / `'transaction'` / `'other'` — use `TOOL_TYPE` constants for safe comparisons.
 
 > [!TIP]
 > Use the `method` parameter to filter execution and apply **Type Guards** for safe parameter access.
@@ -547,25 +549,27 @@ import {
 export class MyCustomHook extends AbstractHook {
   name = 'My Custom Hook';
   description = 'Detailed explanation of what this hook does';
-  relevantTools = ['create_account_tool', 'transfer_hbar_tool']; // List specific tools
+  // List specific tools, or use ['*'] to apply to every tool regardless of method name.
+  relevantTools = ['create_account_tool', 'transfer_hbar_tool'];
 
   // Implement any of the 4 hook methods you need.
 
   async preToolExecutionHook(params: PreToolExecutionParams, method: string) {
     // Early in the lifecycle - before parameter normalization
-    if (!this.relevantTools.includes(method)) return;
+    if (!this.appliesToMethod(method)) return;
 
-    // Access client, context, and raw params from the params object
+    // Access client, context, raw params, and toolType from the params object
     const client = params.client;
     const context = params.context;
     const rawParams = params.rawParams;
+    const toolType = params.toolType; // 'query' | 'transaction' | 'other'
 
     // Your logic here
   }
 
   async postParamsNormalizationHook(params: PostParamsNormalizationParams, method: string) {
     // After parameters are validated and cleaned
-    if (!this.relevantTools.includes(method)) return;
+    if (!this.appliesToMethod(method)) return;
 
     // Access normalized parameters and client
     const normalizedParams = params.normalisedParams;
@@ -576,7 +580,7 @@ export class MyCustomHook extends AbstractHook {
 
   async postCoreActionHook(params: PostCoreActionParams, method: string) {
     // After main logic (e.g., transaction created but not submitted)
-    if (!this.relevantTools.includes(method)) return;
+    if (!this.appliesToMethod(method)) return;
 
     // Access the core action result and client
     const txResult = params.coreActionResult;
@@ -587,7 +591,7 @@ export class MyCustomHook extends AbstractHook {
 
   async postToolExecutionHook(params: PostSecondaryActionParams, method: string) {
     // After everything completes
-    if (!this.relevantTools.includes(method)) return;
+    if (!this.appliesToMethod(method)) return;
 
     // Access the final tool result and client
     const finalResult = params.toolResult;
@@ -738,11 +742,12 @@ protected shouldBlockPreToolExecution(
 
 // 5. Read-only Policy — block any tool that is not a query tool
 //    Use this to guarantee an agent can never submit a transaction.
+//    relevantTools = ['*'] applies the policy to every tool.
 protected shouldBlockPreToolExecution(
   params: PreToolExecutionParams,
   method: string
 ): boolean {
-  return params.tool.toolType !== TOOL_TYPE.QUERY;
+  return params.toolType !== TOOL_TYPE.QUERY;
 }
 ```
 
@@ -753,11 +758,24 @@ that can never submit transactions. This works at two levels:
 
 _Option A — filter before passing tools to the LLM:_
 
+For adapters whose `getTools()` returns an **array** (LangChain, ADK, ElizaOS):
+
 ```ts
 import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
 
+// Only hand query tools to the LLM — no transaction tools included.
 const readOnlyTools = toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY);
-// Pass readOnlyTools to your LLM framework — only query tools are exposed.
+```
+
+For the **AI SDK** adapter, `getTools()` returns a keyed record — filter with `Object.entries`:
+
+```ts
+import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
+
+const allTools = toolkit.getTools();
+const readOnlyTools = Object.fromEntries(
+  Object.entries(allTools).filter(([, t]) => t.toolType === TOOL_TYPE.QUERY),
+);
 ```
 
 _Option B — enforce via policy (defence-in-depth):_
@@ -768,12 +786,15 @@ import type { PreToolExecutionParams } from '@hashgraph/hedera-agent-kit';
 
 export class ReadOnlyPolicy extends AbstractPolicy {
   name = 'ReadOnlyPolicy';
+  description = 'Blocks any tool that is not a read-only query tool';
+  // '*' applies this policy to every tool regardless of method name
+  relevantTools = ['*'];
 
   protected shouldBlockPreToolExecution(
     params: PreToolExecutionParams,
     _method: string,
   ): boolean {
-    return params.tool.toolType !== TOOL_TYPE.QUERY;
+    return params.toolType !== TOOL_TYPE.QUERY;
   }
 }
 

@@ -1,17 +1,21 @@
-import { HederaAgentAPI, toUint8Array } from '@hashgraph/hedera-agent-kit';
+import { HederaAgentAPI, toUint8Array, type ToolType } from '@hashgraph/hedera-agent-kit';
 import { FunctionTool, type ToolInputParameters } from '@google/adk';
+
+/** ADK FunctionTool augmented with a HAK `toolType` field for read-only filtering. */
+export type HederaADKTool = FunctionTool & { toolType?: ToolType };
 
 export default function HederaAgentKitTool(
   hederaAPI: HederaAgentAPI,
   method: string,
   description: string,
   schema: ToolInputParameters,
-): FunctionTool {
+  toolType?: ToolType,
+): HederaADKTool {
   // ADK format enforces a strict regex for tool names: ^[a-zA-Z0-9_-]+$
   // In case plugins have special characters like spaces or brackets, replace with _
   const sanitizedMethodName = method.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-  return new FunctionTool({
+  const adkTool: HederaADKTool = new FunctionTool({
     name: sanitizedMethodName,
     description: description,
     parameters: schema,
@@ -24,4 +28,6 @@ export default function HederaAgentKitTool(
       return result;
     },
   });
+  adkTool.toolType = toolType;
+  return adkTool;
 }

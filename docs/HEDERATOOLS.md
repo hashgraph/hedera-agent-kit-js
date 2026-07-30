@@ -14,7 +14,9 @@ Every tool exposes a `toolType` field that classifies its intent:
 | `'transaction'` | `BaseTransactionTool`   | State-mutating — builds and (depending on `AgentMode`) submits a Hedera transaction. |
 | `'other'`       | `BaseTool` (direct)     | Custom tool that does not fit either category; default for tools that extend `BaseTool` directly. |
 
-Use `TOOL_TYPE` constants for safe comparisons. The most common use-case is building a **read-only agent** that can never submit transactions:
+Use `TOOL_TYPE` constants for safe comparisons. The most common use-case is building a **read-only agent** that can never submit transactions.
+
+For adapters whose `getTools()` returns an **array** (LangChain, ADK, ElizaOS):
 
 ```ts
 import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
@@ -23,7 +25,18 @@ import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
 const readOnlyTools = toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY);
 ```
 
-`toolType` is also included in the `ToolSummary` returned by `HederaAgentAPI.listTools()`:
+For the **AI SDK** adapter, `getTools()` returns a keyed record — filter with `Object.entries`:
+
+```ts
+import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
+
+const allTools = toolkit.getTools();
+const readOnlyTools = Object.fromEntries(
+  Object.entries(allTools).filter(([, t]) => t.toolType === TOOL_TYPE.QUERY),
+);
+```
+
+`toolType` is also included in the `ToolSummary` returned by `HederaAgentAPI.listTools()` — this works regardless of which adapter you are using:
 
 ```ts
 const summary = api.listTools(); // ToolSummary[]

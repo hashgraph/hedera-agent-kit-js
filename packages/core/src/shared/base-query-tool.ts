@@ -8,7 +8,16 @@ import { BaseTool, TOOL_TYPE, ToolType } from './tools';
  * relying on name-prefix heuristics:
  *
  * ```ts
+ * // LangChain / ADK / ElizaOS — getTools() returns an array:
  * toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY)
+ *
+ * // AI SDK — getTools() returns a keyed record, use Object.entries:
+ * Object.fromEntries(
+ *   Object.entries(toolkit.getTools()).filter(([, t]) => t.toolType === TOOL_TYPE.QUERY)
+ * )
+ *
+ * // Core API (adapter-agnostic, via HederaAgentAPI.listTools()):
+ * api.listTools().filter(s => s.toolType === TOOL_TYPE.QUERY).map(s => s.method)
  * ```
  *
  * Query tools fetch data from the Hedera mirror node or network and never

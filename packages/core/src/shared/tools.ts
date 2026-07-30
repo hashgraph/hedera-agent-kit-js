@@ -22,7 +22,16 @@ import {
  *
  * Use with {@link TOOL_TYPE} constants for safe comparisons:
  * ```ts
- * tools.filter(t => t.toolType === TOOL_TYPE.QUERY)
+ * // LangChain / ADK / ElizaOS — getTools() returns an array:
+ * toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY)
+ *
+ * // AI SDK — getTools() returns a keyed record, use Object.entries:
+ * Object.fromEntries(
+ *   Object.entries(toolkit.getTools()).filter(([, t]) => t.toolType === TOOL_TYPE.QUERY)
+ * )
+ *
+ * // Core API — adapter-agnostic, via HederaAgentAPI.listTools():
+ * api.listTools().filter(s => s.toolType === TOOL_TYPE.QUERY).map(s => s.method)
  * ```
  */
 export const TOOL_TYPE = {
@@ -75,7 +84,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   async execute(client: Client, context: Context, params: TParams): Promise<any> {
     try {
       // 1. PreToolExecutionHook
-      await this.preToolExecutionHook({ context, rawParams: params, client });
+      await this.preToolExecutionHook({ context, rawParams: params, client, toolType: this.toolType });
 
       // 2. ParamsNormalization
       const normalisedParams = await this.normalizeParams(params, context, client);
@@ -86,6 +95,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         rawParams: params,
         normalisedParams,
         client,
+        toolType: this.toolType,
       });
 
       // 4. Core Action (Core Tool Logic)
@@ -98,6 +108,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         normalisedParams,
         coreActionResult,
         client,
+        toolType: this.toolType,
       });
 
       // 6. Secondary Action (Optional)
@@ -121,6 +132,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         coreActionResult,
         toolResult: result,
         client,
+        toolType: this.toolType,
       });
     } catch (error) {
       return this.handleError(error, context);
