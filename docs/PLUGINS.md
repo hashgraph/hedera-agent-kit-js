@@ -164,6 +164,13 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 [7] postToolExecutionHook       ← hooks/policies
 ```
 
+> [!IMPORTANT]
+> **Transaction tools vs query tools — where each stage runs:**
+> - **Transaction tools** (writing to the network): extend `BaseTransactionTool` (not `BaseTool`). `coreAction` **builds** the transaction only (`return HederaBuilder.xxx(params)`). `secondaryAction` **dispatches** it via `handleTransaction(tx, client, context, postProcess)`, which signs and submits in `AUTONOMOUS` mode or returns frozen bytes in `RETURN_BYTES` mode. Do **not** override `shouldSecondaryAction` — the default `true` keeps both stages active. `BaseTransactionTool` adds Hedera-specific error handling: `ReceiptStatusError` and `PrecheckStatusError` are automatically caught and serialized into `raw.errorCode` + `raw.transactionId`.
+> - **Query/read-only tools** (no on-chain write): extend `BaseTool`. All logic runs inside `coreAction` (call the mirror-node service, return data). Override `shouldSecondaryAction` to return `false` to skip stage 6 entirely. You do **not** need to override `secondaryAction` — `BaseTool` provides a default that throws if accidentally called, protecting against misconfiguration.
+>
+> This split ensures that `postCoreActionHook` (stage 5) always fires **after the transaction is formed but before it is submitted**, which is what hooks and policies rely on to inspect or block a transaction pre-submission.
+
 For a step-by-step migration guide with fully annotated before/after code, see
 [Migrating Custom Tools to BaseTool](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking) in the v4 migration guide.
 
@@ -184,12 +191,12 @@ For a step-by-step migration guide with fully annotated before/after code, see
 Create your tool file (e.g., tools/my-service/my-tool.ts).
 
 > [!TIP]
-> **v4 Recommended approach — extend `BaseTool`.**  
-> `BaseTool` implements the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that `BaseTool`-based tools automatically participate in the hooks and policies lifecycle.
+> **v4 Recommended approach — extend `BaseTool` or `BaseTransactionTool`.**  
+> Both implement the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that these tools automatically participate in the hooks and policies lifecycle. Use `BaseTransactionTool` for tools that submit Hedera transactions — it adds structured error handling for `ReceiptStatusError` and `PrecheckStatusError`. Use `BaseTool` for query/read-only tools.
 
 ```typescript
 import { z } from "zod";
-import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
+import { Context, BaseTool, untypedQueryOutputParser } from "@hashgraph/hedera-agent-kit";
 import { Client } from "@hiero-ledger/sdk";
 
 // Define your parameter schema (same as before)
@@ -216,6 +223,11 @@ export class MyTool extends BaseTool {
   `;
   parameters = myToolParameters;
 
+  // Query tools use untypedQueryOutputParser so their { raw, humanMessage } envelope
+  // is correctly normalised by framework adapters. Transaction tools use
+  // transactionToolOutputParser instead (see Transaction Handling below).
+  outputParser = untypedQueryOutputParser;
+
   // Stage 1 - Here preToolExecutionHook() will be called automatically - see the 7-stage lifecycle above.
 
   // Stage 2 — validate / transform raw params from the LLM
@@ -229,26 +241,32 @@ export class MyTool extends BaseTool {
 
   // Stage 3 - Here postParamsNormalizationHook() will be called automatically.
 
-  // Stage 4 — core business logic (build a transaction or run a query)
+  // Stage 4 — core business logic (query tools do everything here)
+  // Always return { raw, humanMessage } so framework adapters and classifyToolResult()
+  // can process the output correctly.
   async coreAction(
     normalisedParams: z.infer<typeof myToolParameters>,
     _context: Context,
     _client: Client,
   ) {
-    // Your implementation here
-    return `Result for ${normalisedParams.requiredParam}`;
+    // Your implementation here — call a mirror-node service, external API, etc.
+    const result = `Result for ${normalisedParams.requiredParam}`;
+    return {
+      raw: { result, param: normalisedParams.requiredParam },
+      humanMessage: result,
+    };
   }
 
   // Stage 5 - Here postCoreActionHook() will be called automatically.
 
-  // Skip secondary action for non-transaction tools
+  // Skip secondary action for query tools (nothing to sign/submit)
   async shouldSecondaryAction(_result: any, _context: Context) {
     return false; // return true (default) if you need to sign/submit a transaction
   }
 
-  // Stage 6 — sign/submit the transaction (omit for query-only tools)
+  // Stage 6 — sign/submit the transaction (no-op for query-only tools)
   async secondaryAction(result: any, _client: Client, _context: Context) {
-    return result; // no-op for non-transaction tools
+    return result; // no-op for query tools
   }
 
   // Stage 7 - Here postToolExecutionHook() will be called automatically.
@@ -391,9 +409,9 @@ const toolkit = new HederaLangchainToolkit({
 
 ```typescript
 import { Client, PrivateKey, TransferTransaction } from '@hiero-ledger/sdk';
-import { BaseTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
+import { BaseTransactionTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
 
-export class TreasuryPayoutTool extends BaseTool {
+export class TreasuryPayoutTool extends BaseTransactionTool {
   // method, name, description, parameters, normalizeParams, coreAction:
   // see the Step-by-Step Guide above. coreAction builds the TransferTransaction.
 
@@ -685,7 +703,7 @@ The same single-copy rule applies to any other "singleton" transitive dependency
 
 ### Examples and References
 
-- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
+- See the annotated example plugin in [examples/plugin/](../examples/plugin/) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
 - See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples

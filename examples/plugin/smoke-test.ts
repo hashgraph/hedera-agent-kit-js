@@ -16,7 +16,7 @@
 import assert from 'node:assert';
 import { Client } from '@hiero-ledger/sdk';
 import { AbstractHook, AgentMode, Context } from '@hashgraph/hedera-agent-kit';
-import examplePlugin from './example-plugin';
+import examplePlugin from './index';
 
 // Minimal recording hook — proves the lifecycle runs without touching HCS.
 class RecordingHook extends AbstractHook {
@@ -48,7 +48,7 @@ async function main() {
     name: 'Hedera',
     language: 'es',
   });
-  assert.equal(greetingResult, '¡Hola, Hedera! ¡Bienvenido a Hedera Agent Kit!');
+  assert.equal(greetingResult.humanMessage, '¡Hola, Hedera! ¡Bienvenido a Hedera Agent Kit!');
 
   // 3. Transaction tool dry run: RETURN_BYTES builds and freezes the
   //    transaction, then returns its bytes instead of submitting it.
