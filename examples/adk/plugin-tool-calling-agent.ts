@@ -55,7 +55,7 @@ async function bootstrap(): Promise<void> {
     model: 'gemini-3.1-flash-lite-preview',
     instruction:
       'You are a helpful assistant with access to Hedera blockchain tools. You can help users create accounts, transfer HBAR, manage tokens, create topics, and query blockchain information. Always provide clear explanations of the transactions you perform.',
-    tools: hederaAgentToolkit.getTools(),
+    tools: hederaAgentToolkit.getTools() as any,
   });
 
   // Setup session and runner

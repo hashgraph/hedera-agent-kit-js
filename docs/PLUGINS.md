@@ -550,6 +550,14 @@ switch (result.kind) {
   case 'failure':
     // result.errorCode is the SDK status (e.g. 'INSUFFICIENT_PAYER_BALANCE') or 'ERROR'
     throw new Error(`tool failed (${result.errorCode}): ${result.error}`);
+  case 'policy_block':
+    // Tool was blocked by a policy. Typed fields for programmatic branching:
+    // result.policyName   — display name of the policy that fired
+    // result.stage        — hook stage ('pre_tool_execution' | 'post_params_normalization' | ...)
+    // result.details      — optional structured payload (e.g. { recipientCount, maxRecipients })
+    // result.humanMessage — prose explanation the LLM already received
+    console.warn(`[${result.policyName}] blocked at ${result.stage}`, result.details);
+    break;
   case 'parse_error':
     throw new Error(`tool output unparseable: ${result.humanMessage}`);
   case 'unknown':
@@ -560,6 +568,12 @@ switch (result.kind) {
 `ToolResultStatus<T>` (the return type) and `ToolRawStatus` (the `raw.status` string union) are
 also exported for annotating your own code. `classifyToolResult` is additive and opt-in — the
 parsers still return `{ raw, humanMessage }` unchanged.
+
+The `policy_block` kind surfaces whenever a policy blocked the tool via `raw.errorCode === 'POLICY_BLOCKED'`. It carries
+structured fields (`policyName`, `stage`, `details`) from the `PolicyBlockedError` thrown by the policy, making it safe
+to branch on without parsing prose. See [Blocking with Policies](HOOKS_AND_POLICIES.md#blocking-with-policies) for the
+full envelope shape, the two authoring paths, and per-adapter parsers (`PolicyResultParser` for AI SDK / ADK;
+`ResponseParserService` for LangChain).
 
 **RETURN_BYTES results are typed too.** In `RETURN_BYTES` mode a transaction tool's `raw` is a
 `ReturnBytesResult` (also exported from `@hashgraph/hedera-agent-kit`): `{ bytes, status,

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MaxRecipientsPolicy } from '@/policies/max-recipients-policy';
+import { PolicyBlockedError, POLICY_BLOCK_STAGES } from '@/shared/policy-blocked-error';
 import { Context, AgentMode } from '@/shared';
 import { Client, Hbar } from '@hiero-ledger/sdk';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
@@ -49,12 +50,21 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(
-        policy['shouldBlockPostParamsNormalization'](
-          params,
-          coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
-        ),
-      ).toBe(true);
+      const method = coreAccountPluginToolNames.TRANSFER_HBAR_TOOL;
+      expect(() => policy['shouldBlockPostParamsNormalization'](params, method)).toThrow(
+        PolicyBlockedError,
+      );
+
+      try {
+        policy['shouldBlockPostParamsNormalization'](params, method);
+      } catch (err) {
+        expect(err).toBeInstanceOf(PolicyBlockedError);
+        const e = err as PolicyBlockedError;
+        expect(e.policyName).toBe('Max Recipients Policy');
+        expect(e.toolMethod).toBe(method);
+        expect(e.stage).toBe(POLICY_BLOCK_STAGES.POST_PARAMS_NORMALIZATION);
+        expect(e.details).toEqual({ recipientCount: 2, maxRecipients: 1 });
+      }
     });
 
     it('should not block if positive-amount hbar recipients are within maxRecipients', () => {
@@ -99,12 +109,10 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(
-        policy['shouldBlockPostParamsNormalization'](
-          params,
-          coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
-        ),
-      ).toBe(true);
+      const method = coreAccountPluginToolNames.TRANSFER_HBAR_TOOL;
+      expect(() => policy['shouldBlockPostParamsNormalization'](params, method)).toThrow(
+        PolicyBlockedError,
+      );
     });
 
     it('should not count zero-amount entries as recipients', () => {
@@ -147,12 +155,10 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(
-        policy['shouldBlockPostParamsNormalization'](
-          params,
-          coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
-        ),
-      ).toBe(true);
+      const method = coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL;
+      expect(() => policy['shouldBlockPostParamsNormalization'](params, method)).toThrow(
+        PolicyBlockedError,
+      );
     });
 
     it('should not block if positive-amount token recipients are within maxRecipients', () => {
@@ -194,12 +200,18 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(
-        policy['shouldBlockPostParamsNormalization'](
-          params,
-          coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
-        ),
-      ).toBe(true);
+      const method = coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL;
+      expect(() => policy['shouldBlockPostParamsNormalization'](params, method)).toThrow(
+        PolicyBlockedError,
+      );
+
+      try {
+        policy['shouldBlockPostParamsNormalization'](params, method);
+      } catch (err) {
+        expect(err).toBeInstanceOf(PolicyBlockedError);
+        const e = err as PolicyBlockedError;
+        expect(e.details).toEqual({ recipientCount: 2, maxRecipients: 1 });
+      }
     });
 
     it('should not block if NFT recipients are within maxRecipients', () => {
@@ -226,7 +238,7 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
   });
 
   describe('Custom Strategies', () => {
-    it('should use custom strategy when provided', () => {
+    it('should use custom strategy when provided and block when exceeded', () => {
       const customStrategy = (params: any) => params.customRecipients.length;
       const policy = new MaxRecipientsPolicy(1, ['my_custom_tool'], {
         my_custom_tool: customStrategy,
@@ -241,7 +253,9 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
         },
       };
 
-      expect(policy['shouldBlockPostParamsNormalization'](params, 'my_custom_tool')).toBe(true);
+      expect(() =>
+        policy['shouldBlockPostParamsNormalization'](params, 'my_custom_tool'),
+      ).toThrow(PolicyBlockedError);
     });
 
     it('should block if tool is unhandled and no custom strategy is provided', () => {

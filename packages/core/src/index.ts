@@ -14,6 +14,8 @@ export { BaseTransactionTool } from './shared/base-transaction-tool';
 export { ToolDiscovery } from './shared/tool-discovery';
 export { default as HederaBuilder } from './shared/hedera-utils/hedera-builder';
 export { AbstractPolicy } from './shared/policy';
+export { PolicyBlockedError, isPolicyBlockedError, POLICY_BLOCK_STAGES } from './shared/policy-blocked-error';
+export type { PolicyBlockStage, PolicyBlockInfo } from './shared/policy-blocked-error';
 export { AbstractHook } from './shared/hook';
 export {
   PreToolExecutionParams,
@@ -39,6 +41,7 @@ export {
   transactionToolOutputParser,
   untypedQueryOutputParser,
   classifyToolResult,
+  isPolicyBlockedToolResult,
   TOOL_STATUS,
 } from './shared/utils/default-tool-output-parsing';
 export type { ToolResultStatus, ToolRawStatus } from './shared/utils/default-tool-output-parsing';
