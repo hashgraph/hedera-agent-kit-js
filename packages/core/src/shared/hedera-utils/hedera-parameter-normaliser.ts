@@ -641,11 +641,11 @@ export default class HederaParameterNormaliser {
     const safeDecimals = Number.isFinite(tokenDecimals) ? tokenDecimals : 0;
 
     const tokenTransfers: TokenTransferMinimalParams[] = [];
-    let totalBase = 0;
+    let totalBase = Long.ZERO;
 
     for (const transfer of parsedParams.transfers) {
-      const base = toBaseUnit(transfer.amount, safeDecimals).toNumber();
-      totalBase += base;
+      const base = toBaseUnitLong(transfer.amount, safeDecimals, 'Transfer amount');
+      totalBase = totalBase.add(base);
       tokenTransfers.push({
         tokenId: parsedParams.tokenId,
         accountId: transfer.accountId,
@@ -658,7 +658,7 @@ export default class HederaParameterNormaliser {
     tokenTransfers.push({
       tokenId: parsedParams.tokenId,
       accountId: senderAccountId,
-      amount: -totalBase,
+      amount: totalBase.negate(),
     });
 
     const schedulingParams = parsedParams?.schedulingParams?.isScheduled

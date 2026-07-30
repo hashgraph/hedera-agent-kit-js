@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Client, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import { Client, Long, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import type { Context } from '@/shared/configuration';
 import { IHederaMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-service.interface';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -33,6 +33,15 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
     transactionMemo: memo,
     schedulingParams,
   });
+
+  const isNegativeLongOrNumber = (v: Long | number): boolean =>
+    Long.isLong(v) ? (v as Long).isNegative() : (v as number) < 0;
+
+  const isPositiveLongOrNumber = (v: Long | number): boolean =>
+    Long.isLong(v) ? !(v as Long).isNegative() && !(v as Long).isZero() : (v as number) > 0;
+
+  const toLongOrNumber = (v: Long | number): number =>
+    Long.isLong(v) ? (v as Long).toNumber() : (v as number);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,17 +78,11 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
       expect(result.schedulingParams?.isScheduled).toBe(false);
 
       // recipient credit
-      expect(result.tokenTransfers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ accountId: '0.0.2002', amount: 100 * 10 ** 2 }),
-        ]),
-      );
+      const creditEntry = result.tokenTransfers.find((t: any) => t.accountId === '0.0.2002');
+      expect(creditEntry?.amount.toString()).toBe(String(100 * 10 ** 2));
       // sender debit
-      expect(result.tokenTransfers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ amount: -(100 * 10 ** 2) }),
-        ]),
-      );
+      const debitEntry = result.tokenTransfers.find((t: any) => isNegativeLongOrNumber(t.amount));
+      expect(debitEntry?.amount.toString()).toBe(String(-(100 * 10 ** 2)));
     });
 
     it('should include sender debit entry equal to negative sum of recipient amounts', async () => {
@@ -96,13 +99,14 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
       );
 
       expect(result.tokenTransfers).toHaveLength(3); // 2 credits + 1 debit
-      expect(result.tokenTransfers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ accountId: '0.0.2002', amount: 50 * 10 ** 2 }),
-          expect.objectContaining({ accountId: '0.0.3003', amount: 75 * 10 ** 2 }),
-          expect.objectContaining({ amount: -(125 * 10 ** 2) }),
-        ]),
-      );
+
+      const entry2002 = result.tokenTransfers.find((t: any) => t.accountId === '0.0.2002');
+      const entry3003 = result.tokenTransfers.find((t: any) => t.accountId === '0.0.3003');
+      const debit = result.tokenTransfers.find((t: any) => isNegativeLongOrNumber(t.amount));
+
+      expect(entry2002?.amount.toString()).toBe(String(50 * 10 ** 2));
+      expect(entry3003?.amount.toString()).toBe(String(75 * 10 ** 2));
+      expect(debit?.amount.toString()).toBe(String(-(125 * 10 ** 2)));
     });
 
     it('should use explicit senderAccountId when provided', async () => {
@@ -119,7 +123,7 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
         mockMirrornode,
       );
 
-      const debitEntry = result.tokenTransfers.find((t: any) => (t.amount as number) < 0);
+      const debitEntry = result.tokenTransfers.find((t: any) => isNegativeLongOrNumber(t.amount));
       expect(debitEntry?.accountId).toBe('0.0.5555');
     });
 
@@ -133,7 +137,7 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
         mockMirrornode,
       );
 
-      const debitEntry = result.tokenTransfers.find((t: any) => (t.amount as number) < 0);
+      const debitEntry = result.tokenTransfers.find((t: any) => isNegativeLongOrNumber(t.amount));
       // AccountResolver.resolveAccount returns '0.0.1001' for undefined
       expect(debitEntry?.accountId).toBe('0.0.1001');
     });
@@ -149,8 +153,8 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
         mockMirrornode,
       );
 
-      const creditEntry = result.tokenTransfers.find((t: any) => (t.amount as number) > 0);
-      expect(creditEntry?.amount).toBe(10 ** 6);
+      const creditEntry = result.tokenTransfers.find((t: any) => isPositiveLongOrNumber(t.amount));
+      expect(creditEntry?.amount.toString()).toBe(String(10 ** 6));
     });
 
     it('should handle scheduling parameters when isScheduled is true', async () => {
@@ -228,8 +232,8 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
   });
 
   describe('Transfer list balance (regression)', () => {
-    // Helper: sum of all amount entries in the token transfer list
-    const sumAmounts = (ts: { amount: number }[]) => ts.reduce((acc, t) => acc + t.amount, 0);
+    const sumAmounts = (ts: { amount: Long | number }[]) =>
+      ts.reduce((acc, t) => acc + toLongOrNumber(t.amount), 0);
 
     it('should produce a transfer list that nets to zero for 0.1 + 0.2 @ 8 decimals', async () => {
       (mockMirrornode.getTokenInfo as any).mockResolvedValue({ decimals: 8 });
@@ -260,10 +264,10 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
       );
 
       // toBaseUnit floors: credit = floor(1.5) = 1, debit must be -1
-      const credit = result.tokenTransfers.find((t: any) => t.amount > 0);
-      const debit = result.tokenTransfers.find((t: any) => t.amount < 0);
-      expect(credit?.amount).toBe(1);
-      expect(debit?.amount).toBe(-1);
+      const credit = result.tokenTransfers.find((t: any) => isPositiveLongOrNumber(t.amount));
+      const debit = result.tokenTransfers.find((t: any) => isNegativeLongOrNumber(t.amount));
+      expect(credit?.amount.toString()).toBe('1');
+      expect(debit?.amount.toString()).toBe('-1');
       expect(sumAmounts(result.tokenTransfers)).toBe(0);
     });
 
