@@ -1,0 +1,125 @@
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
+import { createLangchainTestSetup, type LangchainTestSetup } from '@tests/utils';
+import { ReactAgent } from 'langchain';
+import { HederaLangchainToolkit } from '@hashgraph/hedera-agent-kit-langchain';
+import { TRANSFER_FUNGIBLE_TOKEN_TOOL } from '@hashgraph/hedera-agent-kit/plugins';
+
+describe('Transfer Fungible Token Tool Matching Tests', () => {
+  let testSetup: LangchainTestSetup;
+  let agent: ReactAgent;
+  let toolkit: HederaLangchainToolkit;
+
+  beforeAll(async () => {
+    testSetup = await createLangchainTestSetup();
+    agent = testSetup.agent;
+    toolkit = testSetup.toolkit;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should match a simple single-recipient direct token transfer', async () => {
+    const input = "Transfer 100 of HTS fungible token '0.0.33333' to account 0.0.2002";
+    const hederaAPI = toolkit.getHederaAgentKitAPI();
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockReset()
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+    await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledWith(
+      TRANSFER_FUNGIBLE_TOKEN_TOOL,
+      expect.objectContaining({
+        tokenId: '0.0.33333',
+        transfers: expect.arrayContaining([
+          expect.objectContaining({ accountId: '0.0.2002', amount: 100 }),
+        ]),
+      }),
+    );
+  });
+
+  it('should match a multi-recipient direct token transfer', async () => {
+    const input =
+      "Send 50 TKN (HTS Fungible token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003";
+    const hederaAPI = toolkit.getHederaAgentKitAPI();
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockReset()
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+    await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledWith(
+      TRANSFER_FUNGIBLE_TOKEN_TOOL,
+      expect.objectContaining({
+        tokenId: '0.0.33333',
+        transfers: expect.arrayContaining([
+          expect.objectContaining({ accountId: '0.0.2002', amount: 50 }),
+          expect.objectContaining({ accountId: '0.0.3003', amount: 75 }),
+        ]),
+      }),
+    );
+  });
+
+  it('should match with an explicit sender account', async () => {
+    const input =
+      "Send 25 tokens with id 0.0.33333 from account 0.0.1002 to account 0.0.2002";
+    const hederaAPI = toolkit.getHederaAgentKitAPI();
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockReset()
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+    await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledWith(
+      TRANSFER_FUNGIBLE_TOKEN_TOOL,
+      expect.objectContaining({
+        tokenId: '0.0.33333',
+        senderAccountId: '0.0.1002',
+        transfers: expect.arrayContaining([
+          expect.objectContaining({ accountId: '0.0.2002', amount: 25 }),
+        ]),
+      }),
+    );
+  });
+
+  it('should extract scheduling parameters when provided', async () => {
+    const input =
+      "Transfer 100 of fungible token '0.0.33333' to 0.0.2002. Schedule this transaction instead of executing it immediately.";
+    const hederaAPI = toolkit.getHederaAgentKitAPI();
+    const spy = vi
+      .spyOn(hederaAPI, 'run')
+      .mockReset()
+      .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
+
+    await agent.invoke({
+      messages: [{ role: 'user', content: input }],
+    });
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledWith(
+      TRANSFER_FUNGIBLE_TOKEN_TOOL,
+      expect.objectContaining({
+        tokenId: '0.0.33333',
+        transfers: expect.arrayContaining([
+          expect.objectContaining({ accountId: '0.0.2002', amount: 100 }),
+        ]),
+        schedulingParams: expect.objectContaining({
+          isScheduled: true,
+        }),
+      }),
+    );
+  });
+});

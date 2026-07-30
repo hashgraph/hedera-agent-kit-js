@@ -45,6 +45,7 @@ export class MaxRecipientsPolicy extends AbstractPolicy {
       coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,
       coreAccountPluginToolNames.TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
       coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
+      coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_TOOL,
       coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
       coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
       coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
@@ -117,7 +118,7 @@ export class MaxRecipientsPolicy extends AbstractPolicy {
     params: z.infer<ReturnType<typeof airdropFungibleTokenParametersNormalised>>,
   ) => (params.tokenTransfers ?? []).filter(this._isRecipient).length;
 
-  private _countTokenAllowance = (
+  private _countTokenTransfers = (
     params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParametersNormalised>>,
   ) => (params.tokenTransfers ?? []).filter(this._isRecipient).length;
 
@@ -135,8 +136,9 @@ export class MaxRecipientsPolicy extends AbstractPolicy {
         [coreAccountPluginToolNames.TRANSFER_HBAR_TOOL]: this._countHbar,
         [coreAccountPluginToolNames.TRANSFER_HBAR_WITH_ALLOWANCE_TOOL]: this._countHbarAllowance,
         [coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL]: this._countAirdrop,
+        [coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_TOOL]: this._countTokenTransfers,
         [coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL]:
-          this._countTokenAllowance,
+          this._countTokenTransfers,
         [coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_TOOL]: this._countNft,
         [coreTokenPluginToolNames.TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL]:
           this._countNftAllowance,

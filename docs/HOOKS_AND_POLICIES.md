@@ -300,7 +300,7 @@ Every tool in the kit follows a standardized 7-stage lifecycle. The execution lo
          |
 [5. Post-Core Action] --------------> Hook: postCoreActionHook
          |
-[6. Secondary Action]
+[6. Secondary Action] (skipped for query tools)
          |
 [7. Post-Tool Execution] -----------> Hook: postToolExecutionHook
          |
@@ -312,10 +312,13 @@ Every tool in the kit follows a standardized 7-stage lifecycle. The execution lo
 1. **Pre-Tool Execution**: Before any processing begins. Use for early validation or logging.
 2. **Parameter Normalization**: The tool validates and cleans user input (not hookable).
 3. **Post-Parameter Normalization**: After parameters are normalized. Use for parameter-based validation.
-4. **Core Action**: Primary business logic executes (e.g., creating a transaction).
+4. **Core Action**: Primary business logic executes (e.g., creating a transaction or running a query).
 5. **Post-Core Action**: After core logic completes. Use to inspect or modify the result before submission.
-6. **Secondary Action**: Transaction signing/submission happens (not hookable).
+6. **Secondary Action**: Transaction signing/submission happens (not hookable). Query tools skip this stage entirely — `shouldSecondaryAction` returns `false` and `secondaryAction` is never called.
 7. **Post-Tool Execution**: After everything completes. Use for final logging or cleanup.
+
+> [!IMPORTANT]
+> **All 4 hook stages fire for every tool**, including query tools that skip the secondary action. Skipping stage 6 does not suppress `postToolExecutionHook`. The only difference for query tools is that in `postToolExecutionHook`, `toolResult` and `coreActionResult` are the same object (since no secondary action transformed the result).
 
 ## Hook Parameter Structures
 
@@ -327,7 +330,7 @@ executed. This allows hooks to target specific tools or apply general logic.
 | `preToolExecutionHook`        | `context`, `rawParams`, `client`                                                       | `method: string` | Early validation, logging initial state      |
 | `postParamsNormalizationHook` | `context`, `rawParams`, `normalisedParams`, `client`                                   | `method: string` | Parameter-based policies, data enrichment    |
 | `postCoreActionHook`          | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `client`               | `method: string` | Inspect/modify transaction before submission |
-| `postToolExecutionHook`       | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method: string` | Final logging, audit trails, cleanup         |
+| `postToolExecutionHook`       | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method: string` | Final logging, audit trails, cleanup. For transaction tools `toolResult` is the submission result and `coreActionResult` is the pre-submission value; for query tools they are the same object. |
 
 > [!TIP]
 > Use the `method` parameter to filter execution and apply **Type Guards** for safe parameter access.

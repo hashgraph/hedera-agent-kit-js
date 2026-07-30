@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isReturnBytesMode, type Context } from '@/shared/configuration';
+import { type Context } from '@/shared/configuration';
 import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { Client } from '@hiero-ledger/sdk';
@@ -24,7 +24,7 @@ ${contextSnippet}
 
 This tool will transfer a given amount of an existing ERC20 token on Hedera via its EVM smart contract.
 Use this tool when the user mentions "ERC20", "EVM token", or transferring tokens from a smart contract.
-Do NOT use for HTS (Hedera Token Service) native tokens — those are identified by a token ID, not a contract.
+Do NOT use for HTS (Hedera Token Service) native tokens — if erc20 mentioned, then user wants to transfer from a contractId and given 0.0.XYZ address is the contract id not a HTS address.
 Always use this tool when the user mentions "ERC20", "ERC-20", or "contract" as the token source — regardless of the amount being transferred.
 
 Parameters:
@@ -36,9 +36,9 @@ Parameters:
 ${usageInstructions}
 
 Example: "Transfer 25 erc20 tokens from contract 0.0.1234 to 0.0.5678" → contractId=0.0.1234, recipientAddress=0.0.5678, amount=25.
-Example: "Send 100 ERC20 tokens (contract: 0.0.5555) to 0.0.6666" → contractId=0.0.5555, recipientAddress=0.0.6666, amount=100.
+Example: "Send 100 ERC20 tokens 0.0.5555 to 0.0.6666" → contractId=0.0.5555, recipientAddress=0.0.6666, amount=100.
 Example: "Move 200 erc20 tokens of contract 0x1111...1111 to 0.0.4444" → contractId=0x1111...1111, recipientAddress=0.0.4444, amount=200.
-Example: "Transfer 1000000 ERC20 tokens from contract 0.0.1234 to 0.0.5678" means transferring 1000000 tokens of the ERC20 contract 0.0.1234 to the account 0.0.5678 — the contractId is 0.0.1234 and the recipientAddress is 0.0.5678.
+Example: "Transfer 1000000 ERC20 tokens 0.0.1234 to 0.0.5678" means transferring 1000000 tokens of the ERC20 contract 0.0.1234 to the account 0.0.5678 — the contractId is 0.0.1234 and the recipientAddress is 0.0.5678.
 `;
 };
 
@@ -86,9 +86,6 @@ export class TransferErc20Tool extends BaseTransactionTool {
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (isReturnBytesMode(context.mode)) {
-      return await handleTransaction(transaction, client, context);
-    }
     return await handleTransaction(transaction, client, context, postProcess);
   }
 }
