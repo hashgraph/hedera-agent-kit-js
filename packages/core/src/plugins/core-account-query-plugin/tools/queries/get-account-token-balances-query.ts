@@ -91,13 +91,6 @@ export class GetAccountTokenBalancesQueryTool extends BaseTool {
   async secondaryAction(_request: any, _client: Client, _context: Context): Promise<any> {
     return null;
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get account token balances';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_account_token_balances_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
-  }
 }
 
 const tool = (context: Context): BaseTool => new GetAccountTokenBalancesQueryTool(context);

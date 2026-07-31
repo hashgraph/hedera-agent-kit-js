@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { submitTopicMessageParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -33,7 +30,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const SUBMIT_TOPIC_MESSAGE_TOOL = 'submit_topic_message_tool';
 
-export class SubmitTopicMessageTool extends BaseTool {
+export class SubmitTopicMessageTool extends BaseTransactionTool {
   method = SUBMIT_TOPIC_MESSAGE_TOOL;
   name = 'Submit Topic Message';
   description: string;
@@ -61,18 +58,8 @@ export class SubmitTopicMessageTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to submit message to topic';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[submit_topic_message_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new SubmitTopicMessageTool(context);
+const tool = (context: Context): BaseTransactionTool => new SubmitTopicMessageTool(context);
 
 export default tool;

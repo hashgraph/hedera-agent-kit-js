@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
-import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey} from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_ERC20_TOOL } from '@/plugins/core-evm-plugin/tools/erc20/create-erc20';
 import { createERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -128,6 +128,24 @@ describe('createERC20 tool (unit)', () => {
     );
   });
 
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'returns early when in %s mode (skips ERC20 address lookup)',
+    async mode => {
+      (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
+
+      const customContext: any = { accountId: '0.0.1001', mode };
+      const tool = toolFactory(customContext);
+      const client = makeClient();
+
+      const res: any = await tool.execute(client, customContext, params);
+
+      expect(res).toBeDefined();
+      expect(res.raw).toBeDefined();
+      expect(res.erc20Address).toBeUndefined();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
+    },
+  );
+
   it('returns error message when an Error is thrown', async () => {
     (mockedBuilder.executeTransaction as Mock).mockImplementation(() => {
       throw new Error('boom');
@@ -138,9 +156,9 @@ describe('createERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toContain('Failed to create ERC20 token: boom');
-    expect(res.raw.error).toContain('Failed to create ERC20 token: boom');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toContain('Failed to execute Create ERC20 Token: boom');
+    expect(res.raw.error).toContain('Failed to execute Create ERC20 Token: boom');
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -153,8 +171,8 @@ describe('createERC20 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to create ERC20 token');
-    expect(res.raw.error).toBe('Failed to create ERC20 token');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toBe('Failed to execute Create ERC20 Token');
+    expect(res.raw.error).toBe('Failed to execute Create ERC20 Token');
+    expect(res.raw.status).toBe('ERROR');
   });
 });

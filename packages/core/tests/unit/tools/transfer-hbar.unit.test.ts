@@ -98,7 +98,7 @@ describe('transfer-hbar tool (unit)', () => {
     const res = await tool.execute(client, context, {
       transfers: [{ accountId: '0.0.9', amount: 1 }],
     } as any);
-    expect(res.humanMessage).toContain('Failed to transfer HBAR');
+    expect(res.humanMessage).toContain('Failed to execute Transfer HBAR');
     expect(res.humanMessage).toContain('boom');
   });
 
@@ -114,6 +114,6 @@ describe('transfer-hbar tool (unit)', () => {
     const res = await tool.execute(client, context, {
       transfers: [{ accountId: '0.0.9', amount: 1 }],
     } as any);
-    expect(res.humanMessage).toBe('Failed to transfer HBAR');
+    expect(res.humanMessage).toBe('Failed to execute Transfer HBAR');
   });
 });

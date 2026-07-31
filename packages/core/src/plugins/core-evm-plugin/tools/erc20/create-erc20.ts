@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { AgentMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status, TransactionRecordQuery } from '@hiero-ledger/sdk';
+import { isReturnBytesMode, type Context } from '@/shared/configuration';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, TransactionRecordQuery } from '@hiero-ledger/sdk';
 import {
   ExecuteStrategyResult,
   handleTransaction,
@@ -46,7 +46,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const CREATE_ERC20_TOOL = 'create_erc20_tool';
 
-export class CreateErc20Tool extends BaseTool {
+export class CreateErc20Tool extends BaseTransactionTool {
   method = CREATE_ERC20_TOOL;
   name = 'Create ERC20 Token';
   description: string;
@@ -83,26 +83,16 @@ export class CreateErc20Tool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     const result = await handleTransaction(transaction, client, context);
 
-    if (context.mode === AgentMode.RETURN_BYTES) return result;
+    if (isReturnBytesMode(context.mode)) return result;
 
     const raw = (result as ExecuteStrategyResult).raw;
     const erc20Address = await getERC20Address(client, raw);
     const humanMessage = postProcess(erc20Address, raw);
 
-    return { ...result, erc20Address, humanMessage };
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const message =
-      'Failed to create ERC20 token' + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[create_erc20_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+    return { ...(result as ExecuteStrategyResult), erc20Address, humanMessage };
   }
 }
 
-const tool = (context: Context): BaseTool => new CreateErc20Tool(context);
+const tool = (context: Context): BaseTransactionTool => new CreateErc20Tool(context);
 
 export default tool;

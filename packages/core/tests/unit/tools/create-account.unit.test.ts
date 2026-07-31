@@ -108,10 +108,10 @@ describe('create-account tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params);
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to create account');
+    expect(res.humanMessage).toContain('Failed to execute Create Account');
     expect(res.humanMessage).toContain('boom');
     expect(res.raw).toBeDefined();
-    expect(res.raw.error).toContain('Failed to create account');
+    expect(res.raw.error).toContain('Failed to execute Create Account');
   });
 
   it('returns generic failure response object when a non-Error is thrown', async () => {
@@ -125,7 +125,7 @@ describe('create-account tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params);
     expect(res).toBeDefined();
-    expect(res.humanMessage).toContain('Failed to create account');
-    expect(res.raw.error).toContain('Failed to create account');
+    expect(res.humanMessage).toContain('Failed to execute Create Account');
+    expect(res.raw.error).toContain('Failed to execute Create Account');
   });
 });

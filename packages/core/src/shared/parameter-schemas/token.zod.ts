@@ -9,6 +9,7 @@ import {
   TokenSupplyType,
   TokenType,
 } from '@hiero-ledger/sdk';
+import Long from 'long';
 import { TokenTransferMinimalParams } from '@/shared/hedera-utils/types';
 import {
   optionalScheduledTransactionParams,
@@ -72,6 +73,9 @@ export const createFungibleTokenParametersNormalised = (_context: Context = {}) 
         metadataKey: z.custom<PublicKey>().optional().describe('The metadata key for the token.'),
         tokenMemo: z.string().optional().describe('The memo for the token.'),
         tokenType: z.custom<TokenType>().optional().describe('The type of the token.'),
+        // Normalised fields: converted from display units to int64-safe Longs by the normaliser.
+        initialSupply: z.custom<Long | number>(),
+        maxSupply: z.custom<Long | number>().optional(),
       }),
   );
 
@@ -154,6 +158,7 @@ export const mintFungibleTokenParameters = (_context: Context = {}) =>
 export const mintFungibleTokenParametersNormalised = (_context: Context = {}) =>
   mintFungibleTokenParameters(_context)
     .omit({ schedulingParams: true })
+    .extend({ amount: z.custom<Long | number>() })
     .merge(optionalScheduledTransactionParamsNormalised(_context));
 
 export const mintNonFungibleTokenParameters = (_context: Context = {}) =>
@@ -209,49 +214,49 @@ export const updateTokenParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New admin key. Pass boolean `true` to use the operator/user key, or provide a Hedera-compatible public key string. Required for most property updates.',
+        'New admin key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").  Required for most property updates.',
       ),
     kycKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New KYC key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New KYC key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     freezeKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New freeze key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New freeze key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     wipeKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New wipe key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New wipe key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     supplyKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New supply key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New supply key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     feeScheduleKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New fee schedule key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New fee schedule key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     pauseKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New pause key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New pause key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     metadataKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New metadata key. Pass boolean `true` to use the operator/user key, or provide a public key string.',
+        'New metadata key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     metadata: z
       .string()
@@ -457,6 +462,35 @@ export const transferNonFungibleTokenParametersNormalised = (_context: Context) 
     ),
   });
 
+export const transferFungibleTokenParameters = (context: Context = {}) =>
+  optionalScheduledTransactionParams(context).extend({
+    tokenId: z.string().describe('Token ID to transfer (e.g. "0.0.12345")'),
+    senderAccountId: z
+      .string()
+      .optional()
+      .describe('Account ID of the sender. Defaults to operator account if omitted.'),
+    transfers: z
+      .array(
+        z.object({
+          accountId: z.string().describe('Recipient account ID (Required)'),
+          amount: z
+            .number()
+            .nonnegative()
+            .describe('Amount of tokens to transfer in display unit. (Required)'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient transfers'),
+    transactionMemo: z.string().optional().describe('Memo for the transaction'),
+  });
+
+export const transferFungibleTokenParametersNormalised = (context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(context).extend({
+    tokenId: z.string(),
+    tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
+    transactionMemo: z.string().optional(),
+  });
+
 export const transferFungibleTokenWithAllowanceParameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
     tokenId: z.string().describe('Token ID to transfer'),
@@ -482,7 +516,7 @@ export const transferFungibleTokenWithAllowanceParametersNormalised = (context: 
     tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
     approvedTransfer: z.object({
       ownerAccountId: z.string(),
-      amount: z.number(),
+      amount: z.custom<Long | number>(),
     }),
     transactionMemo: z.string().optional(),
   });

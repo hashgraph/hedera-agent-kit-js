@@ -5,6 +5,7 @@ import { HederaMirrornodeServiceDefaultImpl } from '@/shared/hedera-utils/mirror
 const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
 const notFound = () => ({ ok: false, status: 404, statusText: 'Not Found' });
 const serverError = () => ({ ok: false, status: 500, statusText: 'Internal Server Error' });
+const unavailable = () => ({ ok: false, status: 503, statusText: 'Service Unavailable' });
 
 describe('mirror node getTransactionRecord - 404 retry with backoff', () => {
   const service = new HederaMirrornodeServiceDefaultImpl(LedgerId.TESTNET);
@@ -45,12 +46,39 @@ describe('mirror node getTransactionRecord - 404 retry with backoff', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3); // maxAttempts
   });
 
-  it('does not retry non-404 errors', async () => {
+  it('does not retry non-retryable errors (500)', async () => {
     const fetchMock = vi.fn().mockResolvedValue(serverError());
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(service.getTransactionRecord('0.0.2-2-2')).rejects.toThrow('500');
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries transient overload statuses (503)', async () => {
+    const record = { transactions: [{ result: 'SUCCESS' }] };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(unavailable())
+      .mockResolvedValueOnce(ok(record));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = service.getTransactionRecord('0.0.3-3-3');
+    await vi.runAllTimersAsync();
+
+    await expect(promise).resolves.toEqual(record);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries network-level failures and throws once exhausted', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('ECONNRESET'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = service.getTransactionRecord('0.0.4-4-4');
+    const assertion = expect(promise).rejects.toThrow('Network error fetching');
+    await vi.runAllTimersAsync();
+    await assertion;
+
+    expect(fetchMock).toHaveBeenCalledTimes(3); // maxAttempts
   });
 
   it('applies the same 404 retry to other methods (getTokenInfo)', async () => {

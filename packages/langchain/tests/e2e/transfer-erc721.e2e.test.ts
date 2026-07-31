@@ -159,7 +159,7 @@ describe('Transfer ERC721 Token E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(result);
 
       expect(parsedResponse).toBeDefined();
-      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to transfer ERC721');
+      expect(parsedResponse[0].parsedData.humanMessage).toContain('Failed to execute Transfer ERC721');
     },
   );
 });

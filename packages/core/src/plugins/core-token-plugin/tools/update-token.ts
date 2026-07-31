@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, PublicKey, Status } from '@hiero-ledger/sdk';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client, PublicKey } from '@hiero-ledger/sdk';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -74,31 +71,33 @@ This tool will update an existing Hedera HTS token. Only the fields provided wil
 
 Key fields (adminKey, kycKey, freezeKey, wipeKey, supplyKey, feeScheduleKey, pauseKey, metadataKey) must contain **Hedera-compatible public keys (as strings) or boolean (true/false)**. You can provide these in one of three ways:
 
-1. **Boolean true** – Set this field to use user/operator key. Injecting of the key will be handled automatically.
+1. **Boolean true** – Set this field to use the user/operator key (e.g. when the user asks for "my key", "my operator key", "my public key", or "use my key"). Injecting of the key will be handled automatically. NEVER set a key field to an account ID string (such as 0.0.x).
 2. **Not provided** – The field will not be updated.
-3. **String** – Provide a Hedera-compatible public key string to set a field explicitly.
+3. **String** – Provide a Hedera-compatible public key string (e.g., 302a...) to set a field explicitly.
 
 Parameters:
 - ${tokenDesc}
 - tokenName (string, optional): New name for the token. Up to 100 characters.
 - tokenSymbol (string, optional): New symbol for the token. Up to 100 characters.
 - treasuryAccountId (string, optional): New treasury account for the token (Hedera account ID).
-- adminKey (boolean|string, optional): New admin key. Pass true to use your operator key, or provide a public key string.
-- kycKey (boolean|string, optional): New KYC key. Pass true to use your operator key, or provide a public key string.
-- freezeKey (boolean|string, optional): New freeze key. Pass true to use your operator key, or provide a public key string.
-- wipeKey (boolean|string, optional): New wipe key. Pass true to use your operator key, or provide a public key string.
-- supplyKey (boolean|string, optional): New supply key. Pass true to use your operator key, or provide a public key string.
-- feeScheduleKey (boolean|string, optional): New fee schedule key. Pass true to use your operator key, or provide a public key string.
-- pauseKey (boolean|string, optional): New pause key. Pass true to use your operator key, or provide a public key string.
-- metadataKey (boolean|string, optional): New metadata key. Pass true to use your operator key, or provide a public key string.
+- adminKey (boolean|string, optional): New admin key. Pass boolean true to use your key/operator key, or provide a public key string.
+- kycKey (boolean|string, optional): New KYC key. Pass boolean true to use your key/operator key, or provide a public key string.
+- freezeKey (boolean|string, optional): New freeze key. Pass boolean true to use your key/operator key, or provide a public key string.
+- wipeKey (boolean|string, optional): New wipe key. Pass boolean true to use your key/operator key, or provide a public key string.
+- supplyKey (boolean|string, optional): New supply key. Pass boolean true to use your key/operator key, or provide a public key string.
+- feeScheduleKey (boolean|string, optional): New fee schedule key. Pass boolean true to use your key/operator key, or provide a public key string.
+- pauseKey (boolean|string, optional): New pause key. Pass boolean true to use your key/operator key, or provide a public key string.
+- metadataKey (boolean|string, optional): New metadata key. Pass boolean true to use your key/operator key, or provide a public key string.
 - metadata (string, optional): New metadata for the token, in bytes (hex or base64).
 - tokenMemo (string, optional): Short public memo for the token, up to 100 characters.
 - autoRenewAccountId (string, optional): Account to automatically pay for renewal.
 
 Examples:
-- If the user asks for "my key" → set the field to \`true\`.
+- If the user asks for "my key", "my public key", "my operator key", or any phrase referring to their own key → set the field to \`true\`. Never use the account ID (e.g. "0.0.1002") for a key field.
 - If the user does not mention the key → do not set the field.
-- If the user provides a key → set the field to the provided public key string.
+- If the user provides a Hedera-compatible public key string → set the field to that string.
+
+IMPORTANT: Key fields NEVER accept account IDs. An account ID like "0.0.1002" is not a valid key value. If the user says "my key" without providing a public key string, always use \`true\`.
 
 If the user provides multiple fields in a single request, 
 combine them into **one tool call** with all parameters together.
@@ -113,7 +112,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const UPDATE_TOKEN_TOOL = 'update_token_tool';
 
-export class UpdateTokenTool extends BaseTool {
+export class UpdateTokenTool extends BaseTransactionTool {
   method = UPDATE_TOKEN_TOOL;
   name = 'Update Token';
   description: string;
@@ -140,30 +139,14 @@ export class UpdateTokenTool extends BaseTool {
 
     await checkValidityOfUpdates(normalisedParams, mirrornodeService, userPublicKey);
 
-    const tx = HederaBuilder.updateToken(normalisedParams);
-
-    return await handleTransaction(tx, client, context, postProcess);
+    return HederaBuilder.updateToken(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to update token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[update_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 
-const tool = (context: Context): BaseTool => new UpdateTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new UpdateTokenTool(context);
 
 export default tool;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey} from '@hiero-ledger/sdk';
 import toolFactory, { MINT_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/mint-erc721';
 import { mintERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -121,6 +121,30 @@ describe('mintERC721 tool (unit)', () => {
     );
   });
 
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'returns bytes result when in %s mode',
+    async mode => {
+      mockedNormaliser.normaliseMintERC721Params.mockResolvedValue(normalisedParams);
+      mockedBuilder.executeTransaction.mockReturnValue({} as any);
+
+      const customContext: any = { accountId: '0.0.1001', mode };
+      const tool = toolFactory(customContext);
+      const client = makeClient();
+
+      const res: any = await tool.execute(client, customContext, params);
+
+      expect(res).toBeDefined();
+      expect(res.raw).toBeDefined();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(Object),
+        customContext,
+        expect.any(Function),
+      );
+    },
+  );
+
   it('returns error message when an Error is thrown', async () => {
     mockedBuilder.executeTransaction.mockImplementation(() => {
       throw new Error('mint failed');
@@ -133,7 +157,7 @@ describe('mintERC721 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('mint failed');
     expect(res.raw.error).toContain('mint failed');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -146,9 +170,9 @@ describe('mintERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to mint ERC721');
-    expect(res.raw.error).toBe('Failed to mint ERC721');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toBe('Failed to execute Mint ERC721');
+    expect(res.raw.error).toBe('Failed to execute Mint ERC721');
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles parameter validation errors', async () => {
@@ -163,7 +187,7 @@ describe('mintERC721 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('Invalid parameters: Field "toAddress" - Invalid address');
     expect(res.raw.error).toContain('Invalid parameters: Field "toAddress" - Invalid address');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('handles address resolution errors', async () => {
@@ -178,6 +202,6 @@ describe('mintERC721 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('Account not found: 0.0.9999');
     expect(res.raw.error).toContain('Account not found: 0.0.9999');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 });

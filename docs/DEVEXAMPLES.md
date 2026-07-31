@@ -67,8 +67,9 @@ Try out one or more of the example agents:
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
 * **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
 * **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
-* **Option J -** [Example Google ADK Agent](#option-j-try-out-the-google-adk-agent)
-* **Option K -** [Example Streaming Tool Calling Agent](#option-k-run-the-streaming-tool-calling-agent)
+* **Option J -** [Example Custom Signing Agent](#option-j-run-the-custom-signing-agent)
+* **Option K -** [Example Google ADK Agent](#option-k-try-out-the-google-adk-agent)
+* **Option L -** [Example Streaming Tool Calling Agent](#option-l-run-the-streaming-tool-calling-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -449,7 +450,37 @@ npm run langchain:audit-trail-agent
 
 ---
 
-### Option J: Try out the Google ADK Agent
+### Option J: Run the Custom Signing Agent
+
+This example demonstrates `AgentMode.CUSTOM_EXECUTE_TX` with an interactive human-in-the-loop console strategy — a pattern that also covers remote TEE enclaves, MPC threshold signers, Fireblocks/AWS KMS integrations, and any other delegated signing flow. The agent halts before each transaction and prompts for approval in the terminal before delegating to the custom strategy.
+
+**Found at:**
+- `examples/langchain/custom-signing-tool-calling-agent.ts` (LangChain v0.3)
+- `examples/langchain-v1/custom-signing-tool-calling-agent.ts` (LangChain v1 / LangGraph)
+
+For the full API reference and `TransactionStrategy` interface, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
+
+#### Running the Example
+
+##### LangChain v0.3
+
+```bash
+cd examples/langchain
+npm install
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+---
+
+### Option K: Try out the Google ADK Agent
 
 This example demonstrates how to use the Hedera Agent Kit with [Google's Agent Development Kit (ADK)](https://google.github.io/adk-docs/get-started/). It includes a plugin tool calling agent and supports the ADK Web GUI for interactive testing.
 
@@ -493,7 +524,7 @@ This will start a local web server (by default at `http://localhost:8000`) where
 
 ---
 
-### Option K: Run the Streaming Tool Calling Agent
+### Option L: Run the Streaming Tool Calling Agent
 
 Same as the basic tool calling agent, but the agent's responses are **streamed token by token** instead of returned all at once — using `agent.stream()` instead of `agent.invoke()` in LangChain v1, and `streamText` instead of `generateText` in the AI SDK.
 

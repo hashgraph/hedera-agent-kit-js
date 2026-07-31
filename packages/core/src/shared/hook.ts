@@ -38,6 +38,24 @@ export interface PostSecondaryActionParams<TParams = any, TNormalisedParams = an
 export abstract class AbstractHook {
   public abstract name: string;
   public abstract description?: string;
+
+  /**
+   * The list of tool method names this hook applies to. The hook is a no-op for any tool not in
+   * this list.
+   *
+   * Use the tool-name constants from `@hashgraph/hedera-agent-kit/plugins` rather than bare
+   * strings to avoid typos — e.g.:
+   *
+   * ```ts
+   * import { coreAccountPluginToolNames, coreTokenPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
+   *
+   * relevantTools = [
+   *   coreAccountPluginToolNames.TRANSFER_HBAR_TOOL,          // 'transfer_hbar_tool'
+   *   coreAccountPluginToolNames.TRANSFER_HBAR_WITH_ALLOWANCE_TOOL,
+   *   coreTokenPluginToolNames.AIRDROP_FUNGIBLE_TOKEN_TOOL,
+   * ];
+   * ```
+   */
   public abstract relevantTools: string[];
 
   public async preToolExecutionHook(_params: PreToolExecutionParams, method: string): Promise<any> {

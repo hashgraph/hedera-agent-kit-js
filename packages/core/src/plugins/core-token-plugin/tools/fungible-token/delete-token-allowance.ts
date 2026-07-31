@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { deleteTokenAllowanceParameters } from '@/shared/parameter-schemas/account.zod';
@@ -42,7 +39,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const DELETE_TOKEN_ALLOWANCE_TOOL = 'delete_token_allowance_tool';
 
-export class DeleteTokenAllowanceTool extends BaseTool {
+export class DeleteTokenAllowanceTool extends BaseTransactionTool {
   method = DELETE_TOKEN_ALLOWANCE_TOOL;
   name = 'Delete Token Allowance';
   description: string;
@@ -69,30 +66,15 @@ export class DeleteTokenAllowanceTool extends BaseTool {
     );
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.approveTokenAllowance(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.approveTokenAllowance(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete token allowance(s).';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[delete_token_allowance_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 
-const tool = (context: Context): BaseTool => new DeleteTokenAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new DeleteTokenAllowanceTool(context);
 
 export default tool;

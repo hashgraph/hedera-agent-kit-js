@@ -6,10 +6,11 @@ import {
   HederaOperationsWrapper,
   type TestAccount,
   waitForMirrorTx,
+  waitFor,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
 import { Client } from '@hiero-ledger/sdk';
-import { createERC20Parameters } from '@hashgraph/hedera-agent-kit';
+import { createERC20Parameters, getMirrornodeService } from '@hashgraph/hedera-agent-kit';
 import { z } from 'zod';
 
 describe('Transfer ERC20 Token E2E Tests', () => {
@@ -52,6 +53,19 @@ describe('Transfer ERC20 Token E2E Tests', () => {
 
     testTokenAddress = createResult.erc20Address;
     await waitForMirrorTx(executorWrapper, createResult.raw.transactionId);
+
+    const mirrorNode = getMirrornodeService(undefined, executorClient.ledgerId!);
+    await waitFor(
+      async () => {
+        try {
+          await mirrorNode.getERC20Decimals(testTokenAddress);
+          return true;
+        } catch {
+          return null;
+        }
+      },
+      { timeoutMs: 60000, intervalMs: 500, description: 'ERC20 contract to be callable' },
+    );
   });
 
   afterAll(async () => {

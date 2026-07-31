@@ -7,20 +7,22 @@
 Build Hedera-powered AI agents **in under a minute**.
 
 > **Upgrading from v3?** See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for all breaking changes.
+>
+> **Building a custom plugin?** See the [Custom Plugin Authoring Guide](docs/PLUGINS.md#creating-a-plugin) — the v4 `BaseTool` pattern, a runnable starter in [`examples/plugin`](examples/plugin), and a no-LLM smoke test.
 
 ## Packages
 
 The Hedera Agent Kit is organized as a monorepo containing the core SDK and multiple framework adapter packages:
 
-| Package | NPM Link | Description |
-|---------|----------|-------------|
-| **`@hashgraph/hedera-agent-kit`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit) | Core SDK & plugins for Hedera network integration |
-| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils) |
-| **`@hashgraph/hedera-agent-kit-ai-sdk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk) | Vercel AI SDK adapter (compatible with standard tools) |
-| **`@hashgraph/hedera-agent-kit-elizaos`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos) | ElizaOS adapter (custom Eliza Actions) |
-| **`@hashgraph/hedera-agent-kit-mcp`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp) | Model Context Protocol (MCP) Server toolkit |
-| **`@hashgraph/hedera-agent-kit-adk`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk) | Google Agent Development Kit (ADK) adapter |
-| **`create-hedera-agent`** | [npm](https://www.npmjs.com/package/create-hedera-agent) | CLI scaffold tool to bootstrap Next.js agent apps |
+| Package                                     | NPM Link                                                                   | Description                                            |
+|---------------------------------------------|----------------------------------------------------------------------------|--------------------------------------------------------|
+| **`@hashgraph/hedera-agent-kit`**           | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit)           | Core SDK & plugins for Hedera network integration      |
+| **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils)       |
+| **`@hashgraph/hedera-agent-kit-ai-sdk`**    | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk)    | Vercel AI SDK adapter (compatible with standard tools) |
+| **`@hashgraph/hedera-agent-kit-elizaos`**   | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos)   | ElizaOS adapter (custom Eliza Actions)                 |
+| **`@hashgraph/hedera-agent-kit-mcp`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp)       | Model Context Protocol (MCP) Server toolkit            |
+| **`@hashgraph/hedera-agent-kit-adk`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk)       | Google Agent Development Kit (ADK) adapter             |
+| **`create-hedera-agent`**                   | [npm](https://www.npmjs.com/package/create-hedera-agent)                   | CLI scaffold tool to bootstrap Next.js agent apps      |
 
 ---
 
@@ -64,7 +66,9 @@ Want to add more functionality from Hedera Services? [Open an issue](https://git
 ### Third Party Plugins
 The Hedera Agent Kit is extensible with third-party plugins developed by other projects. See how you can build and submit your own plugin to be listed as a Hedera Agent Kit plugin in [Hedera Docs](https://docs.hedera.com/hedera/open-source-solutions/ai-studio-on-hedera/hedera-ai-agent-kit/plugins#plugins) and in [docs/PLUGINS.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md).
 
-_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md)_
+👉 **Build your own plugin:** follow the [Custom Plugin Authoring Guide](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#creating-a-plugin) (v4 `BaseTool` pattern, a runnable starter in [`examples/plugin`](https://github.com/hashgraph/hedera-agent-kit-js/tree/main/examples/plugin), and a no-LLM smoke test), then [publish and register it](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#publish-and-register-your-plugin) to get it listed here.
+
+_[Contribute your own plugin](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/PLUGINS.md#creating-a-plugin)_
 
 ### Hooks and Policies
 
@@ -93,14 +97,15 @@ First follow instructions in the [Developer Examples to clone and configure the 
 
 - **Option A -** [Example Tool Calling Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-a-run-the-example-tool-calling-agent)
 - **Option B -** [Example Structured Chat Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-b-run-the-structured-chat-agent-langchain-v03-only)
-- **Option C -** [Example Human in the Loop Chat Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
+- **Option C -** [Example Return Bytes Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
 - **Option D -** [Example MCP Server](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
 - **Option E -** [Example External MCP Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-e-try-out-the-external-mcp-agent)
 - **Option F -** [Example ElizaOS Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-f-try-out-the-hedera-agent-kit-with-elizaos)
 - **Option G -** [Example Preconfigured MCP Client Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-g-try-out-the-preconfigured-mcp-client-agent)
 - **Option H -** [Example Policy Enforcement Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
 - **Option I -** [Example Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-audit-trail-agent)
-- **Option J -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-j-try-out-the-google-adk-agent)
+- **Option J -** [Example Custom Signing Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-j-run-the-custom-signing-agent)
+- **Option K -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-k-try-out-the-google-adk-agent)
 
 ---
 
@@ -244,12 +249,14 @@ npx tsx index.ts
 
 ### Agent Execution Modes
 
-This tool has two execution modes with AI agents; autonomous execution and return bytes. If you set:
+HAK supports three transaction execution modes:
 
-- `mode: AgentMode.RETURN_BYTES` the transaction is **not** executed — the tool freezes it and returns unsigned transaction bytes, so the calling application, wallet, or user can sign and submit them. This keeps signing keys out of the agent entirely.
-- `mode: AgentMode.AUTONOMOUS` the transaction will be executed autonomously, using the operator account set in the client with `.setOperator(...)`.
+- `mode: AgentMode.AUTONOMOUS` — signs and broadcasts transactions directly using the operator key set on the client. Ideal for local testing, scripts, and fully autonomous agents.
+- `mode: AgentMode.RETURN_BYTES` — returns serialized unsigned transaction bytes to the caller for external signing (e.g. MetaMask, HashPack, or any wallet). Ideal for stateless servers, browser extensions, and dApps.
+- `mode: AgentMode.CUSTOM_EXECUTE_TX` — delegates signing **and execution** to a pluggable `TransactionStrategy` (e.g. remote TEE, MPC, KMS, HITL console). Returns a full receipt; compatible with audit-trail hooks.
+- `mode: AgentMode.CUSTOM_RETURN_BYTES` — delegates transaction assembly to a pluggable `TransactionStrategy` that returns unsigned bytes for out-of-band signing. Enables delegated-payer flows.
 
-See [docs/MCP.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/MCP.md) for a guide to building non-custodial MCP servers on top of `RETURN_BYTES` mode.
+For full configuration examples, built-in strategies, and a reference implementation, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md). For building non-custodial MCP servers on top of `RETURN_BYTES` mode, see [docs/MCP.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/MCP.md).
 
 ### Hedera Plugins & Tools
 

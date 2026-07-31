@@ -152,7 +152,7 @@ describe('Transfer ERC721 Integration Tests', () => {
       const tool = transferERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, {} as any);
 
-      expect(result.humanMessage).toContain('Failed to transfer ERC721');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC721');
       expect(result.raw.error).toContain('Invalid parameters');
     });
 
@@ -165,7 +165,7 @@ describe('Transfer ERC721 Integration Tests', () => {
       const tool = transferERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Failed to transfer ERC721');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC721');
     });
 
     it('should fail when transferring non-existent token', async () => {
@@ -179,7 +179,7 @@ describe('Transfer ERC721 Integration Tests', () => {
       const tool = transferERC721Tool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Failed to transfer ERC721');
+      expect(result.humanMessage).toContain('Failed to execute Transfer ERC721');
     });
   });
 });

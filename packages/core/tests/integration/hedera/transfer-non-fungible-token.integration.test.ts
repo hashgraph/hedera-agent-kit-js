@@ -129,8 +129,10 @@ describe('Transfer NFT Integration Tests', () => {
     const tool = transferNonFungibleToken(recipientContext);
     const result = await tool.execute(recipientClient, recipientContext, params);
 
-    expect(result.raw.status).not.toBe('SUCCESS');
-    expect(result.humanMessage).toContain('Failed to transfer non-fungible token');
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('INVALID_NFT_ID');
+    expect(result.raw.transactionId).toBeDefined();
+    expect(result.humanMessage).toContain('Failed to execute Transfer Non Fungible Token');
   });
 
   it('should schedule an NFT transfer', async () => {

@@ -1,17 +1,15 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { transferFungibleTokenWithAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { transactionToolOutputParser } from '@/shared/utils/default-tool-output-parsing';
+import { appendTokenAssociationHint } from '@/shared/token-error-hints';
 
 const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   const contextSnippet = PromptGenerator.getContextSnippet(context);
@@ -20,21 +18,29 @@ const transferFungibleTokenWithAllowancePrompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a HTS fungible token using an existing **token allowance**.
+This tool will transfer a HTS (Hedera Token Service) native fungible token using an existing **token allowance**.
+
+IMPORTANT: Do NOT use this tool when:
+- The user mentions "ERC20" or "ERC-20" tokens — use transfer_erc20_tool instead
+- The user mentions a "contract" as the token source — that is an ERC20 transfer, use transfer_erc20_tool instead
+- The user does not explicitly mention an allowance, "spend allowance", or "use allowance" — default to the standard HTS transfer tool in that case
+This tool is ONLY for HTS native fungible tokens transferred via an existing allowance mechanism.
 
 Parameters:
-- tokenId (string, required): The token ID to transfer (e.g. "0.0.12345")
-- sourceAccountId (string, required): Account ID of the token owner (the allowance granter)
-- transfers (array of objects, required): List of token transfers. Each object should contain:
+- tokenId (string, required): The HTS token ID to transfer (e.g. "0.0.12345")
+- sourceAccountId (string, required): Account ID of the token owner (the allowance granter). IMPORTANT: Do NOT infer this from context; it must be explicitly stated by the user.
+- transfers (array of objects, required): List of token transfers — accepts multiple recipients at once. Each object should contain:
   - accountId (string, required): Recipient account ID
-  - amount (number, required): Amount of tokens to transfer in display unit
+  - amount (number, required): Amount to transfer in display units
 - transactionMemo (string, optional): Optional memo for the transaction
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 
 Example: Spend allowance from account 0.0.1002 to send 25 fungible tokens with id 0.0.33333 to 0.0.2002
-Example 2: Use allowance from 0.0.1002 to send 50 TKN (FT token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+Example 2: Use allowance from 0.0.1002 to send 50 TKN (HTS Fungible token id: '0.0.33333') to 0.0.2002 and 75 TKN to 0.0.3003
+
+If the user specifies multiple recipients in a single request, include them ALL in one tool call as a single transfers array. Do not split the transfer into multiple tool calls.
 `;
 };
 
@@ -51,7 +57,7 @@ Transaction ID: ${response.transactionId}`;
 export const TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL =
   'transfer_fungible_token_with_allowance_tool';
 
-export class TransferFungibleTokenWithAllowanceTool extends BaseTool {
+export class TransferFungibleTokenWithAllowanceTool extends BaseTransactionTool {
   method = TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL;
   name = 'Transfer Fungible Token with Allowance';
   description: string;
@@ -78,30 +84,20 @@ export class TransferFungibleTokenWithAllowanceTool extends BaseTool {
     );
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.transferFungibleTokenWithAllowance(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
+  async handleError(error: unknown, context: Context): Promise<any> {
+    return appendTokenAssociationHint(await super.handleError(error, context));
   }
 
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to transfer fungible token with allowance';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_fungible_token_with_allowance_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 
-const tool = (context: Context): BaseTool => new TransferFungibleTokenWithAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool =>
+  new TransferFungibleTokenWithAllowanceTool(context);
 
 export default tool;
