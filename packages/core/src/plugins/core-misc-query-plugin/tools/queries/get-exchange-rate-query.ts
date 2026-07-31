@@ -80,7 +80,7 @@ export class GetExchangeRateQueryTool extends BaseTool {
       normalisedParams.timestamp,
     );
     return {
-      raw: rates,
+      raw: { ...rates },
       humanMessage: postProcess(rates),
     };
   }
@@ -91,16 +91,6 @@ export class GetExchangeRateQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null; // Not applicable for query tools
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    console.error('[GetExchangeRate] Error getting exchange rate', error);
-    const message = error instanceof Error ? error.message : 'Failed to get exchange rate';
-
-    return {
-      raw: { error: message },
-      humanMessage: message,
-    };
   }
 }
 

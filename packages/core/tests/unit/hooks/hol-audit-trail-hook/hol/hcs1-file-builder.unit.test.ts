@@ -45,7 +45,6 @@ describe('Hcs1FileBuilder', () => {
         expect.objectContaining({
           topicMemo: expect.stringMatching(/^[a-f0-9]{64}:brotli:base64$/),
           autoRenewAccountId: '0.0.12345',
-          isSubmitKey: false,
           submitKey: 'mock-public-key',
         }),
       );

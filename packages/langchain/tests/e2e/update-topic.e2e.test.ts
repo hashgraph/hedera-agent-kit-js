@@ -33,7 +33,6 @@ describe('Update Topic E2E Tests', () => {
     // Create a topic with admin and submit keys so most tests can run updates
     const createTopicResp = await executorWrapper.createTopic({
       autoRenewAccountId: executor.accountId.toString(),
-      isSubmitKey: true,
       adminKey: executor.privateKey.publicKey as PublicKey,
       submitKey: executor.privateKey.publicKey as PublicKey,
       topicMemo: 'initial-topic-memo',
@@ -99,7 +98,6 @@ describe('Update Topic E2E Tests', () => {
       // Create a topic without a submitKey
       const createTopicWithoutSubmitResp = await executorWrapper.createTopic({
         autoRenewAccountId: executor.accountId.toString(),
-        isSubmitKey: false,
         adminKey: executor.privateKey.publicKey as PublicKey,
         topicMemo: 'no-submit',
       });
@@ -120,10 +118,10 @@ describe('Update Topic E2E Tests', () => {
       const parsedResponse = responseParsingService.parseNewToolMessages(queryResult);
 
       expect(parsedResponse[0].parsedData.humanMessage).toContain(
-        'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
+        'Failed to execute Update Topic: Cannot update submitKey: topic was created without a submitKey',
       );
       expect(parsedResponse[0].parsedData.raw.error).toContain(
-        'Failed to update topic: Cannot update submitKey: topic was created without a submitKey',
+        'Failed to execute Update Topic: Cannot update submitKey: topic was created without a submitKey',
       );
     },
   );
@@ -160,7 +158,6 @@ describe('Update Topic E2E Tests', () => {
 
       const createSecondaryTopicResp = await secondaryWrapper.createTopic({
         autoRenewAccountId: secondary.accountId.toString(),
-        isSubmitKey: true,
         adminKey: secondary.privateKey.publicKey as PublicKey,
         submitKey: secondary.privateKey.publicKey as PublicKey,
         topicMemo: 'secondary-topic',

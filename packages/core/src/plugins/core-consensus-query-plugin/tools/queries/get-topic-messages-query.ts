@@ -4,10 +4,7 @@ import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consens
 import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
 import { BaseTool } from '@/shared/tools';
-import {
-  TopicMessage,
-  TopicMessagesQueryParams,
-} from '@/shared/hedera-utils/mirrornode/types';
+import { TopicMessage, TopicMessagesQueryParams } from '@/shared/hedera-utils/mirrornode/types';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -37,8 +34,7 @@ const postProcess = (messages: TopicMessage[], topicId: string) => {
   }
 
   const messagesText = messages.map(
-    message =>
-        `${base64ToUtf8(message.message)} - posted at: ${message.consensus_timestamp}\n`,
+    message => `${base64ToUtf8(message.message)} - posted at: ${message.consensus_timestamp}\n`,
   );
 
   return `Messages for topic ${topicId}:
@@ -119,13 +115,6 @@ export class GetTopicMessagesQueryTool extends BaseTool {
 
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null; // Not applicable for query tools
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get topic messages';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_topic_messages_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
   }
 }
 

@@ -47,7 +47,6 @@ export class Hcs1FileBuilder {
     const topicTransaction = HederaBuilder.createTopic({
       topicMemo,
       autoRenewAccountId: params.autoRenewAccountId,
-      isSubmitKey: false,
       submitKey: params.submitKey,
     });
 

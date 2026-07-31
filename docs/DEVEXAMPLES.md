@@ -67,7 +67,9 @@ Try out one or more of the example agents:
 * **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
 * **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
 * **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
-* **Option J -** [Example Google ADK Agent](#option-j-try-out-the-google-adk-agent)
+* **Option J -** [Example Custom Signing Agent](#option-j-run-the-custom-signing-agent)
+* **Option K -** [Example Google ADK Agent](#option-k-try-out-the-google-adk-agent)
+* **Option L -** [Example Streaming Tool Calling Agent](#option-l-run-the-streaming-tool-calling-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -164,24 +166,8 @@ npm install
 npm run langchain:return-bytes-tool-calling-agent
 ```
 
-**⚠️ Breaking Change: v4.0.0 Migration from Buffer to Uint8Array**
-
-`RETURN_BYTES` now standardizes `raw.bytes` to `Uint8Array` across Node.js and web. If you previously parsed Node-specific Buffer payloads (`{ type: 'Buffer', data: [...] }`), migrate to a `Uint8Array` parser.
-
-Before:
-
-```ts
-const realBytes = Buffer.isBuffer(bytesObject)
-  ? bytesObject
-  : Buffer.from(bytesObject.data);
-```
-
-After:
-
-```ts
-const bytes = toolCall.parsedData.raw.bytes;
-const tx = Transaction.fromBytes(bytes);
-```
+> [!NOTE]
+> Since v4.0.0, `RETURN_BYTES` standardizes `raw.bytes` to `Uint8Array` — see the [migration guide](MIGRATION-v4.md#9-return_bytes-mode---rawbytes-standardized-to-uint8array) if you previously parsed Node `Buffer` payloads. For the full non-custodial pattern built on this mode, see [docs/MCP.md](MCP.md).
 
 The agent will start a CLI chatbot that you can interact with. You can make requests in natural language, and this demo will demonstrate an app with a workflow that requires a human in the loop to approve actions and execute transactions.
 
@@ -231,6 +217,9 @@ In this example, we can just take the returned bytes and execute the transaction
 
 ### Option D: Try Out the MCP Server
 
+> [!NOTE]
+> For the architecture behind this example (custodial vs. non-custodial, `RETURN_BYTES`, key custody), see [docs/MCP.md](MCP.md).
+
 1. Navigate to the MCP examples directory:
 
 ```bash
@@ -264,25 +253,7 @@ npm run start:http:return-bytes
 ```
 
 
-**Optional: Test out Claude Desktop or an IDE to operate the Hedera MCP server.**
-
-5. Create/edit Claude Desktop or your IDE MCP config file:
-```json
-{
-"mcpServers": {
-  "hedera-mcp-server": {
-        "command": "node",
-        "args": [
-          "<Path>/hedera-agent-kit-js/examples/modelcontextprotocol/dist/stdio.js"
-        ],
-        "env": {
-          "HEDERA_OPERATOR_ID": "0.0.xxxx",
-          "HEDERA_OPERATOR_KEY": "3030...."
-        }
-      }
-  }
-}
-```
+**Optional:** connect Claude Desktop or your IDE to the running server — see [docs/MCP.md](MCP.md#connecting-from-claude-desktop-or-an-ide) for the client configuration.
 
 
 ### Option E: Try Out the External MCP Agent
@@ -479,7 +450,37 @@ npm run langchain:audit-trail-agent
 
 ---
 
-### Option J: Try out the Google ADK Agent
+### Option J: Run the Custom Signing Agent
+
+This example demonstrates `AgentMode.CUSTOM_EXECUTE_TX` with an interactive human-in-the-loop console strategy — a pattern that also covers remote TEE enclaves, MPC threshold signers, Fireblocks/AWS KMS integrations, and any other delegated signing flow. The agent halts before each transaction and prompts for approval in the terminal before delegating to the custom strategy.
+
+**Found at:**
+- `examples/langchain/custom-signing-tool-calling-agent.ts` (LangChain v0.3)
+- `examples/langchain-v1/custom-signing-tool-calling-agent.ts` (LangChain v1 / LangGraph)
+
+For the full API reference and `TransactionStrategy` interface, see [docs/TRANSACTION_MODES.md](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/TRANSACTION_MODES.md).
+
+#### Running the Example
+
+##### LangChain v0.3
+
+```bash
+cd examples/langchain
+npm install
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:custom-signing-tool-calling-agent
+```
+
+---
+
+### Option K: Try out the Google ADK Agent
 
 This example demonstrates how to use the Hedera Agent Kit with [Google's Agent Development Kit (ADK)](https://google.github.io/adk-docs/get-started/). It includes a plugin tool calling agent and supports the ADK Web GUI for interactive testing.
 
@@ -520,3 +521,31 @@ npx adk web
 This will start a local web server (by default at `http://localhost:8000`) where you can interact with the Hedera agent visually.
 
 > **Note:** It is strongly recommended to use the native ADK tools (`npx adk run agent.ts` and `npx adk web`) for interacting with ADK agents. The custom CLI implemented in `plugin-tool-calling-agent.ts` is provided solely as an example to demonstrate how building a custom CLI runner is possible.
+
+---
+
+### Option L: Run the Streaming Tool Calling Agent
+
+Same as the basic tool calling agent, but the agent's responses are **streamed token by token** instead of returned all at once — using `agent.stream()` instead of `agent.invoke()` in LangChain v1, and `streamText` instead of `generateText` in the AI SDK.
+
+**Found at:**
+- `examples/ai-sdk/streaming-tool-calling-agent.ts`
+- `examples/langchain-v1/streaming-tool-calling-agent.ts`
+
+#### Running the Example
+
+##### AI SDK
+
+```bash
+cd examples/ai-sdk
+npm install
+npm run ai-sdk:streaming-tool-calling-agent
+```
+
+##### LangChain v1
+
+```bash
+cd examples/langchain-v1
+npm install
+npm run langchain:streaming-tool-calling-agent
+```

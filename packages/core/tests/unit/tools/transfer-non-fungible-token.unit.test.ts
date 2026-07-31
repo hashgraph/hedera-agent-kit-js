@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@hiero-ledger/sdk';
+import { AccountId, Client, ReceiptStatusError, Status, TransactionId } from '@hiero-ledger/sdk';
 import toolFactory, { TRANSFER_NON_FUNGIBLE_TOKEN_TOOL } from '@/plugins/core-token-plugin/tools/non-fungible-token/transfer-non-fungible-token';
+
+function makeReceiptStatusError(statusValue: Status): ReceiptStatusError {
+  const txId = TransactionId.generate(new AccountId(0, 0, 1));
+  return new ReceiptStatusError({
+    transactionReceipt: {} as any,
+    status: statusValue,
+    transactionId: txId,
+  });
+}
 
 vi.mock('@/shared/hedera-utils/hedera-parameter-normaliser', () => ({
   default: {
@@ -128,7 +137,34 @@ describe('transfer-non-fungible-token tool', () => {
       tokenId: '0.0.2001',
       recipients: [{ recipientId: '0.0.3001', serialNumber: 1 }],
     });
-    expect(res.humanMessage).toContain('Failed to transfer non-fungible token:');
+    expect(res.humanMessage).toContain('Failed to execute Transfer Non Fungible Token:');
     expect(res.humanMessage).toContain('boom');
+  });
+
+  it('appends TOKEN_NOT_ASSOCIATED_TO_ACCOUNT hint to humanMessage', async () => {
+    const tool = toolFactory(context);
+    const client = makeClient();
+
+    const txId = TransactionId.generate(new AccountId(0, 0, 1));
+    const err = new ReceiptStatusError({
+      transactionReceipt: {} as any,
+      status: Status.TokenNotAssociatedToAccount,
+      transactionId: txId,
+    });
+
+    const { default: builder } = await import('@/shared/hedera-utils/hedera-builder');
+    (builder.transferNonFungibleToken as any).mockImplementation(() => {
+      throw err;
+    });
+
+    const res: any = await tool.execute(client, context, {
+      tokenId: '0.0.2001',
+      recipients: [{ recipientId: '0.0.3001', serialNumber: 1 }],
+    });
+
+    expect(res.raw.errorCode).toBe('TOKEN_NOT_ASSOCIATED_TO_ACCOUNT');
+    expect(res.raw.error).toBe(err.message);
+    expect(res.humanMessage).toContain('associate_token_tool');
+    expect(res.humanMessage).toContain('maxAutoAssociations');
   });
 });

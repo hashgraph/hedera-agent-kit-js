@@ -125,8 +125,10 @@ describe('Sign Schedule Transaction Integration Tests', () => {
       const result = await tool.execute(executorClient, context, params);
 
       // Should return an error
-      expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to sign scheduled transaction');
+      expect(result.raw.status).toBe('ERROR');
+      expect(result.raw.errorCode).toBe('INVALID_SCHEDULE_ID');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
     });
 
     it('should fail with malformed schedule ID', async () => {
@@ -139,7 +141,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
 
       // Should return an error
       expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to sign scheduled transaction');
+      expect(result.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
     });
 
     it('should fail with empty schedule ID', async () => {
@@ -152,7 +154,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
 
       // Should return an error
       expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to sign scheduled transaction');
+      expect(result.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
     });
 
     it('should fail when trying to sign already executed schedule', async () => {
@@ -192,8 +194,10 @@ describe('Sign Schedule Transaction Integration Tests', () => {
       const secondResult = await tool.execute(executorClient, context, params);
 
       // Should return an error since the schedule is already executed
-      expect(secondResult.raw.status).not.toBe('SUCCESS');
-      expect(secondResult.humanMessage).toContain('Failed to sign scheduled transaction');
+      expect(secondResult.raw.status).toBe('ERROR');
+      expect(secondResult.raw.errorCode).toBe('SCHEDULE_ALREADY_EXECUTED');
+      expect(secondResult.raw.transactionId).toBeDefined();
+      expect(secondResult.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
     });
   });
 
@@ -209,7 +213,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
 
       // Should return an error since this is not a valid schedule ID
       expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to sign scheduled transaction');
+      expect(result.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
     });
 
     it('should handle schedule ID with special characters', async () => {
@@ -223,7 +227,7 @@ describe('Sign Schedule Transaction Integration Tests', () => {
 
       // Should return an error since this is not a valid schedule ID
       expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to sign scheduled transaction');
+      expect(result.humanMessage).toContain('Failed to execute Sign Scheduled Transaction');
     });
   });
 });

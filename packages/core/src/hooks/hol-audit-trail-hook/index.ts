@@ -1,10 +1,11 @@
 import z from 'zod';
+import { Client } from '@hiero-ledger/sdk';
 
 import {
   AbstractHook,
   PostSecondaryActionParams,
   PreToolExecutionParams,
-  AgentMode,
+  isReturnBytesMode,
 } from '@/shared';
 import { buildAuditEntry } from '@/hooks/hol-audit-trail-hook/audit/audit-entry';
 import { AuditSession } from '@/hooks/hol-audit-trail-hook/audit/audit-session';
@@ -17,13 +18,29 @@ const configSchema = z.object({
     .regex(/^0\.0\.\d+$/, 'sessionId must be a valid Hedera topic ID in format 0.0.xxx'),
 });
 
-export type HolAuditTrailHookConfig = z.infer<typeof configSchema>;
+export type HolAuditTrailHookConfig = z.infer<typeof configSchema> & {
+  /**
+   * Optional client used to submit audit messages to HCS; defaults to the agent's operator
+   * client. Must have a local operator key capable of signing and submitting transactions.
+   */
+  loggingClient?: Client;
+};
 
 /**
  * Hook that writes HOL-standards-compliant audit trails to an HCS session topic.
  *
  * Uses an HCS-2 INDEXED registry as the session topic to list audit entries.
  * Delegates to AuditSession + HolAuditWriter for all write operations.
+ *
+ * @remarks
+ * Supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`.
+ *
+ * - In `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes it throws before the tool executes, because
+ *   no transaction was submitted — there is nothing to audit.
+ * - In `CUSTOM_EXECUTE_TX` mode the strategy must return `ExecuteStrategyResult`
+ *   (i.e. `{ raw, humanMessage }`), which is enforced by the `TransactionStrategy` interface. This
+ *   guarantees the same audit entry shape as AUTONOMOUS mode, so remote signing and HITL flows are
+ *   fully supported.
  */
 export class HolAuditTrailHook extends AbstractHook {
   relevantTools: string[];
@@ -32,21 +49,27 @@ export class HolAuditTrailHook extends AbstractHook {
 
   private session: AuditSession | null = null;
   private sessionId: string;
+  private loggingClient?: Client;
 
   /**
    * @param config.sessionId - Hedera topic ID (format `0.0.xxx`) used as the audit session registry.
    *   The topic should be created with memo `hcs-2:0:0` to be fully compliant with the HCS-2 standard.
    *   See {@link https://hol.org/docs/standards/hcs-2/}
    * @param config.relevantTools - List of tool names that trigger audit trail logging.
+   * @param config.loggingClient - Optional client used to submit audit messages to HCS; defaults to
+   *   the agent's operator client. Must have a local operator key capable of signing and submitting
+   *   transactions.
    */
   constructor(config: HolAuditTrailHookConfig) {
     super();
-    const validated = configSchema.parse(config);
+    const { loggingClient, ...rest } = config;
+    const validated = configSchema.parse(rest);
     this.relevantTools = validated.relevantTools;
     this.name = 'HOL Audit Trail Hook';
     this.description =
-      'Hook to add HOL-standards-compliant audit trail to HCS topics. Available only in Agent Mode AUTONOMOUS.';
+      'Hook to add HOL-standards-compliant audit trail to HCS topics. Supported in AgentMode.AUTONOMOUS and AgentMode.CUSTOM_EXECUTE_TX. Blocked in RETURN_BYTES and CUSTOM_RETURN_BYTES modes.';
     this.sessionId = validated.sessionId;
+    this.loggingClient = loggingClient;
   }
 
   getSessionId(): string {
@@ -56,9 +79,9 @@ export class HolAuditTrailHook extends AbstractHook {
   async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
     if (!this.relevantTools.includes(method)) return;
 
-    if (params.context.mode === AgentMode.RETURN_BYTES) {
+    if (isReturnBytesMode(params.context.mode)) {
       throw new Error(
-        `Unsupported hook: HolAuditTrailHook is available only in Agent Mode AUTONOMOUS. Stopping the agent execution before tool ${method} is executed.`,
+        `Unsupported hook: HolAuditTrailHook does not support AgentMode.RETURN_BYTES or AgentMode.CUSTOM_RETURN_BYTES. Stopping the agent execution before tool ${method} is executed.`,
       );
     }
   }
@@ -68,7 +91,7 @@ export class HolAuditTrailHook extends AbstractHook {
 
     try {
       if (!this.session) {
-        const writer = new HolAuditWriter(params.client);
+        const writer = new HolAuditWriter(this.loggingClient ?? params.client);
         this.session = new AuditSession(writer, this.sessionId);
       }
 

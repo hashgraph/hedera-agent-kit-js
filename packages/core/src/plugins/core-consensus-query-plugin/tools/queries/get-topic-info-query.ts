@@ -102,13 +102,6 @@ export class GetTopicInfoQueryTool extends BaseTool {
   async secondaryAction(_transaction: any, _client: Client, _context: Context) {
     return null; // Not applicable for query tools
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to get topic info';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[get_topic_info_query_tool]', message);
-    return { raw: { error: message }, humanMessage: message };
-  }
 }
 
 const tool = (context: Context): BaseTool => new GetTopicInfoQueryTool(context);

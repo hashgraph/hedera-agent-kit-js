@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { associateTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -40,7 +37,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const ASSOCIATE_TOKEN_TOOL = 'associate_token_tool';
 
-export class AssociateTokenTool extends BaseTool {
+export class AssociateTokenTool extends BaseTransactionTool {
   method = ASSOCIATE_TOKEN_TOOL;
   name = 'Associate Token(s)';
   description: string;
@@ -61,31 +58,15 @@ export class AssociateTokenTool extends BaseTool {
     return HederaParameterNormaliser.normaliseAssociateTokenParams(params, context, client);
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.associateToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.associateToken(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to associate token(s)';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[associate_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 
-const tool = (context: Context): BaseTool => new AssociateTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new AssociateTokenTool(context);
 
 export default tool;

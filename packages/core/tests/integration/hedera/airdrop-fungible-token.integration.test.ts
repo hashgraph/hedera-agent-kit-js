@@ -153,6 +153,9 @@ describe('Airdrop Fungible Token Integration Tests', () => {
 
     const result: any = await tool.execute(executorClient, context, params);
 
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('INSUFFICIENT_TOKEN_BALANCE');
+    expect(result.raw.transactionId).toBeDefined();
     expect(result.raw.error).toContain('INSUFFICIENT_TOKEN_BALANCE');
 
     recipientClient.close();

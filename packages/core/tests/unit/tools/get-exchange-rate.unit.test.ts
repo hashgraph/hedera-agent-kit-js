@@ -83,8 +83,8 @@ describe('get-exchange-rate tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, { timestamp: 'x' } as any);
-    expect(res.humanMessage).toBe('boom');
-    expect(res.raw.error).toBe('boom');
+    expect(res.humanMessage).toBe('Failed to execute Get Exchange Rate: boom');
+    expect(res.raw.error).toBe('Failed to execute Get Exchange Rate: boom');
   });
 
   it('returns generic message when non-Error thrown', async () => {
@@ -101,7 +101,7 @@ describe('get-exchange-rate tool (unit)', () => {
     });
 
     const res: any = await tool.execute(client, context, {} as any);
-    expect(res.humanMessage).toBe('Failed to get exchange rate');
-    expect(res.raw.error).toBe('Failed to get exchange rate');
+    expect(res.humanMessage).toBe('Failed to execute Get Exchange Rate');
+    expect(res.raw.error).toBe('Failed to execute Get Exchange Rate');
   });
 });

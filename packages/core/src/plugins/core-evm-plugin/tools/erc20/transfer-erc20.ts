@@ -1,12 +1,9 @@
 import { z } from 'zod';
-import { AgentMode, type Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { type Context } from '@/shared/configuration';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { transferERC20Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -25,18 +22,23 @@ const transferERC20Prompt = (context: Context = {}) => {
   return `
 ${contextSnippet}
 
-This tool will transfer a given amount of an existing ERC20 token on Hedera. ERC20 is an EVM compatible fungible token.
+This tool will transfer a given amount of an existing ERC20 token on Hedera via its EVM smart contract.
+Use this tool when the user mentions "ERC20", "EVM token", or transferring tokens from a smart contract.
+Do NOT use for HTS (Hedera Token Service) native tokens — if erc20 mentioned, then user wants to transfer from a contractId and given 0.0.XYZ address is the contract id not a HTS address.
+Always use this tool when the user mentions "ERC20", "ERC-20", or "contract" as the token source — regardless of the amount being transferred.
 
 Parameters:
-- contractId (str, required): The id of the ERC20 contract. This can be the EVM address or the Hedera account id.
-- recipientAddress (str, required): The EVM or Hedera address to which the tokens will be transferred. This can be the EVM address or the Hedera account id.
-- amount (number, required): The amount to be transferred
+- contractId (str, required): The ERC20 smart contract address (EVM or Hedera format). This is a CONTRACT address, NOT a token ID.
+- recipientAddress (str, required): Recipient address (EVM or Hedera format).
+- amount (number, required): Amount to transfer in display units.
 - ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${usageInstructions}
 
-Example: "Transfer 1 ERC20 token 0.0.6473135 to 0xd94dc7f82f103757f715514e4a37186be6e4580b" means transferring the amount of 1 of the ERC20 token with contract id 0.0.6473135 to the 0xd94dc7f82f103757f715514e4a37186be6e4580b EVM address.
-Example: "Transfer 1 ERC20 token 0xd94dc7f82f103757f715514e4a37186be6e4580b to 0.0.6473135" means transferring the amount of 1 of the ERC20 token with contract id 0xd94dc7f82f103757f715514e4a37186be6e4580b to the 0.0.6473135 Hedera account id.
+Example: "Transfer 25 erc20 tokens from contract 0.0.1234 to 0.0.5678" → contractId=0.0.1234, recipientAddress=0.0.5678, amount=25.
+Example: "Send 100 ERC20 tokens 0.0.5555 to 0.0.6666" → contractId=0.0.5555, recipientAddress=0.0.6666, amount=100.
+Example: "Move 200 erc20 tokens of contract 0x1111...1111 to 0.0.4444" → contractId=0x1111...1111, recipientAddress=0.0.4444, amount=200.
+Example: "Transfer 1000000 ERC20 tokens 0.0.1234 to 0.0.5678" means transferring 1000000 tokens of the ERC20 contract 0.0.1234 to the account 0.0.5678 — the contractId is 0.0.1234 and the recipientAddress is 0.0.5678.
 `;
 };
 
@@ -49,7 +51,7 @@ Schedule ID: ${response.scheduleId.toString()}`
 
 export const TRANSFER_ERC20_TOOL = 'transfer_erc20_tool';
 
-export class TransferErc20Tool extends BaseTool {
+export class TransferErc20Tool extends BaseTransactionTool {
   method = TRANSFER_ERC20_TOOL;
   name = 'Transfer ERC20';
   description: string;
@@ -84,23 +86,10 @@ export class TransferErc20Tool extends BaseTool {
   }
 
   async secondaryAction(transaction: any, client: Client, context: Context) {
-    if (context.mode === AgentMode.RETURN_BYTES) {
-      return await handleTransaction(transaction, client, context);
-    }
     return await handleTransaction(transaction, client, context, postProcess);
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to transfer ERC20';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[transfer_erc20_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
   }
 }
 
-const tool = (context: Context): BaseTool => new TransferErc20Tool(context);
+const tool = (context: Context): BaseTransactionTool => new TransferErc20Tool(context);
 
 export default tool;

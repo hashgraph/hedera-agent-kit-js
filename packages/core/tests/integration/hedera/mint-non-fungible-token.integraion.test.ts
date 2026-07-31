@@ -139,6 +139,9 @@ describe('Mint Non-Fungible Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
 
     expect(result).toBeDefined();
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('INVALID_TOKEN_ID');
+    expect(result.raw.transactionId).toBeDefined();
     expect(result.humanMessage).toContain('INVALID_TOKEN_ID');
     expect(result.raw.error).toContain('INVALID_TOKEN_ID');
   });

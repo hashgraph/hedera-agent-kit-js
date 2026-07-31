@@ -1,12 +1,9 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import { mintFungibleTokenParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
@@ -43,7 +40,7 @@ Transaction ID: ${response.transactionId.toString()}`;
 
 export const MINT_FUNGIBLE_TOKEN_TOOL = 'mint_fungible_token_tool';
 
-export class MintFungibleTokenTool extends BaseTool {
+export class MintFungibleTokenTool extends BaseTransactionTool {
   method = MINT_FUNGIBLE_TOKEN_TOOL;
   name = 'Mint Fungible Token';
   description: string;
@@ -70,30 +67,15 @@ export class MintFungibleTokenTool extends BaseTool {
     );
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.mintFungibleToken(normalisedParams);
-    return await handleTransaction(tx, client, context, postProcess);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.mintFungibleToken(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to mint fungible token';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[mint_fungible_token_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 
-const tool = (context: Context): BaseTool => new MintFungibleTokenTool(context);
+const tool = (context: Context): BaseTransactionTool => new MintFungibleTokenTool(context);
 
 export default tool;

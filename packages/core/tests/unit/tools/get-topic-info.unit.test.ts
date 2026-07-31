@@ -94,7 +94,7 @@ describe('Get Topic Info Tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toBe('Failed to get topic info');
-    expect(res.raw.error).toBe('Failed to get topic info');
+    expect(res.humanMessage).toBe('Failed to execute Get Topic Info');
+    expect(res.raw.error).toBe('Failed to execute Get Topic Info');
   });
 });

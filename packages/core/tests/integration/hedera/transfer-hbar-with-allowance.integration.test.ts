@@ -119,8 +119,10 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       const tool = transferHbarWithAllowanceTool(context);
       const result = await tool.execute(spenderClient, context, params);
 
-      expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to transfer HBAR');
+      expect(result.raw.status).toBe('ERROR');
+      expect(result.raw.errorCode).toBe('SPENDER_DOES_NOT_HAVE_ALLOWANCE');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.humanMessage).toContain('Failed to execute Transfer HBAR with allowance');
     });
 
     it('should fail when transfer exceeds approved allowance', async () => {
@@ -142,8 +144,10 @@ describe('Transfer HBAR With Allowance Integration Tests', () => {
       const tool = transferHbarWithAllowanceTool(context);
       const result = await tool.execute(spenderClient, context, params);
 
-      expect(result.raw.status).not.toBe('SUCCESS');
-      expect(result.humanMessage).toContain('Failed to transfer HBAR');
+      expect(result.raw.status).toBe('ERROR');
+      expect(result.raw.errorCode).toBe('AMOUNT_EXCEEDS_ALLOWANCE');
+      expect(result.raw.transactionId).toBeDefined();
+      expect(result.humanMessage).toContain('Failed to execute Transfer HBAR with allowance');
     });
 
     it('should fail if amount is zero or negative', async () => {

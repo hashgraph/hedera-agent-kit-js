@@ -60,7 +60,8 @@ Hooks can execute at 4 different points during a tool's lifecycle:
 Add hooks and policies to your agent's context during initialization:
 
 ```typescript
-import { HcsAuditTrailHook, MaxRecipientsPolicy, RejectToolPolicy } from '@hashgraph/hedera-agent-kit';
+import { HcsAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
+import { MaxRecipientsPolicy, RejectToolPolicy } from '@hashgraph/hedera-agent-kit/policies';
 
 const context = {
   hooks: [
@@ -87,8 +88,13 @@ const context = {
 Provides an immutable audit trail by logging tool executions to a Hedera Consensus Service (HCS) topic.
 
 > [!IMPORTANT]  
-> **Autonomous Mode Only**: This hook is strictly available in `AUTONOMOUS` mode. It will throw an error if used in
-> `RETURN_BYTES` mode.
+> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`. It throws before the
+> tool executes in `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes — no transaction was submitted, so there is nothing to
+> audit.
+>
+> In `CUSTOM_EXECUTE_TX` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
+> (`{ raw: RawTransactionResponse, humanMessage: string }`). This guarantees the hook receives the same shape as in
+> `AUTONOMOUS` mode and can log the audit entry correctly.
 
 > [!WARNING]  
 > **HIP-991 (Paid Topics)**: If a paid topic is used, it will incur submission fees. Ensure the `loggingClient` has
@@ -144,8 +150,13 @@ Hook that writes [HOL-standards-compliant](https://hol.org) audit trails to an H
 INDEXED registry as the session topic to list audit entries.
 
 > [!IMPORTANT]  
-> **Autonomous Mode Only**: This hook is strictly available in `AUTONOMOUS` mode. It will throw an error if used in
-> `RETURN_BYTES` mode.
+> **Supported Modes**: This hook supports `AgentMode.AUTONOMOUS` and `AgentMode.CUSTOM_EXECUTE_TX`. It throws before the
+> tool executes in `RETURN_BYTES` and `CUSTOM_RETURN_BYTES` modes — no transaction was submitted, so there is nothing to
+> audit.
+>
+> In `CUSTOM_EXECUTE_TX` mode, your `TransactionStrategy` must return `ExecuteStrategyResult`
+> (`{ raw: RawTransactionResponse, humanMessage: string }`). This guarantees the hook receives the same shape as in
+> `AUTONOMOUS` mode and can write a compliant HOL audit entry.
 
 **Prerequisites**:
 
@@ -157,15 +168,25 @@ INDEXED registry as the session topic to list audit entries.
 
 - `relevantTools`: `string[]` - List of tool names that trigger audit trail logging.
 - `sessionId`: `string` - The Hedera topic ID (format `0.0.xxx`) used as the audit session registry.
+- `loggingClient?`: `Client` - (Optional) A separate Hedera client used to submit audit messages to HCS. Defaults to
+  the agent's operator client. Must have a local operator key capable of signing and submitting transactions.
 
 **Example Usage**:
 
 ```typescript
 import { HolAuditTrailHook } from '@hashgraph/hedera-agent-kit/hooks';
 
+// Basic usage — agent's operator client is used for HCS submissions
 const holAuditHook = new HolAuditTrailHook({
   relevantTools: ['transfer_hbar_tool', 'create_fungible_token_tool'],
   sessionId: '0.0.12345'
+});
+
+// With a dedicated logging client (e.g. when the agent's main client has no local key)
+const holAuditHookWithLogger = new HolAuditTrailHook({
+  relevantTools: ['transfer_hbar', 'create_token'],
+  sessionId: '0.0.12345',
+  loggingClient: myDedicatedLoggingClient,
 });
 
 // Add to your agent configuration
@@ -279,7 +300,7 @@ Every tool in the kit follows a standardized 7-stage lifecycle. The execution lo
          |
 [5. Post-Core Action] --------------> Hook: postCoreActionHook
          |
-[6. Secondary Action]
+[6. Secondary Action] (skipped for query tools)
          |
 [7. Post-Tool Execution] -----------> Hook: postToolExecutionHook
          |
@@ -291,10 +312,13 @@ Every tool in the kit follows a standardized 7-stage lifecycle. The execution lo
 1. **Pre-Tool Execution**: Before any processing begins. Use for early validation or logging.
 2. **Parameter Normalization**: The tool validates and cleans user input (not hookable).
 3. **Post-Parameter Normalization**: After parameters are normalized. Use for parameter-based validation.
-4. **Core Action**: Primary business logic executes (e.g., creating a transaction).
+4. **Core Action**: Primary business logic executes (e.g., creating a transaction or running a query).
 5. **Post-Core Action**: After core logic completes. Use to inspect or modify the result before submission.
-6. **Secondary Action**: Transaction signing/submission happens (not hookable).
+6. **Secondary Action**: Transaction signing/submission happens (not hookable). Query tools skip this stage entirely — `shouldSecondaryAction` returns `false` and `secondaryAction` is never called.
 7. **Post-Tool Execution**: After everything completes. Use for final logging or cleanup.
+
+> [!IMPORTANT]
+> **All 4 hook stages fire for every tool**, including query tools that skip the secondary action. Skipping stage 6 does not suppress `postToolExecutionHook`. The only difference for query tools is that in `postToolExecutionHook`, `toolResult` and `coreActionResult` are the same object (since no secondary action transformed the result).
 
 ## Hook Parameter Structures
 
@@ -306,7 +330,7 @@ executed. This allows hooks to target specific tools or apply general logic.
 | `preToolExecutionHook`        | `context`, `rawParams`, `client`                                                       | `method: string` | Early validation, logging initial state      |
 | `postParamsNormalizationHook` | `context`, `rawParams`, `normalisedParams`, `client`                                   | `method: string` | Parameter-based policies, data enrichment    |
 | `postCoreActionHook`          | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `client`               | `method: string` | Inspect/modify transaction before submission |
-| `postToolExecutionHook`       | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method: string` | Final logging, audit trails, cleanup         |
+| `postToolExecutionHook`       | `context`, `rawParams`, `normalisedParams`, `coreActionResult`, `toolResult`, `client` | `method: string` | Final logging, audit trails, cleanup. For transaction tools `toolResult` is the submission result and `coreActionResult` is the pre-submission value; for query tools they are the same object. |
 
 > [!TIP]
 > Use the `method` parameter to filter execution and apply **Type Guards** for safe parameter access.

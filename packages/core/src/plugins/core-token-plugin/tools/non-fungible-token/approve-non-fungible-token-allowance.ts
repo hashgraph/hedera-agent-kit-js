@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { approveNftAllowanceParameters } from '@/shared/parameter-schemas/token.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -44,11 +41,11 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const APPROVE_NFT_ALLOWANCE_TOOL = 'approve_nft_allowance_tool';
 
-export class ApproveNftAllowanceTool extends BaseTool {
+export class ApproveNftAllowanceTool extends BaseTransactionTool {
   method = APPROVE_NFT_ALLOWANCE_TOOL;
   name = 'Approve NFT Allowance';
   description: string;
-  parameters:  ReturnType<typeof approveNftAllowanceParameters>;
+  parameters: ReturnType<typeof approveNftAllowanceParameters>;
   outputParser = transactionToolOutputParser;
 
   constructor(context: Context) {
@@ -65,31 +62,15 @@ export class ApproveNftAllowanceTool extends BaseTool {
     return HederaParameterNormaliser.normaliseApproveNftAllowance(params, context, client);
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.approveNftAllowance(normalisedParams);
-
-    return await handleTransaction(tx, client, context, postProcess);
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.approveNftAllowance(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
-  }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to Approve NFT allowance';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[approve_nft_allowance_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 
-const tool = (context: Context): BaseTool => new ApproveNftAllowanceTool(context);
+const tool = (context: Context): BaseTransactionTool => new ApproveNftAllowanceTool(context);
 
 export default tool;

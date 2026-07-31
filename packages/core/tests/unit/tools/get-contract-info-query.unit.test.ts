@@ -65,7 +65,7 @@ describe('get-contract-info tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { contractId: '0.0.5005' });
 
-    expect(res.raw).toEqual({ contractId: '0.0.5005', contractInfo });
+    expect(res.raw).toEqual({ contractId: '0.0.5005', contractInfo, status: 'SUCCESS' });
     expect(res.humanMessage).toContain('Here are the details for contract **0.0.5005**:');
     expect(res.humanMessage).toContain('Memo');
     expect(mockGetContractInfo).toHaveBeenCalledWith('0.0.5005');
@@ -91,7 +91,7 @@ describe('get-contract-info tool (unit)', () => {
 
     const res: any = await tool.execute(client, context, { contractId: '0.0.8888' });
 
-    expect(res.humanMessage).toContain('Failed to get contract info');
-    expect(res.raw.error).toContain('Failed to get contract info');
+    expect(res.humanMessage).toContain('Failed to execute Get Contract Info');
+    expect(res.raw.error).toContain('Failed to execute Get Contract Info');
   });
 });

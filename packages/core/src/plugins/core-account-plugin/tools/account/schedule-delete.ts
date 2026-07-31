@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
-import { Client, Status } from '@hiero-ledger/sdk';
-import {
-  handleTransaction,
-  RawTransactionResponse,
-} from '@/shared/strategies/tx-mode-strategy';
+import { BaseTransactionTool } from '@/shared/base-transaction-tool';
+import { Client } from '@hiero-ledger/sdk';
+import { handleTransaction, RawTransactionResponse } from '@/shared/strategies/tx-mode-strategy';
 import HederaBuilder from '@/shared/hedera-utils/hedera-builder';
 import { scheduleDeleteTransactionParameters } from '@/shared/parameter-schemas/account.zod';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
@@ -32,7 +29,7 @@ const postProcess = (response: RawTransactionResponse) => {
 
 export const SCHEDULE_DELETE_TOOL = 'schedule_delete_tool';
 
-export class ScheduleDeleteTool extends BaseTool {
+export class ScheduleDeleteTool extends BaseTransactionTool {
   method = SCHEDULE_DELETE_TOOL;
   name = 'Delete Scheduled Transaction';
   description: string;
@@ -60,18 +57,8 @@ export class ScheduleDeleteTool extends BaseTool {
   async secondaryAction(transaction: any, client: Client, context: Context) {
     return await handleTransaction(transaction, client, context, postProcess);
   }
-
-  async handleError(error: unknown, _context: Context): Promise<any> {
-    const desc = 'Failed to delete scheduled transaction';
-    const message = desc + (error instanceof Error ? `: ${error.message}` : '');
-    console.error('[schedule_delete_tool]', message);
-    return {
-      raw: { status: Status.InvalidTransaction, error: message },
-      humanMessage: message,
-    };
-  }
 }
 
-const tool = (context: Context): BaseTool => new ScheduleDeleteTool(context);
+const tool = (context: Context): BaseTransactionTool => new ScheduleDeleteTool(context);
 
 export default tool;

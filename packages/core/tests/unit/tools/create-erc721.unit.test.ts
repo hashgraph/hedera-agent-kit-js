@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
-import { AccountId, Client, PrivateKey, Status } from '@hiero-ledger/sdk';
+import { AccountId, Client, PrivateKey} from '@hiero-ledger/sdk';
 import toolFactory, { CREATE_ERC721_TOOL } from '@/plugins/core-evm-plugin/tools/erc721/create-erc721';
 import { createERC721Parameters } from '@/shared/parameter-schemas/evm.zod';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
@@ -125,21 +125,24 @@ describe('createERC721 tool (unit)', () => {
     );
   });
 
-  it('returns early when in RETURN_BYTES mode', async () => {
-    (mockedNormaliser.normaliseCreateERC721Params as Mock).mockResolvedValue(normalisedParams);
-    (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
+  it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
+    'returns early when in %s mode (skips address lookup)',
+    async mode => {
+      (mockedNormaliser.normaliseCreateERC721Params as Mock).mockResolvedValue(normalisedParams);
+      (mockedBuilder.executeTransaction as Mock).mockReturnValue({} as any);
 
-    const customContext: any = { accountId: '0.0.1001', mode: AgentMode.RETURN_BYTES };
-    const tool = toolFactory(customContext);
-    const client = makeClient();
+      const customContext: any = { accountId: '0.0.1001', mode };
+      const tool = toolFactory(customContext);
+      const client = makeClient();
 
-    const res = await tool.execute(client, customContext, params);
+      const res = await tool.execute(client, customContext, params);
 
-    expect(res).toBeDefined();
-    expect(res.raw).toBeDefined();
-    expect(res.erc721Address).toBeUndefined();
-    expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
-  });
+      expect(res).toBeDefined();
+      expect(res.raw).toBeDefined();
+      expect(res.erc721Address).toBeUndefined();
+      expect(mockedTxStrategy.handleTransaction).toHaveBeenCalledOnce();
+    },
+  );
 
   it('returns error message when an Error is thrown', async () => {
     (mockedBuilder.executeTransaction as Mock).mockImplementation(() => {
@@ -153,7 +156,7 @@ describe('createERC721 tool (unit)', () => {
 
     expect(res.humanMessage).toContain('boom');
     expect(res.raw.error).toContain('boom');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.raw.status).toBe('ERROR');
   });
 
   it('returns generic failure message when a non-Error is thrown', async () => {
@@ -166,8 +169,8 @@ describe('createERC721 tool (unit)', () => {
 
     const res = await tool.execute(client, context, params);
 
-    expect(res.humanMessage).toContain('Failed to create ERC721 token');
-    expect(res.raw.error).toContain('Failed to create ERC721 token');
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
+    expect(res.humanMessage).toContain('Failed to execute Create ERC721 Token');
+    expect(res.raw.error).toContain('Failed to execute Create ERC721 Token');
+    expect(res.raw.status).toBe('ERROR');
   });
 });

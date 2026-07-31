@@ -142,10 +142,29 @@ async function bootstrap(): Promise<void> {
       })) || [];
 
       const parsedTools = responseParser.parseNewToolMessages({ messages });
-      let bytes = parsedTools?.[0]?.parsedData?.raw?.bytes;
+      const envelope = parsedTools?.[0]?.parsedData?.raw;
 
-      if (bytes) {
-        const tx = Transaction.fromBytes(bytes);
+      if (envelope?.bytes) {
+        // RETURN_BYTES mode returns a structured ReturnBytesResult envelope alongside the raw
+        // bytes. Print everything the caller needs to review, sign, and verify the transaction.
+        console.log('\n--- RETURN_BYTES envelope ---');
+        console.log(
+          JSON.stringify(
+            {
+              status: envelope.status,
+              type: envelope.type,
+              transactionId: envelope.transactionId,
+              payerAccountId: envelope.payerAccountId,
+              expiresAt: envelope.expiresAt,
+              memo: envelope.memo,
+              bytesLength: envelope.bytes.length,
+            },
+            null,
+            2,
+          ),
+        );
+
+        const tx = Transaction.fromBytes(envelope.bytes);
         const result = await tx.execute(humanInTheLoopClient);
         const receipt = await result.getReceipt(humanInTheLoopClient);
         console.log('Transaction receipt:', receipt.status.toString());

@@ -15,6 +15,7 @@ import {
   TopicInfoQuery,
   TransactionRecordQuery,
   TransferTransaction,
+  Hbar,
 } from '@hiero-ledger/sdk';
 import BigNumber from 'bignumber.js';
 import { getTestLedgerIdForTests } from '../profile/resolve';
@@ -310,8 +311,11 @@ class HederaOperationsWrapper {
 
   async deployERC20(bytecode: string) {
     try {
-      const tx = new ContractCreateFlow().setGas(3_000_000).setBytecode(bytecode);
+      const tx = new ContractCreateFlow()
+        .setGas(3_000_000)
+        .setBytecode(bytecode);
 
+      this.client.setDefaultMaxTransactionFee(new Hbar(100));
       const response = await tx.execute(this.client);
       const receipt = await response.getReceipt(this.client);
 

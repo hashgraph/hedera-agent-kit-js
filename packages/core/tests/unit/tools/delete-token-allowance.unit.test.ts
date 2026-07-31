@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client, Status } from '@hiero-ledger/sdk';
+import { Client} from '@hiero-ledger/sdk';
 import toolFactory, { DELETE_TOKEN_ALLOWANCE_TOOL } from '@/plugins/core-token-plugin/tools/fungible-token/delete-token-allowance';
 
 // ---- Mocks ----
@@ -124,8 +124,8 @@ describe('delete-token-allowance tool (unit)', () => {
     const res: any = await tool.execute(client, context, params as any);
 
     expect(res).toBeDefined();
-    expect(res.raw.status).toBe(Status.InvalidTransaction);
-    expect(res.humanMessage).toContain('Failed to delete token allowance');
+    expect(res.raw.status).toBe('ERROR');
+    expect(res.humanMessage).toContain('Failed to execute Delete Token Allowance');
     expect(res.humanMessage).toContain('Test normaliser failure');
   });
 });

@@ -41,22 +41,6 @@ describe('HederaParameterNormaliser.normaliseCreateTopicParams', () => {
     expect(res.submitKey).toBeUndefined();
   });
 
-  it('sets submitKey from mirror node when isSubmitKey is true and mirror has key', async () => {
-    const generatedKeyPair = PrivateKey.generateED25519();
-    vi.mocked(AccountResolver.getDefaultPublicKey).mockResolvedValue(generatedKeyPair.publicKey);
-
-    const res = await HederaParameterNormaliser.normaliseCreateTopicParams(
-      { isSubmitKey: true, topicMemo: 'hello' } as any,
-      context,
-      client,
-      mirrorNode,
-    );
-
-    expect(res.isSubmitKey).toBe(true);
-    expect(res.submitKey?.toString()).toBe(generatedKeyPair.publicKey.toStringDer());
-    expect(res.topicMemo).toBe('hello');
-  });
-
   it('sets submitKey and adminKey from boolean true', async () => {
     const generatedKeyPair = PrivateKey.generateED25519();
     vi.mocked(AccountResolver.getDefaultPublicKey).mockResolvedValue(generatedKeyPair.publicKey);

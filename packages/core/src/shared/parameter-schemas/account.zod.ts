@@ -9,7 +9,7 @@ import {
 
 // Structural check on `__isLong__`; survives ESM/CJS dual copies where an instanceof
 // check against the imported Long constructor would silently fail.
-const zLong = z.custom<Long>((v) => Long.isLong(v), { message: 'Expected Long' });
+const zLong = z.custom<Long>(v => Long.isLong(v), { message: 'Expected Long' });
 
 export const transferHbarParameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
@@ -191,7 +191,8 @@ export const approveTokenAllowanceParameters = (_context: Context = {}) =>
             .number()
             .nonnegative()
             .describe(
-              'Amount of tokens to approve (must be positive, can be float or int) Given in display units, the tool will handle parsing. (Required)',
+              'Amount of tokens to approve (must be positive, can be float or int). ' +
+                'Given in display units, the tool will handle parsing. (Required)',
             ),
         }),
       )

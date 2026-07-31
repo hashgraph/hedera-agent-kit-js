@@ -164,6 +164,13 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 [7] postToolExecutionHook       ← hooks/policies
 ```
 
+> [!IMPORTANT]
+> **Transaction tools vs query tools — where each stage runs:**
+> - **Transaction tools** (writing to the network): extend `BaseTransactionTool` (not `BaseTool`). `coreAction` **builds** the transaction only (`return HederaBuilder.xxx(params)`). `secondaryAction` **dispatches** it via `handleTransaction(tx, client, context, postProcess)`, which signs and submits in `AUTONOMOUS` mode or returns frozen bytes in `RETURN_BYTES` mode. Do **not** override `shouldSecondaryAction` — the default `true` keeps both stages active. `BaseTransactionTool` adds Hedera-specific error handling: `ReceiptStatusError` and `PrecheckStatusError` are automatically caught and serialized into `raw.errorCode` + `raw.transactionId`.
+> - **Query/read-only tools** (no on-chain write): extend `BaseTool`. All logic runs inside `coreAction` (call the mirror-node service, return data). Override `shouldSecondaryAction` to return `false` to skip stage 6 entirely. You do **not** need to override `secondaryAction` — `BaseTool` provides a default that throws if accidentally called, protecting against misconfiguration.
+>
+> This split ensures that `postCoreActionHook` (stage 5) always fires **after the transaction is formed but before it is submitted**, which is what hooks and policies rely on to inspect or block a transaction pre-submission.
+
 For a step-by-step migration guide with fully annotated before/after code, see
 [Migrating Custom Tools to BaseTool](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking) in the v4 migration guide.
 
@@ -184,12 +191,12 @@ For a step-by-step migration guide with fully annotated before/after code, see
 Create your tool file (e.g., tools/my-service/my-tool.ts).
 
 > [!TIP]
-> **v4 Recommended approach — extend `BaseTool`.**  
-> `BaseTool` implements the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that `BaseTool`-based tools automatically participate in the hooks and policies lifecycle.
+> **v4 Recommended approach — extend `BaseTool` or `BaseTransactionTool`.**  
+> Both implement the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that these tools automatically participate in the hooks and policies lifecycle. Use `BaseTransactionTool` for tools that submit Hedera transactions — it adds structured error handling for `ReceiptStatusError` and `PrecheckStatusError`. Use `BaseTool` for query/read-only tools.
 
 ```typescript
 import { z } from "zod";
-import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
+import { Context, BaseTool, untypedQueryOutputParser } from "@hashgraph/hedera-agent-kit";
 import { Client } from "@hiero-ledger/sdk";
 
 // Define your parameter schema (same as before)
@@ -216,6 +223,11 @@ export class MyTool extends BaseTool {
   `;
   parameters = myToolParameters;
 
+  // Query tools use untypedQueryOutputParser so their { raw, humanMessage } envelope
+  // is correctly normalised by framework adapters. Transaction tools use
+  // transactionToolOutputParser instead (see Transaction Handling below).
+  outputParser = untypedQueryOutputParser;
+
   // Stage 1 - Here preToolExecutionHook() will be called automatically - see the 7-stage lifecycle above.
 
   // Stage 2 — validate / transform raw params from the LLM
@@ -229,26 +241,32 @@ export class MyTool extends BaseTool {
 
   // Stage 3 - Here postParamsNormalizationHook() will be called automatically.
 
-  // Stage 4 — core business logic (build a transaction or run a query)
+  // Stage 4 — core business logic (query tools do everything here)
+  // Always return { raw, humanMessage } so framework adapters and classifyToolResult()
+  // can process the output correctly.
   async coreAction(
     normalisedParams: z.infer<typeof myToolParameters>,
     _context: Context,
     _client: Client,
   ) {
-    // Your implementation here
-    return `Result for ${normalisedParams.requiredParam}`;
+    // Your implementation here — call a mirror-node service, external API, etc.
+    const result = `Result for ${normalisedParams.requiredParam}`;
+    return {
+      raw: { result, param: normalisedParams.requiredParam },
+      humanMessage: result,
+    };
   }
 
   // Stage 5 - Here postCoreActionHook() will be called automatically.
 
-  // Skip secondary action for non-transaction tools
+  // Skip secondary action for query tools (nothing to sign/submit)
   async shouldSecondaryAction(_result: any, _context: Context) {
     return false; // return true (default) if you need to sign/submit a transaction
   }
 
-  // Stage 6 — sign/submit the transaction (omit for query-only tools)
+  // Stage 6 — sign/submit the transaction (no-op for query-only tools)
   async secondaryAction(result: any, _client: Client, _context: Context) {
-    return result; // no-op for non-transaction tools
+    return result; // no-op for query tools
   }
 
   // Stage 7 - Here postToolExecutionHook() will be called automatically.
@@ -270,7 +288,7 @@ export default tool;
 ```typescript
 import { z } from "zod";
 import { Context, Tool } from "@hashgraph/hedera-agent-kit";
-import { Client } from "@hashgraph/sdk";
+import { Client } from "@hiero-ledger/sdk";
 
 const myToolParameters = (context: Context = {}) =>
   z.object({
@@ -346,19 +364,24 @@ Create your plugin index file (index.ts):
 
   export default { myCustomPlugin, myCustomPluginToolNames };
 ```
-**Step 4: Register Your Plugin**
+**Step 4: Use Your Plugin**
 
-Add your plugin to the main plugins index (src/plugins/index.ts):
+If you are building an **external / custom plugin** (the common case), there is **nothing to register in this repository**. Your plugin is a plain object — import it and pass it to the toolkit's `plugins: [...]` array, exactly as shown in [Using Your Custom Plugin](#using-your-custom-plugin) below:
 
-``` typescript
-  import { myCustomPlugin, myCustomPluginToolNames } from './my-custom-plugin';
+```typescript
+import { myCustomPlugin } from './my-custom-plugin';
 
-  export {
-    // ... existing exports
-    myCustomPlugin,
-    myCustomPluginToolNames,
-  };
+const toolkit = new HederaLangchainToolkit({
+  client,
+  configuration: {
+    plugins: [myCustomPlugin],
+    context: { mode: AgentMode.AUTONOMOUS },
+  },
+});
 ```
+
+> [!NOTE]
+> Editing this repository's `packages/core/src/plugins/index.ts` is **only** needed when you are contributing a plugin **into the core SDK** via a pull request — not for your own external plugin. See [Publish and Register Your Plugin](#publish-and-register-your-plugin) for that flow.
 
 ### Best Practices
 
@@ -380,15 +403,15 @@ Add your plugin to the main plugins index (src/plugins/index.ts):
 - Respect the AgentMode (`AUTONOMOUS` vs `RETURN_BYTES`)
 - Implement proper transaction building patterns
 
-**Multi-Account Signing**
+### Multi-Account Signing
 
 `handleTransaction()` signs with the operator of whichever `Client` you pass — the toolkit's client is just the default your tool receives. To sign from a different account than the agent's operator (e.g. a separate treasury or distributor wallet), build a dedicated client inside your tool and pass that one instead:
 
 ```typescript
 import { Client, PrivateKey, TransferTransaction } from '@hiero-ledger/sdk';
-import { BaseTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
+import { BaseTransactionTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
 
-export class TreasuryPayoutTool extends BaseTool {
+export class TreasuryPayoutTool extends BaseTransactionTool {
   // method, name, description, parameters, normalizeParams, coreAction:
   // see the Step-by-Step Guide above. coreAction builds the TransferTransaction.
 
@@ -406,7 +429,56 @@ export class TreasuryPayoutTool extends BaseTool {
 }
 ```
 
-The `AgentMode` is still respected. In `RETURN_BYTES` mode nothing is signed server-side: `handleTransaction()` returns unsigned bytes for `context.accountId` (the connected user's account) regardless of which client you pass, so human-in-the-loop flows are unaffected. The signer swap above only changes behaviour in `AUTONOMOUS` mode.
+The signer swap above only changes behaviour in `AUTONOMOUS` mode — see [Signer and transport setups](#signer-and-transport-setups) for how `AgentMode` drives signing; `RETURN_BYTES` flows are unaffected by which client you pass.
+
+### The `Context` object
+
+`Context` is the shared, per-request state that the toolkit threads through every plugin
+and tool. You pass it once when you construct the toolkit (`configuration.context`), and the
+toolkit hands the **same object** to `Plugin.tools(context)` and to every
+`execute(client, context, params)` call (and to `normalizeParams` / `coreAction` /
+`secondaryAction` on `BaseTool`). Tools read from it — they do not construct it.
+
+| Field               | Type                        | Description                                                                                                                                                               |
+|---------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `accountId`         | `string?`                   | The connected/operating account. Used to resolve the payer/source account, and **required** in `RETURN_BYTES` mode.                                                       |
+| `accountPublicKey`  | `string?`                   | Public key for `accountId`. Either passed in configuration or fetched from the mirror node based on `accountId`.                                                          |
+| `mode`              | `AgentMode?`                | `AUTONOMOUS` (the kit signs and submits) or `RETURN_BYTES` (the kit returns unsigned transaction bytes). See [Signer and transport setups](#signer-and-transport-setups). |
+| `mirrornodeService` | `IHederaMirrornodeService?` | Mirror-node client used by query tools for read access.                                                                                                                   |
+| `hooks`             | `AbstractHook[]?`           | Hooks and policies run at lifecycle stages. Only `BaseTool`-based tools participate. See [HOOKS_AND_POLICIES.md](HOOKS_AND_POLICIES.md).                                  |
+
+See [packages/core/src/shared/configuration.ts](../packages/core/src/shared/configuration.ts)
+for the source definition.
+
+```typescript
+// Reading context inside a tool
+async coreAction(params: MyParams, context: Context, _client: Client) {
+  const payer = context.accountId; // who the request acts on behalf of
+  if (context.mode === AgentMode.RETURN_BYTES) {
+    // e.g. skip anything that assumes an operator is available to sign
+  }
+  // ...
+}
+```
+
+### Signer and transport setups
+
+Every tool receives a Hedera SDK `Client` (from `@hiero-ledger/sdk`) as the first argument
+to `execute` (and to `coreAction` / `secondaryAction` on `BaseTool`). **How signing and
+submission happen is driven by `context.mode`:**
+
+- **`AUTONOMOUS`** — the injected `Client` carries a local operator key set by the host app
+  (`client.setOperator(accountId, PrivateKey.fromStringECDSA(...))`). When a tool calls
+  `handleTransaction()`, the transaction is signed and submitted by that operator via
+  `tx.execute(client)`. Both **ECDSA** and **ED25519** operator keys are supported.
+- **`RETURN_BYTES`** — `handleTransaction()` freezes the transaction and returns
+  `{ bytes }` (unsigned) for an external wallet to sign and submit. `context.accountId`
+  must be set; nothing is signed inside the kit.
+
+> [!NOTE]
+> There is **no built-in WalletConnect / dApp-connector pairing path** in this repository.
+> External-wallet signing is expressed through `RETURN_BYTES`: the kit hands back unsigned
+> transaction bytes and the host app relays them to whatever wallet or signing flow it uses.
 
 ### Calling a Smart Contract from a Custom Tool
 
@@ -507,6 +579,93 @@ In LangChain v1, we use the `ResponseParserService` to handle tool outputs. This
 
 This allows you to easily display a user-friendly message while still having access to the raw data for further processing.
 
+**Built-in parsers.** A tool declares which parser to use via its optional `outputParser`
+field. The kit ships two ready-made parsers, both importable from
+`@hashgraph/hedera-agent-kit`:
+
+- `transactionToolOutputParser` — for **transaction** tools. Handles both `AUTONOMOUS`
+  output (a `{ raw, humanMessage }` receipt) and `RETURN_BYTES` output (an object with a
+  `bytes` field), and reports a `PARSE_ERROR` shape for malformed output.
+- `untypedQueryOutputParser` — a generic pass-through for **query** tools that already
+  return `{ raw, humanMessage }`.
+
+If you omit `outputParser` (`undefined`), the default handling applies — fine for simple
+non-transaction tools.
+
+**Writing a custom parser.** When your tool returns a shape the built-ins don't cover
+(e.g. a third-party API response), provide your own. It receives the tool's stringified
+output and must return `{ raw, humanMessage }`:
+
+```typescript
+import { Context, BaseTool } from '@hashgraph/hedera-agent-kit';
+
+export class GetHbarPriceTool extends BaseTool {
+  // ...method, name, description, parameters...
+
+  // A custom parser: turn the tool's raw JSON output into { raw, humanMessage }.
+  outputParser = (rawOutput: string) => {
+    try {
+      const data = JSON.parse(rawOutput);
+      return {
+        raw: data, // structured data for programmatic use
+        humanMessage: `HBAR price: $${data.priceUsd}`, // user-facing text for the agent
+      };
+    } catch (error) {
+      return {
+        raw: { status: 'PARSE_ERROR', originalOutput: rawOutput },
+        humanMessage: 'Error: could not parse the price response.',
+      };
+    }
+  };
+}
+```
+
+See [packages/core/src/shared/utils/default-tool-output-parsing.ts](../packages/core/src/shared/utils/default-tool-output-parsing.ts)
+for the reference implementations.
+
+### Typed tool results
+
+The `{ raw, humanMessage }` envelope above is intentionally untyped (`raw: any`). When you want
+to branch on success vs. failure with compile-time safety, pass it to `classifyToolResult`,
+which maps it to a discriminated union. Everything below is importable from
+`@hashgraph/hedera-agent-kit`:
+
+```typescript
+import {
+  transactionToolOutputParser,
+  classifyToolResult,
+  TOOL_STATUS, // { SUCCESS, ERROR, PARSE_ERROR } — the known raw.status values
+} from '@hashgraph/hedera-agent-kit';
+
+const envelope = transactionToolOutputParser(rawToolOutput);
+const result = classifyToolResult<{ transactionId: string; topicId?: string }>(envelope);
+
+switch (result.kind) {
+  case 'success':
+    // result.data is typed as T; result.transactionId is lifted out when present
+    console.log('ok', result.transactionId, result.data.topicId);
+    break;
+  case 'failure':
+    // result.errorCode is the SDK status (e.g. 'INSUFFICIENT_PAYER_BALANCE') or 'ERROR'
+    throw new Error(`tool failed (${result.errorCode}): ${result.error}`);
+  case 'parse_error':
+    throw new Error(`tool output unparseable: ${result.humanMessage}`);
+  case 'unknown':
+    throw new Error(result.humanMessage);
+}
+```
+
+`ToolResultStatus<T>` (the return type) and `ToolRawStatus` (the `raw.status` string union) are
+also exported for annotating your own code. `classifyToolResult` is additive and opt-in — the
+parsers still return `{ raw, humanMessage }` unchanged.
+
+**RETURN_BYTES results are typed too.** In `RETURN_BYTES` mode a transaction tool's `raw` is a
+`ReturnBytesResult` (also exported from `@hashgraph/hedera-agent-kit`): `{ bytes, status,
+transactionId, payerAccountId, type, expiresAt, memo }`. Its `status` is always
+`TOOL_STATUS.SUCCESS`, so it classifies as `kind: 'success'`. See
+[MCP.md](MCP.md#what-a-transaction-tool-returns) for the full field table and the wallet
+handoff.
+
 ### Using Your Custom Plugin
 
 #### LangChain v0.3 (Classic)
@@ -596,13 +755,40 @@ See [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts) for a comp
 
 **Optional audit logging:** `BaseTool`-based tools can log their executions to an HCS topic via `HcsAuditTrailHook` — add it to `context.hooks`, no tool changes required. See [HOOKS_AND_POLICIES.md](HOOKS_AND_POLICIES.md).
 
+### Troubleshooting: duplicate transitive dependencies (protobufjs & the Hedera SDK chain)
+
+**Symptom.** Intermittent runtime **protobuf errors** — type/registry mismatches or `instanceof`-style failures during transaction serialization — when your plugin depends on the Hedera SDK chain **alongside another SDK** (for example an asset-tokenization / ATS SDK) that drags in a different `protobufjs` major.
+
+**Cause.** The Hedera SDK chain currently spans two `protobufjs` majors: `@hiero-ledger/sdk` resolves `protobufjs@8.x`, while the `@hiero-ledger/proto` / `@hashgraph/proto` packages resolve `protobufjs@7.x`. npm and yarn can legitimately keep **both** copies in the tree, but protobuf keeps a global type registry that does not tolerate two majors loaded at once — hence the runtime errors. This cannot be fixed from inside a published plugin: `overrides`/`resolutions` declared in a library's `package.json` are ignored for downstream installs — only the **consumer/app root** can force a single copy.
+
+**Fix.** Pin a single `protobufjs` from your app's root `package.json`:
+
+```jsonc
+// npm — package.json
+"overrides": { "protobufjs": "8.0.1" }
+```
+
+```jsonc
+// yarn / pnpm — package.json
+"resolutions": { "protobufjs": "8.0.1" }
+```
+
+`@hiero-ledger/sdk` resolves `protobufjs@8.0.0`, which is why that's the major to standardize on, but pin to `8.0.1` (or later) instead of `8.0.0` itself — `8.0.0` and `7.5.4` are both affected by [CVE-2026-41242](https://github.com/protobufjs/protobuf.js/security/advisories/GHSA-xq3m-2v4x-88gg) (critical, arbitrary code execution via crafted protobuf definitions), fixed in `8.0.1`/`7.5.5`. Then re-test. Confirm only one copy remains:
+
+```bash
+npm ls protobufjs      # or: pnpm why protobufjs / yarn why protobufjs
+```
+
+The same single-copy rule applies to any other "singleton" transitive dependency whose object identity must be shared across the whole tree.
+
 ### Examples and References
 
-- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
+- See the annotated example plugin in [examples/plugin/](../examples/plugin/) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
 - See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples
 - For migrating existing v3 tools to `BaseTool`, see the [Migration Guide](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking)
+- To expose your plugin's tools over the Model Context Protocol (including non-custodial `RETURN_BYTES` servers), see [MCP.md](MCP.md)
 ## Publish and Register Your Plugin
 
 > All commits for your plugin must be [DCO signed](https://wiki.linuxfoundation.org/dco). To avoid having pull requests blocked in the future, always include a sign-off.

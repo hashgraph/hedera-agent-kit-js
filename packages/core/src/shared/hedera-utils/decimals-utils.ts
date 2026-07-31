@@ -1,17 +1,117 @@
 import BigNumber from 'bignumber.js';
+import Long from 'long';
+import { IHederaMirrornodeService } from '@/shared';
+
+// Function selector of ERC20 `decimals()`
+const ERC20_DECIMALS_SELECTOR = '0x313ce567';
+
+// HTTP statuses that indicate a transient failure worth retrying (e.g. solo mirror-node web3 warmup)
+const RETRYABLE_STATUSES = new Set([429, 502, 503, 504]);
+
+/**
+ * Reads the `decimals()` value of an ERC20 contract via the mirror node
+ * read-only `/contracts/call` endpoint.
+ *
+ * Retries on transient 5xx/429 responses (up to 5 attempts, exponential backoff starting at 1s)
+ * to handle cases where the mirror node's web3 simulation module is temporarily unavailable
+ * (e.g. during solo network warmup).  Non-transient errors (e.g. 400) throw immediately.
+ *
+ * @param contractId - The Hedera contract ID (shard.realm.num).
+ * @param mirrorNode - Mirror node service used to resolve the contract and perform the call.
+ * @returns The number of decimals the token uses.
+ */
+export async function getERC20Decimals(
+  contractId: string,
+  mirrorNode: IHederaMirrornodeService,
+): Promise<number> {
+  const contractInfo = await mirrorNode.getContractInfo(contractId);
+  const url = `${mirrorNode.getBaseUrl()}/contracts/call`;
+  const body = JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address });
+  const maxAttempts = 5;
+  let delayMs = 1000;
+
+  for (let attempt = 1; ; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+    } catch (err) {
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        delayMs *= 2;
+        continue;
+      }
+      throw new Error(
+        `Failed to read decimals of ERC20 contract ${contractId}: ${(err as Error).message}`,
+      );
+    }
+    if (response.ok) {
+      const { result } = (await response.json()) as { result: string };
+      return Number(BigInt(result));
+    }
+    if (RETRYABLE_STATUSES.has(response.status) && attempt < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      delayMs *= 2;
+      continue;
+    }
+    throw new Error(
+      `Failed to read decimals of ERC20 contract ${contractId}: ${response.status} ${response.statusText}`,
+    );
+  }
+}
+
+/**
+ * HTS token amounts are stored as int64 on-chain.
+ * Long.MAX_VALUE = 2^63 − 1 = 9,223,372,036,854,775,807.
+ */
+export const HTS_INT64_MAX = new BigNumber('9223372036854775807');
 
 /**
  * Converts a token amount to base units (the smallest denomination).
  * Example: toBaseUnit(1.5, 8) => BigNumber(150000000)
  *
- * @param amount - The human-readable token amount (number or BigNumber).
+ * @param amount - The human-readable token amount (number, numeric string, or BigNumber).
+ *   Note: if `amount` is a JS `number` that has already lost precision above 2^53, passing
+ *   it as a string will not recover that precision — convert to string before the precision
+ *   is lost (i.e. before the number is parsed from JSON or received as a function argument).
  * @param decimals - The number of decimals the token uses.
  * @returns The amount in base units as BigNumber.
  */
-export function toBaseUnit(amount: number | BigNumber, decimals: number): BigNumber {
+export function toBaseUnit(amount: number | string | BigNumber, decimals: number): BigNumber {
   const amountBN = new BigNumber(amount);
   const multiplier = new BigNumber(10).pow(decimals);
   return amountBN.multipliedBy(multiplier).integerValue(BigNumber.ROUND_FLOOR);
+}
+
+/**
+ * Converts a display-unit amount to a precision-safe int64 Long for HTS transactions.
+ *
+ * Uses BigNumber arithmetic throughout to avoid float64 precision loss, then validates
+ * that the result fits within the HTS int64 range before returning a Long.
+ *
+ * @param amount - The human-readable token amount (number, numeric string, or BigNumber).
+ * @param decimals - The number of decimals the token uses.
+ * @param label - Descriptive name included in the error message if the value overflows (default "amount").
+ * @returns The amount in base units as a Long.
+ * @throws {Error} if the base-unit value exceeds Long.MAX_VALUE (9,223,372,036,854,775,807).
+ */
+export function toBaseUnitLong(
+  amount: number | string | BigNumber,
+  decimals: number,
+  label = 'amount',
+): Long {
+  const bn = toBaseUnit(amount, decimals);
+  if (bn.gt(HTS_INT64_MAX)) {
+    throw new Error(
+      `${label} in base units (${bn.toFixed()}) exceeds the HTS int64 maximum ` +
+        `of ${HTS_INT64_MAX.toFixed()}. HTS token amounts are stored as int64; ` +
+        `use a smaller display-unit value.`,
+    );
+  }
+  return Long.fromString(bn.toFixed(0));
 }
 
 /**
