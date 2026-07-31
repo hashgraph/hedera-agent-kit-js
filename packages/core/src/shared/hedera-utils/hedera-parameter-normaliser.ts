@@ -1021,18 +1021,14 @@ export default class HederaParameterNormaliser {
     // Create an interface for encoding
     const iface = new ethers.Interface(factoryContractAbi);
 
-    // initialSupply is given in display units; the factory contract expects base units
-    const baseInitialSupply = toBaseUnit(
-      parsedParams.initialSupply,
-      parsedParams.decimals,
-    ).toFixed();
-
-    // Encode the function call
+    // Encode the function call.
+    // initialSupply is passed in display units on purpose: BaseERC20's constructor mints
+    // `initialSupply_ * 10 ** decimals()` itself, so scaling here would double-apply it.
     const encodedData = iface.encodeFunctionData(factoryContractFunctionName, [
       parsedParams.tokenName,
       parsedParams.tokenSymbol,
       parsedParams.decimals,
-      baseInitialSupply,
+      parsedParams.initialSupply,
     ]);
 
     const functionParameters = ethers.getBytes(encodedData);

@@ -5,10 +5,36 @@ import {
   getProfile,
   HederaOperationsWrapper,
   type TestAccount,
+  waitFor,
   waitForMirrorTx,
 } from '@hashgraph/hedera-agent-kit-tests';
 import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
+import { getMirrornodeService } from '@hashgraph/hedera-agent-kit';
 import { Client } from '@hiero-ledger/sdk';
+
+// Function selector of ERC20 `totalSupply()`
+const TOTAL_SUPPLY_SELECTOR = '0x18160ddd';
+
+/**
+ * Reads `totalSupply()` off the deployed token. Retries because the mirror node's web3
+ * simulation module needs a moment before a freshly deployed contract is callable.
+ */
+const readTotalSupply = async (client: Client, erc20Address: string): Promise<bigint> => {
+  const baseUrl = getMirrornodeService(undefined, client.ledgerId!).getBaseUrl();
+  return waitFor(
+    async () => {
+      const response = await fetch(`${baseUrl}/contracts/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: TOTAL_SUPPLY_SELECTOR, to: erc20Address }),
+      });
+      if (!response.ok) return null;
+      const { result } = (await response.json()) as { result: string };
+      return BigInt(result);
+    },
+    { timeoutMs: 60000, intervalMs: 500, description: 'ERC20 totalSupply to be readable' },
+  );
+};
 
 describe('Create ERC20 Token E2E Tests', () => {
   const profile = getProfile();
@@ -92,6 +118,12 @@ describe('Create ERC20 Token E2E Tests', () => {
 
       const contractInfo = await executorWrapper.getContractInfo(erc20Address!);
       expect(contractInfo).toBeDefined();
+
+      // initialSupply is passed to the factory in display units and scaled on-chain by
+      // BaseERC20's constructor. Asserting the minted amount here is what stops the kit
+      // from scaling it a second time. 1000 * 10^2 = 100_000 base units.
+      const totalSupply = await readTotalSupply(executorClient, erc20Address!);
+      expect(totalSupply).toBe(100_000n);
     },
   );
 

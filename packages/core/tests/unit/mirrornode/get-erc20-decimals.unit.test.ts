@@ -18,6 +18,7 @@ describe('mirror node getERC20Decimals', () => {
     vi.spyOn(service, 'getContractInfo').mockResolvedValue({ evm_address: '0xabc' } as any);
   });
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -58,5 +59,32 @@ describe('mirror node getERC20Decimals', () => {
     await expect(service.getERC20Decimals('0.0.5678')).rejects.toThrow(
       'Failed to read decimals of ERC20 contract 0.0.5678: 400 Bad Request',
     );
+  });
+
+  it('retries a persistent 503 five times before giving up', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' });
+    vi.stubGlobal('fetch', fetchMock);
+
+    // Attach the rejection handler before running timers to avoid unhandled rejection warnings
+    const assertion = expect(service.getERC20Decimals('0.0.5678')).rejects.toThrow(
+      'Failed to read decimals of ERC20 contract 0.0.5678: 503 Service Unavailable',
+    );
+    await vi.runAllTimersAsync();
+    await assertion;
+
+    // 5 attempts, not the default 3 — the web3 module warms up slower than the REST endpoints
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+  });
+
+  it('reports the contract id when the request fails at the network level', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('ECONNRESET')));
+
+    const assertion = expect(service.getERC20Decimals('0.0.5678')).rejects.toThrow(
+      'Failed to read decimals of ERC20 contract 0.0.5678',
+    );
+    await vi.runAllTimersAsync();
+    await assertion;
   });
 });

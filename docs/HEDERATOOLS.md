@@ -1066,12 +1066,12 @@ Deploys a new ERC-20 token via the BaseERC20Factory. Supports scheduled transact
 
 #### Parameters
 
-| Parameter       | Type     | Required | Default | Description                  |
-|-----------------|----------|----------|---------|------------------------------|
-| `tokenName`     | `string` | ✅        | —       | The name of the token.       |
-| `tokenSymbol`   | `string` | ✅        | —       | The symbol of the token.     |
-| `decimals`      | `number` | ❌        | `18`    | Number of decimal places.    |
-| `initialSupply` | `number` | ❌        | `0`     | Initial supply of the token. |
+| Parameter       | Type     | Required | Default | Description                                                             |
+|-----------------|----------|----------|---------|-------------------------------------------------------------------------|
+| `tokenName`     | `string` | ✅        | —       | The name of the token.                                                  |
+| `tokenSymbol`   | `string` | ✅        | —       | The symbol of the token.                                                |
+| `decimals`      | `number` | ❌        | `18`    | Number of decimal places.                                               |
+| `initialSupply` | `number` | ❌        | `0`     | Initial supply in display units; scaled on-chain by `10 ** decimals`.   |
 
 #### Example Prompts
 

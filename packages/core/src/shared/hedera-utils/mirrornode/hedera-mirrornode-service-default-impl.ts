@@ -39,14 +39,17 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
    * Retries on 404 (entity not yet indexed), 429, 502, 503, 504 (transient
    * overload), and network-level errors (fetch throws). Non-retryable statuses
    * throw immediately via `buildError`.
+   *
+   * `maxAttempts` is raised by callers that hit endpoints with a slower warmup than the
+   * plain REST ones (see `getERC20Decimals`).
    */
   private async fetchJson<T>(
     url: string,
     buildError: (response: Response) => string,
     init?: Parameters<typeof fetch>[1],
+    maxAttempts = 3,
   ): Promise<T> {
     const RETRYABLE_STATUSES = new Set([404, 429, 502, 503, 504]);
-    const maxAttempts = 3;
     let delayMs = 1000;
     for (let attempt = 1; ; attempt++) {
       let response: Response;
@@ -220,18 +223,29 @@ export class HederaMirrornodeServiceDefaultImpl implements IHederaMirrornodeServ
   /**
    * Reads the `decimals()` value of an ERC20 contract via the mirror node
    * read-only `/contracts/call` endpoint.
+   *
+   * Uses 5 attempts instead of the default 3: the mirror node's web3 simulation module
+   * warms up slower than the REST endpoints (notably on a freshly started solo network).
    */
   async getERC20Decimals(contractId: string): Promise<number> {
     const contractInfo = await this.getContractInfo(contractId);
-    const { result } = await this.fetchJson<{ result: string }>(
-      `${this.baseUrl}/contracts/call`,
-      r => `Failed to read decimals of ERC20 contract ${contractId}: ${r.status} ${r.statusText}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address }),
-      },
-    );
+    let result: string;
+    try {
+      ({ result } = await this.fetchJson<{ result: string }>(
+        `${this.baseUrl}/contracts/call`,
+        r => `${r.status} ${r.statusText}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: ERC20_DECIMALS_SELECTOR, to: contractInfo.evm_address }),
+        },
+        5,
+      ));
+    } catch (err) {
+      throw new Error(
+        `Failed to read decimals of ERC20 contract ${contractId}: ${(err as Error).message}`,
+      );
+    }
     return Number(BigInt(result));
   }
 
