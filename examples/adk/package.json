@@ -25,6 +25,7 @@
   },
   "overrides": {
     "@hono/node-server": ">=2.0.5",
+    "ip-address": "10.2.1",
     "@opentelemetry/core": ">=2.8.0",
     "@tootallnate/once": ">=2.0.1",
     "adm-zip": ">=0.6.0",
