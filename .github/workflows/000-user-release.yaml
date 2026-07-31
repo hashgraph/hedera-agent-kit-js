@@ -266,7 +266,7 @@ jobs:
           ref: ${{ needs.prepare-release.outputs.tag }}
 
       - name: Create GitHub Release
-        uses: step-security/release-action@03a57407052f15d1537fd5469a6fbbc536aba326 # v1.20.0
+        uses: step-security/release-action@a0d8e0f90f554c15366ca2c9046bf4090d24adbe # v1.21.0
         with:
           tag: ${{ needs.prepare-release.outputs.tag }}
           generateReleaseNotes: true
