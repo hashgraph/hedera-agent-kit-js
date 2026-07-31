@@ -48,7 +48,7 @@
     "@hashgraph/hedera-agent-kit": "workspace:*"
   },
   "peerDependencies": {
-    "@google/adk": "1.4.0",
+    "@google/adk": "^1.4.0",
     "@hiero-ledger/sdk": "^2.86.2"
   },
   "devDependencies": {
