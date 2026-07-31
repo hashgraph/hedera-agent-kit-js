@@ -1,5 +1,5 @@
 import { HederaAgentAPI, toUint8Array } from '@hashgraph/hedera-agent-kit';
-import { tool } from 'ai';
+import { tool, Tool } from 'ai';
 import z from 'zod';
 
 export default function HederaAgentKitTool(
@@ -7,7 +7,7 @@ export default function HederaAgentKitTool(
   method: string,
   description: string,
   schema: z.ZodObject<any, any>,
-) {
+): Tool {
   return tool({
     type: undefined,
     description: description,

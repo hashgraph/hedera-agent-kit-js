@@ -45,15 +45,15 @@
   ],
   "dependencies": {
     "@hashgraph/hedera-agent-kit": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "dotenv": "17.2.1",
     "zod": "3.25.76"
   },
   "peerDependencies": {
-    "@hiero-ledger/sdk": "^2.81.0"
+    "@hiero-ledger/sdk": "^2.86.2"
   },
   "devDependencies": {
-    "@hiero-ledger/sdk": "2.81.0",
+    "@hiero-ledger/sdk": "2.86.2",
     "tsup": "8.5.0",
     "typescript": "5.8.3"
   }

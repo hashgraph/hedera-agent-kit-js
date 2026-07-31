@@ -214,13 +214,13 @@ export const updateTokenParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New admin key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").  Required for most property updates.',
+        'New admin key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ"). Required for most property updates.',
       ),
     kycKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New KYC key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New KYC key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     freezeKey: z
       .union([z.boolean(), z.string()])
@@ -244,19 +244,19 @@ export const updateTokenParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New fee schedule key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New fee schedule key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     pauseKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New pause key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New pause key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     metadataKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New metadata key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New metadata key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     metadata: z
       .string()
