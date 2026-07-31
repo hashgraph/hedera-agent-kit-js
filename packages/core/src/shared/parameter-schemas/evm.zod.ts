@@ -17,8 +17,11 @@ export const contractExecuteTransactionParametersNormalised = (context: Context 
     .extend({
       payableAmount: z
         .number()
+        .int()
         .optional()
-        .describe('The amount of HBAR to pay for the transaction.'),
+        .describe(
+          'The amount to send with the call, denominated in tinybars (1 HBAR = 100,000,000 tinybars). Note: on the Hedera EVM, value is denominated in tinybars, not weibars.',
+        ),
     });
 export const transferERC20Parameters = (context: Context = {}) =>
   optionalScheduledTransactionParams(context).extend({
