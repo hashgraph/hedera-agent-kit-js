@@ -113,9 +113,7 @@ describe('swapTokens tool (unit)', () => {
   });
 
   it('returns a friendly error when normalisation fails', async () => {
-    mockedNormaliser.normaliseSwapExactTokensForTokensParams.mockRejectedValue(
-      new Error('boom'),
-    );
+    mockedNormaliser.normaliseSwapExactTokensForTokensParams.mockRejectedValue(new Error('boom'));
 
     const tool = toolFactory(context);
     const client = makeClient();
@@ -125,5 +123,54 @@ describe('swapTokens tool (unit)', () => {
     expect(res.humanMessage).toContain('Failed to swap tokens');
     expect(res.humanMessage).toContain('boom');
     expect(mockedBuilder.executeTransaction).not.toHaveBeenCalled();
+  });
+
+  describe('amount validation', () => {
+    const schema = swapExactTokensForTokensParameters(context);
+    const withAmounts = (amountIn: string, amountOutMin: string) => ({
+      routerContractId: '0.0.12345',
+      path: ['0.0.111', '0.0.222'],
+      amountIn,
+      amountOutMin,
+    });
+
+    it('accepts positive integer base-unit amounts', () => {
+      expect(schema.safeParse(withAmounts('100000000', '95000000')).success).toBe(true);
+    });
+
+    // A zero slippage floor accepts any output amount, which leaves the swap
+    // open to sandwiching. It must not be representable.
+    it('rejects a zero amountOutMin', () => {
+      const result = schema.safeParse(withAmounts('100000000', '0'));
+      expect(result.success).toBe(false);
+      expect(JSON.stringify(result)).toContain('greater than zero');
+    });
+
+    it('rejects a zero amountIn', () => {
+      expect(schema.safeParse(withAmounts('0', '95000000')).success).toBe(false);
+    });
+
+    // BigInt('') is 0, so an empty string would silently become a zero floor.
+    it('rejects an empty amount rather than coercing it to zero', () => {
+      expect(schema.safeParse(withAmounts('100000000', '')).success).toBe(false);
+    });
+
+    // These reach BigInt() and throw a raw SyntaxError without the regex guard.
+    it.each(['abc', '1.5', '1e10', '  7 ', '0x10'])(
+      'rejects non-integer amount %j before it reaches BigInt()',
+      value => {
+        expect(schema.safeParse(withAmounts(value, '95000000')).success).toBe(false);
+      },
+    );
+
+    it('rejects negative amounts', () => {
+      expect(schema.safeParse(withAmounts('-5', '95000000')).success).toBe(false);
+      expect(schema.safeParse(withAmounts('100000000', '-5')).success).toBe(false);
+    });
+
+    it('accepts amounts beyond Number.MAX_SAFE_INTEGER', () => {
+      const huge = '9007199254740993000';
+      expect(schema.safeParse(withAmounts(huge, huge)).success).toBe(true);
+    });
   });
 });
