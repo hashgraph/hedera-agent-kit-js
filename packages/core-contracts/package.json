@@ -19,7 +19,7 @@
         "@typescript-eslint/eslint-plugin": "8.65.0",
         "@typescript-eslint/parser": "8.65.0",
         "dotenv": "17.4.1",
-        "eslint": "10.2.0",
+        "eslint": "10.8.0",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-prettier": "5.5.6",
         "hardhat": "3.3.0",
