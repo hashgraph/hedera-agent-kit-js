@@ -30,6 +30,8 @@ export type WalletPrepareResponse = ApiResponse<{
   result?: string;
 } & Partial<PendingTransaction>>;
 
+export type TransactionStatus = "pending" | "confirmed" | null;
+
 export type ChatState = {
   messages: Message[];
   input: string;
