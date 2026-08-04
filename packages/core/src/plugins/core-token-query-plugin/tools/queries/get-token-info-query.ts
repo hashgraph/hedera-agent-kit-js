@@ -3,7 +3,7 @@ import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { tokenInfoQueryParameters } from '@/shared/parameter-schemas/token.zod';
 import { Client } from '@hiero-ledger/sdk';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
@@ -71,7 +71,7 @@ ${tokenInfo.memo ? `**Memo**: ${tokenInfo.memo}` : ''}
 
 export const GET_TOKEN_INFO_QUERY_TOOL = 'get_token_info_query_tool';
 
-export class GetTokenInfoQueryTool extends BaseTool {
+export class GetTokenInfoQueryTool extends BaseQueryTool {
   method = GET_TOKEN_INFO_QUERY_TOOL;
   name = 'Get Token Info';
   description: string;
@@ -114,6 +114,6 @@ export class GetTokenInfoQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetTokenInfoQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetTokenInfoQueryTool(context);
 
 export default tool;

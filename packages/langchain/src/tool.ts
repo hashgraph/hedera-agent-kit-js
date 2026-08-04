@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { StructuredTool } from '@langchain/core/tools';
 import { CallbackManagerForToolRun } from '@langchain/core/callbacks/manager';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { HederaAgentAPI } from '@hashgraph/hedera-agent-kit';
+import { HederaAgentAPI, type ToolType } from '@hashgraph/hedera-agent-kit';
 
 class HederaAgentKitTool extends StructuredTool {
   hederaAPI: HederaAgentAPI;
@@ -15,6 +15,9 @@ class HederaAgentKitTool extends StructuredTool {
 
   schema: z.ZodObject<any, any>;
 
+  /** Classifies the tool's intent — see `TOOL_TYPE` from `@hashgraph/hedera-agent-kit`. */
+  toolType?: ToolType;
+
   responseParsingFunction?: (response: any) => {};
 
   constructor(
@@ -23,6 +26,7 @@ class HederaAgentKitTool extends StructuredTool {
     description: string,
     schema: z.ZodObject<any, any>,
     responseParsingFunction?: (response: any) => {},
+    toolType?: ToolType,
   ) {
     super();
 
@@ -32,6 +36,7 @@ class HederaAgentKitTool extends StructuredTool {
     this.description = description;
     this.schema = schema;
     this.responseParsingFunction = responseParsingFunction;
+    this.toolType = toolType;
 
     // Surface the real tool name to stream events as `event.metadata.hakToolName`
     // (on `on_tool_start`, event.name is the shared wrapper class). See README.

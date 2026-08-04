@@ -36,6 +36,7 @@ class HederaLangchainToolkit implements BaseToolkit {
           tool.description,
           tool.parameters,
           tool.outputParser,
+          tool.toolType,
         ),
     );
     this._configuration = configuration;

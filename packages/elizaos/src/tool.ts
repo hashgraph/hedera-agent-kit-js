@@ -13,7 +13,7 @@ import {
   Validator,
 } from '@elizaos/core';
 import { Client } from '@hiero-ledger/sdk';
-import type { Tool, Context } from '@hashgraph/hedera-agent-kit';
+import type { Tool, Context, ToolType } from '@hashgraph/hedera-agent-kit';
 import { generateExtractionTemplate } from './utils/extraction';
 import { customParseJSONObjectFromText } from './utils/parser';
 
@@ -24,6 +24,8 @@ class HederaAgentKitTool implements Action {
   examples?: ActionExample[][] | undefined;
   name: string;
   validate: Validator;
+  /** Classifies the tool's intent — see `TOOL_TYPE` from `@hashgraph/hedera-agent-kit`. */
+  toolType?: ToolType;
 
   constructor(client: Client, context: Context, tool: Tool) {
     const parameterSchema = tool.parameters;
@@ -33,6 +35,7 @@ class HederaAgentKitTool implements Action {
     this.name = tool.method.toUpperCase();
     this.similes = [tool.method.toUpperCase()];
     this.validate = async (_runtime: IAgentRuntime, _message: Memory) => true;
+    this.toolType = tool.toolType;
 
     this.handler = async (
       runtime: IAgentRuntime,

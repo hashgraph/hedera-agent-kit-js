@@ -3,7 +3,7 @@ import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mi
 import { topicMessagesQueryParameters } from '@/shared/parameter-schemas/consensus.zod';
 import { Client } from '@hiero-ledger/sdk';
 import { z } from 'zod';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { TopicMessage, TopicMessagesQueryParams } from '@/shared/hedera-utils/mirrornode/types';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
@@ -69,7 +69,7 @@ const convertMessagesFromBase64ToString = (messages: TopicMessage[]) => {
 
 export const GET_TOPIC_MESSAGES_QUERY_TOOL = 'get_topic_messages_query_tool';
 
-export class GetTopicMessagesQueryTool extends BaseTool {
+export class GetTopicMessagesQueryTool extends BaseQueryTool {
   method = GET_TOPIC_MESSAGES_QUERY_TOOL;
   name = 'Get Topic Messages';
   description: string;
@@ -118,6 +118,6 @@ export class GetTopicMessagesQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetTopicMessagesQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetTopicMessagesQueryTool(context);
 
 export default tool;
