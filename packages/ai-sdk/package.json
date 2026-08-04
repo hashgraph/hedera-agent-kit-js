@@ -51,7 +51,7 @@
     "@ai-sdk/mcp": "2.0.17",
     "@hashgraph/hedera-agent-kit": "workspace:*",
     "@modelcontextprotocol/sdk": "1.30.0",
-    "zod": "3.25.76"
+    "zod": "4.4.3"
   },
   "peerDependencies": {
     "@hiero-ledger/sdk": "^2.86.2",
