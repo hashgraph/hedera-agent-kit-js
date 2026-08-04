@@ -64,7 +64,7 @@
     "@langchain/core": "1.2.3",
     "@langchain/openai": "1.5.5",
     "dotenv": "17.2.1",
-    "langchain": "1.5.3",
+    "langchain": "1.5.4",
     "long": "5.3.2",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
