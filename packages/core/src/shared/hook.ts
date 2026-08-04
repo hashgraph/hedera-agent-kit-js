@@ -68,12 +68,29 @@ export abstract class AbstractHook {
    * Set `relevantTools = ['*']` to apply this hook to **every** tool regardless of method name.
    * This is useful for type-based hooks/policies that operate on `params.toolType` rather than
    * on a specific method name.
+   *
+   * Matching is **not** applied by the tool pipeline: `BaseTool` invokes every registered hook
+   * and each handler decides for itself. Guard every override with
+   * {@link appliesToMethod} so `relevantTools` (including `'*'`) is honoured:
+   *
+   * ```ts
+   * override async preToolExecutionHook(params: PreToolExecutionParams, method: string) {
+   *   if (!this.appliesToMethod(method)) return;
+   *   // ...
+   * }
+   * ```
+   *
+   * {@link AbstractPolicy} already does this in all four handlers, so policies get `'*'`
+   * support for free. See "Template for New Hook" in `docs/HOOKS_AND_POLICIES.md`.
    */
   public abstract relevantTools: string[];
 
   /**
    * Returns `true` when this hook should run for the given method.
    * The special sentinel `'*'` in {@link relevantTools} matches any method.
+   *
+   * Call this at the top of every handler you override. A handler that skips it runs for
+   * every tool, ignoring `relevantTools` entirely.
    */
   protected appliesToMethod(method: string): boolean {
     return this.relevantTools.includes('*') || this.relevantTools.includes(method);

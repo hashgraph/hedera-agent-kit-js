@@ -818,10 +818,14 @@ export default tool;
 
 ### Migrating a query-only tool
 
-For tools that only read data (no transaction signing), you can extend `BaseTool` directly
-(and override `shouldSecondaryAction` to return `false`), or use the `BaseQueryTool`
-convenience subclass which sets `toolType = 'query'` for you. Both are valid — `BaseQueryTool`
-is just a helper that saves a line:
+For tools that only read data (no transaction signing), extend `BaseQueryTool` and override
+`shouldSecondaryAction` to skip stage 6:
+
+> [!IMPORTANT]
+> Do not extend `BaseTool` directly for query tools. `BaseTool` leaves `toolType = 'other'`,
+> so the tool is dropped by `toolType === TOOL_TYPE.QUERY` filters and blocked by a read-only
+> policy. `BaseQueryTool` sets `toolType = 'query'`, which is what makes it discoverable as
+> read-only. See [Tool types](./HEDERATOOLS.md#tool-types).
 
 ```typescript
 import { BaseQueryTool } from '@hashgraph/hedera-agent-kit';
