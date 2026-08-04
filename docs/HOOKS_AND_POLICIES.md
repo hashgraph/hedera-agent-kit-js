@@ -398,9 +398,9 @@ lifecycle.
 
 ## Type Safety & Multi-Tool Context
 
-Hooks are configured for a specific set of tools (the `relevantTools` list). However, because `AbstractHook` is generic,
-there is **no compile-time type safety** for parameters. When a hook targets multiple tools, you must handle the various
-parameter structures using one of three patterns:
+Hooks declare the tools they target in `relevantTools` and narrow to them with `appliesToMethod()`. However, because
+`AbstractHook` is generic, there is **no compile-time type safety** for parameters. When a hook targets multiple tools,
+you must handle the various parameter structures using one of three patterns:
 
 ### 1. Universal Logic
 
@@ -553,10 +553,11 @@ export class MyCustomHook extends AbstractHook {
   relevantTools = ['create_account_tool', 'transfer_hbar_tool'];
 
   // Implement any of the 4 hook methods you need.
+  // Every one of them must start with the appliesToMethod guard - see Best Practices below.
 
   async preToolExecutionHook(params: PreToolExecutionParams, method: string) {
     // Early in the lifecycle - before parameter normalization
-    if (!this.appliesToMethod(method)) return;
+    if (!this.appliesToMethod(method)) return; // required: honours relevantTools
 
     // Access client, context, raw params, and toolType from the params object
     const client = params.client;
@@ -604,11 +605,16 @@ export class MyCustomHook extends AbstractHook {
 
 **Best Practices:**
 
-1. **Naming**: Use descriptive names ending in `Hook`
-2. **Description**: Clearly explain what the hook does and when to use it
-3. **Error Handling**: Wrap your logic in try-catch to avoid breaking tool execution
-4. **Performance**: Keep hook logic lightweight
-5. **State**: Use instance fields on your hook class to persist data across invocations
+1. **Method filtering**: Start every handler you override with `if (!this.appliesToMethod(method)) return;`.
+   `BaseTool` invokes every registered hook for every tool, so `relevantTools` is only honoured by
+   handlers that check it. A handler missing this guard runs for all tools and ignores
+   `relevantTools` entirely, including the `['*']` wildcard. Policies do not need this: `AbstractPolicy`
+   applies the guard in all four handlers before calling your `shouldBlock...` method.
+2. **Naming**: Use descriptive names ending in `Hook`
+3. **Description**: Clearly explain what the hook does and when to use it
+4. **Error Handling**: Wrap your logic in try-catch to avoid breaking tool execution
+5. **Performance**: Keep hook logic lightweight
+6. **State**: Use instance fields on your hook class to persist data across invocations
 
 ### Template for New Policy
 

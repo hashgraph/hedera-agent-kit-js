@@ -4,9 +4,7 @@ import { z } from 'zod';
 
 import HederaAgentAPI from '../../../src/shared/api';
 import type { Tool } from '../../../src/shared/tools';
-import { BaseTool, TOOL_TYPE } from '@/shared';
-import { BaseQueryTool } from '@/shared/base-query-tool';
-import { BaseTransactionTool } from '@/shared';
+import { BaseQueryTool, BaseTool, BaseTransactionTool, TOOL_TYPE } from '@/shared';
 import type { Context } from '@/shared';
 
 const client = Client.forTestnet();

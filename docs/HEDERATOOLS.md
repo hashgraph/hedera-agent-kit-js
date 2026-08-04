@@ -36,12 +36,17 @@ const readOnlyTools = Object.fromEntries(
 );
 ```
 
-`toolType` is also included in the `ToolSummary` returned by `HederaAgentAPI.listTools()` — this works regardless of which adapter you are using:
+`toolType` is also included in the `ToolSummary` returned by `HederaAgentAPI.listTools()`:
 
 ```ts
 const summary = api.listTools(); // ToolSummary[]
 const queryOnly = summary.filter(s => s.toolType === TOOL_TYPE.QUERY);
 ```
+
+> [!NOTE]
+> The **MCP** adapter is the exception. `HederaMCPToolkit` keeps its `HederaAgentAPI` private and
+> registers tools without type metadata, so neither the MCP server wrapper nor an MCP client can
+> filter by `toolType`.
 
 ---
 
@@ -907,6 +912,7 @@ Remove allowance for spender 0.0.123 on tokens 0.0.456 and 0.0.789
 ### TRANSFER_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers a fungible token directly from the sender's own account (no allowance required). Supports scheduled transactions.
 
