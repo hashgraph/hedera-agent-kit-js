@@ -740,8 +740,8 @@ protected shouldBlockPreToolExecution(
   return this.callCount > this.maxCallsPerSession;
 }
 
-// 5. Read-only Policy — block any tool that is not a query tool
-//    Use this to guarantee an agent can never submit a transaction.
+// 5. Read-only Policy - block any tool that is not a query tool
+//    Stops any hook-aware tool (i.e. extending BaseTool) from submitting a transaction.
 //    relevantTools = ['*'] applies the policy to every tool.
 protected shouldBlockPreToolExecution(
   params: PreToolExecutionParams,
@@ -806,7 +806,14 @@ const context: Context = {
 ```
 
 Both approaches are complementary: Option A reduces the tool list seen by the LLM; Option B
-adds a runtime guardrail that will block even if a transaction tool slips through.
+adds a runtime guardrail that blocks a transaction tool that slipped into the list.
+
+> [!WARNING]
+> Option B only covers tools extending `BaseTool` (including `BaseQueryTool` and
+> `BaseTransactionTool`), because policies are invoked from `BaseTool.execute()`. Custom
+> plugins may still ship v3-style object-literal tools, which
+> [do not support hooks and policies](./PLUGINS.md#recommended-extend-basetool-v4) and therefore
+> cannot be blocked. If your toolset contains any, Option A is the only reliable guard.
 
 ---
 
