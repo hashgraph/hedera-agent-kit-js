@@ -13,7 +13,6 @@ The [`@hashgraph/hedera-agent-kit-mcp`](https://www.npmjs.com/package/@hashgraph
 - [What a transaction tool returns](#what-a-transaction-tool-returns)
 - [Signing and submitting on the client](#signing-and-submitting-on-the-client)
 - [Recommended response shape for custom byte-returning tools](#recommended-response-shape-for-custom-byte-returning-tools)
-- [Safety checklist](#safety-checklist)
 
 ## Two architectures: who holds the keys?
 

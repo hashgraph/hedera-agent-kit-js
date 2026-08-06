@@ -63,13 +63,12 @@ Try out one or more of the example agents:
 * **Option C -** [Example Return Bytes Agent](#option-c-try-the-human-in-the-loop-chat-agent)
 * **Option D -** [Example MCP Server](#option-d-try-out-the-mcp-server)
 * **Option E -** [Example External MCP Agent](#option-e-try-out-the-external-mcp-agent)
-* **Option F -** [Example ElizaOS Agent](#option-f-try-out-the-hedera-agent-kit-with-elizaos)
-* **Option G -** [Example Preconfigured MCP Client Agent](#option-g-try-out-the-preconfigured-mcp-client-agent)
-* **Option H -** [Example Policy Enforcement Agent](#option-h-run-the-policy-enforcement-agent)
-* **Option I -** [Example Audit Trail Agent](#option-i-run-the-audit-trail-agent)
-* **Option J -** [Example Custom Signing Agent](#option-j-run-the-custom-signing-agent)
-* **Option K -** [Example Google ADK Agent](#option-k-try-out-the-google-adk-agent)
-* **Option L -** [Example Streaming Tool Calling Agent](#option-l-run-the-streaming-tool-calling-agent)
+* **Option F -** [Example Preconfigured MCP Client Agent](#option-f-try-out-the-preconfigured-mcp-client-agent)
+* **Option G -** [Example Policy Enforcement Agent](#option-g-run-the-policy-enforcement-agent)
+* **Option H -** [Example Audit Trail Agent](#option-h-run-the-audit-trail-agent)
+* **Option I -** [Example Custom Signing Agent](#option-i-run-the-custom-signing-agent)
+* **Option J -** [Example Google ADK Agent](#option-j-try-out-the-google-adk-agent)
+* **Option K -** [Example Streaming Tool Calling Agent](#option-k-run-the-streaming-tool-calling-agent)
 
 <!-- OR
 Try out the create-hedera-app CLI tool to create a new Hedera Agent and a front end application -->
@@ -339,25 +338,7 @@ The agent will start a CLI chatbot using the AI SDK to interact with the externa
 
 **Note:** To integrate other types of MCP servers (HTTP, SSE, WebSocket, etc.), modify the `mcpServers` configuration in the example file. See the [LangChain MCP Adapters documentation](https://reference.langchain.com/python/langchain_mcp_adapters/#langchain_mcp_adapters.client) for configuration details.
 
-### Option F: Try out the Hedera Agent Kit with ElizaOS
-
-ElizaOS is a powerful framework for building autonomous AI agents. The Hedera plugin for ElizaOS enables seamless integration with Hedera's blockchain services, allowing you to create sophisticated AI agents that can interact with the Hedera network.
-
-**v4 Import Update**
-
-As of v4, ElizaOS is a standalone package:
-
-```typescript
-import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit-elizaos';
-```
-
-See the [v3 to v4 Migration Guide](MIGRATION-v4.md) for full details.
-
-
-1. Clone the [Hedera ElizaOS Plugin Repository](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
-2. Install ElizaOS CLI
-3. Follow the [Hedera ElizaOS Plugin Docs](https://github.com/hedera-dev/eliza-plugin-hedera/tree/feat/rework-v3)
-### Option G: Try out the Preconfigured MCP Client Agent
+### Option F: Try out the Preconfigured MCP Client Agent
 
 This example demonstrates how to use the Hedera Agent Kit with preconfigured MCP servers (like Hederion or Hgraph) to access advanced tools without manual server setup.
 
@@ -391,7 +372,7 @@ These agents connect to the configured MCP servers (defined in your code) and al
 
 > If using `HederaMCPServer.HGRAPH_MCP_MAINNET`, ensure you have set the `HGRAPH_API_KEY` in your `.env` file. See [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) for details.
 
-### Option H: Run the Policy Enforcement Agent
+### Option G: Run the Policy Enforcement Agent
 
 This example demonstrates how to use the **MaxRecipientsPolicy** to enforce rules on transactions. In this case, it restricts any HBAR transfer to a maximum of 2 recipients.
 
@@ -419,7 +400,7 @@ npm run langchain:policy-enforcement-agent
 
 ---
 
-### Option I: Run the Audit Trail Agent
+### Option H: Run the Audit Trail Agent
 
 This example demonstrates how to use the **HcsAuditTrailHook** to automatically audit specific actions (like HBAR transfers or token creation) by submitting audit logs to a Hedera Consensus Service (HCS) topic.
 
@@ -450,7 +431,7 @@ npm run langchain:audit-trail-agent
 
 ---
 
-### Option J: Run the Custom Signing Agent
+### Option I: Run the Custom Signing Agent
 
 This example demonstrates `AgentMode.CUSTOM_EXECUTE_TX` with an interactive human-in-the-loop console strategy — a pattern that also covers remote TEE enclaves, MPC threshold signers, Fireblocks/AWS KMS integrations, and any other delegated signing flow. The agent halts before each transaction and prompts for approval in the terminal before delegating to the custom strategy.
 
@@ -480,7 +461,7 @@ npm run langchain:custom-signing-tool-calling-agent
 
 ---
 
-### Option K: Try out the Google ADK Agent
+### Option J: Try out the Google ADK Agent
 
 This example demonstrates how to use the Hedera Agent Kit with [Google's Agent Development Kit (ADK)](https://google.github.io/adk-docs/get-started/). It includes a plugin tool calling agent and supports the ADK Web GUI for interactive testing.
 
@@ -524,7 +505,7 @@ This will start a local web server (by default at `http://localhost:8000`) where
 
 ---
 
-### Option L: Run the Streaming Tool Calling Agent
+### Option K: Run the Streaming Tool Calling Agent
 
 Same as the basic tool calling agent, but the agent's responses are **streamed token by token** instead of returned all at once — using `agent.stream()` instead of `agent.invoke()` in LangChain v1, and `streamText` instead of `generateText` in the AI SDK.
 

@@ -8,7 +8,7 @@ import { BaseTool, TOOL_TYPE, ToolType } from './tools';
  * relying on name-prefix heuristics:
  *
  * ```ts
- * // LangChain / ADK / ElizaOS — getTools() returns an array:
+ * // LangChain / ADK — getTools() returns an array:
  * toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY)
  *
  * // AI SDK — getTools() returns a keyed record, use Object.entries:

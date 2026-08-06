@@ -16,7 +16,7 @@ Every tool exposes a `toolType` field that classifies its intent:
 
 Use `TOOL_TYPE` constants for safe comparisons. The most common use-case is building a **read-only agent** that can never submit transactions.
 
-For adapters whose `getTools()` returns an **array** (LangChain, ADK, ElizaOS):
+For adapters whose `getTools()` returns an **array** (LangChain, ADK):
 
 ```ts
 import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';

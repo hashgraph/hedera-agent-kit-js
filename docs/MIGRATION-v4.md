@@ -1,6 +1,9 @@
 # Migrating from v3 to v4
 
-Version 4 of the Hedera Agent Kit replaces the single monolithic `hedera-agent-kit` package with a family of `@hashgraph`-scoped packages. The core package (`@hashgraph/hedera-agent-kit`) now contains only shared APIs, types, and the plugin system. Framework integrations (LangChain, Vercel AI SDK, ElizaOS, MCP) have been extracted into dedicated toolkit packages that bundle their own framework dependencies. Built-in plugins are no longer exported from the package root; they must be imported from the `@hashgraph/hedera-agent-kit/plugins` subpath and explicitly passed in the configuration. Several deprecated aliases (`coreHTSPlugin`, `coreSCSPlugin`, `coreQueriesPlugin`) have been removed. This guide documents all breaking changes, provides before/after migration examples for each supported framework, and includes a checklist for documentation maintainers updating [docs.hedera.com](https://docs.hedera.com).
+Version 4 of the Hedera Agent Kit replaces the single monolithic `hedera-agent-kit` package with a family of `@hashgraph`-scoped packages. The core package (`@hashgraph/hedera-agent-kit`) now contains only shared APIs, types, and the plugin system. Framework integrations (LangChain, Vercel AI SDK, ElizaOS — **deprecated**, MCP) have been extracted into dedicated toolkit packages that bundle their own framework dependencies. Built-in plugins are no longer exported from the package root; they must be imported from the `@hashgraph/hedera-agent-kit/plugins` subpath and explicitly passed in the configuration. Several deprecated aliases (`coreHTSPlugin`, `coreSCSPlugin`, `coreQueriesPlugin`) have been removed. This guide documents all breaking changes, provides before/after migration examples for each supported framework, and includes a checklist for documentation maintainers updating [docs.hedera.com](https://docs.hedera.com).
+
+> [!WARNING]
+> **ElizaOS support is deprecated.** `@hashgraph/hedera-agent-kit-elizaos` is no longer developed, maintained, or published, and it has been removed from this repository. Every ElizaOS reference in this guide is kept for historical migration context only. Migrate to LangChain, the Vercel AI SDK, Google ADK, or MCP instead.
 
 ## Breaking Changes
 
@@ -24,7 +27,7 @@ Framework integrations are no longer bundled in the core package. Each toolkit i
 | `@hashgraph/hedera-agent-kit`           | `HederaAgentAPI`, `AgentMode`, `Configuration`, `Context`, `Plugin`, `Tool`, `ToolSummary`, `ToolDiscovery`, `HederaBuilder`, `handleTransaction`, `ExecuteStrategy`, parameter schemas, mirrornode types |
 | `@hashgraph/hedera-agent-kit-langchain` | `HederaLangchainToolkit`, `ResponseParserService`, `HederaMCPServer`                                                                                                                                      |
 | `@hashgraph/hedera-agent-kit-ai-sdk`    | `HederaAIToolkit`, `HederaMCPServer`                                                                                                                                                                      |
-| `@hashgraph/hedera-agent-kit-elizaos`   | `HederaElizaOSToolkit`                                                                                                                                                                                    |
+| `@hashgraph/hedera-agent-kit-elizaos` **(deprecated)**   | `HederaElizaOSToolkit`                                                                                                                                                                                    |
 | `@hashgraph/hedera-agent-kit-mcp`       | `HederaMCPToolkit`                                                                                                                                                                                        |
 
 ### 3. Plugin imports moved to `/plugins` subpath
@@ -239,7 +242,10 @@ npm install hedera-agent-kit @hashgraph/sdk ai @ai-sdk/openai dotenv
 npm install @hiero-ledger/sdk @hashgraph/hedera-agent-kit @hashgraph/hedera-agent-kit-ai-sdk @ai-sdk/openai dotenv
 ```
 
-### ElizaOS
+### ElizaOS (deprecated)
+
+> [!WARNING]
+> ElizaOS support is deprecated and `@hashgraph/hedera-agent-kit-elizaos` is no longer published. This section is retained for historical reference only.
 
 **Before (v3):**
 
@@ -434,7 +440,10 @@ const response = await generateText({
 - Plugins come from `@hashgraph/hedera-agent-kit/plugins` and must be explicitly passed
 - `ai` no longer needs separate install; LLM provider (`@ai-sdk/openai`) still does
 
-### ElizaOS
+### ElizaOS (deprecated)
+
+> [!WARNING]
+> ElizaOS support is deprecated and `@hashgraph/hedera-agent-kit-elizaos` is no longer published or maintained. This migration path is retained for historical reference only — new and existing projects should move to LangChain, the Vercel AI SDK, Google ADK, or MCP.
 
 **Before (v3):**
 
@@ -477,7 +486,7 @@ const toolkit = new HederaElizaOSToolkit({
 **Key changes:**
 
 - The `hedera-agent-kit/elizaos` subpath no longer exists
-- ElizaOS is now its own package: `@hashgraph/hedera-agent-kit-elizaos`
+- ElizaOS was split into its own package, `@hashgraph/hedera-agent-kit-elizaos`, which is now **deprecated** and no longer published
 
 ### MCP
 
@@ -863,7 +872,7 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 - [ ] Replace `coreHTSPlugin` with `coreTokenPlugin`
 - [ ] Replace `coreSCSPlugin` with `coreEVMPlugin`
 - [ ] Replace `coreQueriesPlugin` with the individual query plugins
-- [ ] Replace `hedera-agent-kit/elizaos` subpath imports with `@hashgraph/hedera-agent-kit-elizaos`
+- [ ] Remove `hedera-agent-kit/elizaos` subpath imports — ElizaOS support is **deprecated** and `@hashgraph/hedera-agent-kit-elizaos` is no longer published
 
 ### Pages that need updates
 
@@ -871,7 +880,7 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 - [ ] **Plugins page**: Update plugin imports to use `/plugins` subpath; remove deprecated alias references
 - [ ] **LangChain integration**: Split imports between `@hashgraph/hedera-agent-kit` and `@hashgraph/hedera-agent-kit-langchain`; update `ResponseParserService` import
 - [ ] **AI SDK integration**: Update to `@hashgraph/hedera-agent-kit-ai-sdk`
-- [ ] **ElizaOS integration**: Update to `@hashgraph/hedera-agent-kit-elizaos`; remove v3.5 subpath migration note
+- [ ] **ElizaOS integration**: Mark the page as **deprecated** and remove the integration docs — the ElizaOS toolkit is no longer maintained or published
 - [ ] **MCP integration**: Update to `@hashgraph/hedera-agent-kit-mcp`; update `HederaMCPToolkit` import
 - [ ] **Plugin authoring guide**: Update template imports; update peer dependency guidance
 - [ ] **npm package links**: Update from `npmjs.com/package/hedera-agent-kit` to `npmjs.com/package/@hashgraph/hedera-agent-kit`
@@ -886,7 +895,7 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 
 ### Content to remove
 
-- [ ] v3.5.0 ElizaOS migration note (the `/elizaos` subpath no longer exists)
+- [ ] v3.5.0 ElizaOS migration note (the `/elizaos` subpath no longer exists; ElizaOS support is **deprecated** entirely)
 - [ ] References to deprecated plugin aliases (`coreHTSPlugin`, `coreSCSPlugin`, `coreQueriesPlugin`)
 - [ ] Instructions to manually install `@langchain/core`, `langchain`, `@langchain/langgraph` as direct dependencies (only `@langchain/core` and `langchain` are now transitive; LLM providers still need explicit install)
 
@@ -898,7 +907,7 @@ Use this checklist when updating pages on [docs.hedera.com](https://docs.hedera.
 hedera-agent-kit                  → @hashgraph/hedera-agent-kit           (core only)
 (bundled)                         → @hashgraph/hedera-agent-kit-langchain (LangChain)
 (bundled)                         → @hashgraph/hedera-agent-kit-ai-sdk    (Vercel AI SDK)
-hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (ElizaOS)
+hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (ElizaOS — DEPRECATED, unpublished)
 (bundled)                         → @hashgraph/hedera-agent-kit-mcp       (MCP)
 ```
 
@@ -914,7 +923,7 @@ hedera-agent-kit/elizaos          → @hashgraph/hedera-agent-kit-elizaos   (Eli
 + import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk'
 
 - import { HederaElizaOSToolkit } from 'hedera-agent-kit/elizaos'
-+ import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit-elizaos'
++ import { HederaElizaOSToolkit } from '@hashgraph/hedera-agent-kit-elizaos' // DEPRECATED — no longer published
 
 - import { HederaMCPToolkit } from 'hedera-agent-kit'
 + import { HederaMCPToolkit } from '@hashgraph/hedera-agent-kit-mcp'
@@ -1002,4 +1011,4 @@ Example of a valid combination:
 
 > [!NOTE]
 > **Initial Monorepo Release Versioning**:
-> In this initial release of the monorepo, the core package `@hashgraph/hedera-agent-kit` is released at version `4.0.0` (continuing from the v3 line), while the newly split integration/adapter packages (such as `@hashgraph/hedera-agent-kit-langchain`, `@hashgraph/hedera-agent-kit-ai-sdk`, `@hashgraph/hedera-agent-kit-elizaos`, and `@hashgraph/hedera-agent-kit-mcp`) start their lifecycle at version `1.0.0`. These `1.x` integration packages are fully compatible with the `4.x` core package.
+> In this initial release of the monorepo, the core package `@hashgraph/hedera-agent-kit` is released at version `4.0.0` (continuing from the v3 line), while the newly split integration/adapter packages (such as `@hashgraph/hedera-agent-kit-langchain`, `@hashgraph/hedera-agent-kit-ai-sdk`, `@hashgraph/hedera-agent-kit-elizaos` (since **deprecated**), and `@hashgraph/hedera-agent-kit-mcp`) start their lifecycle at version `1.0.0`. These `1.x` integration packages are fully compatible with the `4.x` core package.

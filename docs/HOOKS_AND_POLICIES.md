@@ -77,7 +77,7 @@ const context = {
 > Policies and hooks are both attached through the same `context.hooks` array — there is no separate `policies` field. `AbstractPolicy` extends `AbstractHook`, so a policy is just a hook that can block execution.
 
 > [!TIP]
-> **Example Application**: See [Option I: Run the Audit Trail Agent](DEVEXAMPLES.md#option-i-run-the-audit-trail-agent)
+> **Example Application**: See [Option H: Run the Audit Trail Agent](DEVEXAMPLES.md#option-h-run-the-audit-trail-agent)
 > in the Developer Examples for a complete working implementation across different frameworks.
 
 ## Available Hooks
@@ -251,7 +251,7 @@ const extendedPolicy = new MaxRecipientsPolicy(
 ```
 
 > [!NOTE]
-> **Complete Examples**: Check the [Policy Enforcement Agent](DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
+> **Complete Examples**: Check the [Policy Enforcement Agent](DEVEXAMPLES.md#option-g-run-the-policy-enforcement-agent)
 > for full implementations in [AI SDK](../examples/ai-sdk/policy-enforcement-agent.ts)
 > or [LangChain v1](../examples/langchain-v1/policy-enforcement-agent.ts).
 
@@ -764,7 +764,7 @@ that can never submit transactions. This works at two levels:
 
 _Option A — filter before passing tools to the LLM:_
 
-For adapters whose `getTools()` returns an **array** (LangChain, ADK, ElizaOS):
+For adapters whose `getTools()` returns an **array** (LangChain, ADK):
 
 ```ts
 import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';

@@ -4,7 +4,6 @@ const packages = [
   { dir: 'packages/core', tagMatch: 'v*' },
   { dir: 'packages/ai-sdk', tagMatch: 'v*-ai-sdk' },
   { dir: 'packages/langchain', tagMatch: 'v*-langchain' },
-  { dir: 'packages/elizaos', tagMatch: 'v*-elizaos' },
   { dir: 'packages/mcp', tagMatch: 'v*-mcp' },
   { dir: 'packages/create-hedera-agent', tagMatch: 'v*-create-hedera-agent' },
 ];

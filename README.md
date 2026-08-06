@@ -19,7 +19,6 @@ The Hedera Agent Kit is organized as a monorepo containing the core SDK and mult
 | **`@hashgraph/hedera-agent-kit`**           | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit)           | Core SDK & plugins for Hedera network integration      |
 | **`@hashgraph/hedera-agent-kit-langchain`** | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-langchain) | LangChain adapter (StructuredTools, agent utils)       |
 | **`@hashgraph/hedera-agent-kit-ai-sdk`**    | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-ai-sdk)    | Vercel AI SDK adapter (compatible with standard tools) |
-| **`@hashgraph/hedera-agent-kit-elizaos`**   | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-elizaos)   | ElizaOS adapter (custom Eliza Actions)                 |
 | **`@hashgraph/hedera-agent-kit-mcp`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-mcp)       | Model Context Protocol (MCP) Server toolkit            |
 | **`@hashgraph/hedera-agent-kit-adk`**       | [npm](https://www.npmjs.com/package/@hashgraph/hedera-agent-kit-adk)       | Google Agent Development Kit (ADK) adapter             |
 | **`create-hedera-agent`**                   | [npm](https://www.npmjs.com/package/create-hedera-agent)                   | CLI scaffold tool to bootstrap Next.js agent apps      |
@@ -28,7 +27,7 @@ The Hedera Agent Kit is organized as a monorepo containing the core SDK and mult
 
 ## Contents
 
-- [Packages](#-packages)
+- [Packages](#packages)
 - [Key Features](#key-features)
 - [About the Agent Kit Functionality](#agent-kit-functionality)
 - [Third Party Plugins](#third-party-plugins)
@@ -47,7 +46,7 @@ The Hedera Agent Kit is organized as a monorepo containing the core SDK and mult
 
 The Hedera Agent Kit is an open-source toolkit that brings intelligent agent workflows to the Hedera network. It’s designed for developers who want to integrate Hedera account management and Hedera native functionality into agent applications. With the Hedera Agent Kit, developers can build agents that interact on-chain through a conversational interface. This means Hedera agents can do more than process information; they can also send tokens, manage accounts, store data on Hedera Consensus Service, and coordinate workflows directly on a public ledger.
 
-As of v4, the Hedera Agent Kit is organized as a monorepo of `@hashgraph`-scoped packages. You install the core package plus only the toolkit for your framework (LangChain, Vercel AI SDK, ElizaOS, or MCP). See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for details.
+As of v4, the Hedera Agent Kit is organized as a monorepo of `@hashgraph`-scoped packages. You install the core package plus only the toolkit for your framework (LangChain, Vercel AI SDK, or MCP). See the [v3 → v4 Migration Guide](docs/MIGRATION-v4.md) for details.
 
 The Hedera Agent Kit is extensible with third party plugins by other projects.
 
@@ -79,12 +78,12 @@ The Hedera Agent Kit provides a flexible and powerful system for putting limits 
 * Users can create their own hooks and policies on any available Hedera Agent Kit tool, simply fork this repo and create your own hooks and policies in the `typescript/src/hooks` and `typescript/src/policies` directories.
 * We have provided examples:
   * A hook to [log actions to an HCS topic](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#1-hcsaudittrailhook-hook), creating an easy to track audit trail. 
-  * A policy that [sets the maximum number of recipients](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#2-maxrecipientspolicy-policy) in a transfer or airdrop.
-  * A policy the [blocks tool usage](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#3-rejecttoolpolicy-policy) by an agent.
+  * A policy that [sets the maximum number of recipients](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#1-maxrecipientspolicy-policy) in a transfer or airdrop.
+  * A policy the [blocks tool usage](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md#2-rejecttoolpolicy-policy) by an agent.
 
 For more information on hooks and policies, see the [Hooks and Policies documentation](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/HOOKS_AND_POLICIES.md).
 
-Try out an example [Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-audit-trail-agent) to see how hooks and policies work in practice.
+Try out an example [Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-run-the-audit-trail-agent) to see how hooks and policies work in practice.
 
 ---
 
@@ -100,12 +99,12 @@ First follow instructions in the [Developer Examples to clone and configure the 
 - **Option C -** [Example Return Bytes Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-c-try-the-human-in-the-loop-chat-agent)
 - **Option D -** [Example MCP Server](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-d-try-out-the-mcp-server)
 - **Option E -** [Example External MCP Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-e-try-out-the-external-mcp-agent)
-- **Option F -** [Example ElizaOS Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-f-try-out-the-hedera-agent-kit-with-elizaos)
-- **Option G -** [Example Preconfigured MCP Client Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-g-try-out-the-preconfigured-mcp-client-agent)
-- **Option H -** [Example Policy Enforcement Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
-- **Option I -** [Example Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-audit-trail-agent)
-- **Option J -** [Example Custom Signing Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-j-run-the-custom-signing-agent)
-- **Option K -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-k-try-out-the-google-adk-agent)
+- **Option F -** [Example Preconfigured MCP Client Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-f-try-out-the-preconfigured-mcp-client-agent)
+- **Option G -** [Example Policy Enforcement Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-g-run-the-policy-enforcement-agent)
+- **Option H -** [Example Audit Trail Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-h-run-the-audit-trail-agent)
+- **Option I -** [Example Custom Signing Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-i-run-the-custom-signing-agent)
+- **Option J -** [Example Google ADK Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-j-try-out-the-google-adk-agent)
+- **Option K -** [Example Streaming Tool Calling Agent](https://github.com/hashgraph/hedera-agent-kit-js/blob/main/docs/DEVEXAMPLES.md#option-k-run-the-streaming-tool-calling-agent)
 
 ---
 
