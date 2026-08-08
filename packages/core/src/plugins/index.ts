@@ -9,6 +9,7 @@ import { coreAccountPlugin } from './core-account-plugin';
 import { coreTokenPlugin } from './core-token-plugin';
 import { coreConsensusPlugin } from './core-consensus-plugin';
 import { coreEVMPlugin } from './core-evm-plugin';
+import { coreDexPlugin } from './core-dex-plugin';
 
 // Query plugins
 import { coreAccountQueryPlugin } from './core-account-query-plugin';
@@ -39,6 +40,7 @@ export const allCorePlugins: Plugin[] = [
   coreTokenPlugin,
   coreConsensusPlugin,
   coreEVMPlugin,
+  coreDexPlugin,
   coreAccountQueryPlugin,
   coreTokenQueryPlugin,
   coreConsensusQueryPlugin,
@@ -52,6 +54,7 @@ export * from './core-account-plugin';
 export * from './core-token-plugin';
 export * from './core-consensus-plugin';
 export * from './core-evm-plugin';
+export * from './core-dex-plugin';
 export * from './core-account-query-plugin';
 export * from './core-token-query-plugin';
 export * from './core-consensus-query-plugin';
