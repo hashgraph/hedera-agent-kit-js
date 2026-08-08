@@ -1,4 +1,5 @@
 import { AbstractPolicy, PostParamsNormalizationParams } from '@/shared';
+import { PolicyBlockedError, POLICY_BLOCK_STAGES } from '@/shared/policy-blocked-error';
 import { coreAccountPluginToolNames } from '@/plugins/core-account-plugin';
 import { coreTokenPluginToolNames } from '@/plugins/core-token-plugin';
 import z from 'zod';
@@ -75,7 +76,13 @@ export class MaxRecipientsPolicy extends AbstractPolicy {
       console.warn(
         `MaxRecipientsPolicy: ${method} blocked. Recipient count ${recipientCount} exceeds limit of ${this.maxRecipients}.`,
       );
-      return true;
+      throw new PolicyBlockedError(
+        this.name,
+        method,
+        POLICY_BLOCK_STAGES.POST_PARAMS_NORMALIZATION,
+        this.description,
+        { recipientCount, maxRecipients: this.maxRecipients },
+      );
     }
 
     return false;

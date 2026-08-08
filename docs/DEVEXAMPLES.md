@@ -393,11 +393,26 @@ These agents connect to the configured MCP servers (defined in your code) and al
 
 ### Option H: Run the Policy Enforcement Agent
 
-This example demonstrates how to use the **MaxRecipientsPolicy** to enforce rules on transactions. In this case, it restricts any HBAR transfer to a maximum of 2 recipients.
+This example demonstrates **two ways to author a blocking policy** and how to read the
+structured result back in your code:
+
+- **Path 1 — `return true`**: An inline `MaintenanceModePolicy` (kill-switch) simply
+  returns `true` from `shouldBlockPreToolExecution`. `AbstractPolicy` automatically throws
+  a base `PolicyBlockedError` (policy name, stage — no custom details). Toggle
+  `enabled: true` in the source to activate.
+- **Path 2 — `throw PolicyBlockedError` with details**: The built-in `MaxRecipientsPolicy(2)`
+  throws with structured `details: { recipientCount, maxRecipients }` for programmatic
+  branching. Trigger it by asking the agent to send HBAR to more than 2 recipients at once.
+
+Each example also shows how to extract the structured policy-block data from tool results
+using the framework's parser (`PolicyResultParser` for AI SDK / ADK;
+`ResponseParserService` for LangChain), so you can branch on `policyName`, `stage`, and
+`details` rather than parsing prose.
 
 **Found at:**
 - `examples/ai-sdk/policy-enforcement-agent.ts`
 - `examples/langchain-v1/policy-enforcement-agent.ts`
+- `examples/adk/policy-enforcement-agent.ts`
 
 #### Running the Example
 
@@ -415,6 +430,14 @@ npm run ai-sdk:policy-enforcement-agent
 cd examples/langchain-v1
 npm install
 npm run langchain:policy-enforcement-agent
+```
+
+##### Google ADK
+
+```bash
+cd examples/adk
+npm install
+npm run adk:policy-enforcement-agent
 ```
 
 ---

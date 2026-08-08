@@ -1,5 +1,5 @@
 import { BaseMessage, ToolMessage } from '@langchain/core/messages';
-import { toUint8Array } from '@hashgraph/hedera-agent-kit';
+import { toUint8Array, classifyToolResult, isPolicyBlockedToolResult, type ToolResultStatus } from '@hashgraph/hedera-agent-kit';
 import HederaAgentKitTool from './tool';
 
 // RETURN_BYTES output is JSON text, so `bytes` arrives as a Buffer/numeric-keyed object rather
@@ -121,6 +121,67 @@ class ResponseParserService {
     }
 
     return allParsedData;
+  }
+
+  /**
+   * Parse all new ToolMessages and return only those that were blocked by a policy.
+   *
+   * Internally calls {@link parseNewToolMessages} (which applies the same dedup logic
+   * via `processedMessageIds`), then classifies each parsed envelope and filters to
+   * `kind: 'policy_block'` results. The structured `policyName`, `stage`, `details`,
+   * etc. fields are available on each entry.
+   *
+   * @example
+   * ```ts
+   * const parser = new ResponseParserService(toolkit.getTools());
+   * const { messages } = await agent.invoke(input);
+   *
+   * const blocks = parser.parsePolicyBlocks({ messages });
+   * for (const block of blocks) {
+   *   switch (block.policyName) {
+   *     case 'Grant Amount Policy':
+   *       await queueForAdminReview({ details: block.details });
+   *       break;
+   *     case 'Grant Review Policy':
+   *       throw new Error('Review metadata failed policy');
+   *   }
+   * }
+   * ```
+   *
+   * @param response - The agent response object with a `messages` array.
+   */
+  parsePolicyBlocks(response: AgentResponse): Extract<ToolResultStatus, { kind: 'policy_block' }>[] {
+    const parsed = this.parseNewToolMessages(response);
+    return parsed
+      .map(({ parsedData }) => {
+        // parsedData is the { raw, humanMessage } envelope (bytes already hydrated)
+        if (typeof parsedData?.humanMessage === 'string' && parsedData?.raw !== undefined) {
+          return classifyToolResult(parsedData as { raw: any; humanMessage: string });
+        }
+        return { kind: 'unknown' as const, humanMessage: '' } satisfies ToolResultStatus;
+      })
+      .filter(
+        (r): r is Extract<ToolResultStatus, { kind: 'policy_block' }> =>
+          r.kind === 'policy_block',
+      );
+  }
+
+  /**
+   * Quick boolean check — returns `true` if *any* new tool message in the response
+   * was blocked by a policy.
+   *
+   * Note: this marks the matched messages as processed in `processedMessageIds`,
+   * just like {@link parseNewToolMessages} does. Create a fresh `ResponseParserService`
+   * instance per request if you need idempotent checks.
+   */
+  hasPolicyBlocks(response: AgentResponse): boolean {
+    const parsed = this.parseNewToolMessages(response);
+    return parsed.some(({ parsedData }) => {
+      if (typeof parsedData?.humanMessage === 'string' && parsedData?.raw !== undefined) {
+        return isPolicyBlockedToolResult(parsedData as { raw: any; humanMessage: string });
+      }
+      return false;
+    });
   }
 }
 
