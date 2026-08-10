@@ -17,7 +17,7 @@ jobs:
     runs-on: hedera-agent-linux-medium
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
