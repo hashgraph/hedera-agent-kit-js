@@ -19,6 +19,8 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParameters,
   mintNonFungibleTokenParametersNormalised,
+  transferFungibleTokenParameters,
+  transferFungibleTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParameters,
   transferFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenParameters,
@@ -615,6 +617,63 @@ export default class HederaParameterNormaliser {
     return this.normaliseApproveTokenAllowance(approveParams, context, client, mirrorNode);
   }
 
+  static async normaliseTransferFungibleToken(
+    params: z.infer<ReturnType<typeof transferFungibleTokenParameters>>,
+    context: Context,
+    client: Client,
+    mirrornode: IHederaMirrornodeService,
+  ): Promise<z.infer<ReturnType<typeof transferFungibleTokenParametersNormalised>>> {
+    const parsedParams = this.parseParamsWithSchema(
+      params,
+      transferFungibleTokenParameters,
+      context,
+    );
+
+    const senderAccountId = AccountResolver.resolveAccount(
+      parsedParams.senderAccountId,
+      context,
+      client,
+    );
+
+    const tokenInfo = await mirrornode.getTokenInfo(parsedParams.tokenId);
+    const tokenDecimals = Number(tokenInfo.decimals);
+    // Fallback to 0 if decimals are missing or NaN
+    const safeDecimals = Number.isFinite(tokenDecimals) ? tokenDecimals : 0;
+
+    const tokenTransfers: TokenTransferMinimalParams[] = [];
+    let totalBase = Long.ZERO;
+
+    for (const transfer of parsedParams.transfers) {
+      const base = toBaseUnitLong(transfer.amount, safeDecimals, 'Transfer amount');
+      totalBase = totalBase.add(base);
+      tokenTransfers.push({
+        tokenId: parsedParams.tokenId,
+        accountId: transfer.accountId,
+        amount: base,
+      });
+    }
+
+    // Derive the sender's debit from the sum of already-floored base-unit credits
+    // so the transfer list nets to exactly zero (avoids INVALID_ACCOUNT_AMOUNTS).
+    tokenTransfers.push({
+      tokenId: parsedParams.tokenId,
+      accountId: senderAccountId,
+      amount: totalBase.negate(),
+    });
+
+    const schedulingParams = parsedParams?.schedulingParams?.isScheduled
+      ? (await this.normaliseScheduledTransactionParams(parsedParams, context, client))
+          .schedulingParams
+      : { isScheduled: false };
+
+    return {
+      schedulingParams,
+      tokenId: parsedParams.tokenId,
+      tokenTransfers,
+      transactionMemo: parsedParams.transactionMemo,
+    };
+  }
+
   static async normaliseTransferFungibleTokenWithAllowance(
     params: z.infer<ReturnType<typeof transferFungibleTokenWithAllowanceParameters>>,
     context: Context,
@@ -627,9 +686,10 @@ export default class HederaParameterNormaliser {
       context,
     );
     const tokenInfo = await mirrodnode.getTokenInfo(parsedParams.tokenId);
-    const tokenDecimals = tokenInfo.decimals;
+    const tokenDecimals = Number(tokenInfo.decimals);
+    // Fallback to 0 if decimals are missing or NaN
+    const safeDecimals = Number.isFinite(tokenDecimals) ? tokenDecimals : 0;
 
-    const safeDecimals = Number(tokenDecimals);
     const tokenTransfers: TokenTransferMinimalParams[] = [];
     let totalAmountLong = Long.ZERO;
 

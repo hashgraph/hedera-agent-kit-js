@@ -180,6 +180,17 @@ describe('HolAuditTrailHook', () => {
       expect(mockRegisterEntry).not.toHaveBeenCalled();
     });
 
+    it("should apply to any method when relevantTools is ['*']", async () => {
+      const context = { mode: AgentMode.AUTONOMOUS };
+      const postParams = makePostParams({ context });
+      const wildcardHook = new HolAuditTrailHook({ ...defaultConfig, relevantTools: ['*'] });
+
+      // 'any_unlisted_tool' is not in relevantTools, but '*' matches every method
+      await wildcardHook.postToolExecutionHook(postParams, 'any_unlisted_tool');
+
+      expect(mockCreateFile).toHaveBeenCalledTimes(1);
+    });
+
     it('should lazily create HolAuditWriter and AuditSession on first relevant call', async () => {
       const context = { mode: AgentMode.AUTONOMOUS };
       const postParams = makePostParams({ context });

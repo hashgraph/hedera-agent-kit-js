@@ -15,7 +15,7 @@ import BigNumber from 'bignumber.js';
 export async function verifyHbarBalanceChange(
   accountId: string,
   balanceBeforeRaw: BigNumber,
-  expectedChange: number,
+  expectedChange: number | string,
   hederaOperationsWrapper: HederaOperationsWrapper,
 ): Promise<void> {
   const balanceBefore = toDisplayUnit(balanceBeforeRaw, 8);

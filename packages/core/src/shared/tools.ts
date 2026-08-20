@@ -11,6 +11,37 @@ import {
   AbstractHook,
 } from './hook';
 
+/**
+ * Classifies the intent of a tool.
+ *
+ * | Value           | Meaning                                                                                                |
+ * |-----------------|--------------------------------------------------------------------------------------------------------|
+ * | `'query'`       | Read-only — fetches data from the mirror node / network without submitting a transaction.              |
+ * | `'transaction'` | State-mutating — builds and (depending on `AgentMode`) submits a Hedera transaction.                  |
+ * | `'other'`       | Neither of the above; default for tools that do not extend a typed base class.                        |
+ *
+ * Use with {@link TOOL_TYPE} constants for safe comparisons:
+ * ```ts
+ * // LangChain / ADK / ElizaOS — getTools() returns an array:
+ * toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY)
+ *
+ * // AI SDK — getTools() returns a keyed record, use Object.entries:
+ * Object.fromEntries(
+ *   Object.entries(toolkit.getTools()).filter(([, t]) => t.toolType === TOOL_TYPE.QUERY)
+ * )
+ *
+ * // Core API — adapter-agnostic, via HederaAgentAPI.listTools():
+ * api.listTools().filter(s => s.toolType === TOOL_TYPE.QUERY).map(s => s.method)
+ * ```
+ */
+export const TOOL_TYPE = {
+  QUERY: 'query',
+  TRANSACTION: 'transaction',
+  OTHER: 'other',
+} as const;
+
+export type ToolType = (typeof TOOL_TYPE)[keyof typeof TOOL_TYPE];
+
 export interface Tool {
   method: string;
   name: string;
@@ -19,6 +50,8 @@ export interface Tool {
   execute: (client: Client, context: Context, params: any) => Promise<any>;
   // transactionToolOutputParser and untypedQueryOutputParser can be used. If required, define a custom parser
   outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
+  /** Classifies the tool's intent — see {@link ToolType} and {@link TOOL_TYPE}. */
+  toolType?: ToolType;
 }
 
 /**
@@ -45,11 +78,13 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
   abstract description: string;
   abstract parameters: z.ZodObject<any, any>;
   outputParser?: (rawOutput: string) => { raw: any; humanMessage: string };
+  /** @see {@link ToolType} — defaults to `'other'`; overridden by {@link BaseQueryTool} and {@link BaseTransactionTool}. */
+  toolType: ToolType = TOOL_TYPE.OTHER;
 
   async execute(client: Client, context: Context, params: TParams): Promise<any> {
     try {
       // 1. PreToolExecutionHook
-      await this.preToolExecutionHook({ context, rawParams: params, client });
+      await this.preToolExecutionHook({ context, rawParams: params, client, toolType: this.toolType });
 
       // 2. ParamsNormalization
       const normalisedParams = await this.normalizeParams(params, context, client);
@@ -60,6 +95,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         rawParams: params,
         normalisedParams,
         client,
+        toolType: this.toolType,
       });
 
       // 4. Core Action (Core Tool Logic)
@@ -72,6 +108,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         normalisedParams,
         coreActionResult,
         client,
+        toolType: this.toolType,
       });
 
       // 6. Secondary Action (Optional)
@@ -95,6 +132,7 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
         coreActionResult,
         toolResult: result,
         client,
+        toolType: this.toolType,
       });
     } catch (error) {
       return this.handleError(error, context);

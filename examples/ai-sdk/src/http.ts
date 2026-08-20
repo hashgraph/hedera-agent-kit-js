@@ -3,20 +3,19 @@ import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { LedgerId, Client } from "@hiero-ledger/sdk";
+import { AgentMode, getMirrornodeService } from "@hashgraph/hedera-agent-kit";
 import {
-  AgentMode,
   coreAccountPlugin,
   coreAccountPluginToolNames,
   coreConsensusPlugin,
   coreConsensusPluginToolNames,
   coreTokenPlugin,
   coreTokenPluginToolNames,
-  HederaMCPToolkit,
   coreAccountQueryPlugin,
   coreAccountQueryPluginToolNames,
-  getMirrornodeService,
-} from "hedera-agent-kit";
-import type { Configuration, Context } from "hedera-agent-kit";
+} from "@hashgraph/hedera-agent-kit/plugins";
+import { HederaMCPToolkit } from "@hashgraph/hedera-agent-kit-mcp";
+import type { Configuration, Context } from "@hashgraph/hedera-agent-kit";
 
 type Options = {
   tools?: string[];

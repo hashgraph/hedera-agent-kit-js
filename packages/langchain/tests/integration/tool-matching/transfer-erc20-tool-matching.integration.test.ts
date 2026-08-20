@@ -36,7 +36,7 @@ describe('Transfer ERC20 Tool Matching Integration Tests', () => {
         .mockReset()
         .mockResolvedValue('Operation Mocked - this is a test call and can be ended here');
 
-      const resp = await agent.invoke({
+      await agent.invoke({
         messages: [{ role: 'user', content: input }],
       });
 

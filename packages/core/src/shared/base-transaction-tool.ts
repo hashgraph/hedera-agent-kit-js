@@ -1,5 +1,5 @@
 import { PrecheckStatusError, ReceiptStatusError } from '@hiero-ledger/sdk';
-import { BaseTool } from './tools';
+import { BaseTool, TOOL_TYPE, ToolType } from './tools';
 import { Context } from './configuration';
 import { TOOL_STATUS } from './utils/default-tool-output-parsing';
 
@@ -34,6 +34,8 @@ import { TOOL_STATUS } from './utils/default-tool-output-parsing';
  * returned before submission and `BaseTool.handleError()` handles all errors.
  */
 export abstract class BaseTransactionTool extends BaseTool {
+  toolType: ToolType = TOOL_TYPE.TRANSACTION;
+
   async handleError(error: unknown, context: Context): Promise<any> {
     if (error instanceof ReceiptStatusError || error instanceof PrecheckStatusError) {
       const message = `Failed to execute ${this.name}: ${error.message}`;

@@ -7,13 +7,13 @@
     "adk:return-bytes-agent": "ts-node return-bytes-agent.ts"
   },
   "dependencies": {
-    "@google/adk": "0.6.1",
-    "@google/adk-devtools": "0.6.1",
+    "@google/adk": "1.4.0",
+    "@google/adk-devtools": "1.4.0",
     "dotenv": "^17.2.3",
     "@hashgraph/hedera-agent-kit": "file:../../packages/core",
     "@hashgraph/hedera-agent-kit-adk": "file:../../packages/adk",
     "prompts": "2.4.2",
-    "@hiero-ledger/sdk": "2.81.0"
+    "@hiero-ledger/sdk": "2.86.2"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -22,5 +22,24 @@
     "@types/prompts": "2.4.9",
     "ts-node": "10.9.2",
     "typescript": "5.8.3"
+  },
+  "overrides": {
+    "@hono/node-server": ">=2.0.5",
+    "ip-address": "10.2.1",
+    "@opentelemetry/core": ">=2.8.0",
+    "@tootallnate/once": ">=2.0.1",
+    "adm-zip": ">=0.6.0",
+    "brace-expansion@<1.1.16": ">=1.1.16 <2.0.0",
+    "brace-expansion@>=2.0.0 <2.1.2": ">=2.1.2 <3.0.0",
+    "brace-expansion@>=5.0.0 <=5.0.7": "5.0.8",
+    "tar": ">=7.5.21",
+    "uuid": ">=11.1.1",
+    "ws": ">=8.21.0",
+    "protobufjs": "8.6.6",
+    "axios": ">=1.17.1",
+    "postcss": ">=8.5.18",
+    "sharp": ">=0.35.0",
+    "js-yaml": ">=4.3.0 <5.0.0",
+    "node-gyp": "12.4.0"
   }
 }

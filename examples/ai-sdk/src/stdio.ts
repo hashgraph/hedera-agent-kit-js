@@ -5,17 +5,17 @@ process.stdout.write = process.stderr.write.bind(process.stderr);
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { LedgerId, Client, PrivateKey } from "@hiero-ledger/sdk";
+import { AgentMode } from "@hashgraph/hedera-agent-kit";
 import {
-  AgentMode,
   coreAccountPlugin,
   coreAccountPluginToolNames,
   coreConsensusPlugin,
   coreConsensusPluginToolNames,
   coreTokenPlugin,
   coreTokenPluginToolNames,
-  HederaMCPToolkit,
-} from "hedera-agent-kit";
-import type { Configuration, Context } from "hedera-agent-kit";
+} from "@hashgraph/hedera-agent-kit/plugins";
+import { HederaMCPToolkit } from "@hashgraph/hedera-agent-kit-mcp";
+import type { Configuration, Context } from "@hashgraph/hedera-agent-kit";
 
 import * as dotenv from "dotenv";
 

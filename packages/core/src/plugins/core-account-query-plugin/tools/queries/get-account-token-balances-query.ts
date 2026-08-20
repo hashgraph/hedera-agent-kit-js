@@ -3,7 +3,7 @@ import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { accountTokenBalancesQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { Client } from '@hiero-ledger/sdk';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TokenBalancesResponse } from '@/shared/hedera-utils/mirrornode/types';
@@ -48,7 +48,7 @@ The token balances are returned in display units!
 
 export const GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL = 'get_account_token_balances_query_tool';
 
-export class GetAccountTokenBalancesQueryTool extends BaseTool {
+export class GetAccountTokenBalancesQueryTool extends BaseQueryTool {
   method = GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL;
   name = 'Get Account Token Balances';
   description: string;
@@ -93,6 +93,6 @@ export class GetAccountTokenBalancesQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetAccountTokenBalancesQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetAccountTokenBalancesQueryTool(context);
 
 export default tool;

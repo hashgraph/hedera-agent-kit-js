@@ -38,6 +38,7 @@ import {
   mintFungibleTokenParametersNormalised,
   mintNonFungibleTokenParametersNormalised,
   updateTokenParametersNormalised,
+  transferFungibleTokenParametersNormalised,
   transferFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenWithAllowanceParametersNormalised,
   transferNonFungibleTokenParametersNormalised,
@@ -164,6 +165,22 @@ export default class HederaBuilder {
     }
 
     return tx;
+  }
+
+  static transferFungibleToken(
+    params: z.infer<ReturnType<typeof transferFungibleTokenParametersNormalised>>,
+  ) {
+    const tx = new TransferTransaction();
+
+    for (const t of params.tokenTransfers) {
+      tx.addTokenTransfer(t.tokenId, t.accountId, t.amount);
+    }
+
+    if (params.transactionMemo) {
+      tx.setTransactionMemo(params.transactionMemo);
+    }
+
+    return HederaBuilder.maybeWrapInSchedule(tx, params.schedulingParams);
   }
 
   static transferFungibleTokenWithAllowance(

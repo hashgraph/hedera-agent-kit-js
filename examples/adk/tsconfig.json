@@ -17,6 +17,12 @@
         "strict": true,
         "baseUrl": ".",
         "paths": {
+            "@google/adk": [
+                "./node_modules/@google/adk"
+            ],
+            "@google/adk/*": [
+                "./node_modules/@google/adk/*"
+            ],
             "@hiero-ledger/sdk": [
                 "../../packages/adk/node_modules/@hiero-ledger/sdk"
             ],

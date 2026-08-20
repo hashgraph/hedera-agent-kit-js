@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Client } from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TransactionDetailsResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { toDisplayUnit } from '@/shared/hedera-utils/decimals-utils';
@@ -66,7 +66,7 @@ Entity ID: ${tx.entity_id}${transfersInfo}`;
 
 export const GET_TRANSACTION_RECORD_QUERY_TOOL = 'get_transaction_record_query_tool';
 
-export class GetTransactionRecordQueryTool extends BaseTool {
+export class GetTransactionRecordQueryTool extends BaseQueryTool {
   method = GET_TRANSACTION_RECORD_QUERY_TOOL;
   name = 'Get Transaction Record Query';
   description: string;
@@ -112,6 +112,6 @@ export class GetTransactionRecordQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetTransactionRecordQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetTransactionRecordQueryTool(context);
 
 export default tool;

@@ -6,7 +6,7 @@ import { ChatOllama } from "@langchain/ollama";
 
 export type AIProvider = "openai" | "anthropic" | "groq" | "ollama";
 
-export function createLLMFromEnv(): BaseChatModel<any> {
+export function createLLMFromEnv(): BaseChatModel {
     const provider = (process.env.AI_PROVIDER || "").toLowerCase() as AIProvider;
 
     switch (provider) {

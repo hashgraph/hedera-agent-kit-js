@@ -1,7 +1,7 @@
 import { HederaAgentAPI, type Configuration, ToolDiscovery } from '@hashgraph/hedera-agent-kit';
 import type { Tool, LanguageModelMiddleware } from 'ai';
 import { Client } from '@hiero-ledger/sdk';
-import HederaAgentKitTool from './tool';
+import HederaAgentKitTool, { type HederaAITool } from './tool';
 import { loadMultipleMCPTools } from './hedera-mcps';
 import { HederaMCPServer } from './mcp-configs';
 
@@ -13,7 +13,7 @@ class HederaAIToolkit {
   private _hedera: HederaAgentAPI;
   private _configuration: AISdkConfiguration;
 
-  tools: { [key: string]: Tool };
+  tools: { [key: string]: HederaAITool };
 
   constructor({ client, configuration }: { client: Client; configuration: AISdkConfiguration }) {
     const context = configuration.context || {};
@@ -28,6 +28,7 @@ class HederaAIToolkit {
         tool.method,
         tool.description,
         tool.parameters,
+        tool.toolType,
       );
     });
     this._configuration = configuration;
@@ -57,7 +58,7 @@ class HederaAIToolkit {
     };
   }
 
-  getTools(): { [key: string]: Tool } {
+  getTools(): { [key: string]: HederaAITool } {
     return this.tools;
   }
 }

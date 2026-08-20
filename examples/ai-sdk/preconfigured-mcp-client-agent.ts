@@ -44,8 +44,8 @@ async function bootstrap(): Promise<void> {
   const mcpTools = await hederaAgentToolkit.getMcpTools();
   const hakTools = hederaAgentToolkit.getTools();
 
-  console.log(`Loaded ${hakTools.length} Hedera Agent Kit tools.`);
-  console.log(`Loaded ${mcpTools.length} MCP tools.`);
+  console.log(`Loaded ${Object.keys(hakTools).length} Hedera Agent Kit tools.`);
+  console.log(`Loaded ${Object.keys(mcpTools).length} MCP tools.`);
 
   const allTools = { ...hakTools, ...mcpTools };
 

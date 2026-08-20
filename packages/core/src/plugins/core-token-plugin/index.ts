@@ -3,6 +3,9 @@ import { Plugin } from '@/shared/plugin';
 import airdropFungibleToken, {
   AIRDROP_FUNGIBLE_TOKEN_TOOL,
 } from './tools/fungible-token/airdrop-fungible-token';
+import transferFungibleTokenTool, {
+  TRANSFER_FUNGIBLE_TOKEN_TOOL,
+} from './tools/fungible-token/transfer-fungible-token';
 import transferFungibleTokenWithAllowanceTool, {
   TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 } from './tools/fungible-token/transfer-fungible-token-with-allowance';
@@ -52,6 +55,7 @@ export const coreTokenPlugin: Plugin = {
       associateTokenTool(context),
       transferNonFungibleTokenWithAllowanceTool(context),
       transferNonFungibleTokenTool(context),
+      transferFungibleTokenTool(context),
       transferFungibleTokenWithAllowanceTool(context),
     ];
   },
@@ -60,6 +64,7 @@ export const coreTokenPlugin: Plugin = {
 // Export tool names as an object for destructuring
 export {
   airdropFungibleToken,
+  transferFungibleTokenTool,
   transferFungibleTokenWithAllowanceTool,
   createFungibleTokenTool,
   mintFungibleTokenTool,
@@ -84,6 +89,7 @@ export {
   UPDATE_TOKEN_TOOL,
   TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
   TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+  TRANSFER_FUNGIBLE_TOKEN_TOOL,
   TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 };
 
@@ -100,5 +106,6 @@ export const coreTokenPluginToolNames = {
   UPDATE_TOKEN_TOOL,
   TRANSFER_NON_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
   TRANSFER_NON_FUNGIBLE_TOKEN_TOOL,
+  TRANSFER_FUNGIBLE_TOKEN_TOOL,
   TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL,
 } as const;

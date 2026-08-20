@@ -63,6 +63,31 @@ describe('HcsAuditTrailHook Unit Tests', () => {
     expect(postMessageSpy).not.toHaveBeenCalled();
   });
 
+  it("should apply to any method when relevantTools is ['*']", async () => {
+    const operatorClient = { isOperatorClient: true } as unknown as Client;
+    const context = { mode: AgentMode.AUTONOMOUS };
+    const wildcardHook = new HcsAuditTrailHook(['*'], topicId, mockClient);
+    const postMessageSpy = vi
+      .spyOn(wildcardHook, 'postMessageToHcsTopic')
+      .mockImplementation(async () => {});
+
+    const postParams = {
+      context,
+      normalisedParams: {},
+      client: operatorClient,
+      toolResult: { raw: {} as RawTransactionResponse },
+    } as PostSecondaryActionParams;
+
+    // 'any_unlisted_tool' is not in relevantTools, but '*' matches every method
+    await wildcardHook.postToolExecutionHook(postParams, 'any_unlisted_tool');
+
+    expect(postMessageSpy).toHaveBeenCalledTimes(1);
+    expect(postMessageSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Agent executed tool any_unlisted_tool'),
+      mockClient,
+    );
+  });
+
   it.each([AgentMode.RETURN_BYTES, AgentMode.CUSTOM_RETURN_BYTES])(
     'should throw if mode is %s in preToolExecutionHook',
     async mode => {

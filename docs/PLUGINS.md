@@ -151,6 +151,14 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 
 > [!IMPORTANT]
 > **`BaseTool` is the recommended way to implement tools in v4.** It is an abstract class that **implements** the `Tool` interface, so it is a fully backward-compatible, non-breaking upgrade. Tools based on the older functional pattern (plain object literals) continue to work, but they **do not support hooks and policies**.
+>
+> **Optional typed helpers — `BaseTransactionTool` and `BaseQueryTool`:**
+> These are thin convenience subclasses of `BaseTool`. You don't have to use them — extending `BaseTool` directly is always fine. They exist purely to set `toolType` for you so consumers can filter by intent without name heuristics:
+> - **`BaseTransactionTool`** — sets `toolType = 'transaction'` and adds structured error handling for Hedera receipt/precheck failures. Use it for tools that build/submit transactions.
+> - **`BaseQueryTool`** — sets `toolType = 'query'`. Use it for read-only tools that fetch data from the mirror node or network.
+> - **`BaseTool`** directly — sets `toolType = 'other'` by default. Override the field with `toolType = TOOL_TYPE.TRANSACTION` (or `'query'`) if you prefer to set the type explicitly without inheriting from a subclass.
+>
+> All three implement `Tool` and are fully interchangeable at the framework adapter level.
 
 `BaseTool` enforces a clean 7-stage lifecycle that lets the hooks and policies system tap in automatically — you never call hooks manually:
 
@@ -163,6 +171,13 @@ See [packages/core/src/shared/tools.ts](../packages/core/src/shared/tools.ts) fo
 [6] secondaryAction             ← your logic (sign/submit tx; skip for queries)
 [7] postToolExecutionHook       ← hooks/policies
 ```
+
+> [!IMPORTANT]
+> **Transaction tools vs query tools — where each stage runs:**
+> - **Transaction tools** (writing to the network): extend `BaseTransactionTool` (not `BaseTool`). `coreAction` **builds** the transaction only (`return HederaBuilder.xxx(params)`). `secondaryAction` **dispatches** it via `handleTransaction(tx, client, context, postProcess)`, which signs and submits in `AUTONOMOUS` mode or returns frozen bytes in `RETURN_BYTES` mode. Do **not** override `shouldSecondaryAction` — the default `true` keeps both stages active. `BaseTransactionTool` adds Hedera-specific error handling: `ReceiptStatusError` and `PrecheckStatusError` are automatically caught and serialized into `raw.errorCode` + `raw.transactionId`.
+> - **Query/read-only tools** (no on-chain write): extend `BaseTool`. All logic runs inside `coreAction` (call the mirror-node service, return data). Override `shouldSecondaryAction` to return `false` to skip stage 6 entirely. You do **not** need to override `secondaryAction` — `BaseTool` provides a default that throws if accidentally called, protecting against misconfiguration.
+>
+> This split ensures that `postCoreActionHook` (stage 5) always fires **after the transaction is formed but before it is submitted**, which is what hooks and policies rely on to inspect or block a transaction pre-submission.
 
 For a step-by-step migration guide with fully annotated before/after code, see
 [Migrating Custom Tools to BaseTool](MIGRATION-v4.md#migrating-custom-tools-to-basetool-recommended-non-breaking) in the v4 migration guide.
@@ -184,12 +199,16 @@ For a step-by-step migration guide with fully annotated before/after code, see
 Create your tool file (e.g., tools/my-service/my-tool.ts).
 
 > [!TIP]
-> **v4 Recommended approach — extend `BaseTool`.**  
-> `BaseTool` implements the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that `BaseTool`-based tools automatically participate in the hooks and policies lifecycle.
+> **v4 Recommended approach — extend `BaseTool` or `BaseTransactionTool`.**  
+> Both implement the `Tool` interface, so this is a **non-breaking change**: your plugin and all framework adapters keep working unchanged. The benefit is that these tools automatically participate in the hooks and policies lifecycle. Use `BaseTransactionTool` for tools that submit Hedera transactions — it adds structured error handling for `ReceiptStatusError` and `PrecheckStatusError`. Use `BaseTool` for query/read-only tools.
 
 ```typescript
 import { z } from "zod";
-import { Context, BaseTool } from "@hashgraph/hedera-agent-kit";
+// BaseTool is the standard base class for all tools.
+// Optionally swap for BaseTransactionTool (toolType = 'transaction') or
+// BaseQueryTool (toolType = 'query') to have the type set automatically —
+// but extending BaseTool directly is always valid.
+import { Context, BaseTool, untypedQueryOutputParser } from "@hashgraph/hedera-agent-kit";
 import { Client } from "@hiero-ledger/sdk";
 
 // Define your parameter schema (same as before)
@@ -203,7 +222,9 @@ const myToolParameters = z.object({
 
 export const MY_TOOL = "my_tool";
 
-// Extend BaseTool — BaseTool implements Tool, so this is backward-compatible
+// Extend BaseTool — BaseTool implements Tool, so this is backward-compatible.
+// If this tool submits transactions, extend BaseTransactionTool instead.
+// If this tool only reads data, extend BaseQueryTool instead.
 export class MyTool extends BaseTool {
   method = MY_TOOL;
   name = "My Custom Tool";
@@ -215,6 +236,11 @@ export class MyTool extends BaseTool {
   - optionalParam (string, optional): Description
   `;
   parameters = myToolParameters;
+
+  // Query tools use untypedQueryOutputParser so their { raw, humanMessage } envelope
+  // is correctly normalised by framework adapters. Transaction tools use
+  // transactionToolOutputParser instead (see Transaction Handling below).
+  outputParser = untypedQueryOutputParser;
 
   // Stage 1 - Here preToolExecutionHook() will be called automatically - see the 7-stage lifecycle above.
 
@@ -229,26 +255,32 @@ export class MyTool extends BaseTool {
 
   // Stage 3 - Here postParamsNormalizationHook() will be called automatically.
 
-  // Stage 4 — core business logic (build a transaction or run a query)
+  // Stage 4 — core business logic (query tools do everything here)
+  // Always return { raw, humanMessage } so framework adapters and classifyToolResult()
+  // can process the output correctly.
   async coreAction(
     normalisedParams: z.infer<typeof myToolParameters>,
     _context: Context,
     _client: Client,
   ) {
-    // Your implementation here
-    return `Result for ${normalisedParams.requiredParam}`;
+    // Your implementation here — call a mirror-node service, external API, etc.
+    const result = `Result for ${normalisedParams.requiredParam}`;
+    return {
+      raw: { result, param: normalisedParams.requiredParam },
+      humanMessage: result,
+    };
   }
 
   // Stage 5 - Here postCoreActionHook() will be called automatically.
 
-  // Skip secondary action for non-transaction tools
+  // Skip secondary action for query tools (nothing to sign/submit)
   async shouldSecondaryAction(_result: any, _context: Context) {
     return false; // return true (default) if you need to sign/submit a transaction
   }
 
-  // Stage 6 — sign/submit the transaction (omit for query-only tools)
+  // Stage 6 — sign/submit the transaction (no-op for query-only tools)
   async secondaryAction(result: any, _client: Client, _context: Context) {
-    return result; // no-op for non-transaction tools
+    return result; // no-op for query tools
   }
 
   // Stage 7 - Here postToolExecutionHook() will be called automatically.
@@ -391,9 +423,9 @@ const toolkit = new HederaLangchainToolkit({
 
 ```typescript
 import { Client, PrivateKey, TransferTransaction } from '@hiero-ledger/sdk';
-import { BaseTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
+import { BaseTransactionTool, Context, handleTransaction } from '@hashgraph/hedera-agent-kit';
 
-export class TreasuryPayoutTool extends BaseTool {
+export class TreasuryPayoutTool extends BaseTransactionTool {
   // method, name, description, parameters, normalizeParams, coreAction:
   // see the Step-by-Step Guide above. coreAction builds the TransferTransaction.
 
@@ -462,6 +494,86 @@ submission happen is driven by `context.mode`:**
 > External-wallet signing is expressed through `RETURN_BYTES`: the kit hands back unsigned
 > transaction bytes and the host app relays them to whatever wallet or signing flow it uses.
 
+### Calling a Smart Contract from a Custom Tool
+
+The kit deliberately does **not** ship a generic "execute any contract" tool: handing an LLM arbitrary calldata is a large attack surface (a prompt injection could call `approve()` on your tokens, for example), and a generic tool cannot offer a meaningful parameter schema. Instead, wrap each contract function you want the agent to use as its own tool. Each wrapper gets a precise Zod schema, and the set of tools you register is an allowlist by construction — the agent can only ever call what you wrapped.
+
+The kit already exports the building blocks: `HederaBuilder.executeTransaction()` builds a `ContractExecuteTransaction` (with optional payable amount and scheduling support), and `handleTransaction()` submits it or returns unsigned bytes depending on the `AgentMode`. Use `ethers` (a dependency of the kit; add it to your own `package.json` too) to ABI-encode the call.
+
+```typescript
+import { z } from 'zod';
+import { ethers } from 'ethers';
+import { Client, Hbar, HbarUnit } from '@hiero-ledger/sdk';
+import {
+  BaseTool,
+  Context,
+  HederaBuilder,
+  handleTransaction,
+  transactionToolOutputParser,
+} from '@hashgraph/hedera-agent-kit';
+
+// Fixed at build time — the agent can only ever call this contract.
+const ESCROW_CONTRACT_ID = '0.0.12345';
+const ESCROW_ABI = [
+  'function release(uint256 dealId)',
+  'function deposit(uint256 dealId) payable',
+];
+const escrowInterface = new ethers.Interface(ESCROW_ABI);
+
+export const DEPOSIT_ESCROW_TOOL = 'deposit_escrow_tool';
+
+const depositEscrowParameters = z.object({
+  dealId: z.number().int().describe('The id of the escrow deal to deposit into.'),
+  amount: z.number().positive().describe('The amount of HBAR to deposit.'),
+});
+
+export class DepositEscrowTool extends BaseTool {
+  method = DEPOSIT_ESCROW_TOOL;
+  name = 'Deposit Escrow';
+  description = `
+  Deposits HBAR into an escrow deal.
+
+  Parameters:
+  - dealId (number, required): The id of the escrow deal
+  - amount (number, required): The amount of HBAR to deposit
+  `;
+  parameters = depositEscrowParameters;
+  outputParser = transactionToolOutputParser;
+
+  async normalizeParams(
+    params: z.infer<typeof depositEscrowParameters>,
+    _context: Context,
+    _client: Client,
+  ) {
+    const parsed = depositEscrowParameters.parse(params);
+    const encoded = escrowInterface.encodeFunctionData('deposit', [parsed.dealId]);
+    return {
+      contractId: ESCROW_CONTRACT_ID,
+      functionParameters: ethers.getBytes(encoded),
+      gas: 100_000,
+      // payableAmount is in TINYBARS — convert from HBAR explicitly
+      payableAmount: Hbar.from(parsed.amount, HbarUnit.Hbar).toTinybars().toNumber(),
+      schedulingParams: { isScheduled: false },
+    };
+  }
+
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.executeTransaction(normalisedParams);
+  }
+
+  async secondaryAction(tx: any, client: Client, context: Context) {
+    // Submits in AUTONOMOUS mode, returns unsigned bytes in RETURN_BYTES mode
+    return handleTransaction(tx, client, context);
+  }
+}
+
+const tool = (_context: Context) => new DepositEscrowTool();
+
+export default tool;
+```
+
+A non-payable call (e.g. `release(uint256 dealId)`) is the same tool minus the `amount` parameter and `payableAmount` field. Register the tools in a plugin as shown in the Step-by-Step Guide above.
+
 ### Tool Output Parsing
 
 The Hedera Agent Kit tools return a structured JSON output that needs to be parsed to be useful for the agent and the user.
@@ -499,9 +611,9 @@ non-transaction tools.
 output and must return `{ raw, humanMessage }`:
 
 ```typescript
-import { Context, BaseTool } from '@hashgraph/hedera-agent-kit';
+import { Context, BaseQueryTool } from '@hashgraph/hedera-agent-kit';
 
-export class GetHbarPriceTool extends BaseTool {
+export class GetHbarPriceTool extends BaseQueryTool {
   // ...method, name, description, parameters...
 
   // A custom parser: turn the tool's raw JSON output into { raw, humanMessage }.
@@ -685,7 +797,7 @@ The same single-copy rule applies to any other "singleton" transitive dependency
 
 ### Examples and References
 
-- See the annotated example plugin in [examples/plugin/example-plugin.ts](../examples/plugin/example-plugin.ts) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
+- See the annotated example plugin in [examples/plugin/](../examples/plugin/) and its no-LLM smoke test in [examples/plugin/smoke-test.ts](../examples/plugin/smoke-test.ts)
 - See existing core plugins in `packages/core/src/plugins/core-*-plugin/`
 - Follow the patterns established in tools like [transfer-hbar.ts](../packages/core/src/plugins/core-account-plugin/tools/account/transfer-hbar.ts)
 - See [examples/langchain/tool-calling-agent.ts](../examples/langchain/tool-calling-agent.ts) for usage examples

@@ -1,6 +1,8 @@
 "use client";
 
-import WalletConnectPanel from "./WalletConnect";
+import dynamic from "next/dynamic";
+
+const WalletConnectPanel = dynamic(() => import("./WalletConnect"), { ssr: false });
 
 export default function WalletConnectClient() {
     return <WalletConnectPanel variant="compact" />;

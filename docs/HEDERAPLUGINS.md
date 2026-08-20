@@ -22,7 +22,7 @@ The tools are organized into plugins, each containing related functionality:
 * **Core Misc Query Plugin**: Tools for fetching miscellaneous information from Hedera Mirror Node
 * **Core Transaction Query Plugin**: Tools for handling Hedera transaction–related queries
 
-See [an example of how to create a plugin](../examples/plugin/example-plugin.ts) as well as how they can be
+See [an example of how to create a plugin](../examples/plugin/README.md) as well as how they can be
 used to build with using [Langchain](../examples/langchain/plugin-tool-calling-agent.ts) or using
 the [Vercel AI SDK](../examples/ai-sdk/plugin-tool-calling-agent.ts).
 

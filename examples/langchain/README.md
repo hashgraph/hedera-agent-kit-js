@@ -45,6 +45,9 @@ A basic agent that can natively call tools.
 `npm run langchain:structured-chat-agent`
 An agent that uses a structured chat prompt.
 
+> [!NOTE]
+> Earlier versions of this example pulled the prompt at startup from LangChain Hub via `langchain/hub`. That approach is no longer recommended: it introduces a runtime network dependency on LangSmith, requires trusting a remotely-hosted template (a supply-chain risk — the remote content can change without notice), and triggered a `langchain@1.5.3` bug that required monkey-patching the `langsmith` client. The prompt is now inlined directly in the source as a static `ChatPromptTemplate`, matching the pattern used by all other agents in this directory.
+
 ### Return Bytes Agent (Human-in-the-Loop)
 `npm run langchain:return-bytes-tool-calling-agent`
 An agent that returns transaction bytes for manual signing/execution instead of executing them directly.

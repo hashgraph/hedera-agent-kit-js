@@ -214,13 +214,13 @@ export const updateTokenParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New admin key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").  Required for most property updates.',
+        'New admin key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ"). Required for most property updates.',
       ),
     kycKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New KYC key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New KYC key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     freezeKey: z
       .union([z.boolean(), z.string()])
@@ -244,19 +244,19 @@ export const updateTokenParameters = (_context: Context = {}) =>
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New fee schedule key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New fee schedule key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     pauseKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New pause key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New pause key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     metadataKey: z
       .union([z.boolean(), z.string()])
       .optional()
       .describe(
-        'New metadata key. Pass boolean `true` to use the operator/user key (for "my key"), or provide a public key string (not an account ID "0.0.XYZ").',
+        'New metadata key. Pass boolean `true` to use the operator/user key (for "my key" or "my operator key"), or provide a public key string (not an account ID "0.0.XYZ").',
       ),
     metadata: z
       .string()
@@ -460,6 +460,35 @@ export const transferNonFungibleTokenParametersNormalised = (_context: Context) 
         receiver: z.instanceof(AccountId),
       }),
     ),
+  });
+
+export const transferFungibleTokenParameters = (context: Context = {}) =>
+  optionalScheduledTransactionParams(context).extend({
+    tokenId: z.string().describe('Token ID to transfer (e.g. "0.0.12345")'),
+    senderAccountId: z
+      .string()
+      .optional()
+      .describe('Account ID of the sender. Defaults to operator account if omitted.'),
+    transfers: z
+      .array(
+        z.object({
+          accountId: z.string().describe('Recipient account ID (Required)'),
+          amount: z
+            .number()
+            .nonnegative()
+            .describe('Amount of tokens to transfer in display unit. (Required)'),
+        }),
+      )
+      .min(1)
+      .describe('Array of recipient transfers'),
+    transactionMemo: z.string().optional().describe('Memo for the transaction'),
+  });
+
+export const transferFungibleTokenParametersNormalised = (context: Context = {}) =>
+  optionalScheduledTransactionParamsNormalised(context).extend({
+    tokenId: z.string(),
+    tokenTransfers: z.custom<TokenTransferMinimalParams[]>(),
+    transactionMemo: z.string().optional(),
   });
 
 export const transferFungibleTokenWithAllowanceParameters = (context: Context = {}) =>

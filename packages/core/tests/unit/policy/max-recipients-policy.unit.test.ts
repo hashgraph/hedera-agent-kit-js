@@ -179,6 +179,61 @@ describe('MaxRecipientsPolicy Unit Tests', () => {
     });
   });
 
+  describe('Direct fungible token transfers (TRANSFER_FUNGIBLE_TOKEN_TOOL)', () => {
+    it('should block if positive-amount recipients exceed maxRecipients', () => {
+      const policy = new MaxRecipientsPolicy(5);
+      const params = {
+        context,
+        client,
+        rawParams: {},
+        normalisedParams: {
+          tokenTransfers: [
+            { tokenId: '0.0.999', accountId: '0.0.100', amount: -600 }, // sender
+            { tokenId: '0.0.999', accountId: '0.0.1', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.2', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.3', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.4', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.5', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.6', amount: 100 },
+          ],
+        },
+      };
+
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          params,
+          coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_TOOL,
+        ),
+      ).toBe(true);
+    });
+
+    it('should not block if positive-amount recipients are within maxRecipients', () => {
+      const policy = new MaxRecipientsPolicy(5);
+      const params = {
+        context,
+        client,
+        rawParams: {},
+        normalisedParams: {
+          tokenTransfers: [
+            { tokenId: '0.0.999', accountId: '0.0.100', amount: -500 }, // sender
+            { tokenId: '0.0.999', accountId: '0.0.1', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.2', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.3', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.4', amount: 100 },
+            { tokenId: '0.0.999', accountId: '0.0.5', amount: 100 },
+          ],
+        },
+      };
+
+      expect(
+        policy['shouldBlockPostParamsNormalization'](
+          params,
+          coreTokenPluginToolNames.TRANSFER_FUNGIBLE_TOKEN_TOOL,
+        ),
+      ).toBe(false);
+    });
+  });
+
   describe('NFT transfers (transfers)', () => {
     it('should block if NFT recipients exceed maxRecipients', () => {
       const policy = new MaxRecipientsPolicy(1);

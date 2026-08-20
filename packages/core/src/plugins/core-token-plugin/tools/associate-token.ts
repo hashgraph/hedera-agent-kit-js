@@ -58,18 +58,12 @@ export class AssociateTokenTool extends BaseTransactionTool {
     return HederaParameterNormaliser.normaliseAssociateTokenParams(params, context, client);
   }
 
-  async coreAction(normalisedParams: any, context: Context, client: Client) {
-    const tx = HederaBuilder.associateToken(normalisedParams);
-    const result = await handleTransaction(tx, client, context, postProcess);
-    return result;
+  async coreAction(normalisedParams: any, _context: Context, _client: Client) {
+    return HederaBuilder.associateToken(normalisedParams);
   }
 
-  async shouldSecondaryAction(_coreActionResult: any, _context: Context): Promise<boolean> {
-    return false;
-  }
-
-  async secondaryAction(_transaction: any, _client: Client, _context: Context) {
-    return null;
+  async secondaryAction(transaction: any, client: Client, context: Context) {
+    return await handleTransaction(transaction, client, context, postProcess);
   }
 }
 

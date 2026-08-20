@@ -1,5 +1,6 @@
 export * from './api';
 export * from './base-transaction-tool';
+export * from './base-query-tool';
 export * from './configuration';
 export * from './tools';
 export * from './plugin';

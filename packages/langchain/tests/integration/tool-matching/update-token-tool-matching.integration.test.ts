@@ -82,7 +82,7 @@ describe('Update Token Tool Matching Integration Tests', () => {
     });
 
     it('should handle adminKey set to true (operator key)', async () => {
-      const input = 'Set the admin key for token 0.0.4004 to my key';
+      const input = 'Set the admin key for token 0.0.4004 to my operator key';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi

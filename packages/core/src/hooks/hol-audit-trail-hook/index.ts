@@ -77,7 +77,7 @@ export class HolAuditTrailHook extends AbstractHook {
   }
 
   async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<any> {
-    if (!this.relevantTools.includes(method)) return;
+    if (!this.appliesToMethod(method)) return;
 
     if (isReturnBytesMode(params.context.mode)) {
       throw new Error(
@@ -87,7 +87,7 @@ export class HolAuditTrailHook extends AbstractHook {
   }
 
   async postToolExecutionHook(params: PostSecondaryActionParams, method: string): Promise<any> {
-    if (!this.relevantTools.includes(method)) return;
+    if (!this.appliesToMethod(method)) return;
 
     try {
       if (!this.session) {
