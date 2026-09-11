@@ -56,6 +56,6 @@
     "@hiero-ledger/sdk": "2.86.2",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }
