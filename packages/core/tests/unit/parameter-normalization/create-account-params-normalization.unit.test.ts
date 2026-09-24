@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PrivateKey, PublicKey } from '@hiero-ledger/sdk';
+import { KeyList, PrivateKey, PublicKey } from '@hiero-ledger/sdk';
 import HederaParameterNormaliser from '@/shared/hedera-utils/hedera-parameter-normaliser';
 
 vi.mock('@/shared/utils/account-resolver', () => ({
@@ -165,5 +165,87 @@ describe('HederaParameterNormaliser.normaliseCreateAccount', () => {
     expect(spy).toHaveBeenCalled();
     expect(result.schedulingParams).toEqual(mockScheduleParams.schedulingParams);
     expect(result.key!.toString()).toBe(params.publicKey);
+  });
+  describe('multi-signature accounts', () => {
+    const keyA = PrivateKey.generateED25519().publicKey.toStringDer();
+    const keyB = PrivateKey.generateED25519().publicKey.toStringDer();
+    const keyC = PrivateKey.generateED25519().publicKey.toStringDer();
+
+    it('builds a KeyList requiring every key when no threshold is given', async () => {
+      const result = await HederaParameterNormaliser.normaliseCreateAccount(
+        { publicKeys: [keyA, keyB, keyC] } as any,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.key).toBeInstanceOf(KeyList);
+      const keyList = result.key as KeyList;
+      expect(keyList.threshold).toBeNull();
+      expect(Array.from(keyList).length).toBe(3);
+    });
+
+    it('builds an m-of-n threshold key when a threshold is given', async () => {
+      const result = await HederaParameterNormaliser.normaliseCreateAccount(
+        { publicKeys: [keyA, keyB, keyC], threshold: 2 } as any,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.key).toBeInstanceOf(KeyList);
+      const keyList = result.key as KeyList;
+      expect(keyList.threshold).toBe(2);
+      expect(Array.from(keyList).length).toBe(3);
+    });
+
+    it('prefers publicKeys over a single publicKey', async () => {
+      const result = await HederaParameterNormaliser.normaliseCreateAccount(
+        { publicKey: keyA, publicKeys: [keyB, keyC], threshold: 1 } as any,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.key).toBeInstanceOf(KeyList);
+      expect((result.key as KeyList).threshold).toBe(1);
+    });
+
+    it('does not consult the mirror node when publicKeys are supplied', async () => {
+      await HederaParameterNormaliser.normaliseCreateAccount(
+        { publicKeys: [keyA, keyB] } as any,
+        context,
+        { operatorPublicKey: undefined } as any,
+        mirrorNode as any,
+      );
+
+      expect(mirrorNode.getAccount).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['zero', 0],
+      ['greater than the number of keys', 4],
+    ])('rejects a threshold that is %s', async (_label, threshold) => {
+      await expect(
+        HederaParameterNormaliser.normaliseCreateAccount(
+          { publicKeys: [keyA, keyB, keyC], threshold } as any,
+          context,
+          client,
+          mirrorNode as any,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('falls back to single-key resolution when publicKeys is absent', async () => {
+      const result = await HederaParameterNormaliser.normaliseCreateAccount(
+        { publicKey: keyA } as any,
+        context,
+        client,
+        mirrorNode as any,
+      );
+
+      expect(result.key).toBeInstanceOf(PublicKey);
+      expect(result.key!.toString()).toBe(keyA);
+    });
   });
 });

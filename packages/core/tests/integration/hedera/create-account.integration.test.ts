@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Client, Key, Status } from '@hiero-ledger/sdk';
+import { Client, Key, KeyList, PrivateKey, Status } from '@hiero-ledger/sdk';
 import createAccountTool from '@/plugins/core-account-plugin/tools/account/create-account';
 import { AgentMode, type Context } from '@/shared/configuration';
 import {
@@ -94,6 +94,44 @@ describe('Create Account Integration Tests', () => {
       expect(result.raw.status).toBe(Status.Success.toString());
       expect(result.raw.scheduleId).toBeDefined();
     });
+
+    it('should create a multi-signature account requiring every key', async () => {
+      const keys = [PrivateKey.generateED25519(), PrivateKey.generateED25519()];
+      const params = {
+        publicKeys: keys.map(key => key.publicKey.toStringDer()),
+      };
+
+      const tool = createAccountTool(context);
+      const result = await tool.execute(executorClient, context, params);
+
+      expect(result.raw.status).toBe(Status.Success.toString());
+      expect(result.raw.accountId).toBeDefined();
+
+      const info = await executorWrapper.getAccountInfo(result.raw.accountId!.toString());
+      expect(info.key).toBeInstanceOf(KeyList);
+      expect((info.key as KeyList).threshold).toBeNull();
+    });
+
+    it('should create a 2-of-3 threshold account', async () => {
+      const keys = [
+        PrivateKey.generateED25519(),
+        PrivateKey.generateED25519(),
+        PrivateKey.generateED25519(),
+      ];
+      const params = {
+        publicKeys: keys.map(key => key.publicKey.toStringDer()),
+        threshold: 2,
+      };
+
+      const tool = createAccountTool(context);
+      const result = await tool.execute(executorClient, context, params);
+
+      expect(result.raw.status).toBe(Status.Success.toString());
+
+      const info = await executorWrapper.getAccountInfo(result.raw.accountId!.toString());
+      expect(info.key).toBeInstanceOf(KeyList);
+      expect((info.key as KeyList).threshold).toBe(2);
+    });
   });
 
   describe('Invalid Create Account Scenarios', () => {
@@ -107,6 +145,19 @@ describe('Create Account Integration Tests', () => {
 
       expect(result.raw.status).not.toBe(Status.Success.toString());
       expect(result.humanMessage).toMatch(/public key cannot be decoded|Invalid hex string/);
+    });
+
+    it('should fail when the threshold exceeds the number of public keys', async () => {
+      const params = {
+        publicKeys: [PrivateKey.generateED25519().publicKey.toStringDer()],
+        threshold: 2,
+      };
+
+      const tool = createAccountTool(context);
+      const result = await tool.execute(executorClient, context, params);
+
+      expect(result.raw.status).not.toBe(Status.Success.toString());
+      expect(result.humanMessage).toContain('Invalid threshold');
     });
 
     it('should fail with negative initial balance', async () => {
