@@ -107,6 +107,16 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Status: Validated by HAK team, v4-compatible release
 
+- [Hedera Guardian Agent Plugin](https://www.npmjs.com/package/@nature-wired/hedera-guardian-agent-plugin) provides sustainability project discovery and decoded project detail retrieval using the Sustainability Atlas APIs. It exposes the core actions (`search_guardian_projects`, `get_guardian_project`) for AI-assisted sustainability project workflows.
+
+  NPM: https://www.npmjs.com/package/@nature-wired/hedera-guardian-agent-plugin
+
+  Github repository: https://github.com/Nature-Wired/hedera-guardian-agent-plugin
+
+  Version: @nature-wired/hedera-guardian-agent-plugin@0.1.0
+
+  Status: Not validated by HAK team, v4-compatible release
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
