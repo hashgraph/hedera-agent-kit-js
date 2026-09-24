@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Client } from '@hiero-ledger/sdk';
 import { Context } from './configuration';
 import { TOOL_STATUS } from './utils/default-tool-output-parsing';
+import { isPolicyBlockedError, PolicyBlockInfo } from './policy-blocked-error';
 
 import {
   PreToolExecutionParams,
@@ -66,7 +67,7 @@ export interface Tool {
  * | `raw.status`    | Source                                          | Meaning                                                                 |
  * |-----------------|-------------------------------------------------|-------------------------------------------------------------------------|
  * | `'SUCCESS'`     | `BaseTool.execute()` (defaulted via `??=`), `ReturnBytesStrategy`, or `ExecuteStrategy` | Operation completed successfully. Any tool that reaches the end of `execute()` without an explicit `raw.status` is automatically assigned `'SUCCESS'`. |
- * | `'ERROR'`       | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt/precheck failures. |
+ * | `'ERROR'`       | `BaseTool.handleError()` / `BaseTransactionTool.handleError()` | Caught exception. Transaction tools extend `BaseTransactionTool`, which additionally sets `raw.errorCode` (specific SDK status name, e.g. `'INSUFFICIENT_PAYER_BALANCE'`) and `raw.transactionId` for Hedera receipt/precheck failures. Policy blocks set `raw.errorCode = 'POLICY_BLOCKED'` and `raw.policyBlock` (see `PolicyBlockInfo`). |
  * | `'PARSE_ERROR'` | `transactionToolOutputParser` / `untypedQueryOutputParser` | Output is not valid JSON or has an unexpected shape.                     |
  *
  * Use {@link classifyToolResult} to map these into the stable
@@ -199,15 +200,36 @@ export abstract class BaseTool<TParams = any, TNormalisedParams = any> implement
 
   /**
    * Default error handler called when any step of `execute()` throws.
-   * Returns `{ raw: { status: 'ERROR', error: string }, humanMessage: string }`.
-   * Transaction tools extend `BaseTransactionTool` which overrides this to
-   * additionally extract structured fields from `ReceiptStatusError` and
-   * `PrecheckStatusError`.
+   *
+   * - If the error is a {@link PolicyBlockedError} (thrown by `AbstractPolicy` or a
+   *   custom policy), the structured policy information is lifted onto `raw.policyBlock`
+   *   and `raw.errorCode` is set to `'POLICY_BLOCKED'`. The human-readable `humanMessage`
+   *   is preserved so the LLM agent loop still receives readable feedback.
+   * - For all other errors: returns `{ raw: { status: 'ERROR', error: string }, humanMessage }`.
+   *
+   * Transaction tools extend `BaseTransactionTool` which additionally extracts structured
+   * fields from `ReceiptStatusError` and `PrecheckStatusError`.
    */
   async handleError(error: unknown, _context: Context): Promise<any> {
     const desc = `Failed to execute ${this.name}`;
     const message = desc + (error instanceof Error ? `: ${error.message}` : '');
     console.error(`[${this.method}]`, message);
+
+    if (isPolicyBlockedError(error)) {
+      const policyBlock: PolicyBlockInfo = {
+        code: 'POLICY_BLOCKED',
+        policyName: error.policyName,
+        toolMethod: error.toolMethod,
+        stage: error.stage,
+        ...(error.description !== undefined && { description: error.description }),
+        ...(error.details !== undefined && { details: error.details }),
+      };
+      return {
+        raw: { status: TOOL_STATUS.ERROR, errorCode: 'POLICY_BLOCKED', error: message, policyBlock },
+        humanMessage: message,
+      };
+    }
+
     return { raw: { status: TOOL_STATUS.ERROR, error: message }, humanMessage: message };
   }
 

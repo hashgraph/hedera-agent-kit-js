@@ -1,7 +1,7 @@
-import { AgentMode } from '@hashgraph/hedera-agent-kit';
-import { HederaAIToolkit } from '@hashgraph/hedera-agent-kit-ai-sdk';
+import { AgentMode, AbstractPolicy } from '@hashgraph/hedera-agent-kit';
+import { HederaAIToolkit, PolicyResultParser } from '@hashgraph/hedera-agent-kit-ai-sdk';
 import { MaxRecipientsPolicy } from '@hashgraph/hedera-agent-kit/policies';
-import { coreAccountPlugin } from '@hashgraph/hedera-agent-kit/plugins';
+import { coreAccountPlugin, coreAccountPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
 import { Client, PrivateKey } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
@@ -9,6 +9,33 @@ import { openai } from '@ai-sdk/openai';
 import { generateText, stepCountIs, wrapLanguageModel } from 'ai';
 
 dotenv.config();
+
+// ---------------------------------------------------------------------------
+// Path 1 — simple boolean block (return true)
+//
+// Returning `true` from a `shouldBlock*` guard is the simplest way to block
+// a tool call. AbstractPolicy automatically throws a base PolicyBlockedError
+// carrying the policy name, description, blocked tool method, and hook stage
+// — but no custom `details` payload.
+//
+// Set `enabled: true` to activate this policy and observe the base block.
+// ---------------------------------------------------------------------------
+class MaintenanceModePolicy extends AbstractPolicy {
+  readonly name = 'Maintenance Mode Policy';
+  readonly description = 'Transfers are temporarily disabled for maintenance';
+  // Only applies to HBAR transfers; extend relevantTools to cover more methods.
+  readonly relevantTools = [coreAccountPluginToolNames.TRANSFER_HBAR_TOOL];
+
+  constructor(private readonly enabled: boolean) {
+    super();
+  }
+
+  // Path 1: returning `true` causes AbstractPolicy to throw a base
+  // PolicyBlockedError automatically — no custom details attached.
+  protected shouldBlockPreToolExecution(): boolean {
+    return this.enabled;
+  }
+}
 
 async function bootstrap(): Promise<void> {
   const operatorId = process.env.ACCOUNT_ID!;
@@ -20,8 +47,15 @@ async function bootstrap(): Promise<void> {
     // PrivateKey.fromStringED25519(operatorKey), // Use this line if you have an ED25519 key
   );
 
-  // Instantiate the MaxRecipientsPolicy, restricting transfers to a maximum of 2 recipients
-  const policy = new MaxRecipientsPolicy(2);
+  // Path 1 — MaintenanceModePolicy (return true, no structured details).
+  // Toggle `enabled` to `true` to see this path block transfers immediately.
+  const maintenancePolicy = new MaintenanceModePolicy(false);
+
+  // Path 2 — MaxRecipientsPolicy (throws PolicyBlockedError with structured details).
+  // This policy throws with `details: { recipientCount, maxRecipients }` when the
+  // number of recipients in a transfer exceeds the configured cap.
+  // Trigger it by asking the agent to send HBAR to more than 2 recipients at once.
+  const maxRecipientsPolicy = new MaxRecipientsPolicy(2);
 
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
@@ -31,7 +65,7 @@ async function bootstrap(): Promise<void> {
       context: {
         mode: AgentMode.AUTONOMOUS,
         accountId: operatorId,
-        hooks: [policy],
+        hooks: [maintenancePolicy, maxRecipientsPolicy],
       },
     },
   });
@@ -41,9 +75,25 @@ async function bootstrap(): Promise<void> {
     middleware: hederaAgentToolkit.middleware(),
   });
 
+  // Parser for extracting structured policy-block data from AI SDK tool results.
+  const parser = new PolicyResultParser();
+
   console.log('Hedera Agent CLI Chatbot with Policy Enforcement — type "exit" to quit');
-  console.log('This agent explicitly loads tools related to Transfers and Airdrops.');
-  console.log('MaxRecipientsPolicy is ACTIVE: All transfers to >2 recipients are blocked.');
+  console.log('');
+  console.log('Two policies are configured:');
+  console.log(
+    '  [Path 1] MaintenanceModePolicy — simple return-true block, no structured details.',
+    'Set `enabled: true` in the source to activate.',
+  );
+  console.log(
+    '  [Path 2] MaxRecipientsPolicy   — throws PolicyBlockedError with details.',
+    'Ask the agent to send HBAR to >2 recipients at once to trigger it.',
+  );
+  console.log('');
+  console.log(
+    'When a policy blocks a tool the agent explains it in prose (humanMessage).',
+    'The === Policy Block === section shows the structured data your code can branch on.',
+  );
   console.log('');
 
   // Chat memory: conversation history
@@ -75,8 +125,39 @@ async function bootstrap(): Promise<void> {
       // Add AI response to history
       conversationHistory.push({ role: 'assistant', content: response.text });
 
-      // Print the AI's answer
+      // Print the AI's answer (prose message — what the LLM sees)
       console.log(`AI: ${response.text}`);
+
+      // -----------------------------------------------------------------------
+      // Parser usage: extract structured policy-block data from tool results.
+      //
+      // response.steps contains one entry per LLM round-trip; each step has a
+      // toolResults array whose entries have an `output` field with the
+      // { raw, humanMessage } envelope returned by the Hedera tool.
+      //
+      // parsePolicyBlocks() filters to only the `kind: 'policy_block'` entries,
+      // giving you typed fields for programmatic branching without substring-
+      // matching the prose message.
+      // -----------------------------------------------------------------------
+      const allToolResults = response.steps.flatMap((step) => step.toolResults ?? []);
+      const policyBlocks = parser.parsePolicyBlocks(allToolResults);
+
+      if (policyBlocks.length > 0) {
+        console.log('\n=== Policy Block(s) Detected ===');
+        for (const block of policyBlocks) {
+          console.log(`  Policy  : ${block.policyName}`);
+          console.log(`  Stage   : ${block.stage}`);
+          if (block.description) console.log(`  Reason  : ${block.description}`);
+          if (block.details) console.log(`  Details : ${JSON.stringify(block.details)}`);
+          console.log(`  Message : ${block.humanMessage}`);
+          console.log('');
+          // Example of programmatic branching on structured fields:
+          // switch (block.policyName) {
+          //   case 'Maintenance Mode Policy': await notifyOps(block); break;
+          //   case 'Max Recipients Policy':   await queueForReview(block.details); break;
+          // }
+        }
+      }
     } catch (err) {
       console.error('Error:', err);
     }

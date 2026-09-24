@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   classifyToolResult,
+  isPolicyBlockedToolResult,
   transactionToolOutputParser,
   type ToolResultStatus,
 } from '@/shared/utils/default-tool-output-parsing';
@@ -212,6 +213,137 @@ describe('classifyToolResult', () => {
       });
 
       expect(result.kind).toBe('unknown');
+    });
+  });
+
+  describe('policy_block', () => {
+    const policyBlockRaw = {
+      raw: {
+        status: 'ERROR',
+        errorCode: 'POLICY_BLOCKED',
+        error: 'Failed to execute Disburse Grant: Action disburse_grant blocked by policy: Grant Amount Policy (Blocks payouts above the configured auto-pay USD cap)',
+        policyBlock: {
+          code: 'POLICY_BLOCKED',
+          policyName: 'Grant Amount Policy',
+          toolMethod: 'disburse_grant',
+          stage: 'post_params_normalization',
+          description: 'Blocks payouts above the configured auto-pay USD cap',
+          details: { approvedUsd: 750, capUsd: 500 },
+        },
+      },
+      humanMessage: 'Failed to execute Disburse Grant: Action disburse_grant blocked by policy: Grant Amount Policy (Blocks payouts above the configured auto-pay USD cap)',
+    };
+
+    it('classifies a policy-block envelope as policy_block kind', () => {
+      const result = classifyToolResult(policyBlockRaw);
+
+      expect(result.kind).toBe('policy_block');
+      if (result.kind === 'policy_block') {
+        expect(result.policyName).toBe('Grant Amount Policy');
+        expect(result.toolMethod).toBe('disburse_grant');
+        expect(result.stage).toBe('post_params_normalization');
+        expect(result.description).toBe('Blocks payouts above the configured auto-pay USD cap');
+        expect(result.details).toEqual({ approvedUsd: 750, capUsd: 500 });
+        expect(result.error).toContain('blocked by policy: Grant Amount Policy');
+        expect(result.humanMessage).toContain('Disburse Grant');
+      }
+    });
+
+    it('policy_block without details returns undefined details', () => {
+      const envelope = {
+        raw: {
+          status: 'ERROR',
+          errorCode: 'POLICY_BLOCKED',
+          error: 'Failed to execute foo: Action foo blocked by policy: Reject Tool Call',
+          policyBlock: {
+            code: 'POLICY_BLOCKED',
+            policyName: 'Reject Tool Call',
+            toolMethod: 'foo',
+            stage: 'pre_tool_execution',
+          },
+        },
+        humanMessage: 'Failed to execute foo: Action foo blocked by policy: Reject Tool Call',
+      };
+
+      const result = classifyToolResult(envelope);
+      expect(result.kind).toBe('policy_block');
+      if (result.kind === 'policy_block') {
+        expect(result.policyName).toBe('Reject Tool Call');
+        expect(result.stage).toBe('pre_tool_execution');
+        expect(result.details).toBeUndefined();
+      }
+    });
+
+    it('policy_block survives JSON round-trip (as it would through HederaAgentAPI.run)', () => {
+      const serialized = JSON.stringify({ result: policyBlockRaw });
+      const parsed = JSON.parse(serialized).result;
+      const result = classifyToolResult(parsed);
+
+      expect(result.kind).toBe('policy_block');
+      if (result.kind === 'policy_block') {
+        expect(result.policyName).toBe('Grant Amount Policy');
+        expect(result.details).toEqual({ approvedUsd: 750, capUsd: 500 });
+      }
+    });
+
+    it('policy_block takes precedence over the generic failure branch', () => {
+      // raw.status is ERROR which would match the failure branch — policy_block must fire first
+      const result = classifyToolResult(policyBlockRaw);
+      expect(result.kind).toBe('policy_block');
+      expect(result.kind).not.toBe('failure');
+    });
+  });
+
+  describe('isPolicyBlockedToolResult', () => {
+    it('returns true for a valid policy-block envelope', () => {
+      const envelope = {
+        raw: {
+          status: 'ERROR',
+          errorCode: 'POLICY_BLOCKED',
+          error: 'blocked',
+          policyBlock: {
+            code: 'POLICY_BLOCKED',
+            policyName: 'SomePolicy',
+            toolMethod: 'foo',
+            stage: 'pre_tool_execution',
+          },
+        },
+        humanMessage: 'blocked',
+      };
+      expect(isPolicyBlockedToolResult(envelope)).toBe(true);
+    });
+
+    it('returns false for a normal ERROR envelope', () => {
+      expect(
+        isPolicyBlockedToolResult({
+          raw: { status: 'ERROR', error: 'something went wrong' },
+          humanMessage: 'something went wrong',
+        }),
+      ).toBe(false);
+    });
+
+    it('returns false for a SUCCESS envelope', () => {
+      expect(
+        isPolicyBlockedToolResult({
+          raw: { status: 'SUCCESS' },
+          humanMessage: 'done',
+        }),
+      ).toBe(false);
+    });
+
+    it('returns false when raw is null', () => {
+      expect(
+        isPolicyBlockedToolResult({ raw: null as any, humanMessage: '' }),
+      ).toBe(false);
+    });
+
+    it('returns false when policyBlock.code does not match', () => {
+      expect(
+        isPolicyBlockedToolResult({
+          raw: { policyBlock: { code: 'SOMETHING_ELSE' } },
+          humanMessage: '',
+        }),
+      ).toBe(false);
     });
   });
 

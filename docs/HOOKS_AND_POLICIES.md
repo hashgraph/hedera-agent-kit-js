@@ -14,6 +14,7 @@ through **Hooks** and **Policies**.
 - [Quick Overview](#quick-overview)
 - [When Hooks and Policies are Called](#when-hooks-and-policies-are-called)
 - [How to Use Hooks and Policies](#how-to-use-hooks-and-policies)
+- [Blocking with Policies](#blocking-with-policies)
 - [Available Hooks](#available-hooks)
     - [HcsAuditTrailHook](#1-hcsaudittrailhook-hook)
     - [HolAuditTrailHook](#2-holaudittrailhook-hook)
@@ -79,6 +80,185 @@ const context = {
 > [!TIP]
 > **Example Application**: See [Option I: Run the Audit Trail Agent](DEVEXAMPLES.md#option-i-run-the-audit-trail-agent)
 > in the Developer Examples for a complete working implementation across different frameworks.
+
+---
+
+## Blocking with Policies
+
+When a policy fires, the tool call is **immediately halted** and a `PolicyBlockedError` is surfaced to the agent.
+The error carries structured data through the `{ raw, humanMessage }` envelope so you can
+**branch on machine-readable fields** in your own code instead of pattern-matching prose.
+
+### Two ways to author a policy block
+
+#### Path 1 — return `true` (base block, no custom details)
+
+Return `true` from a `shouldBlock*` guard. `AbstractPolicy` automatically throws a base
+`PolicyBlockedError` that carries the policy name, description, blocked tool method, and
+hook stage — but no custom `details` payload.
+
+```typescript
+import { AbstractPolicy } from '@hashgraph/hedera-agent-kit';
+import { coreAccountPluginToolNames } from '@hashgraph/hedera-agent-kit/plugins';
+
+class MaintenanceModePolicy extends AbstractPolicy {
+  readonly name = 'Maintenance Mode Policy';
+  readonly description = 'Transfers are temporarily disabled for maintenance';
+  readonly relevantTools = [coreAccountPluginToolNames.TRANSFER_HBAR_TOOL];
+
+  constructor(private readonly enabled: boolean) { super(); }
+
+  // Returning `true` is all you need — AbstractPolicy throws the error for you.
+  protected shouldBlockPreToolExecution(): boolean {
+    return this.enabled;
+  }
+}
+```
+
+#### Path 2 — throw `PolicyBlockedError` directly (structured details)
+
+Throw a `PolicyBlockedError` yourself from a `shouldBlock*` method when you want to
+attach a machine-readable `details` payload for programmatic branching. The built-in
+`MaxRecipientsPolicy` uses this path:
+
+```typescript
+import {
+  AbstractPolicy,
+  PolicyBlockedError,
+  POLICY_BLOCK_STAGES,
+} from '@hashgraph/hedera-agent-kit';
+
+class MaxRecipientsPolicy extends AbstractPolicy {
+  // ...
+  protected shouldBlockPostParamsNormalization(params, method) {
+    const recipientCount = this.countRecipients(params.normalisedParams, method);
+    if (recipientCount > this.maxRecipients) {
+      throw new PolicyBlockedError(
+        this.name,
+        method,
+        POLICY_BLOCK_STAGES.POST_PARAMS_NORMALIZATION,
+        this.description,
+        { recipientCount, maxRecipients: this.maxRecipients }, // <- structured details
+      );
+    }
+    return false;
+  }
+}
+```
+
+Both paths produce the same `{ raw, humanMessage }` envelope shape — only the presence of
+`details` differs.
+
+### The result envelope shape
+
+When a policy fires, the tool returns:
+
+| Field | Value |
+|---|---|
+| `humanMessage` | Prose error for the LLM: `"Action transfer_hbar_tool blocked by policy: Max Recipients Policy (…)"` |
+| `raw.status` | `'ERROR'` |
+| `raw.errorCode` | `'POLICY_BLOCKED'` |
+| `raw.error` | Same prose as `humanMessage` |
+| `raw.policyBlock.code` | `'POLICY_BLOCKED'` (stable discriminant) |
+| `raw.policyBlock.policyName` | Display name of the policy that fired |
+| `raw.policyBlock.toolMethod` | The blocked tool method string |
+| `raw.policyBlock.stage` | Hook stage: `pre_tool_execution` \| `post_params_normalization` \| `post_core_action` \| `post_secondary_action` |
+| `raw.policyBlock.description` | Optional: the policy's description string |
+| `raw.policyBlock.details` | Optional: structured payload from Path 2 (e.g. `{ recipientCount: 3, maxRecipients: 2 }`) |
+
+> [!NOTE]
+> `humanMessage` is the prose the LLM sees and explains to the user. `raw.policyBlock` is
+> for your server-side code to branch on. Never parse `humanMessage` with substring
+> matching — use `raw.policyBlock` instead.
+
+### Reading policy blocks in your code
+
+#### Core utilities (framework-agnostic)
+
+```typescript
+import {
+  classifyToolResult,
+  isPolicyBlockedToolResult,
+} from '@hashgraph/hedera-agent-kit';
+
+const result = await tool.execute(client, context, params);
+
+// Quick boolean check
+if (isPolicyBlockedToolResult(result)) {
+  console.log(result.raw.policyBlock.policyName);
+}
+
+// Full discriminated union — type-safe branching
+const classified = classifyToolResult(result);
+if (classified.kind === 'policy_block') {
+  console.log(classified.policyName);  // string
+  console.log(classified.stage);       // PolicyBlockStage
+  console.log(classified.details);     // Record<string, unknown> | undefined
+}
+```
+
+#### AI SDK (`PolicyResultParser`)
+
+```typescript
+import { PolicyResultParser } from '@hashgraph/hedera-agent-kit-ai-sdk';
+
+const parser = new PolicyResultParser();
+
+// After generateText / streamText:
+const allToolResults = response.steps.flatMap((step) => step.toolResults ?? []);
+const policyBlocks = parser.parsePolicyBlocks(allToolResults);
+
+for (const block of policyBlocks) {
+  console.log(block.policyName, block.stage, block.details);
+}
+```
+
+#### ADK (`PolicyResultParser` from the ADK package)
+
+```typescript
+import { PolicyResultParser } from '@hashgraph/hedera-agent-kit-adk';
+import { getFunctionResponses, isFinalResponse } from '@google/adk';
+
+const parser = new PolicyResultParser();
+const turnToolResults: any[] = [];
+
+for await (const event of runner.runAsync({ ... })) {
+  for (const fr of getFunctionResponses(event)) {
+    if (fr.response) turnToolResults.push(fr.response);
+  }
+  if (isFinalResponse(event)) {
+    const policyBlocks = parser.parsePolicyBlocks(turnToolResults);
+    for (const block of policyBlocks) {
+      console.log(block.policyName, block.stage, block.details);
+    }
+  }
+}
+```
+
+#### LangChain (`ResponseParserService`)
+
+```typescript
+import { ResponseParserService } from '@hashgraph/hedera-agent-kit-langchain';
+
+const responseParsingService = new ResponseParserService(toolkit.getTools());
+
+const response = await agent.invoke({ input: userMessage });
+if (responseParsingService.hasPolicyBlocks(response)) {
+  const policyBlocks = responseParsingService.parsePolicyBlocks(response);
+  for (const block of policyBlocks) {
+    console.log(block.policyName, block.stage, block.details);
+  }
+}
+```
+
+> [!TIP]
+> See the **Policy Enforcement Agent** examples for complete, runnable demonstrations of
+> both paths and parser usage across all three adapters:
+> [`examples/ai-sdk/policy-enforcement-agent.ts`](../examples/ai-sdk/policy-enforcement-agent.ts),
+> [`examples/langchain-v1/policy-enforcement-agent.ts`](../examples/langchain-v1/policy-enforcement-agent.ts),
+> [`examples/adk/policy-enforcement-agent.ts`](../examples/adk/policy-enforcement-agent.ts).
+
+---
 
 ## Available Hooks
 
@@ -252,8 +432,9 @@ const extendedPolicy = new MaxRecipientsPolicy(
 
 > [!NOTE]
 > **Complete Examples**: Check the [Policy Enforcement Agent](DEVEXAMPLES.md#option-h-run-the-policy-enforcement-agent)
-> for full implementations in [AI SDK](../examples/ai-sdk/policy-enforcement-agent.ts)
-> or [LangChain v1](../examples/langchain-v1/policy-enforcement-agent.ts).
+> for full implementations in [AI SDK](../examples/ai-sdk/policy-enforcement-agent.ts),
+> [LangChain v1](../examples/langchain-v1/policy-enforcement-agent.ts),
+> or [ADK](../examples/adk/policy-enforcement-agent.ts).
 
 ---
 
@@ -357,8 +538,11 @@ They should not stop execution unless an error occurs.
 ### Policies (`AbstractPolicy`)
 
 Policies are specialized Hooks designed to **validate** and **block** execution. They use `shouldBlock...` methods that
-return boolean values. If `true` is returned, the `AbstractPolicy` base class throws an error, immediately halting the tool's
-lifecycle.
+return boolean values. If `true` is returned, the `AbstractPolicy` base class throws a **`PolicyBlockedError`**,
+immediately halting the tool's lifecycle. Custom policies that need machine-readable structured data can instead
+`throw new PolicyBlockedError(policyName, method, stage, description, details)` directly from the `shouldBlock*` method
+to attach a `details` payload for programmatic branching — see the
+[Blocking with Policies](#blocking-with-policies) section above.
 
 **Policy Execution Flow:**
 
@@ -369,7 +553,7 @@ lifecycle.
          |
     [AbstractPolicy.preToolExecutionHook] (calls shouldBlockPreToolExecution)
          |
-    [shouldBlockPreToolExecution?] -- Yes --> [THROW ERROR] --> (Error returned to LLM/Agent)
+    [shouldBlockPreToolExecution?] -- Yes --> [THROW PolicyBlockedError] --> (raw.errorCode='POLICY_BLOCKED' / raw.policyBlock returned to LLM/Agent)
          |
          No
          |
@@ -700,8 +884,11 @@ export class MyCustomPolicy extends AbstractPolicy {
 **Best Practices:**
 
 1. **Naming**: Use descriptive names ending in `Policy`
-2. **Error Messages**: The `AbstractPolicy` base class will create error messages. For custom messages, you can throw your own
-   error in the `shouldBlock...` method
+2. **Error Messages / Structured Details**: The `AbstractPolicy` base class automatically creates a `PolicyBlockedError`
+   with a prose message when `true` is returned. To attach machine-readable `details` for programmatic branching (e.g.
+   `{ recipientCount, maxRecipients }`), `throw new PolicyBlockedError(name, method, stage, description, details)` directly
+   from the `shouldBlock*` method instead of returning `true`. The built-in `MaxRecipientsPolicy` demonstrates this pattern.
+   See [Blocking with Policies](#blocking-with-policies) for the full result envelope shape and how to read it back
 3. **Specificity**: Be specific about what conditions trigger blocking
 4. **Documentation**: Clearly document what conditions will block execution
 5. **Performance**: Keep validation logic fast
