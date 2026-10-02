@@ -1,14 +1,17 @@
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import type { StructuredToolInterface } from '@langchain/core/tools';
-import { HederaMCPServer, MCP_SERVER_CONFIGS } from './mcp-configs';
+import { HederaMCPServer, MCP_SERVER_CONFIGS, type MCPServerAuthMap } from './mcp-configs';
+import { ensureMcpAuthorized } from './mcp-auth';
 
 /**
  * Loads tools from multiple MCP servers
  * @param serverNames - Array of preconfigured MCP server names
+ * @param mcpAuth - OAuth options for servers that require sign-in (e.g. the hosted Hedera Network MCP)
  * @returns Promise resolving to an array of LangChain tools from all servers
  */
 export async function loadMultipleMCPTools(
   serverNames: HederaMCPServer[],
+  mcpAuth: MCPServerAuthMap = {},
 ): Promise<StructuredToolInterface[]> {
   const mcpServers: Record<string, any> = {};
 
@@ -19,10 +22,18 @@ export async function loadMultipleMCPTools(
     }
 
     if (config.type === 'http') {
-      mcpServers[serverName] = {
-        type: 'http',
-        url: config.url,
-      };
+      const entry: Record<string, any> = { type: 'http', url: config.url };
+      if (config.auth === 'oauth') {
+        const oauth = mcpAuth[serverName];
+        if (!oauth) {
+          throw new Error(
+            `MCP server ${serverName} requires OAuth sign-in. Pass \`mcpAuth\` with an authProvider for it.`,
+          );
+        }
+        await ensureMcpAuthorized(config.url, oauth);
+        entry.authProvider = oauth.authProvider;
+      }
+      mcpServers[serverName] = entry;
     } else {
       mcpServers[serverName] = {
         type: 'stdio',

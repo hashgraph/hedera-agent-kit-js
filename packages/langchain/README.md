@@ -125,6 +125,8 @@ const mcpTools = await toolkit.getMcpTools();
 const allTools = [...toolkit.getTools(), ...mcpTools];
 ```
 
+The hosted Hedera Network MCP (`HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET`) requires an OAuth sign-in with a wallet, so it also needs `mcpAuth` (an MCP SDK `OAuthClientProvider` plus a way to receive the authorization code). See [HEDERAMCPS.md](../../docs/HEDERAMCPS.md#hedera-network-mcp-hosted-wallet-sign-in) and `examples/langchain-v1/hedera-network-mcp-agent.ts`.
+
 ## License
 
 Apache-2.0

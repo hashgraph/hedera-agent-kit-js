@@ -4,10 +4,12 @@ import { HederaAgentAPI } from '@hashgraph/hedera-agent-kit';
 import { type Configuration, ToolDiscovery } from '@hashgraph/hedera-agent-kit';
 import { Client } from '@hiero-ledger/sdk';
 import { loadMultipleMCPTools } from './hedera-mcps';
-import { HederaMCPServer } from './mcp-configs';
+import { HederaMCPServer, type MCPServerAuthMap } from './mcp-configs';
 
 type LangchainConfiguration = Configuration & {
   mcpServers?: HederaMCPServer[];
+  /** OAuth options for MCP servers that require sign-in, keyed by server. */
+  mcpAuth?: MCPServerAuthMap;
 };
 
 class HederaLangchainToolkit implements BaseToolkit {
@@ -53,7 +55,7 @@ class HederaLangchainToolkit implements BaseToolkit {
     const enabledMcps = this._configuration.mcpServers || [];
     if (enabledMcps.length === 0) return [];
 
-    return await loadMultipleMCPTools(enabledMcps);
+    return await loadMultipleMCPTools(enabledMcps, this._configuration.mcpAuth);
   }
 
   getHederaAgentKitAPI(): HederaAgentAPI {

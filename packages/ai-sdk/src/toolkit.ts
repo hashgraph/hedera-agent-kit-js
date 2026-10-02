@@ -3,10 +3,12 @@ import type { Tool, LanguageModelMiddleware } from 'ai';
 import { Client } from '@hiero-ledger/sdk';
 import HederaAgentKitTool from './tool';
 import { loadMultipleMCPTools } from './hedera-mcps';
-import { HederaMCPServer } from './mcp-configs';
+import { HederaMCPServer, type MCPServerAuthMap } from './mcp-configs';
 
 type AISdkConfiguration = Configuration & {
   mcpServers?: HederaMCPServer[];
+  /** OAuth options for MCP servers that require sign-in, keyed by server. */
+  mcpAuth?: MCPServerAuthMap;
 };
 
 class HederaAIToolkit {
@@ -41,7 +43,7 @@ class HederaAIToolkit {
     const enabledMcps = this._configuration.mcpServers || [];
     if (enabledMcps.length === 0) return {};
 
-    return await loadMultipleMCPTools(enabledMcps);
+    return await loadMultipleMCPTools(enabledMcps, this._configuration.mcpAuth);
   }
 
   middleware(): LanguageModelMiddleware {
