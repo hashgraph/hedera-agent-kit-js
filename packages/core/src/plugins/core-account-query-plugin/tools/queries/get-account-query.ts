@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { Client } from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { accountQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
@@ -39,7 +39,7 @@ Deleted: ${account.deleted},
 
 export const GET_ACCOUNT_QUERY_TOOL = 'get_account_query_tool';
 
-export class GetAccountQueryTool extends BaseTool {
+export class GetAccountQueryTool extends BaseQueryTool {
   method = GET_ACCOUNT_QUERY_TOOL;
   name = 'Get Account Query';
   description: string;
@@ -89,6 +89,6 @@ export class GetAccountQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetAccountQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetAccountQueryTool(context);
 
 export default tool;

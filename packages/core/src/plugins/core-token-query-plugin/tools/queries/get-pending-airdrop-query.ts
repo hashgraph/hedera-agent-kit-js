@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { Client } from '@hiero-ledger/sdk';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import {
   TokenAirdropsResponse,
@@ -95,7 +95,7 @@ const postProcess = (accountId: string, enrichedAirdrops: EnrichedTokenAirdrop[]
 
 export const GET_PENDING_AIRDROP_TOOL = 'get_pending_airdrop_tool';
 
-export class GetPendingAirdropQueryTool extends BaseTool {
+export class GetPendingAirdropQueryTool extends BaseQueryTool {
   method = GET_PENDING_AIRDROP_TOOL;
   name = 'Get Pending Airdrops';
   description: string;
@@ -152,6 +152,6 @@ export class GetPendingAirdropQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetPendingAirdropQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetPendingAirdropQueryTool(context);
 
 export default tool;

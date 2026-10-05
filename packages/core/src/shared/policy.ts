@@ -84,7 +84,7 @@ export abstract class AbstractPolicy extends AbstractHook {
   // Hook implementations that throw when validation fails
   /** @internal */
   public async preToolExecutionHook(params: PreToolExecutionParams, method: string): Promise<void> {
-    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    if (!this.appliesToMethod(method)) return; // break execution if this hook does not apply to the current tool
     const shouldBlock = await this.shouldBlockPreToolExecution(params, method);
     if (shouldBlock) {
       throw new Error(
@@ -98,7 +98,7 @@ export abstract class AbstractPolicy extends AbstractHook {
     params: PostParamsNormalizationParams,
     method: string,
   ): Promise<void> {
-    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    if (!this.appliesToMethod(method)) return; // break execution if this hook does not apply to the current tool
     const shouldBlock = await this.shouldBlockPostParamsNormalization(params, method);
     if (shouldBlock) {
       throw new Error(
@@ -109,7 +109,7 @@ export abstract class AbstractPolicy extends AbstractHook {
 
   /** @internal */
   public async postCoreActionHook(params: PostCoreActionParams, method: string): Promise<void> {
-    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    if (!this.appliesToMethod(method)) return; // break execution if this hook does not apply to the current tool
     const shouldBlock = await this.shouldBlockPostCoreAction(params, method);
     if (shouldBlock) {
       throw new Error(
@@ -123,7 +123,7 @@ export abstract class AbstractPolicy extends AbstractHook {
     params: PostSecondaryActionParams,
     method: string,
   ): Promise<void> {
-    if (!this.relevantTools.includes(method)) return; // break execution if this hook does not apply to the current tool
+    if (!this.appliesToMethod(method)) return; // break execution if this hook does not apply to the current tool
     const shouldBlock = await this.shouldBlockPostSecondaryAction(params, method);
     if (shouldBlock) {
       throw new Error(

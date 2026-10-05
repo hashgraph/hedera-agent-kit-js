@@ -3,7 +3,7 @@ import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { contractInfoQueryParameters } from '@/shared/parameter-schemas/evm.zod';
 import { Client } from '@hiero-ledger/sdk';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { ContractInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { untypedQueryOutputParser } from '@/shared/utils/default-tool-output-parsing';
@@ -66,7 +66,7 @@ const postProcess = (contract: ContractInfo) => {
 
 export const GET_CONTRACT_INFO_QUERY_TOOL = 'get_contract_info_query_tool';
 
-export class GetContractInfoQueryTool extends BaseTool {
+export class GetContractInfoQueryTool extends BaseQueryTool {
   method = GET_CONTRACT_INFO_QUERY_TOOL;
   name = 'Get Contract Info';
   description: string;
@@ -112,6 +112,6 @@ export class GetContractInfoQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetContractInfoQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetContractInfoQueryTool(context);
 
 export default tool;

@@ -1,14 +1,18 @@
-import { HederaAgentAPI, toUint8Array } from '@hashgraph/hedera-agent-kit';
-import { tool, Tool } from 'ai';
+import { HederaAgentAPI, toUint8Array, type ToolType } from '@hashgraph/hedera-agent-kit';
+import { tool, type Tool } from 'ai';
 import z from 'zod';
+
+/** AI SDK tool object augmented with a HAK `toolType` field for read-only filtering. */
+export type HederaAITool = Tool & { toolType?: ToolType };
 
 export default function HederaAgentKitTool(
   hederaAPI: HederaAgentAPI,
   method: string,
   description: string,
   schema: z.ZodObject<any, any>,
-): Tool {
-  return tool({
+  toolType?: ToolType,
+): HederaAITool {
+  const aiTool = tool({
     type: undefined,
     description: description,
     inputSchema: schema,
@@ -21,5 +25,7 @@ export default function HederaAgentKitTool(
       if (result?.raw?.bytes !== undefined) result.raw.bytes = toUint8Array(result.raw.bytes);
       return result;
     },
-  });
+  }) as HederaAITool;
+  aiTool.toolType = toolType;
+  return aiTool;
 }

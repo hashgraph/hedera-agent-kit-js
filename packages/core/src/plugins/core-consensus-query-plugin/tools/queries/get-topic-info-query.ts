@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
 import { Client } from '@hiero-ledger/sdk';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { TopicInfo } from '@/shared/hedera-utils/mirrornode/types';
 import { getTopicInfoParameters } from '@/shared/parameter-schemas/consensus.zod';
@@ -57,7 +57,7 @@ const postProcess = (topic: TopicInfo) => {
 
 export const GET_TOPIC_INFO_QUERY_TOOL = 'get_topic_info_query_tool';
 
-export class GetTopicInfoQueryTool extends BaseTool {
+export class GetTopicInfoQueryTool extends BaseQueryTool {
   method = GET_TOPIC_INFO_QUERY_TOOL;
   name = 'Get Topic Info';
   description: string;
@@ -104,6 +104,6 @@ export class GetTopicInfoQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetTopicInfoQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetTopicInfoQueryTool(context);
 
 export default tool;

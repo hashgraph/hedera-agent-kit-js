@@ -8,9 +8,10 @@ export { AgentMode, isReturnBytesMode, isCustomMode } from './shared/configurati
 export type { Configuration, Context } from './shared/configuration';
 export type { Plugin } from './shared/plugin';
 export { PluginRegistry } from './shared/plugin';
-export { BaseTool } from './shared/tools';
-export type { Tool } from './shared/tools';
+export { BaseTool, TOOL_TYPE } from './shared/tools';
+export type { Tool, ToolType } from './shared/tools';
 export { BaseTransactionTool } from './shared/base-transaction-tool';
+export { BaseQueryTool } from './shared/base-query-tool';
 export { ToolDiscovery } from './shared/tool-discovery';
 export { default as HederaBuilder } from './shared/hedera-utils/hedera-builder';
 export { AbstractPolicy } from './shared/policy';

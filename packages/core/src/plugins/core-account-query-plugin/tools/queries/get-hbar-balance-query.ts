@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Context } from '@/shared/configuration';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { Client } from '@hiero-ledger/sdk';
 import { accountBalanceQueryParameters } from '@/shared/parameter-schemas/account.zod';
 import BigNumber from 'bignumber.js';
@@ -32,7 +32,7 @@ const postProcess = (hbarBalance: string, accountId: string) => {
 
 export const GET_HBAR_BALANCE_QUERY_TOOL = 'get_hbar_balance_query_tool';
 
-export class GetHbarBalanceQueryTool extends BaseTool {
+export class GetHbarBalanceQueryTool extends BaseQueryTool {
   method = GET_HBAR_BALANCE_QUERY_TOOL;
   name = 'Get HBAR Balance';
   description: string;
@@ -73,6 +73,6 @@ export class GetHbarBalanceQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetHbarBalanceQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetHbarBalanceQueryTool(context);
 
 export default tool;

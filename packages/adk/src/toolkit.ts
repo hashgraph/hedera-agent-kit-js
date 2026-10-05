@@ -5,14 +5,14 @@ import {
   type Tool,
 } from '@hashgraph/hedera-agent-kit';
 import { Client } from '@hiero-ledger/sdk';
-import HederaAgentKitTool from './tool';
-import type { BaseTool, ToolInputParameters } from '@google/adk';
+import HederaAgentKitTool, { type HederaADKTool } from './tool';
+import type { ToolInputParameters } from '@google/adk';
 
 class HederaADKToolkit {
   private hedera: HederaAgentAPI;
   private configuration: Configuration;
 
-  tools: { [key: string]: BaseTool };
+  tools: { [key: string]: HederaADKTool };
 
   constructor({ client, configuration }: { client: Client; configuration: Configuration }) {
     this.configuration = configuration;
@@ -28,11 +28,12 @@ class HederaADKToolkit {
         tool.method,
         tool.description,
         tool.parameters as unknown as ToolInputParameters,
+        tool.toolType,
       );
     });
   }
 
-  getTools(): BaseTool[] {
+  getTools(): HederaADKTool[] {
     return Object.values(this.tools);
   }
 }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Client } from '@hiero-ledger/sdk';
 import { Context } from '@/shared/configuration';
 import { getMirrornodeService } from '@/shared/hedera-utils/mirrornode/hedera-mirrornode-utils';
-import { BaseTool } from '@/shared/tools';
+import { BaseQueryTool } from '@/shared/base-query-tool';
 import { PromptGenerator } from '@/shared/utils/prompt-generator';
 import { ExchangeRateResponse } from '@/shared/hedera-utils/mirrornode/types';
 import { exchangeRateQueryParameters } from '@/shared/parameter-schemas/core-misc.zod';
@@ -49,7 +49,7 @@ const postProcess = (rates: ExchangeRateResponse) => {
 
 export const GET_EXCHANGE_RATE_TOOL = 'get_exchange_rate_tool';
 
-export class GetExchangeRateQueryTool extends BaseTool {
+export class GetExchangeRateQueryTool extends BaseQueryTool {
   method = GET_EXCHANGE_RATE_TOOL;
   name = 'Get Exchange Rate';
   description: string;
@@ -94,6 +94,6 @@ export class GetExchangeRateQueryTool extends BaseTool {
   }
 }
 
-const tool = (context: Context): BaseTool => new GetExchangeRateQueryTool(context);
+const tool = (context: Context): BaseQueryTool => new GetExchangeRateQueryTool(context);
 
 export default tool;

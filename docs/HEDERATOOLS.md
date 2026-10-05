@@ -4,6 +4,50 @@ This document provides detailed parameter specifications and example prompts for
 
 For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAPLUGINS.md).
 
+## Tool types
+
+Every tool exposes a `toolType` field that classifies its intent:
+
+| `toolType`      | Base class              | Meaning                                                                 |
+|-----------------|-------------------------|-------------------------------------------------------------------------|
+| `'query'`       | `BaseQueryTool`         | Read-only — fetches data from the mirror node or network.               |
+| `'transaction'` | `BaseTransactionTool`   | State-mutating — builds and (depending on `AgentMode`) submits a Hedera transaction. |
+| `'other'`       | `BaseTool` (direct)     | Custom tool that does not fit either category; default for tools that extend `BaseTool` directly. |
+
+Use `TOOL_TYPE` constants for safe comparisons. The most common use-case is building a **read-only agent** that can never submit transactions.
+
+For adapters whose `getTools()` returns an **array** (LangChain, ADK, ElizaOS):
+
+```ts
+import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
+
+// Only hand query tools to the LLM — no transaction tools included.
+const readOnlyTools = toolkit.getTools().filter(t => t.toolType === TOOL_TYPE.QUERY);
+```
+
+For the **AI SDK** adapter, `getTools()` returns a keyed record — filter with `Object.entries`:
+
+```ts
+import { TOOL_TYPE } from '@hashgraph/hedera-agent-kit';
+
+const allTools = toolkit.getTools();
+const readOnlyTools = Object.fromEntries(
+  Object.entries(allTools).filter(([, t]) => t.toolType === TOOL_TYPE.QUERY),
+);
+```
+
+`toolType` is also included in the `ToolSummary` returned by `HederaAgentAPI.listTools()`:
+
+```ts
+const summary = api.listTools(); // ToolSummary[]
+const queryOnly = summary.filter(s => s.toolType === TOOL_TYPE.QUERY);
+```
+
+> [!NOTE]
+> The **MCP** adapter is the exception. `HederaMCPToolkit` keeps its `HederaAgentAPI` private and
+> registers tools without type metadata, so neither the MCP server wrapper nor an MCP client can
+> filter by `toolType`.
+
 ---
 
 ## Table of Contents
@@ -70,6 +114,7 @@ For a high-level overview of available plugins, see [HEDERAPLUGINS.md](./HEDERAP
 ### TRANSFER_HBAR_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfer HBAR between accounts. Supports scheduled transactions.
 
@@ -105,6 +150,7 @@ Send 0.5 HBAR to account 0.0.2222. Schedule it and make it expire 01.02.2026 and
 ### CREATE_ACCOUNT_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Creates a new Hedera account. Supports scheduled transactions.
 
@@ -143,6 +189,7 @@ Schedule creation of an account with max automatic token associations 10. Make i
 ### UPDATE_ACCOUNT_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Update an account's metadata. Supports scheduled transactions.
 
@@ -174,6 +221,7 @@ Schedule an account update for account 0.0.1234. Set the account memo to "update
 ### DELETE_ACCOUNT_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Delete an account and transfer its assets.
 
@@ -196,6 +244,7 @@ Delete account 0.0.12345 and transfer funds to 0.0.67890
 ### APPROVE_HBAR_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Approve an HBAR spending allowance for a spender account.
 
@@ -220,6 +269,7 @@ Allow account 0.0.12345 to spend up to 10 HBAR from my account
 ### DELETE_HBAR_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Delete an HBAR allowance from an owner to a spender.
 
@@ -243,6 +293,7 @@ Delete HBAR allowance for 0.0.123
 ### TRANSFER_HBAR_WITH_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfer HBAR using an existing allowance. Supports scheduled transactions.
 
@@ -272,6 +323,7 @@ Transfer 1 HBAR from 0.0.123 to 0.0.456 using allowance. Schedule this transacti
 ### SIGN_SCHEDULE_TRANSACTION_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Sign a scheduled transaction on the Hedera network.
 
@@ -293,6 +345,7 @@ Add my signature to schedule 0.0.12345
 ### SCHEDULE_DELETE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Delete a scheduled transaction so it will not execute.
 
@@ -316,6 +369,7 @@ Cancel schedule 0.0.12345
 ### GET_ACCOUNT_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns comprehensive account information for a given Hedera account.
 
@@ -349,6 +403,7 @@ Show me details about account 0.0.12345
 ### GET_HBAR_BALANCE_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns the HBAR balance for a given Hedera account.
 
@@ -372,6 +427,7 @@ Get my HBAR balance
 ### GET_ACCOUNT_TOKEN_BALANCES_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns token balances for a Hedera account.
 
@@ -397,6 +453,7 @@ Show balance of token 0.0.11111 for account 0.0.12345
 ### CREATE_TOPIC_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Create a new topic on the Hedera network. Supports scheduled transactions.
 
@@ -431,6 +488,7 @@ Schedule create topic transaction with memo "Scheduled Topic". Make it expire 01
 ### SUBMIT_TOPIC_MESSAGE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Submit a message to a topic on the Hedera network. Supports scheduled transactions.
 
@@ -460,6 +518,7 @@ Submit message "Hello World" to topic 0.0.12345. Schedule it and make it expire 
 ### DELETE_TOPIC_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Delete a topic on the Hedera network.
 
@@ -480,6 +539,7 @@ Delete topic 0.0.12345
 ### UPDATE_TOPIC_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Update a topic on the Hedera network.
 
@@ -510,6 +570,7 @@ Set my key as admin key for topic 0.0.12345
 ### GET_TOPIC_INFO_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns information for a given Hedera Consensus Service (HCS) topic.
 
@@ -531,6 +592,7 @@ Show me details about topic 0.0.12345
 ### GET_TOPIC_MESSAGES_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns messages for a given Hedera Consensus Service (HCS) topic.
 
@@ -558,6 +620,7 @@ Get messages from topic 0.0.12345 after 2024-01-01
 ### CREATE_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Creates a fungible token on Hedera. Supports scheduled transactions.
 
@@ -595,6 +658,7 @@ Schedule create fungible token transaction called MyToken with symbol MTK. Make 
 ### CREATE_NON_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Creates a non-fungible token (NFT) on Hedera. Supports scheduled transactions.
 
@@ -629,6 +693,7 @@ Schedule create non-fungible token transaction called MyToken with symbol MTK. M
 ### MINT_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Mints additional supply of an existing fungible token. Supports scheduled transactions.
 
@@ -657,6 +722,7 @@ Schedule mint 10 of token 0.0.12345. Make it expire 01.02.2026 and wait for its 
 ### MINT_NON_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Mints NFTs with unique metadata for an existing NFT class. Supports scheduled transactions.
 
@@ -686,6 +752,7 @@ Schedule Mint 0.0.5005 with metadata: ipfs://bafyreiao6ajgsfji6qsgbqwdtjdu5gmul7
 ### ASSOCIATE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Associates one or more tokens with an account.
 
@@ -708,6 +775,7 @@ Associate tokens 0.0.123 and 0.0.456 to account 0.0.789
 ### DISSOCIATE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Dissociates one or more tokens from an account.
 
@@ -731,6 +799,7 @@ Dissociate tokens 0.0.123 and 0.0.456 from account 0.0.789
 ### UPDATE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Update token metadata.
 
@@ -767,6 +836,7 @@ Update token 0.0.12345 with new memo "Updated token"
 ### AIRDROP_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Airdrops a fungible token to multiple recipients.
 
@@ -792,6 +862,7 @@ Airdrop 15 HTS tokens 0.0.7777 to 0.0.3001 and 0.0.3002 from 0.0.1500
 ### APPROVE_TOKEN_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Approve fungible token spending allowances.
 
@@ -816,6 +887,7 @@ Allow 0.0.67890 to spend 50 of my token 0.0.12345
 ### DELETE_TOKEN_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Delete fungible token allowance(s).
 
@@ -840,6 +912,7 @@ Remove allowance for spender 0.0.123 on tokens 0.0.456 and 0.0.789
 ### TRANSFER_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers a fungible token directly from the sender's own account (no allowance required). Supports scheduled transactions.
 
@@ -875,6 +948,7 @@ Transfer 50 of token 0.0.12345 to account 0.0.67890. Schedule this transaction a
 ### TRANSFER_FUNGIBLE_TOKEN_WITH_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers a fungible token using an existing token allowance. Supports scheduled transactions.
 
@@ -905,6 +979,7 @@ Transfer 100 of fungible token '0.0.33333' from 0.0.1002 to 0.0.2002 using allow
 ### APPROVE_NFT_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Approves an NFT allowance for specific serials or all serials.
 
@@ -934,6 +1009,7 @@ Grant approval for the entire collection token 0.0.1010 to account 0.0.2020
 ### DELETE_NFT_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Deletes NFT allowance(s) for specific serial numbers.
 
@@ -960,6 +1036,7 @@ Delete allowance for NFT token 0.0.1234 serials 10 and 12 with memo "cleanup"
 ### TRANSFER_NON_FUNGIBLE_TOKEN_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers NFTs from the operator's account to specified recipients. Supports scheduled transactions.
 
@@ -990,6 +1067,7 @@ Transfer NFT 0.0.12345 serial 1 to 0.0.222. Schedule this transaction and make i
 ### TRANSFER_NFT_WITH_ALLOWANCE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers NFTs using an existing token allowance.
 
@@ -1016,6 +1094,7 @@ Use allowance to send serials 1 and 2 of NFT 0.0.12345 from 0.0.111 to 0.0.222
 ### GET_TOKEN_INFO_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns details of a given token (HTS).
 
@@ -1038,6 +1117,7 @@ Show me details about token 0.0.12345
 ### GET_PENDING_AIRDROP_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns pending airdrops for a Hedera account.
 
@@ -1061,6 +1141,7 @@ Show pending airdrops for account 0.0.12345
 ### CREATE_ERC20_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Deploys a new ERC-20 token via the BaseERC20Factory. Supports scheduled transactions.
 
@@ -1091,6 +1172,7 @@ Schedule deploy ERC20 token called MyCoin with symbol MC, 500 initial supply, an
 ### TRANSFER_ERC20_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers an ERC-20 token. Supports scheduled transactions.
 
@@ -1123,6 +1205,7 @@ Schedule transfer 100 0.0.5678 ERC20 tokens from contract to 0x12345678901234567
 ### CREATE_ERC721_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Deploys a new ERC-721 token via the BaseERC721Factory. Supports scheduled transactions.
 
@@ -1152,6 +1235,7 @@ Schedule deploy ERC721 token called MyNFT with symbol MNFT. Make it expire 01.02
 ### MINT_ERC721_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Mints a new ERC-721 token. Supports scheduled transactions.
 
@@ -1180,6 +1264,7 @@ Schedule mint ERC721 token 0.0.5678 to 0x123456789012345678901234567890123456789
 ### TRANSFER_ERC721_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `transaction`
 
 Transfers an ERC-721 token. Supports scheduled transactions.
 
@@ -1212,6 +1297,7 @@ Schedule transfer ERC721 token 1 from contract 0.0.5678 from 0.0.1234 to 0x12345
 ### GET_CONTRACT_INFO_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns details of a given smart contract.
 
@@ -1236,6 +1322,7 @@ What is the EVM address of contract 0.0.12345?
 ### GET_TRANSACTION_RECORD_QUERY_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns details for a given transaction ID.
 
@@ -1260,6 +1347,7 @@ Show me details about transaction 0.0.12345@1234567890.123456789
 ### GET_EXCHANGE_RATE_TOOL
 
 **Supports Hooks & Policies**: ✅ Yes
+**Tool type**: `query`
 
 Returns the Hedera network HBAR exchange rate.
 
