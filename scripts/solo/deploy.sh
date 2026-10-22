@@ -11,4 +11,6 @@ export SOLO_CLUSTER_SETUP_NAMESPACE="${SOLO_CLUSTER_SETUP_NAMESPACE:-solo-cluste
 export SOLO_DEPLOYMENT="${SOLO_DEPLOYMENT:-solo-deployment}"
 
 echo "Deploying Solo single-node network (cluster=${SOLO_CLUSTER_NAME}, namespace=${SOLO_NAMESPACE})..."
-solo one-shot single deploy
+# Pass the namespace explicitly: inside a CI runner pod Solo otherwise defaults to
+# the runner's namespace, and long names break in-cluster DNS (63-char label limit).
+solo one-shot single deploy --namespace "${SOLO_NAMESPACE}"
