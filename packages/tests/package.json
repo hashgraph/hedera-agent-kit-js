@@ -9,7 +9,7 @@
     "test:e2e": "echo 'E2E tests moved to packages/langchain'"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "devDependencies": {
     "@hashgraph/hedera-agent-kit": "workspace:*",
