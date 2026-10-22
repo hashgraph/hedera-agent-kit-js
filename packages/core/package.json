@@ -63,7 +63,7 @@
     "test:e2e": "echo 'No e2e tests for @hashgraph/hedera-agent-kit (core)'"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "author": "Hashgraph",
   "license": "Apache-2.0",

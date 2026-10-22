@@ -14,7 +14,7 @@
     "prettier-check": "prettier './**/*.{js,ts,md,html,css}' --check"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "dependencies": {
     "@hiero-ledger/sdk": "2.86.2",
