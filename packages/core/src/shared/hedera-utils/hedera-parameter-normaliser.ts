@@ -68,6 +68,7 @@ import {
   Client,
   Hbar,
   HbarAllowance,
+  KeyList,
   Long,
   NftId,
   PublicKey,
@@ -939,6 +940,27 @@ export default class HederaParameterNormaliser {
     };
   };
 
+  /**
+   * Builds the `Key` for a multi-signature account.
+   *
+   * With a threshold the resulting `KeyList` is an m-of-n key: any `threshold`
+   * of the supplied keys can authorise a transaction. Without one every key in
+   * the list must sign. Returns `undefined` when no keys are supplied, so the
+   * caller falls through to single-key resolution.
+   */
+  static buildMultiSigKey(publicKeys?: string[], threshold?: number): KeyList | undefined {
+    if (!publicKeys?.length) {
+      return undefined;
+    }
+    if (threshold !== undefined && (threshold < 1 || threshold > publicKeys.length)) {
+      throw new Error(
+        `Invalid threshold ${threshold}: must be between 1 and the number of public keys (${publicKeys.length}).`,
+      );
+    }
+    const keys = publicKeys.map(key => PublicKey.fromString(key));
+    return threshold === undefined ? new KeyList(keys) : new KeyList(keys, threshold);
+  }
+
   static async normaliseCreateAccount(
     params: z.infer<ReturnType<typeof createAccountParameters>>,
     context: Context,
@@ -948,10 +970,16 @@ export default class HederaParameterNormaliser {
     const parsedParams: z.infer<ReturnType<typeof createAccountParameters>> =
       this.parseParamsWithSchema(params, createAccountParameters, context);
 
-    // Try resolving the publicKey in priority order
-    let publicKey = parsedParams.publicKey ?? client.operatorPublicKey?.toStringDer();
+    // A multi-signature account is described by publicKeys (+ optional threshold)
+    // and short-circuits the single-key resolution below.
+    const multiSigKey = this.buildMultiSigKey(parsedParams.publicKeys, parsedParams.threshold);
 
-    if (!publicKey) {
+    // Try resolving the publicKey in priority order
+    let publicKey = multiSigKey
+      ? undefined
+      : (parsedParams.publicKey ?? client.operatorPublicKey?.toStringDer());
+
+    if (!multiSigKey && !publicKey) {
       const defaultAccountId = AccountResolver.getDefaultAccount(context, client);
       if (defaultAccountId) {
         const account = await mirrorNode.getAccount(defaultAccountId);
@@ -959,7 +987,7 @@ export default class HederaParameterNormaliser {
       }
     }
 
-    if (!publicKey) {
+    if (!multiSigKey && !publicKey) {
       throw new Error(
         'Unable to resolve public key: no param, mirror node, or client operator key available.',
       );
@@ -974,7 +1002,7 @@ export default class HederaParameterNormaliser {
     return {
       ...parsedParams,
       schedulingParams,
-      key: PublicKey.fromString(publicKey),
+      key: multiSigKey ?? PublicKey.fromString(publicKey!),
     };
   }
 

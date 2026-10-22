@@ -49,7 +49,24 @@ export const createAccountParameters = (_context: Context = {}) =>
     publicKey: z
       .string()
       .optional()
-      .describe('Account public key. If not provided, the operator’s public key will be used.'),
+      .describe(
+        'Account public key for a single-signature account. If neither this nor publicKeys is provided, the operator’s public key will be used.',
+      ),
+    publicKeys: z
+      .array(z.string())
+      .min(1)
+      .optional()
+      .describe(
+        'Public keys for a multi-signature account. Takes precedence over publicKey. Without a threshold every key must sign; with one, any `threshold` of them suffices.',
+      ),
+    threshold: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe(
+        'Number of keys from publicKeys required to sign (m-of-n). Omit to require all of them. Ignored unless publicKeys is provided.',
+      ),
     accountMemo: z.string().optional().describe('Optional memo for the account.'),
     initialBalance: z
       .number()
