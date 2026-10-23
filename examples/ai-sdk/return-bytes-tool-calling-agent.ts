@@ -70,7 +70,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const model = wrapLanguageModel({
-    model: openai('gpt-4o'),
+    model: openai('gpt-5.4-nano'),
     middleware: hederaAgentToolkit.middleware(),
   });
 

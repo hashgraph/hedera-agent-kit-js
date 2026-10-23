@@ -391,6 +391,22 @@ These agents connect to the configured MCP servers (defined in your code) and al
 
 > If using `HederaMCPServer.HGRAPH_MCP_MAINNET`, ensure you have set the `HGRAPH_API_KEY` in your `.env` file. See [docs.hgraph.com](https://docs.hgraph.com/mcp-server/setup-claude) for details.
 
+#### Hosted Hedera Network MCP (wallet sign-in)
+
+The hosted Hedera Network MCP (testnet) needs an OAuth sign-in with a wallet (HashPack, Kabila, ... via WalletConnect) and does not use `ACCOUNT_ID` / `PRIVATE_KEY`; only `OPENAI_API_KEY` is required. Transactions are approved in your wallet, and the agent calls `check_signing_status` when you ask for the result. See [HEDERAMCPS.md](./HEDERAMCPS.md#hedera-network-mcp-hosted-wallet-sign-in).
+
+**Found at:**
+- `examples/langchain-v1/hedera-network-mcp-agent.ts`
+- `examples/ai-sdk/hedera-network-mcp-agent.ts`
+
+```bash
+cd examples/langchain-v1   # or examples/ai-sdk
+npm install
+npm run langchain:hedera-network-mcp-agent   # or: npm run ai-sdk:hedera-network-mcp-agent
+```
+
+A browser tab opens with the Hedera sign-in page; pair your wallet and approve the sign-in message. Then try "What's my HBAR balance?" (no wallet prompt) or "Send 1 HBAR to 0.0.98765" (approve in your wallet).
+
 ### Option H: Run the Policy Enforcement Agent
 
 This example demonstrates how to use the **MaxRecipientsPolicy** to enforce rules on transactions. In this case, it restricts any HBAR transfer to a maximum of 2 recipients.
