@@ -30,12 +30,21 @@ describe('reject tool policy integration tests', () => {
     const tool = getHbarBalanceTool(context);
     const params = { accountId: profile.operator.accountId.toString() };
 
-    await expect(tool.execute(operatorClient, context, params)).resolves.toEqual({
-      raw: {
-        error: `Failed to execute Get HBAR Balance: Action ${GET_HBAR_BALANCE_QUERY_TOOL} blocked by policy: Reject Tool Call (Stops agent from calling predefined tools)`,
-        status: 'ERROR',
-      },
-      humanMessage: `Failed to execute Get HBAR Balance: Action ${GET_HBAR_BALANCE_QUERY_TOOL} blocked by policy: Reject Tool Call (Stops agent from calling predefined tools)`,
+    const result = await tool.execute(operatorClient, context, params);
+
+    // Prose message is preserved for the LLM loop
+    const expectedMessage = `Failed to execute Get HBAR Balance: Action ${GET_HBAR_BALANCE_QUERY_TOOL} blocked by policy: Reject Tool Call (Stops agent from calling predefined tools)`;
+    expect(result.raw.error).toBe(expectedMessage);
+    expect(result.raw.status).toBe('ERROR');
+    expect(result.raw.errorCode).toBe('POLICY_BLOCKED');
+    expect(result.humanMessage).toBe(expectedMessage);
+
+    // Structured policy block info for programmatic loops
+    expect(result.raw.policyBlock).toMatchObject({
+      code: 'POLICY_BLOCKED',
+      policyName: 'Reject Tool Call',
+      toolMethod: GET_HBAR_BALANCE_QUERY_TOOL,
+      stage: 'pre_tool_execution',
     });
   });
 
