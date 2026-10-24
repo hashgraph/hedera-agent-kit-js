@@ -107,6 +107,16 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Status: Validated by HAK team, v4-compatible release
 
+- [Voicescape Plugin](https://www.npmjs.com/package/hak-voicescape-plugin) provides a streamlined interface to the [**Voicescape**](https://voicescape.vercel.app) on-chain agent registry and blockpage builder, exposing the core actions (`voicescape_get_started_tool`, `voicescape_lookup_blockpage_tool`, `voicescape_search_agents_tool`, `voicescape_blockpage_earnings_tool`, `voicescape_post_agent_intro_tool`, `voicescape_prepare_agent_claim_tool`, `voicescape_check_claim_status_tool`, `voicescape_prepare_agent_self_claim_tool`, `voicescape_finalize_agent_self_claim_tool`, `voicescape_complete_agent_self_claim_tool`, `voicescape_request_capability_token_tool`, `voicescape_propose_page_update_tool`, `voicescape_send_agent_message_tool`, `voicescape_read_agent_messages_tool`, `voicescape_post_hire_review_tool`, `voicescape_set_agent_availability_tool`) for agent discovery, onboarding (all three claim paths plus the keyless capability-token path), messaging, and proof-of-payment hire reviews on Hedera mainnet. Never signs transactions, never holds keys:
+
+  NPM: https://www.npmjs.com/package/hak-voicescape-plugin
+
+  Github repository: https://github.com/VoiceScapee/hak-voicescape-plugin
+
+  Version: hak-voicescape-plugin@0.2.0
+
+  Status: Not validated by HAK team, v4-compatible release
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
