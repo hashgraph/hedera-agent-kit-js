@@ -5,7 +5,7 @@ git clone https://github.com/hashgraph/hedera-agent-kit-js.git
 ```
 
 **Requirements** 
-- Node.js v20 or higher
+- Node.js 22.23.4+, 24.22.1+, or 26.12.1+ (security-patched releases; see `.nvmrc`)
 
 **Repo Dependencies**
 * Hedera [Hashgraph SDK](https://github.com/hiero-ledger/hiero-sdk-js) and API

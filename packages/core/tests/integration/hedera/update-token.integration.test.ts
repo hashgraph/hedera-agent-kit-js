@@ -177,10 +177,10 @@ describe('Update Token Integration Tests', () => {
     const result: any = await tool.execute(executorClient, context, params);
 
     expect(result.humanMessage).toContain(
-      'Invalid parameters: Field "tokenName" - String must contain at most 100 character(s)',
+      'Invalid parameters: Field "tokenName" - Too big: expected string to have <=100 characters',
     );
     expect(result.raw.error).toContain(
-      'Invalid parameters: Field "tokenName" - String must contain at most 100 character(s)',
+      'Invalid parameters: Field "tokenName" - Too big: expected string to have <=100 characters',
     );
   });
 
@@ -249,9 +249,7 @@ describe('Update Token Integration Tests', () => {
     expect(result.raw.transactionId).toBeDefined();
 
     const updatedInfo = await executorWrapper.getTopicInfo(topicId.toString());
-    expect(updatedInfo?.autoRenewAccountId?.toString()).toBe(
-      executor.accountId.toString(),
-    );
+    expect(updatedInfo?.autoRenewAccountId?.toString()).toBe(executor.accountId.toString());
     expect(updatedInfo?.autoRenewPeriod?.seconds.toString()).toBe(newAutoRenewPeriod.toString());
 
     const expirationTimeMillis =
@@ -275,7 +273,9 @@ describe('Update Token Integration Tests', () => {
     const params = { topicId: topicId.toString(), submitKey: true };
 
     const result: any = await tool.execute(executorClient, context, params);
-    expect(result.humanMessage).toContain('Failed to execute Update Topic: Cannot update submitKey');
+    expect(result.humanMessage).toContain(
+      'Failed to execute Update Topic: Cannot update submitKey',
+    );
   });
 
   it('fails with invalid topic ID', async () => {

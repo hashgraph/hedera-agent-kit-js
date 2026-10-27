@@ -226,7 +226,9 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "contractId" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "contractId" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when toAddress is missing', async () => {
@@ -245,7 +247,9 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "toAddress" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "toAddress" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when tokenId is missing', async () => {
@@ -264,7 +268,9 @@ describe('HederaParameterNormaliser.normaliseTransferERC721Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "tokenId" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "tokenId" - Invalid input: expected number, received undefined/,
+      );
     });
 
     it('throws when tokenId is not a number', async () => {

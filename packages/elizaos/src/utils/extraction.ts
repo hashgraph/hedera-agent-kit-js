@@ -1,5 +1,5 @@
 import type { Tool } from '@hashgraph/hedera-agent-kit';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { z } from 'zod';
 
 /**
  * Generates an extraction template based on the tool description, params and zod schema.
@@ -9,7 +9,8 @@ export function generateExtractionTemplate(tool: Tool): string {
   const zodSchema = tool.parameters; // Zod Schema of the tool parameters, used for generating JSON schema for extraction response
   const description = tool.description; // description of the tool, used for generating a list of required/optional params
   const actionName = tool.name;
-  const toolParamsJSONSchema = zodToJsonSchema(zodSchema, actionName); // JSON schema created based on the tool's params
+  // JSON schema created based on the tool's params; `io: 'input'` describes what the LLM must supply
+  const toolParamsJSONSchema = { title: actionName, ...z.toJSONSchema(zodSchema, { io: 'input' }) };
 
   return `Given the recent messages and Hedera wallet information below:
 {{recentMessages}}

@@ -94,16 +94,26 @@ describe('HederaParameterNormaliser.normaliseUpdateTopic', () => {
     expect(res.expirationTime).toBeUndefined();
   });
 
-  it('normalises expirationTime if provided as Date', async () => {
-    const expiration = new Date('2025-12-25T12:00:00Z');
+  it('normalises an ISO expirationTime with a UTC offset to a Date', async () => {
     const params: z.infer<ReturnType<typeof updateTopicParameters>> = {
       topicId: '0.0.1010',
-      expirationTime: expiration,
+      expirationTime: '2025-12-25T14:00:00+02:00',
     };
 
     const res = await HederaParameterNormaliser.normaliseUpdateTopic(params, context, client);
 
     expect(res.expirationTime).toBeInstanceOf(Date);
-    expect(res.expirationTime!.toISOString()).toBe(expiration.toISOString());
+    expect(res.expirationTime!.toISOString()).toBe('2025-12-25T12:00:00.000Z');
+  });
+
+  it('rejects a Date expirationTime: the LLM-facing schema accepts ISO strings only', async () => {
+    const params = {
+      topicId: '0.0.1010',
+      expirationTime: new Date('2025-12-25T12:00:00Z'),
+    } as unknown as z.infer<ReturnType<typeof updateTopicParameters>>;
+
+    await expect(
+      HederaParameterNormaliser.normaliseUpdateTopic(params, context, client),
+    ).rejects.toThrow(/Field "expirationTime" - Invalid input: expected string, received Date/);
   });
 });

@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const AgentRequestSchema = z.object({
     prompt: z.string().min(1).optional(),
     tool: z.string().optional(),
-    params: z.record(z.any()).optional(),
+    params: z.record(z.string(), z.any()).optional(),
 });
 
 export const AgentErrorSchema = z.object({

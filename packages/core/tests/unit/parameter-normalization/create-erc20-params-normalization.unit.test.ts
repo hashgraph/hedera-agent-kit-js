@@ -165,7 +165,9 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           context,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "tokenName" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when tokenSymbol is missing', async () => {
@@ -180,7 +182,9 @@ describe('HederaParameterNormaliser.normaliseCreateERC20Params', () => {
           context,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "tokenSymbol" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "tokenSymbol" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when decimals is not a number', async () => {

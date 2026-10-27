@@ -206,10 +206,10 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain(
-        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.error).toContain(
-        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.status).toBeDefined();
     });
@@ -222,8 +222,12 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Invalid parameters: Field "tokenName" - Required');
-      expect(result.raw.error).toContain('Invalid parameters: Field "tokenName" - Required');
+      expect(result.humanMessage).toContain(
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined',
+      );
+      expect(result.raw.error).toContain(
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined',
+      );
       expect(result.raw.status).toBeDefined();
     });
 
@@ -235,8 +239,12 @@ describe('Create Non-Fungible Token Integration Tests', () => {
       const tool = createNonFungibleTokenTool(context);
       const result: any = await tool.execute(executorClient, context, params);
 
-      expect(result.humanMessage).toContain('Invalid parameters: Field "tokenSymbol" - Required');
-      expect(result.raw.error).toContain('Invalid parameters: Field "tokenSymbol" - Required');
+      expect(result.humanMessage).toContain(
+        'Invalid parameters: Field "tokenSymbol" - Invalid input: expected string, received undefined',
+      );
+      expect(result.raw.error).toContain(
+        'Invalid parameters: Field "tokenSymbol" - Invalid input: expected string, received undefined',
+      );
       expect(result.raw.status).toBeDefined();
     });
   });

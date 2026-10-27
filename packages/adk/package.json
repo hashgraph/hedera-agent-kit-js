@@ -48,14 +48,14 @@
     "@hashgraph/hedera-agent-kit": "workspace:*"
   },
   "peerDependencies": {
-    "@google/adk": "^1.4.0",
+    "@google/adk": "^1.4.0 || ^2.3.0",
     "@hiero-ledger/sdk": "^2.86.2"
   },
   "devDependencies": {
-    "@google/adk": "1.4.0",
-    "@hiero-ledger/sdk": "2.86.2",
+    "@google/adk": "2.3.0",
+    "@hiero-ledger/sdk": "2.90.1",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   }
 }
