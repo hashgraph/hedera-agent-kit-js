@@ -227,7 +227,7 @@ describe('HederaParameterNormaliser.normaliseTransferFungibleToken', () => {
           mockClient,
           mockMirrornode,
         ),
-      ).rejects.toThrow(/Number must be greater than or equal to 0/i);
+      ).rejects.toThrow(/Too small: expected number to be >=0/);
     });
   });
 

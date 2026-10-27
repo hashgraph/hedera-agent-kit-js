@@ -49,18 +49,17 @@
   ],
   "dependencies": {
     "@hashgraph/hedera-agent-kit": "workspace:*",
-    "zod": "3.25.76",
-    "zod-to-json-schema": "3.24.6"
+    "zod": "4.6.7"
   },
   "peerDependencies": {
     "@elizaos/core": "^1.7.2",
-    "@hiero-ledger/sdk": "^2.86.2"
+    "@hiero-ledger/sdk": "^2.90.1"
   },
   "devDependencies": {
     "@elizaos/core": "1.7.2",
-    "@hiero-ledger/sdk": "2.86.2",
+    "@hiero-ledger/sdk": "2.90.1",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   }
 }

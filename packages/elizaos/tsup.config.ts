@@ -22,6 +22,6 @@ export default defineConfig([
     bundle: true,
     external: ['@hiero-ledger/sdk', '@hashgraph/hedera-agent-kit'],
     noExternal: ['@elizaos/core'],
-    target: 'node16',
+    target: 'node22',
   },
 ]);

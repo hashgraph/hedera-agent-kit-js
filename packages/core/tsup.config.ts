@@ -34,7 +34,7 @@ export default defineConfig([
     clean: true,
     bundle: true,
     external: ['@hiero-ledger/sdk'],
-    target: 'node16',
+    target: 'node22',
     esbuildOptions(options) {
       options.alias = srcAlias;
     },

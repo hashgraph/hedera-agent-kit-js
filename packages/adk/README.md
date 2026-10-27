@@ -12,6 +12,8 @@ Google Agent Development Kit (ADK) integration for Hedera Agent Kit. Wraps Heder
 npm install @hashgraph/hedera-agent-kit-adk @hashgraph/hedera-agent-kit @hiero-ledger/sdk @google/adk dotenv
 ```
 
+Supports `@google/adk` 1.4+ and 2.3+. The toolkit only uses the tool API, which is the same in both majors. CI tests against 2.x, so 2.x is recommended.
+
 ### 2. Configure environment variables
 
 Create a `.env` file:

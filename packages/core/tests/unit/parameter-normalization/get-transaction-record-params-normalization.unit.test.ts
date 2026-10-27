@@ -47,7 +47,9 @@ describe('HederaParameterNormaliser.normaliseGetTransactionRecordParams', () => 
 
     expect(() =>
       HederaParameterNormaliser.normaliseGetTransactionRecordParams(params, context),
-    ).toThrow('Invalid parameters: Field "transactionId" - Required');
+    ).toThrow(
+      'Invalid parameters: Field "transactionId" - Invalid input: expected string, received undefined',
+    );
   });
 
   it('throws an error if transactionId format is invalid', () => {

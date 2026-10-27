@@ -116,10 +116,12 @@ export const updateTopicParameters = (_context: Context = {}) =>
       .optional()
       .describe('Account to automatically pay for topic renewal (Hedera account ID).'),
     autoRenewPeriod: z.number().optional().describe('Auto renew period in seconds.'),
+    // LLM-facing schemas must be JSON-Schema representable (no Date/instanceof/transforms);
+    // the Date conversion happens in the normaliser (see updateTopicParametersNormalised).
     expirationTime: z
-      .union([z.string(), z.instanceof(Date)])
+      .string()
       .optional()
-      .describe('New expiration time for the topic (ISO string or Date).'),
+      .describe('New expiration time for the topic (ISO 8601 string).'),
   });
 
 export const updateTopicParametersNormalised = (_context: Context = {}) =>
