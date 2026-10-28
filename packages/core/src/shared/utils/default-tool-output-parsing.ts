@@ -1,3 +1,5 @@
+import type { PolicyBlockStage } from '../policy-blocked-error';
+
 /**
  * Shared status constants for the `raw.status` field.
  *
@@ -157,7 +159,7 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
 
 /**
  * Discriminated union describing a tool result that has been classified into
- * a stable success / failure / parse_error / unknown shape.
+ * a stable success / failure / policy_block / parse_error / unknown shape.
  *
  * - `success`: `raw.status === 'SUCCESS'`. `data` exposes the original `raw`
  *   payload typed as `T`. `transactionId` is lifted out when present.
@@ -166,6 +168,11 @@ export const untypedQueryOutputParser = (rawOutput: string): { raw: any; humanMe
  *   the failure was a Hedera network receipt or precheck error, or `'ERROR'` for
  *   generic caught exceptions. `transactionId` is lifted out when present
  *   (receipt and precheck failures both set it).
+ * - `policy_block`: `raw.errorCode === 'POLICY_BLOCKED'` and `raw.policyBlock`
+ *   is present. Carries the structured policy block info: `policyName`, `toolMethod`,
+ *   `stage`, and optional `description` / `details`. The LLM-facing `humanMessage`
+ *   is preserved. Use {@link isPolicyBlockedToolResult} as a quick envelope-level
+ *   guard before classifying.
  * - `parse_error`: `raw.status === 'PARSE_ERROR'` or the envelope was
  *   structurally malformed (missing `raw`, non-object, etc.).
  * - `unknown`: `raw.status` is a non-empty string that does not match any of
@@ -180,6 +187,16 @@ export type ToolResultStatus<T = unknown> =
       kind: 'failure';
       errorCode: string;
       transactionId?: string;
+      error: string;
+      humanMessage: string;
+    }
+  | {
+      kind: 'policy_block';
+      policyName: string;
+      toolMethod: string;
+      stage: PolicyBlockStage;
+      description?: string;
+      details?: Record<string, unknown>;
       error: string;
       humanMessage: string;
     }
@@ -244,6 +261,25 @@ export const classifyToolResult = <T = unknown>(parsed: {
     };
   }
 
+  // Policy block — check before the generic failure branch so it gets a dedicated `kind`.
+  if (
+    raw.policyBlock &&
+    typeof raw.policyBlock === 'object' &&
+    raw.policyBlock.code === 'POLICY_BLOCKED'
+  ) {
+    const pb = raw.policyBlock;
+    return {
+      kind: 'policy_block',
+      policyName: pb.policyName,
+      toolMethod: pb.toolMethod,
+      stage: pb.stage,
+      ...(pb.description !== undefined && { description: pb.description }),
+      ...(pb.details !== undefined && { details: pb.details }),
+      error: typeof raw.error === 'string' ? raw.error : humanMessage,
+      humanMessage,
+    };
+  }
+
   if (raw.status === TOOL_STATUS.ERROR || typeof raw.error === 'string') {
     return {
       kind: 'failure',
@@ -263,3 +299,33 @@ export const classifyToolResult = <T = unknown>(parsed: {
 
   return { kind: 'unknown', humanMessage };
 };
+
+/**
+ * Quick envelope-level guard that returns `true` when a `{ raw, humanMessage }` envelope
+ * was produced by a policy block (i.e. `raw.policyBlock.code === 'POLICY_BLOCKED'`).
+ *
+ * Use this for a fast boolean check before you need the full structured data. To branch on
+ * individual fields pass the envelope to {@link classifyToolResult} and check
+ * `result.kind === 'policy_block'`.
+ *
+ * @example
+ * ```ts
+ * const envelope = transactionToolOutputParser(rawOutput);
+ * if (isPolicyBlockedToolResult(envelope)) {
+ *   const result = classifyToolResult(envelope);
+ *   if (result.kind === 'policy_block') {
+ *     console.log(result.policyName, result.details);
+ *   }
+ * }
+ * ```
+ */
+export function isPolicyBlockedToolResult(parsed: { raw: any; humanMessage: string }): boolean {
+  return (
+    parsed != null &&
+    typeof parsed.raw === 'object' &&
+    parsed.raw !== null &&
+    typeof parsed.raw.policyBlock === 'object' &&
+    parsed.raw.policyBlock !== null &&
+    parsed.raw.policyBlock.code === 'POLICY_BLOCKED'
+  );
+}

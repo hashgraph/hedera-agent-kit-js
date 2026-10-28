@@ -93,6 +93,12 @@ console.log(parsed[0].toolName);   // e.g. "create_account_tool"
 console.log(parsed[0].parsedData); // tool execution result
 ```
 
+`ResponseParserService` also exposes `parsePolicyBlocks(response)` and
+`hasPolicyBlocks(response)` for surfacing structured policy-block data without parsing
+prose. See
+[Blocking with Policies](../../docs/HOOKS_AND_POLICIES.md#blocking-with-policies) for
+details and a usage snippet.
+
 ## Streaming
 
 When streaming with `agent.streamEvents({ version: 'v2' })`, the `on_tool_start` event's `name` is the shared wrapper class (`HederaAgentKitTool`). To label steps with the real tool name, read it from `event.metadata.hakToolName`:
