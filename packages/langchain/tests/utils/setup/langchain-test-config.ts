@@ -165,7 +165,7 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
 
 export const DEFAULT_LLM_OPTIONS: LlmOptions = {
   provider: LLMProvider.OPENAI,
-  model: 'gpt-4o-mini',
+  model: 'gpt-6-luna',
 };
 
 // this system prompt is designed to be used in tests to ensure the agent focuses on tool usage and parameter extraction without making up information or deviating from expected tool calls.
