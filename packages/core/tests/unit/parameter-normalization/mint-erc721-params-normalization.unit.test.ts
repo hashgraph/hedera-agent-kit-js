@@ -141,7 +141,9 @@ describe('HederaParameterNormaliser.normaliseMintERC721Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "contractId" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "contractId" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when toAddress is invalid type', async () => {

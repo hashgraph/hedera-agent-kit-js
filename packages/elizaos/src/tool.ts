@@ -13,6 +13,7 @@ import {
   Validator,
 } from '@elizaos/core';
 import { Client } from '@hiero-ledger/sdk';
+import { z } from 'zod';
 import type { Tool, Context, ToolType } from '@hashgraph/hedera-agent-kit';
 import { generateExtractionTemplate } from './utils/extraction';
 import { customParseJSONObjectFromText } from './utils/parser';
@@ -75,7 +76,7 @@ class HederaAgentKitTool implements Action {
         // call llm to generate a comprehensive message to the user about missing params
         const promptText = `given the recent messages {{recent_messages}},
         tool description: ${tool.description}
-        and the error message: ${validation.error.format()}
+        and the error message: ${z.prettifyError(validation.error)}
         generate a comprehensive message to the user about missing params
         `;
 
@@ -85,7 +86,7 @@ class HederaAgentKitTool implements Action {
         if (callback) {
           await callback({
             text: modelOutput,
-            content: { error: validation.error.format() },
+            content: { error: z.treeifyError(validation.error) },
           });
         }
         return {

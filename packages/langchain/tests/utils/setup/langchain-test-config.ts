@@ -23,9 +23,11 @@ import {
   coreMiscQueriesPluginsToolNames,
 } from '@hashgraph/hedera-agent-kit/plugins';
 import {
+  LLMFactory,
   LlmOptions,
   LLMProvider,
 } from '@hashgraph/hedera-agent-kit-tests/shared/setup/llm-factory';
+import { ChatOpenAI } from '@langchain/openai';
 
 /**
  * Common test toolkit options type used by langchain test setup.
@@ -165,12 +167,31 @@ export const TOOLKIT_OPTIONS: LangchainTestOptions = {
 
 export const DEFAULT_LLM_OPTIONS: LlmOptions = {
   provider: LLMProvider.OPENAI,
-  model: 'gpt-4o-mini',
+  model: 'gpt-6-luna',
 };
+
+/**
+ * Creates the model handed to the agent. gpt-6 models reject function tools combined
+ * with reasoning on /v1/chat/completions, so those are built explicitly and routed
+ * through the Responses API; everything else uses the plain 'provider:model' identifier.
+ */
+export function createTestModel(options: LlmOptions): string | ChatOpenAI {
+  if (options.provider === LLMProvider.OPENAI && options.model?.startsWith('gpt-6')) {
+    return new ChatOpenAI({
+      model: options.model,
+      apiKey: options.apiKey,
+      useResponsesApi: true,
+      reasoning: { effort: 'low' },
+    });
+  }
+  return LLMFactory.createLLM(options);
+}
 
 // this system prompt is designed to be used in tests to ensure the agent focuses on tool usage and parameter extraction without making up information or deviating from expected tool calls.
 // we want it to try its best with extracting params so it is strongly encouraged to rather call a tool with best matching params than to not call a tool at all.
+// the current date lets reasoning models resolve relative dates (e.g. "expire tomorrow") instead of asking the user for one.
 export const SYSTEM_PROMPT = `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
+        Current date and time (UTC): ${new Date().toISOString()}.
         Always use the exact tool name and parameter structure expected by it.
         Always call the best matching tool with best extracted params you can choose from the user input.
         Do not make up parameters.`;

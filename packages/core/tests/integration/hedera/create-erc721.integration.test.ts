@@ -110,10 +110,10 @@ describe('Create ERC721 Integration Tests', () => {
       const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain(
-        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.error).toContain(
-        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.error).toContain('Failed to execute Create ERC721 Token');
       expect(result.humanMessage).toContain('Failed to execute Create ERC721 Token');
