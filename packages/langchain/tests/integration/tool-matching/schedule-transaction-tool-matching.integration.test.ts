@@ -201,7 +201,7 @@ describe('Schedule transaction params extraction test', () => {
 
     it('should extract waitForExpiry: true from natural language', async () => {
       const input =
-        'Schedule mint token 0.0.5005 with metadata ipfs://QmWaitTest and execute it at expiration time regardless of signatures';
+        'Schedule mint token 0.0.5005 with metadata ipfs://QmWaitTest, set expiration time to 2030-01-01T00:00:00Z and execute it at expiration time regardless of signatures';
 
       const hederaAPI = toolkit.getHederaAgentKitAPI();
       const spy = vi

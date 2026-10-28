@@ -189,7 +189,9 @@ export function createTestModel(options: LlmOptions): string | ChatOpenAI {
 
 // this system prompt is designed to be used in tests to ensure the agent focuses on tool usage and parameter extraction without making up information or deviating from expected tool calls.
 // we want it to try its best with extracting params so it is strongly encouraged to rather call a tool with best matching params than to not call a tool at all.
+// the current date lets reasoning models resolve relative dates (e.g. "expire tomorrow") instead of asking the user for one.
 export const SYSTEM_PROMPT = `You are a Hedera blockchain assistant. You have access to tools for blockchain operations.
+        Current date and time (UTC): ${new Date().toISOString()}.
         Always use the exact tool name and parameter structure expected by it.
         Always call the best matching tool with best extracted params you can choose from the user input.
         Do not make up parameters.`;

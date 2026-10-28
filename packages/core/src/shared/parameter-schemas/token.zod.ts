@@ -261,7 +261,7 @@ export const updateTokenParameters = (_context: Context = {}) =>
     metadata: z
       .string()
       .optional()
-      .describe('New metadata for the token, in bytes (as base64 or hex).'),
+      .describe('New metadata for the token, exactly as provided by the user (do not encode it).'),
     tokenMemo: z
       .string()
       .max(100)
