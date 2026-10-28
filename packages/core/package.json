@@ -1,6 +1,6 @@
 {
   "name": "@hashgraph/hedera-agent-kit",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Core package for building agents that interact with the Hedera network.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
