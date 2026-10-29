@@ -52,7 +52,8 @@ async function bootstrap(): Promise<void> {
   // The client is only needed to construct the toolkit; no operator: the wallet signs everything.
   const client = Client.forTestnet();
 
-  const callbackServer = startOAuthCallbackServer();
+  const authProvider = new InMemoryOAuthClientProvider();
+  const callbackServer = startOAuthCallbackServer(authProvider);
 
   const hederaAgentToolkit = new HederaLangchainToolkit({
     client,
@@ -61,7 +62,7 @@ async function bootstrap(): Promise<void> {
       mcpServers: [HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET],
       mcpAuth: {
         [HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET]: {
-          authProvider: new InMemoryOAuthClientProvider(),
+          authProvider,
           waitForAuthorizationCode: callbackServer.waitForCode,
         },
       },

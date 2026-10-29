@@ -3,7 +3,7 @@ import { Client } from '@hiero-ledger/sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { openai } from '@ai-sdk/openai';
-import { generateText, stepCountIs } from 'ai';
+import { generateText, stepCountIs, type ModelMessage } from 'ai';
 import {
   InMemoryOAuthClientProvider,
   startOAuthCallbackServer,
@@ -51,7 +51,8 @@ async function bootstrap(): Promise<void> {
   // The client is only needed to construct the toolkit; no operator: the wallet signs everything.
   const client = Client.forTestnet();
 
-  const callbackServer = startOAuthCallbackServer();
+  const authProvider = new InMemoryOAuthClientProvider();
+  const callbackServer = startOAuthCallbackServer(authProvider);
 
   const hederaAgentToolkit = new HederaAIToolkit({
     client,
@@ -60,7 +61,7 @@ async function bootstrap(): Promise<void> {
       mcpServers: [HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET],
       mcpAuth: {
         [HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET]: {
-          authProvider: new InMemoryOAuthClientProvider(),
+          authProvider,
           waitForAuthorizationCode: callbackServer.waitForCode,
         },
       },
@@ -79,7 +80,7 @@ async function bootstrap(): Promise<void> {
   console.log('\nHedera Network MCP Chatbot — type "exit" to quit');
   console.log('Try: "What is my HBAR balance?" or "Send 1 HBAR to 0.0.98765"\n');
 
-  const conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
+  const conversationHistory: ModelMessage[] = [];
 
   while (true) {
     const { userInput } = await prompts({ type: 'text', name: 'userInput', message: 'You' });
@@ -100,7 +101,8 @@ async function bootstrap(): Promise<void> {
         stopWhen: stepCountIs(10), // room for write tool + check_signing_status polling
       });
 
-      conversationHistory.push({ role: 'assistant', content: response.text });
+      // Keep tool calls and results too, so the requestId from a write tool survives to later turns.
+      conversationHistory.push(...response.response.messages);
       console.log(`\nAI: ${response.text}\n`);
     } catch (err) {
       console.error('Error:', err);

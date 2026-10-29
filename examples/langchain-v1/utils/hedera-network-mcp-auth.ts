@@ -1,4 +1,5 @@
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
 import type { OAuthClientProvider } from '@modelcontextprotocol/sdk/client/auth.js';
 import type {
@@ -13,14 +14,15 @@ const CALLBACK_URL = `http://127.0.0.1:${CALLBACK_PORT}/callback`;
 /**
  * Minimal in-memory OAuth client provider for the hosted Hedera Network MCP.
  *
- * Client registration (dynamic), tokens and the PKCE verifier live only for the lifetime of the
- * process, so the wallet sign-in is repeated on every run. Persist them (file, keychain, DB) if
- * you want the session to survive restarts.
+ * Client registration (dynamic), tokens, the PKCE verifier and the OAuth `state` live only for the
+ * lifetime of the process, so the wallet sign-in is repeated on every run. Persist them (file,
+ * keychain, DB) if you want the session to survive restarts.
  */
 export class InMemoryOAuthClientProvider implements OAuthClientProvider {
   private _clientInformation?: OAuthClientInformationMixed;
   private _tokens?: OAuthTokens;
   private _codeVerifier?: string;
+  private _state?: string;
 
   get redirectUrl(): string {
     return CALLBACK_URL;
@@ -61,17 +63,32 @@ export class InMemoryOAuthClientProvider implements OAuthClientProvider {
     return this._codeVerifier;
   }
 
+  /** Random OAuth `state` for the authorization request; the callback must echo it back (CSRF protection). */
+  state(): string {
+    this._state = randomBytes(32).toString('base64url');
+    return this._state;
+  }
+
+  /** The `state` sent with the pending authorization request, if any. */
+  get expectedState(): string | undefined {
+    return this._state;
+  }
+
   /** Opens the Hedera wallet sign-in page in the default browser. */
   redirectToAuthorization(authorizationUrl: URL) {
+    const url = authorizationUrl.toString();
     console.log('\nOpen this URL to sign in with your Hedera wallet (WalletConnect):');
-    console.log(authorizationUrl.toString(), '\n');
-    const opener =
+    console.log(url, '\n');
+    if (authorizationUrl.protocol !== 'https:' && authorizationUrl.protocol !== 'http:') return;
+
+    // No shell: the URL is passed as a single argument, so its contents are never interpreted.
+    const [command, args] =
       process.platform === 'darwin'
-        ? 'open'
+        ? ['open', [url]]
         : process.platform === 'win32'
-          ? 'start ""'
-          : 'xdg-open';
-    exec(`${opener} "${authorizationUrl.toString()}"`, () => {
+          ? ['rundll32', ['url.dll,FileProtocolHandler', url]]
+          : ['xdg-open', [url]];
+    execFile(command, args, () => {
       /* ignore: the URL was already printed for manual opening */
     });
   }
@@ -80,8 +97,12 @@ export class InMemoryOAuthClientProvider implements OAuthClientProvider {
 /**
  * Starts a local server that receives the OAuth redirect.
  * Call `waitForCode()` after the sign-in page was opened; it resolves with the authorization code.
+ * Callbacks whose `state` does not match `authProvider.expectedState` are rejected and ignored.
  */
-export function startOAuthCallbackServer(timeoutMs = 5 * 60 * 1000) {
+export function startOAuthCallbackServer(
+  authProvider: InMemoryOAuthClientProvider,
+  timeoutMs = 5 * 60 * 1000,
+) {
   let resolveCode!: (code: string) => void;
   let rejectCode!: (err: Error) => void;
   const codePromise = new Promise<string>((resolve, reject) => {
@@ -97,6 +118,12 @@ export function startOAuthCallbackServer(timeoutMs = 5 * 60 * 1000) {
       res.writeHead(404).end();
       return;
     }
+    const state = url.searchParams.get('state');
+    if (!state || state !== authProvider.expectedState) {
+      // Not from our pending sign-in: ignore it and keep waiting for the real callback.
+      res.writeHead(400, { 'Content-Type': 'text/plain' }).end('Invalid OAuth state');
+      return;
+    }
     const code = url.searchParams.get('code');
     const error = url.searchParams.get('error');
     res.writeHead(code ? 200 : 400, { 'Content-Type': 'text/plain' });
@@ -105,12 +132,22 @@ export function startOAuthCallbackServer(timeoutMs = 5 * 60 * 1000) {
     else
       rejectCode(new Error(`OAuth sign-in failed: ${error ?? 'no authorization code returned'}`));
   });
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    rejectCode(
+      err.code === 'EADDRINUSE'
+        ? new Error(
+            `OAuth callback port ${CALLBACK_PORT} is already in use (is another example running?)`,
+          )
+        : err,
+    );
+  });
   server.listen(CALLBACK_PORT, '127.0.0.1');
 
   const timer = setTimeout(
     () => rejectCode(new Error('Timed out waiting for wallet sign-in')),
     timeoutMs,
   );
+  codePromise.finally(() => clearTimeout(timer)).catch(() => {});
 
   return {
     waitForCode: () => codePromise,

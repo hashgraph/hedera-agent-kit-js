@@ -93,7 +93,8 @@ import {
   startOAuthCallbackServer,
 } from './utils/hedera-network-mcp-auth';
 
-const callbackServer = startOAuthCallbackServer(); // local server listening on http://127.0.0.1:8090/callback
+const authProvider = new InMemoryOAuthClientProvider();
+const callbackServer = startOAuthCallbackServer(authProvider); // local server listening on http://127.0.0.1:8090/callback
 
 const toolkit = new HederaLangchainToolkit({
   client, // Client.forTestnet() — no operator is needed, the wallet signs
@@ -102,7 +103,7 @@ const toolkit = new HederaLangchainToolkit({
     mcpServers: [HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET],
     mcpAuth: {
       [HederaMCPServer.HEDERA_NETWORK_MCP_TESTNET]: {
-        authProvider: new InMemoryOAuthClientProvider(),
+        authProvider,
         waitForAuthorizationCode: callbackServer.waitForCode, // resolves with the `code` sent to the redirect URL
       },
     },
@@ -116,6 +117,7 @@ callbackServer.close();
 **Where `authProvider` and `waitForAuthorizationCode` come from.** The kit does not ship them; you supply both (the kit only exports the `MCPServerOAuthOptions` / `MCPServerAuthMap` types and `ensureMcpAuthorized`).
 - `authProvider` is any implementation of the MCP SDK's `OAuthClientProvider` (`@modelcontextprotocol/sdk/client/auth.js`). It stores the dynamically registered client, tokens and PKCE verifier, declares the redirect URL, and opens the sign-in URL in `redirectToAuthorization`.
 - `waitForAuthorizationCode` is a function returning a promise that resolves with the `code` query parameter that the sign-in page redirects to your `redirectUrl`. Typically a small local HTTP server, or your app's own callback route.
+- Implement `state()` on the provider (a fresh random value per sign-in) and have your callback reject any redirect whose `state` does not match it. Otherwise any page the user visits during sign-in can inject an attacker's authorization code (CSRF).
 
 Ready-made versions of both (an in-memory provider and a local callback server) live in [`examples/langchain-v1/utils/hedera-network-mcp-auth.ts`](../examples/langchain-v1/utils/hedera-network-mcp-auth.ts) and [`examples/ai-sdk/utils/hedera-network-mcp-auth.ts`](../examples/ai-sdk/utils/hedera-network-mcp-auth.ts); copy one into your project.
 

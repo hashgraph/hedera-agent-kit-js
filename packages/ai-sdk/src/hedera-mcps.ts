@@ -73,7 +73,8 @@ export async function loadMCPToolsFromConfig(
 }
 
 /**
- * Loads tools from multiple MCP servers
+ * Loads tools from multiple MCP servers.
+ * Servers are loaded one at a time so OAuth sign-ins never run concurrently (e.g. racing for the same callback port).
  * @param serverNames - Array of preconfigured MCP server names
  * @param mcpAuth - OAuth options for servers that require sign-in
  * @returns Promise resolving to a record of AI SDK tools from all servers
@@ -82,8 +83,10 @@ export async function loadMultipleMCPTools(
   serverNames: HederaMCPServer[],
   mcpAuth: MCPServerAuthMap = {},
 ): Promise<Record<string, Tool>> {
-  const toolPromises = serverNames.map(serverName => loadMCPTools(serverName, mcpAuth[serverName]));
-  const toolRecords = await Promise.all(toolPromises);
+  const tools: Record<string, Tool> = {};
+  for (const serverName of serverNames) {
+    Object.assign(tools, await loadMCPTools(serverName, mcpAuth[serverName]));
+  }
 
-  return Object.assign({}, ...toolRecords);
+  return tools;
 }
