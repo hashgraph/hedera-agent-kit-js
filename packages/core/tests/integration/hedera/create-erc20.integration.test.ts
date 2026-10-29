@@ -95,10 +95,10 @@ describe('Create ERC20 Integration Tests', () => {
       const result: any = await tool.execute(executorClient, context, params);
 
       expect(result.humanMessage).toContain(
-        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.error).toContain(
-        'Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        'Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.error).toContain('Failed to execute Create ERC20 Token');
       expect(result.humanMessage).toContain('Failed to execute Create ERC20 Token');
@@ -119,10 +119,10 @@ describe('Create ERC20 Integration Tests', () => {
       expect(result.humanMessage).toContain('Failed to execute Create ERC20 Token');
 
       expect(result.raw.error).toContain(
-        'Invalid parameters: Field "decimals" - Number must be greater than or equal to 0',
+        'Invalid parameters: Field "decimals" - Too small: expected number to be >=0',
       );
       expect(result.humanMessage).toContain(
-        'Invalid parameters: Field "decimals" - Number must be greater than or equal to 0',
+        'Invalid parameters: Field "decimals" - Too small: expected number to be >=0',
       );
     });
   });

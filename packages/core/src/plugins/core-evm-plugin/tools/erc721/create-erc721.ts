@@ -23,7 +23,7 @@ This tool creates an ERC721 token on Hedera by calling the BaseERC721Factory con
 Parameters:
 - tokenName (str, required): The name of the token
 - tokenSymbol (str, required): The symbol of the token
-- baseURI (str, required): The base URI for token metadata
+- baseURI (str, optional): The base URI for token metadata. Defaults to an empty string
 ${PromptGenerator.getScheduledTransactionParamsDescription(context)}
 
 ${PromptGenerator.getParameterUsageInstructions()}

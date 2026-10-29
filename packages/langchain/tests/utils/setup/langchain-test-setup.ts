@@ -5,6 +5,7 @@ import {
   TOOLKIT_OPTIONS,
   DEFAULT_LLM_OPTIONS,
   getProviderApiKeyMap,
+  createTestModel,
   SYSTEM_PROMPT,
 } from '@tests/utils';
 
@@ -13,7 +14,6 @@ import type { LangchainTestOptions } from '@tests/utils';
 import { createAgent, ReactAgent } from 'langchain';
 import { AgentMode } from '@hashgraph/hedera-agent-kit';
 import {
-  LLMFactory,
   LlmOptions,
   LLMProvider,
 } from '@hashgraph/hedera-agent-kit-tests/shared/setup/llm-factory';
@@ -59,7 +59,7 @@ export async function createLangchainTestSetup(
   };
 
   // Create LLM
-  const llm = LLMFactory.createLLM(resolvedLlmOptions);
+  const llm = createTestModel(resolvedLlmOptions);
 
   // Prepare toolkit
   const toolkit = new HederaLangchainToolkit({

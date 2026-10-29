@@ -122,10 +122,10 @@ describe('Create Fungible Token Integration Tests', () => {
       const result: any = await tool.execute(client, context, params);
 
       expect(result.humanMessage).toContain(
-        ' Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        ' Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.error).toContain(
-        ' Invalid parameters: Field "tokenName" - Required; Field "tokenSymbol" - Required',
+        ' Invalid parameters: Field "tokenName" - Invalid input: expected string, received undefined; Field "tokenSymbol" - Invalid input: expected string, received undefined',
       );
       expect(result.raw.status).toBeDefined();
     });

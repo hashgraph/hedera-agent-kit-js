@@ -185,7 +185,9 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "contractId" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "contractId" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when recipientAddress is missing', async () => {
@@ -203,7 +205,9 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "recipientAddress" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "recipientAddress" - Invalid input: expected string, received undefined/,
+      );
     });
 
     it('throws when amount is missing', async () => {
@@ -221,7 +225,9 @@ describe('HederaParameterNormaliser.normaliseTransferERC20Params', () => {
           mockMirrorNode,
           mockClient,
         ),
-      ).rejects.toThrow(/Invalid parameters: Field "amount" - Required/);
+      ).rejects.toThrow(
+        /Invalid parameters: Field "amount" - Invalid input: expected number, received undefined/,
+      );
     });
 
     it('throws when amount is not a number', async () => {

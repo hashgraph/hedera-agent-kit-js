@@ -123,7 +123,7 @@ export default class HederaParameterNormaliser {
   }
 
   private static formatZodIssues(error: z.ZodError): string {
-    return error.errors.map(err => `Field "${err.path.join('.')}" - ${err.message}`).join('; ');
+    return error.issues.map(err => `Field "${err.path.join('.')}" - ${err.message}`).join('; ');
   }
 
   static async normaliseCreateFungibleTokenParams(
@@ -910,10 +910,7 @@ export default class HederaParameterNormaliser {
       normalised.autoRenewAccountId = parsedParams.autoRenewAccountId;
     if (parsedParams.autoRenewPeriod) normalised.autoRenewPeriod = parsedParams.autoRenewPeriod;
     if (parsedParams.expirationTime) {
-      normalised.expirationTime =
-        parsedParams.expirationTime instanceof Date
-          ? parsedParams.expirationTime
-          : new Date(parsedParams.expirationTime);
+      normalised.expirationTime = new Date(parsedParams.expirationTime);
     }
 
     return normalised;

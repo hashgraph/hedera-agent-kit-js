@@ -1,6 +1,6 @@
 {
   "name": "@hashgraph/hedera-agent-kit",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Core package for building agents that interact with the Hedera network.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
@@ -63,7 +63,7 @@
     "test:e2e": "echo 'No e2e tests for @hashgraph/hedera-agent-kit (core)'"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "author": "Hashgraph",
   "license": "Apache-2.0",
@@ -82,17 +82,16 @@
     "bignumber.js": "9.3.1",
     "ethers": "6.17.0",
     "long": "5.3.2",
-    "zod": "3.25.76",
-    "zod-to-json-schema": "3.25.2"
+    "zod": "4.6.7"
   },
   "peerDependencies": {
-    "@hiero-ledger/sdk": "^2.86.2"
+    "@hiero-ledger/sdk": "^2.90.1"
   },
   "devDependencies": {
     "@hashgraph/hedera-agent-kit-tests": "workspace:*",
-    "@hiero-ledger/sdk": "2.86.2",
+    "@hiero-ledger/sdk": "2.90.1",
     "tsup": "8.5.0",
     "typescript": "5.8.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.12"
   }
 }

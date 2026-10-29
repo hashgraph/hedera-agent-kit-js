@@ -66,14 +66,14 @@ export class LLMFactory {
    * @returns {string} The default model name for the specified provider
    * @private
    * @example
-   * - OpenAI: 'gpt-4o-mini'
+   * - OpenAI: 'gpt-6-luna'
    * - Anthropic: 'claude-3-haiku-20240307'
    * - Groq: 'llama3-8b-8192'
    */
   private static getDefaultModel(provider: LLMProvider): string {
     switch (provider) {
       case LLMProvider.OPENAI:
-        return 'gpt-4o-mini';
+        return 'gpt-6-luna';
       case LLMProvider.ANTHROPIC:
         return 'claude-3-haiku-20240307';
       case LLMProvider.GROQ:

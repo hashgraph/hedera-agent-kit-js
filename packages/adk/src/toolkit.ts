@@ -6,7 +6,6 @@ import {
 } from '@hashgraph/hedera-agent-kit';
 import { Client } from '@hiero-ledger/sdk';
 import HederaAgentKitTool, { type HederaADKTool } from './tool';
-import type { ToolInputParameters } from '@google/adk';
 
 class HederaADKToolkit {
   private hedera: HederaAgentAPI;
@@ -27,7 +26,7 @@ class HederaADKToolkit {
         this.hedera,
         tool.method,
         tool.description,
-        tool.parameters as unknown as ToolInputParameters,
+        tool.parameters,
         tool.toolType,
       );
     });

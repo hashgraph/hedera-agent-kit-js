@@ -34,9 +34,9 @@ export const auditEntrySchema = z.object({
   source: z.string().describe('Identifier of the system that produced this entry.'),
   timestamp: z.string().describe('ISO 8601 timestamp of when the tool was executed.'),
   tool: z.string().describe('Name of the tool that was executed.'),
-  params: z.record(z.any()).describe('Normalised parameters passed to the tool.'),
+  params: z.record(z.string(), z.any()).describe('Normalised parameters passed to the tool.'),
   result: z.object({
-    raw: z.record(z.any()).describe('Raw result returned by the tool.'),
+    raw: z.record(z.string(), z.any()).describe('Raw result returned by the tool.'),
     message: z.string().nullable().describe('Human-readable result message.'),
   }),
 });

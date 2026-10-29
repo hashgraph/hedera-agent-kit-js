@@ -10,7 +10,7 @@ root-level pnpm scripts.
 - **Docker** (running)
 - **kind**: `brew install kind` (or [kind docs](https://kind.sigs.k8s.io/))
 - **kubectl**: `brew install kubectl`
-- **Node 22** + **pnpm 9.15+**
+- **Node 22.23.4+, 24.22.1+, or 26.12.1+** (`.nvmrc` pins 24) + **pnpm 9.15+**
 - An LLM API key in `.env.test.local`. Only required for tests that exercise the agent (e2e and a subset of integration).
 
 Copy `.env.test.local.example` to `.env.test.local` and fill in `OPENAI_API_KEY` (or
