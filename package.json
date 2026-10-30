@@ -32,7 +32,7 @@
     "@typescript-eslint/eslint-plugin": "8.65.0",
     "@typescript-eslint/parser": "8.65.0",
     "dotenv": "17.2.1",
-    "eslint": "10.8.0",
+    "eslint": "10.13.0",
     "globals": "17.8.0",
     "prettier": "3.8.3",
     "semver": "7.8.5",
