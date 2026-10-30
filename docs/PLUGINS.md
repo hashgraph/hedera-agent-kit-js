@@ -107,6 +107,14 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Status: Validated by HAK team, v4-compatible release
 
+- [Ledger Plugin](https://www.npmjs.com/package/hak-ledger-plugin) is the first Ledger hardware-wallet plugin for the Hedera Agent Kit — a human-in-the-loop signer that Clear-Signs high-risk EVM transactions on a physical Ledger before the agent executes them, exposing `ledger_clear_sign` (Clear-Sign + optionally broadcast an unsigned EVM tx; the device is the final gate) and `ledger_get_address` (derive + verify a hardware-backed EVM identity). Pairs with `hak-uniswap-plugin`'s `requires_ledger_approval` flow for device-gated, above-threshold settlement:
+
+  NPM: https://www.npmjs.com/package/hak-ledger-plugin
+
+  Github repository: https://github.com/jmgomezl/hak-ledger-plugin
+
+  Version: hak-ledger-plugin@0.1.0
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
