@@ -59,7 +59,7 @@
     "@elizaos/core": "1.7.2",
     "@hiero-ledger/sdk": "2.90.1",
     "tsup": "8.5.0",
-    "typescript": "5.8.3",
+    "typescript": "6.0.3",
     "vitest": "4.1.12"
   }
 }

@@ -15,7 +15,7 @@
     "@hashgraph/hedera-agent-kit": "workspace:*",
     "@hiero-ledger/sdk": "2.90.1",
     "bignumber.js": "9.3.1",
-    "typescript": "5.8.3",
+    "typescript": "6.0.3",
     "vitest": "4.1.12",
     "zod": "4.6.7"
   }
