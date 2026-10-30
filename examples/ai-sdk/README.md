@@ -80,6 +80,13 @@ Connects to a preconfigured MCP server (like Hederion) to perform actions.
 npm run ai-sdk:preconfigured-mcp-client-agent
 ```
 
+### Hedera Network MCP Agent (hosted, wallet sign-in)
+Connects to the hosted Hedera Network MCP (testnet). You sign in with your own wallet (HashPack, Kabila, ... via WalletConnect) instead of using `ACCOUNT_ID` / `PRIVATE_KEY`, and approve each transaction in the wallet. Only `OPENAI_API_KEY` is required. A browser tab opens for the sign-in on startup.
+
+```bash
+npm run ai-sdk:hedera-network-mcp-agent
+```
+
 ### Audit Trail Agent
 Demonstrates how to use the `HcsAuditTrailHook` to audit HBAR transfers and token creation.
 

@@ -193,6 +193,14 @@ This agent uses a preconfigured MCP client to connect to Hedera network:
 npm run langchain:preconfigured-mcp-client-agent
 ```
 
+#### Hedera Network MCP (hosted, wallet sign-in)
+
+The hosted Hedera Network MCP (testnet) needs a wallet sign-in instead of `ACCOUNT_ID` / `PRIVATE_KEY`; only `OPENAI_API_KEY` is required. A browser tab opens for the sign-in (HashPack, Kabila, ... via WalletConnect) and each transaction is approved in the wallet:
+
+```bash
+npm run langchain:hedera-network-mcp-agent
+```
+
 #### Hgraph MCP Server Configuration
 
 To use the **Hgraph MCP Server** (`HederaMCPServer.HGRAPH_MCP_MAINNET`), you must obtain an API key:

@@ -113,6 +113,9 @@ const server = new HederaMCPToolkit({
 
 `RETURN_BYTES` mode requires `accountId` in the context — it is used to generate the transaction ID before freezing. For an HTTP server shared by many callers, do not hard-code it: read it from the `x-hedera-account-id` header when a session initializes and build the toolkit with that per-session context. This keeps the server stateless while identifying which account each transaction is built for. The reference implementation in [`examples/modelcontextprotocol/src/http.ts`](../examples/modelcontextprotocol/src/http.ts) does exactly this (and also resolves the account's public key from the mirror node).
 
+> [!NOTE]
+> The `x-hedera-account-id` header applies to **self-hosted** servers like the reference implementation above. The hosted [Hedera Network MCP](./HEDERAMCPS.md#hedera-network-mcp-hosted-wallet-sign-in) ignores it: the account comes from an OAuth sign-in with a wallet, and transactions are approved in the wallet instead of being returned as bytes.
+
 A remote MCP client then connects like this:
 
 ```json
