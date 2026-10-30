@@ -65,6 +65,15 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
   Status: Validated by HAK team, v4-compatible release
 
 
+- [Uniswap Plugin](https://www.npmjs.com/package/hak-uniswap-plugin) is the first Uniswap plugin for the Hedera Agent Kit, letting a Hedera agent swap tokens through Uniswap permissionless liquidity on EVM chains (Ethereum, Unichain, Base, …). It exposes the action (`uniswap_swap`) with a quote → dynamic ERC-20 allowance → execute flow for cross-asset settlement and treasury rebalancing, plus an optional Ledger Clear-Sign gate for above-threshold swaps:
+
+  NPM: https://www.npmjs.com/package/hak-uniswap-plugin
+
+  Github repository: https://github.com/jmgomezl/hak-uniswap-plugin
+
+  Version: hak-uniswap-plugin@0.1.0
+
+
 - [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
 
   NPM: https://www.npmjs.com/package/coincap-hedera-plugin
