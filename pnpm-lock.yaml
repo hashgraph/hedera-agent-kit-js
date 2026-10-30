@@ -52,8 +52,8 @@ importers:
         specifier: 8.65.0
         version: 8.65.0(eslint@10.8.0)(typescript@5.8.3)
       dotenv:
-        specifier: 17.2.1
-        version: 17.2.1
+        specifier: 18.0.9
+        version: 18.0.9
       eslint:
         specifier: 10.8.0
         version: 10.8.0
@@ -179,8 +179,8 @@ importers:
         specifier: 8.65.0
         version: 8.65.0(eslint@10.2.0)(typescript@5.8.3)
       dotenv:
-        specifier: 17.4.1
-        version: 17.4.1
+        specifier: 18.0.9
+        version: 18.0.9
       eslint:
         specifier: 10.2.0
         version: 10.2.0
@@ -287,8 +287,8 @@ importers:
         specifier: 1.5.5
         version: 1.5.5(@langchain/core@1.2.3(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.0))(openai@6.49.0(ws@8.22.0)(zod@4.6.7))(ws@8.22.0))(ws@8.22.0)
       dotenv:
-        specifier: 17.2.1
-        version: 17.2.1
+        specifier: 18.0.9
+        version: 18.0.9
       langchain:
         specifier: 1.5.3
         version: 1.5.3(@langchain/core@1.2.3(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.0))(openai@6.49.0(ws@8.22.0)(zod@4.6.7))(ws@8.22.0))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.0))(openai@6.49.0(ws@8.22.0)(zod@4.6.7))(ws@8.22.0)
@@ -314,8 +314,8 @@ importers:
         specifier: '>=1.32.2 <2.0.0'
         version: 1.32.2(@cfworker/json-schema@4.1.1)(zod@4.6.7)
       dotenv:
-        specifier: 17.2.1
-        version: 17.2.1
+        specifier: 18.0.9
+        version: 18.0.9
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -1999,13 +1999,14 @@ packages:
     resolution: {integrity: sha512-avsq/xk4YPIrn0CgleX5bjT9Y8IT1p9PxrNQ++RBQ2WEyFfHCTDsT9kmyxz+H/axnjAwg8wJWEIuPGOUuNupiA==}
     engines: {node: '>= 14.17'}
 
-  dotenv@17.2.1:
-    resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  dotenv@17.4.1:
-    resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
+  dotenv@18.0.9:
+    resolution: {integrity: sha512-3fVOW4cB02R066PUSwn8O4TJyz9NckQl7F81blIbaq9jKBm2tSmOKky7ZHIXzGvkVPXCSn6jkpziBPZdGFs8Tw==}
     engines: {node: '>=12'}
+    hasBin: true
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -3752,7 +3753,7 @@ snapshots:
       '@langchain/textsplitters': 1.0.1(@langchain/core@1.1.39(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.0))(openai@6.49.0(ws@8.22.0)(zod@4.6.7))(ws@8.22.0))
       adze: 2.3.0
       crypto-browserify: 3.12.1
-      dotenv: 17.4.1
+      dotenv: 17.4.2
       fast-redact: 3.5.0
       glob: 13.0.6
       handlebars: 4.7.10
@@ -5306,9 +5307,9 @@ snapshots:
       - supports-color
     optional: true
 
-  dotenv@17.2.1: {}
+  dotenv@17.4.2: {}
 
-  dotenv@17.4.1: {}
+  dotenv@18.0.9: {}
 
   dunder-proto@1.0.1:
     dependencies:
