@@ -132,8 +132,8 @@ importers:
   packages/core:
     dependencies:
       bignumber.js:
-        specifier: 9.3.1
-        version: 9.3.1
+        specifier: 11.1.5
+        version: 11.1.5
       ethers:
         specifier: 6.17.0
         version: 6.17.0
@@ -339,8 +339,8 @@ importers:
         specifier: 2.90.1
         version: 2.90.1
       bignumber.js:
-        specifier: 9.3.1
-        version: 9.3.1
+        specifier: 11.1.5
+        version: 11.1.5
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -1751,6 +1751,9 @@ packages:
 
   bignumber.js@11.1.2:
     resolution: {integrity: sha512-9idDyC15Vpk+53w4OfxEu2PqHSKFQUffrH1oTvnkJ9fduTJ032tpuI2sxS04oCzocklokWUZmWVEkTEQdLmUOQ==}
+
+  bignumber.js@11.1.5:
+    resolution: {integrity: sha512-6WmzCNtUnfKpbozq+hOgWaZMMzORmYBwF1xZScyoIX3QRYWeKTtxxwDOW5tIz7C9BdjkIYHGTcelCLkXg0mndw==}
 
   bignumber.js@9.3.1:
     resolution: {integrity: sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==}
@@ -5012,6 +5015,8 @@ snapshots:
     optional: true
 
   bignumber.js@11.1.2: {}
+
+  bignumber.js@11.1.5: {}
 
   bignumber.js@9.3.1: {}
 
