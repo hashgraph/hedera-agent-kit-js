@@ -107,6 +107,16 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Status: Validated by HAK team, v4-compatible release
 
+- [Jev Gate Plugin](https://www.npmjs.com/package/hak-jev-plugin) is an AI decision gate for tool calls, built on the v4 [Hooks and Policies](./HOOKS_AND_POLICIES.md) system. It exposes `JevGatePolicy` (an `AbstractPolicy` for `context.hooks`) that asks [**TypeSafe's Jev**](https://docs.typesafe.ai) typed questions about a pending swap (`saucerswap_swap_tokens`) after it is built and before it is signed, blocks it when the probabilities fall below a threshold (fail closed on timeout), falls back to deterministic rules without an API key, and writes one receipt per decision to an HCS topic:
+
+  NPM: https://www.npmjs.com/package/hak-jev-plugin
+
+  Github repository: https://github.com/jmgomezl/hak-jev-plugin
+
+  Version: hak-jev-plugin@0.1.1
+
+  Status: Not validated by HAK team, v4-compatible release
+
 ## Plugin Architecture
 
 The tools are now organized into plugins, each containing a set functionality related to the Hedera service or project they are created for.
