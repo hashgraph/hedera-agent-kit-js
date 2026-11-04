@@ -60,9 +60,16 @@ See this list of available third party plugins for the Hedera Agent Kit in the [
 
   Github repository: https://github.com/jmgomezl/hak-pyth-plugin
 
-  Version: hak-pyth-plugin@0.2.0
+  Version: hak-pyth-plugin@0.3.0
 
   Status: Validated by HAK team, v4-compatible release
+
+  > **Upgrade required before 2026-08-18.** Pyth Core now requires an API key
+  > ([OP-PIP-100](https://forum.pyth.network/t/passed-op-pip-100-pyth-core-to-pyth-pro-migration/2420)).
+  > From that date the Hermes endpoint rejects anonymous price requests, so versions
+  > below 0.3.0 stop returning prices. Upgrade to 0.3.0 and set `PYTH_API_KEY`
+  > ([get a key](https://docs.pyth.network/price-feeds/pro/acquire-api-key)); the plugin
+  > then targets the upgraded endpoint automatically.
 
 
 - [CoinCap Plugin](https://www.npmjs.com/package/coincap-hedera-plugin) provides access to the [**CoinCap API service**](https://www.coincap.io) to access cryptocurrency market data. It exposes the action (`get HBAR price in USD`) to get the current price of HBAR in USD currency, by using it you can ask your agent to get your current HBAR balance expressed in USD.
