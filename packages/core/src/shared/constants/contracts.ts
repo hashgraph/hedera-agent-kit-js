@@ -41,6 +41,12 @@ export const ERC721_TRANSFER_FUNCTION_ABI = [
 export const ERC721_MINT_FUNCTION_NAME = 'safeMint';
 export const ERC721_MINT_FUNCTION_ABI = ['function safeMint(address to) external returns (bool)'];
 
+// Uniswap V2 style DEX router swap (SaucerSwap, Pangolin, etc. expose this signature)
+export const DEX_SWAP_EXACT_TOKENS_FUNCTION_NAME = 'swapExactTokensForTokens';
+export const DEX_SWAP_EXACT_TOKENS_FUNCTION_ABI = [
+  'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) external returns (uint256[] memory amounts)',
+];
+
 /**
  * Get the ERC20 factory contract address for the specified network
  * @param ledgerId - The Hedera network ledger ID
