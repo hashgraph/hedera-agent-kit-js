@@ -565,3 +565,37 @@ cd examples/langchain-v1
 npm install
 npm run langchain:streaming-tool-calling-agent
 ```
+
+---
+
+### Option M: Run the Hedera Agent Kit + x402 Micropayments Example
+
+Demonstrates HTTP 402 ("Payment Required") micropayments using `@x402/core` and `@x402/hedera` to gate Hedera Agent Kit tools (`submit_topic_message_tool`, `mint_fungible_token_tool`) and Model Context Protocol (MCP) servers behind cryptographic micropayments.
+
+**Found at:**
+- `examples/x402/`
+
+#### Running the Example
+
+##### 1. Setup & Next.js Web App
+
+```bash
+cd examples/x402
+npm install --legacy-peer-deps
+cp .env.example .env
+npm run dev
+```
+
+##### 2. Run Smoke & Unit Tests
+
+```bash
+npx tsx smoke-test.ts
+npm test
+```
+
+##### 3. Run Payment-Gated MCP Server & ReAct Agent Loop
+
+```bash
+npm run start:mcp
+npm run start:agent
+```
