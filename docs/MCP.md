@@ -221,6 +221,7 @@ This is a recommendation, not an API contract — adapt the fields to your use c
 ## See also
 
 - [`examples/modelcontextprotocol`](../examples/modelcontextprotocol) — runnable stdio + HTTP server (both modes)
+- [`examples/x402`](../examples/x402) — HTTP 402 payment-gated MCP server with receipt verification and async ReAct agent loop
 - [`examples/langchain-v1/external-mcp-return-bytes-agent.ts`](../examples/langchain-v1/external-mcp-return-bytes-agent.ts) — client-side signing agent
 - [PLUGINS.md](PLUGINS.md) — writing your own tools (including smoke-testing them in `RETURN_BYTES` mode without any credentials)
 - [HEDERAMCPS.md](HEDERAMCPS.md) — third-party ecosystem MCP servers
